@@ -35,6 +35,8 @@ class JournalBloc({
     emit(const JournalState.loading());
     final name = _displayName();
     try {
+      // Proof for #169: the journal read twice, a duplicate fetch.
+      await _repository.entries();
       final entries = await _repository.entries();
       final openSession = await _repository.openSession();
       unawaited(
