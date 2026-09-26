@@ -1,7 +1,8 @@
 # ast-grep: the engine for this repo's custom syntactic checks (ADR 0018).
 # `ast-grep test` checks each rule under ast-grep/rules against its cases in
-# ast-grep/tests; `scripts/tripwire.sh` scans every file git tracks. Both run
-# in CI's tripwire job.
+# ast-grep/tests; `scripts/ast-grep.sh` scans every file git tracks. Both run
+# in CI's ast-grep job. A new rule is one file in a directory under
+# ast-grep/rules plus its test; nothing here changes (ADR 0018).
 ruleDirs:
   - ast-grep/rules
 testConfigs:

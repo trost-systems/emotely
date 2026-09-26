@@ -19,10 +19,11 @@ on purpose: `dart` is the standalone SDK `apps/web` is pinned to, and
 
 `release-status.sh` records one store channel's version and build in the README badges' `status.json`.
 
-`tripwire.sh` runs the ast-grep rules over every file git tracks, so an
-untracked scratch file never fails it; `pnpm tripwire` runs it after the rule
-tests and its own tests (`tripwire.test.sh`), all three of which CI's
-`tripwire` job runs.
+`ast-grep.sh` runs every ast-grep rule over every file git tracks, so an
+untracked scratch file never fails it; `pnpm ast-grep:check` runs it after
+the rule tests and its own tests (`ast-grep.test.sh`), all three of which
+CI's `ast-grep` job runs. A rule's `files` and `ignores` are tested only in
+`ast-grep.test.sh`, since a rule test case has no path.
 
 `l10n-check.sh` is what `melos run l10n:check` runs in each Flutter package
 with an `l10n.yaml` (ADR 0020): it regenerates the localizations and fails

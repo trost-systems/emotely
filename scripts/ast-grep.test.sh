@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Tests for tripwire.sh, through its command line only: a throwaway git
+# Tests for ast-grep.sh, through its command line only: a throwaway git
 # repository with this repository's rules in, findings and the exit code out.
 # What each rule matches is tested by `ast-grep test` (ast-grep/tests); this
-# covers what the rules alone cannot: which files are read, the messages, and
-# the output CI turns into annotations. ast-grep must be on PATH:
-#   pnpm exec bash scripts/tripwire.test.sh
+# covers what the rules alone cannot: which files are read (a rule test case
+# has no path, so `files` and `ignores` are only tested here), the messages,
+# and the output CI turns into annotations. ast-grep must be on PATH:
+#   pnpm exec bash scripts/ast-grep.test.sh
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -25,7 +26,7 @@ repo() {
   git -C "${dir}" init --quiet
   cp "${root}/sgconfig.yml" "${dir}/"
   cp -R "${root}/ast-grep" "${dir}/"
-  cp "${root}/scripts/tripwire.sh" "${dir}/scripts/"
+  cp "${root}/scripts/ast-grep.sh" "${dir}/scripts/"
   while (($# > 0)); do
     write "${dir}/$1" "$2"
     git -C "${dir}" add -- "$1"
@@ -41,7 +42,7 @@ write() {
 
 # The findings as sorted `path:line: message` lines, lines counted from 1.
 findings() {
-  (cd "$1" && { bash scripts/tripwire.sh --json=stream 2>/dev/null || true; }) |
+  (cd "$1" && { bash scripts/ast-grep.sh --json=stream 2>/dev/null || true; }) |
     jq -r '"\(.file):\(.range.start.line + 1): \(.message)"' | sort
 }
 
@@ -86,11 +87,42 @@ test_exempts_generated_files_and_anything_git_does_not_track() {
 ${actual}"
 }
 
+# no-from-environment: a define is read only in the environment file of the
+# app it belongs to; anywhere else, feature and utility packages first, the
+# message names that file.
+test_reads_defines_only_in_each_apps_environment_file() {
+  local dir
+  dir="$(repo \
+    apps/mobile/app/lib/app/environment.dart "const a = String.fromEnvironment('A');\n" \
+    apps/mobile/app/integration_test/environment.dart "const p = String.fromEnvironment('P');\n" \
+    apps/web/lib/environment.dart "const k = String.fromEnvironment('K');\n" \
+    apps/mobile/packages/feature/feature_x/lib/src/x.dart "const a = String.fromEnvironment('A');\n" \
+    apps/mobile/packages/utility/utility_y/lib/y.dart "\nconst b = bool.fromEnvironment('B');\n" \
+    apps/mobile/app/lib/app/dependencies.dart "const c = int.fromEnvironment('C');\n" \
+    apps/mobile/app/integration_test/live_test.dart "const p = String.fromEnvironment('P');\n" \
+    apps/web/lib/main.dart "const d = String.fromEnvironment('D');\n")"
+
+  local app="reads a --dart-define outside the app: read it in apps/mobile/app/lib/app/environment.dart and pass the value into the package's registration function (ADR 0015)"
+  local site="reads a define outside the site's environment file: read it in apps/web/lib/environment.dart and import the value from there"
+  local expected
+  expected="$(printf '%s\n' \
+    "apps/mobile/app/integration_test/live_test.dart:1: \"String.fromEnvironment\" ${app}" \
+    "apps/mobile/app/lib/app/dependencies.dart:1: \"int.fromEnvironment\" ${app}" \
+    "apps/mobile/packages/feature/feature_x/lib/src/x.dart:1: \"String.fromEnvironment\" ${app}" \
+    "apps/mobile/packages/utility/utility_y/lib/y.dart:2: \"bool.fromEnvironment\" ${app}" \
+    "apps/web/lib/main.dart:1: \"String.fromEnvironment\" ${site}")"
+  local actual
+  actual="$(findings "${dir}")"
+  [[ "${actual}" == "${expected}" ]] ||
+    fail "reads defines only in each app's environment file: got
+${actual}"
+}
+
 test_fails_with_the_file_the_line_and_the_reason() {
   local dir output
   dir="$(repo lib/a.ts 'f();\n// TODO: handle later\n')"
 
-  if output="$(cd "${dir}" && bash scripts/tripwire.sh --report-style short 2>&1)"; then
+  if output="$(cd "${dir}" && bash scripts/ast-grep.sh --report-style short 2>&1)"; then
     fail "fails a workaround comment: exited 0"
   fi
   [[ "${output}" == *'lib/a.ts:2:1: error[workaround-tag-typescript]: workaround comment "TODO"'* ]] ||
@@ -98,11 +130,23 @@ test_fails_with_the_file_the_line_and_the_reason() {
 ${output}"
 }
 
+test_fails_a_define_read_in_a_feature_package() {
+  local dir output
+  dir="$(repo apps/mobile/packages/feature/feature_x/lib/x.dart "const a = String.fromEnvironment('A');\n")"
+
+  if output="$(cd "${dir}" && bash scripts/ast-grep.sh --report-style short 2>&1)"; then
+    fail "fails a define read in a feature package: exited 0"
+  fi
+  [[ "${output}" == *'feature_x/lib/x.dart:1:11: error[no-from-environment]: "String.fromEnvironment" reads a --dart-define'* ]] ||
+    fail "names the rule and the read: got
+${output}"
+}
+
 test_writes_github_annotations_when_asked() {
   local dir output
   dir="$(repo scripts/a.sh '# TODO\n')"
 
-  output="$(cd "${dir}" && { bash scripts/tripwire.sh --format github 2>/dev/null || true; })"
+  output="$(cd "${dir}" && { bash scripts/ast-grep.sh --format github 2>/dev/null || true; })"
   [[ "${output}" == *'::error file=scripts/a.sh,line=1,endLine=1,title=workaround-tag-bash::workaround comment "TODO"'* ]] ||
     fail "writes a GitHub annotation: got
 ${output}"
@@ -112,13 +156,15 @@ test_passes_a_clean_tree_from_any_directory_inside_it() {
   local dir
   dir="$(repo lib/a.dart '// Nothing deferred.\n')"
 
-  (cd "${dir}/lib" && bash ../scripts/tripwire.sh >/dev/null 2>&1) ||
+  (cd "${dir}/lib" && bash ../scripts/ast-grep.sh >/dev/null 2>&1) ||
     fail "passes a clean tree from a subdirectory: exited non-zero"
 }
 
 test_reports_every_tracked_hand_written_source_with_its_path
 test_exempts_generated_files_and_anything_git_does_not_track
+test_reads_defines_only_in_each_apps_environment_file
 test_fails_with_the_file_the_line_and_the_reason
+test_fails_a_define_read_in_a_feature_package
 test_writes_github_annotations_when_asked
 test_passes_a_clean_tree_from_any_directory_inside_it
 
@@ -126,4 +172,4 @@ if ((failures > 0)); then
   printf '%d test(s) failed\n' "${failures}" >&2
   exit 1
 fi
-printf 'tripwire.sh: all tests passed\n'
+printf 'ast-grep.sh: all tests passed\n'

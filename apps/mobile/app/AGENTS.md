@@ -78,7 +78,9 @@ hand-rolled widgets.
   method) in `lib/app/account_device_data.dart`.
 - Build-time values (`--dart-define`s) are read and validated in the app
   only (`lib/app/environment.dart`, `urlFrom`) and passed into registration
-  functions. No package calls `String.fromEnvironment`.
+  functions. No package calls `String.fromEnvironment`; CI's `ast-grep`
+  job fails any read outside that file, apart from the smoke password in
+  `integration_test/environment.dart`, which must never reach `lib/`.
 - Tests compose with the same `registerApp` and replace only the leaves:
   the two http clients, the Supabase client, the PostHog instance and the
   preferences store (`test/helpers/app_harness.dart`). `getIt.reset()`

@@ -1,0 +1,83 @@
+# Build-time defines are read in one file per app (ADR 0015, issue 165):
+# `String.fromEnvironment`, `bool.fromEnvironment`, `int.fromEnvironment` and
+# `bool.hasEnvironment`, called, torn off or `const`, through a `dart:core`
+# import prefix or not. The app reads and validates every define in
+# `lib/app/environment.dart` and passes the values into the packages'
+# registration functions, so there is one inventory of defines and one
+# fail-fast point. The live integration test reads the smoke account's
+# password from its own `integration_test/environment.dart`, so the secret
+# never reaches `lib/`. The site (apps/web) has its own environment file and
+# its own document below.
+#
+# The Dart linter's `do_not_use_environment` bans the same calls, but
+# everywhere: flutter_agent_lints turns it off because defines are Flutter's
+# configuration path, and the analyzer can only exempt a file by an ignore
+# comment inside it, which travels with any copy of the code. Here the
+# exemption is a path, reviewed in this file.
+#
+# Emotely-specific (ADR 0018, "General and emotely-specific rules"): it names
+# this repository's paths.
+#
+# Only syntax is matched: a constructor of our own named `fromEnvironment` on
+# another class passes; `String`, `bool` and `int` are the SDK's.
+id: no-from-environment
+language: dart
+severity: error
+ignores:
+  - apps/mobile/app/lib/app/environment.dart
+  - apps/mobile/app/integration_test/environment.dart
+  - apps/web/**
+rule:
+  pattern: $E
+  any:
+    - kind: member_expression
+      all:
+        - has:
+            field: property
+            regex: '^(?:from|has)Environment$'
+        - has:
+            field: object
+            regex: '^(?:\w+\s*\.\s*)?(?:String|bool|int)$'
+    - kind: const_object_expression
+      regex: '^const\s+(?:\w+\s*\.\s*)?(?:String|bool|int)\s*\.\s*(?:from|has)Environment\b'
+    - kind: new_expression
+      regex: '^new\s+(?:\w+\s*\.\s*)?(?:String|bool|int)\s*\.\s*(?:from|has)Environment\b'
+transform:
+  READ:
+    replace:
+      source: $E
+      replace: '(?s)\A.*?\b((?:String|bool|int)\s*\.\s*(?:from|has)Environment)\b.*\z'
+      by: "$1"
+message: '"$READ" reads a --dart-define outside the app: read it in apps/mobile/app/lib/app/environment.dart and pass the value into the package''s registration function (ADR 0015)'
+---
+# The site: the same match, with apps/web/lib/environment.dart as the one
+# place. Keep `rule` and `transform` identical to the document above.
+id: no-from-environment-web
+language: dart
+severity: error
+files:
+  - apps/web/**
+ignores:
+  - apps/web/lib/environment.dart
+rule:
+  pattern: $E
+  any:
+    - kind: member_expression
+      all:
+        - has:
+            field: property
+            regex: '^(?:from|has)Environment$'
+        - has:
+            field: object
+            regex: '^(?:\w+\s*\.\s*)?(?:String|bool|int)$'
+    - kind: const_object_expression
+      regex: '^const\s+(?:\w+\s*\.\s*)?(?:String|bool|int)\s*\.\s*(?:from|has)Environment\b'
+    - kind: new_expression
+      regex: '^new\s+(?:\w+\s*\.\s*)?(?:String|bool|int)\s*\.\s*(?:from|has)Environment\b'
+transform:
+  READ:
+    replace:
+      source: $E
+      replace: '(?s)\A.*?\b((?:String|bool|int)\s*\.\s*(?:from|has)Environment)\b.*\z'
+      by: "$1"
+message: '"$READ" reads a define outside the site''s environment file: read it in apps/web/lib/environment.dart and import the value from there'

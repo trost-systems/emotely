@@ -662,8 +662,8 @@ printf '    %-14s %s\n' "docker"   "${docker_version_output:-not available}"
 if [ "$VERIFY" -eq 1 ]; then
   step "Verifying (the CI jobs, minus the ones that need a secret)"
 
-  info "tripwire: no workaround comments, no suppression without a reason"
-  (cd "$REPO_ROOT" && pnpm tripwire)
+  info "ast-grep: the comment tripwire and the architecture rules"
+  (cd "$REPO_ROOT" && pnpm ast-grep:check)
 
   info "spell: the app's copy, English and German, and the words CONTEXT.md avoids"
   (cd "$REPO_ROOT" && pnpm spell)

@@ -61,7 +61,7 @@ twice was held too low: move it up a layer. A one-off needs only its fix.
 - Words a user reads — the app, the site, sign-in mails, store listings,
   the companion's prompts — use [`CONTEXT.md`](CONTEXT.md)'s terms, in
   every language; its header says how to add or change one.
-- Deferred work goes into an issue, not a comment: the Dart analyzer, biome and CI's tripwire (ast-grep rules in `ast-grep/rules/tripwire`, for what those two miss) fail on a TODO or workaround comment and on a suppression without its reason.
+- Deferred work goes into an issue, not a comment: the Dart analyzer, biome and the tripwire in CI's `ast-grep` job (rules in `ast-grep/rules/tripwire`, for what those two miss) fail on a TODO or workaround comment and on a suppression without its reason.
 - A new custom check is rules for an existing engine, never a hand-rolled
   tool: ast-grep (`ast-grep/rules`, each with a test in `ast-grep/tests`)
   when it depends only on syntax, a Dart analyzer rule only when it needs
@@ -70,6 +70,11 @@ twice was held too low: move it up a layer. A one-off needs only its fix.
   each falls short, then cover only the gap. Size a tool for hundreds of pull
   requests a day
   ([ADR 0018](docs/adr/0018-custom-checks-are-engine-rules-first.md)).
+- An ast-grep rule that names emotely's paths, packages or ADRs goes in
+  `ast-grep/rules/architecture`; one that would hold unchanged in a project
+  that isn't emotely goes in `ast-grep/rules/tripwire` or a new directory
+  beside it, the general set we may share later. Its `files` and `ignores`
+  are tested in `scripts/ast-grep.test.sh`, since a rule test has no path.
 
 ## Billing
 

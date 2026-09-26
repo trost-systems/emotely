@@ -31,8 +31,7 @@ import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:testing/testing.dart';
 
-const _smokeEmail = String.fromEnvironment('SMOKE_EMAIL');
-const _smokePassword = String.fromEnvironment('SMOKE_PASSWORD');
+import 'environment.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -82,8 +81,8 @@ class LiveSessionRobot(final WidgetTester tester) {
       ),
     );
     await supabase.client.auth.signInWithPassword(
-      email: _smokeEmail,
-      password: _smokePassword,
+      email: smokeEmail,
+      password: smokePassword,
     );
     final posthog = Posthog();
     // The real startup gate against the real endpoint: if the deployed config

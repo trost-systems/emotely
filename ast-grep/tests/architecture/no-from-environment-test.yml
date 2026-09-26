@@ -1,0 +1,48 @@
+id: no-from-environment
+valid:
+  # A package takes the value as an argument; the app reads the define.
+  - |
+    void registerJournal(GetIt getIt, {required Uri agentUrl}) {
+      getIt.registerSingleton(AgentClient(agentUrl));
+    }
+  # Named in a comment or a string, nothing is read.
+  - |
+    /// Never call [String.fromEnvironment] here; see the app's environment.
+    final hint = 'String.fromEnvironment';
+  # A constructor of our own that happens to share the name.
+  - |
+    final a = Config.fromEnvironment(values);
+    const b = Settings.fromEnvironment();
+  # The process environment at run time is another matter.
+  - |
+    final home = Platform.environment['HOME'];
+invalid:
+  # A feature package reading a define in its registration function.
+  - |
+    void registerJournal(GetIt getIt) {
+      final url = Uri.parse(const String.fromEnvironment('EMOTELY_AGENT_URL'));
+      getIt.registerSingleton(AgentClient(url));
+    }
+  # A utility package reading a flag in a repository.
+  - |
+    class AnalyticsRepository {
+      static const enabled = bool.fromEnvironment('ANALYTICS', defaultValue: true);
+    }
+  - |
+    const retries = int.fromEnvironment('RETRIES', defaultValue: 3);
+  - |
+    const hasKey = bool.hasEnvironment('POSTHOG_KEY');
+  # Through an import prefix on dart:core, with and without const.
+  - |
+    const a = core.String.fromEnvironment('A');
+  - |
+    final b = const core.bool.fromEnvironment('B');
+  - |
+    final c = new String.fromEnvironment('C');
+  # A tear-off reads it too, once called.
+  - |
+    final read = String.fromEnvironment;
+  # Inside a longer expression.
+  - |
+    final empty = const String.fromEnvironment('KEY').isEmpty;
+    final keys = const [String.fromEnvironment('A'), int.fromEnvironment('B')];

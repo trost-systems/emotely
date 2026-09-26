@@ -43,11 +43,13 @@ today's languages gets rewritten later. We would rather not write it twice.
    codebase many times larger than today's.
 
 `sgconfig.yml` at the repository root points ast-grep at `ast-grep/rules`
-and `ast-grep/tests`. `scripts/tripwire.sh` runs every rule over the files
-git tracks; CI's `tripwire` job runs the rule tests, the script's own tests
+and `ast-grep/tests`. `scripts/ast-grep.sh` runs every rule over the files
+git tracks; CI's `ast-grep` job runs the rule tests, the script's own tests
 and the scan, and feeds `ci-ok`. A new syntactic rule is one YAML file under
 `ast-grep/rules` plus its test under `ast-grep/tests`; the scan picks it up
-with no other change.
+with no other change (see [Adding a rule](#adding-a-rule)). The script and
+the job were called `tripwire` until #165 added the first rule that is not
+about comments.
 
 ## Measurements
 
@@ -129,6 +131,78 @@ Each is pinned as a test case, so a change shows up in `ast-grep test`:
 None of these needs a program. If one ever lets a real workaround comment
 through, the fallback is point 2 above: a Rust program, weighed against
 keeping the rule. That trade-off is decided then, not now.
+
+## General and emotely-specific rules (amended 2026-09-26, #165)
+
+The deciding test for where a rule lives: **would it make sense in a project
+that isn't emotely?**
+
+| Directory | Scope | Today |
+|---|---|---|
+| `ast-grep/rules/tripwire` | General: holds unchanged in any project with agents writing code. A later general concern gets its own directory beside it. | The comment tripwire: workaround tags and phrases, suppressions without a reason, in Dart, TypeScript and shell. |
+| `ast-grep/rules/architecture` | Emotely-specific: the rule names emotely's paths, packages or ADRs, and means nothing elsewhere. | `no-from-environment` (ADR 0015): a define is read only in its app's environment file. |
+
+Tests mirror the layout under `ast-grep/tests`. The engine does not care:
+`ruleDirs` reads every directory under `ast-grep/rules`, and one scan runs
+them all.
+
+**Recommendation: keep both sets here until a second project wants the
+general one.** Sharing has a cost we don't need to pay yet: a versioned
+package, a way for `sgconfig.yml` to find its rules (`ruleDirs` takes paths,
+so an npm package under `node_modules` would do), and changes made in two
+repositories. With one consumer, the directory split is enough, and moving
+a general directory out is a `git mv` plus one `ruleDirs` entry. When it is
+extracted, the home is a rule set beside
+[`flutter_agent_lints`](https://github.com/peter-trost/flutter_agent_lints),
+not inside it: the tripwire covers TypeScript and shell as well as Dart, and
+`flutter_agent_lints` is a pub package the analyzer reads, not ast-grep.
+
+`no-from-environment` is emotely-specific. "Read a define in one place" is a
+general idea, but the rule's whole content is which place: this repository's
+two environment files.
+
+## Adding a rule
+
+A rule is one file plus its test, and nothing else changes:
+
+1. List the existing rules you checked (Decision, point 3) in the pull
+   request, and cover only the gap.
+2. Pick the directory by the test above, and write the test first:
+   `ast-grep/tests/<directory>/<rule-id>-test.yml`, with `valid` and
+   `invalid` cases. Run `pnpm exec ast-grep test` and see it fail.
+   `ast-grep test` exits 0 on a test whose rule does not exist yet, printing
+   only "Configuration not found", so read the output, not the exit code.
+3. Write `ast-grep/rules/<directory>/<rule-id>.yml`: `severity: error`, a
+   comment saying why the rule exists, which existing rules fall short, and
+   whether it is general or emotely-specific, and a `message` that names
+   the fix, not only the fault.
+4. Record the snapshots with `pnpm exec ast-grep test --update-all` and
+   read them: they are the rule's expected findings.
+5. If the rule has `files` or `ignores`, test them in
+   `scripts/ast-grep.test.sh`, the only place a finding has a path.
+6. `pnpm ast-grep:check` runs all three steps of CI's `ast-grep` job.
+
+### What `no-from-environment` leaves to existing tools
+
+Checked on 2026-09-26 against `flutter_agent_lints` 1.0.1 under the Dart
+3.13 analyzer, `jaspr_lints` 0.7.2, biome 2.5.14 and shellcheck:
+
+- **Dart linter, `do_not_use_environment`.** It flags every
+  `fromEnvironment` and `hasEnvironment` call (probed on a scratch file).
+  `flutter_agent_lints` turns it off, since defines are how Flutter is
+  configured, and the analyzer cannot scope a rule to all files but one.
+  Its only exemption is an `ignore_for_file` comment in the allowed file,
+  and a comment travels with any copy of the code: a feature package opts
+  out by writing one, with any reason `document_ignores` accepts. Enabling
+  it in the shared set and turning it off for the app would exempt the
+  whole app, not its environment file, and its message ("Invalid use of an
+  environment declaration") cannot name the right place.
+- **No other analyzer rule, and no `jaspr_lints` rule,** reads environment
+  declarations.
+- **biome and shellcheck** do not read Dart.
+
+So the gap is all of it: a path-scoped exemption and a message naming the
+file. The rule is `ast-grep/rules/architecture/no-from-environment.yml`.
 
 ## Consequences
 

@@ -112,3 +112,13 @@ The rules, in the app's `AGENTS.md` and enforced by review:
   Supabase SDK awaits a network token refresh with backoff for up to ten
   seconds when the persisted token is expired and the device is offline —
   is a follow-up about starting on the persisted session, not a DI concern.
+
+## Amendment 2026-09-26: configuration is enforced, not reviewed
+
+"The app owns configuration" is no longer review-only (#165). The ast-grep
+rule `no-from-environment` (ADR 0018) fails any `String`, `bool` or
+`int.fromEnvironment`, or `bool.hasEnvironment`, outside
+`app/lib/app/environment.dart`. The one other file allowed to read a define
+is `app/integration_test/environment.dart`, for the smoke account's password,
+which the live integration test needs and no build of the app may carry.
+The other rules above stay review-only until #170.
