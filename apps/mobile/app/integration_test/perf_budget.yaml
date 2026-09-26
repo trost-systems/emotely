@@ -120,4 +120,3 @@ environments:
   device:
     raster: gated
     baseline: {}
-# Temporary: triggers the workflow on the proof commit (#169).
