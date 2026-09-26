@@ -72,9 +72,11 @@ const appVersion = z.string().regex(/^\d+\.\d+\.\d+$/);
 // (ADR 0008).
 export const maxAnswerLength = 4096;
 
-// The longest display name the agent takes, after trimming, in UTF-16 code
-// units (JavaScript's and Dart's `String.length`), emitted under `limits` for
-// the app to cap its name field with.
+// The longest display name the agent takes, after trimming, in Unicode code
+// points — Dart's `runes.length` and the `profiles` table's check, so a name
+// the profile holds is always one the agent takes. zod counts code points
+// for a string's `max` (JSON Schema's `maxLength` means the same), so forty
+// emoji fit. Emitted under `limits` for the app to cap its name field with.
 export const maxDisplayNameLength = 40;
 
 // Who the session is for, beyond the signed-in user id: what the companion may
