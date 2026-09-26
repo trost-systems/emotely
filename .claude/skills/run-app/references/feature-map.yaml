@@ -28,8 +28,8 @@ screens:
     path: /
     reach:
       - "`run-app.sh up` ends here."
-      - From anywhere under the tabs, tap app_shell.journal (twice returns
-        the tab to its first screen).
+      - From anywhere under the tabs, tap app_shell.journal; a tap on the
+        tab already shown returns it to its first screen.
     does: >-
       Home, the Journal tab: the entries so far, newest first, and the way
       into the next session (start one, or continue or discard the
@@ -71,8 +71,12 @@ screens:
     looks: >-
       App bar titled with the entry's date (month, day, year) and a back
       arrow, the tab bar still at the bottom. "Your entry" as a heading,
-      the summary paragraph, then question headings each with an answer
-      under it: bullet lists, "N / 10" ratings, emoji, colour names.
+      the summary paragraph in full (the journal cuts it to two lines),
+      then question headings each with an answer under it: bullet lists,
+      "N / 10" ratings, emoji, colour names. The body is the same widget a
+      finished session ends on (SessionRoute, SessionCompleted); only the
+      app bar and the tab bar tell the two apart. With both cropped away,
+      reproduce here: it needs no model rounds.
     states:
       EntryBloc:
         EntryLoading: App bar "Entry" and a spinner.
@@ -110,7 +114,9 @@ screens:
         SessionInitial: '"Thinking…" and a spinner.'
         SessionLoading: '"Thinking…" and a spinner.'
         SessionAwaitingAnswer: '"Question N", the question and its input.'
-        SessionCompleted: The filed entry, as on EntryRoute.
+        SessionCompleted: >-
+          The filed entry, the same body as EntryRoute; here under
+          "Journaling session" and with no tab bar.
         SessionFailure: >-
           The reason in words ("Could not reach the journaling assistant."
           and five others) and Try again, or Start over when the session
@@ -147,12 +153,12 @@ screens:
       the imprint (both open the browser), the feedback mail (opens the
       mail app), and signing out last.
     looks: >-
-      App bar "More", the tab bar with More selected. Orange section
+      App bar "More", the tab bar with More selected. Brown section
       headings Account, Consent, Legal and Feedback over rows: "Your
       account" (a chevron), "Withdraw consent" or "Give consent" with a
       long explanation, "Privacy notice" and "Imprint" (open-in-new
       icons), "Send feedback" (a mail icon), then "Sign out" with a logout
-      icon.
+      icon, below the fold on a phone.
     states:
       ConsentBloc:
         ConsentUnknown: 'The consent row reads "Check again".'
@@ -173,7 +179,9 @@ screens:
       more_view.privacy_notice: Opens the privacy notice in the browser.
       more_view.imprint: Opens the imprint in the browser.
       more_view.feedback: Opens the feedback mail.
-      more_view.sign_out: Signs out; the app lands on SignInRoute.
+      more_view.sign_out: >-
+        Signs out; the app lands on SignInRoute. Below the fold, so
+        get-interactive-elements lists it only after scroll-to.
 
   - route: AccountRoute
     package: feature_account
@@ -246,9 +254,9 @@ screens:
     package: feature_auth
     path: /sign-in
     reach:
-      - Tap app_shell.more, then more_view.sign_out. Visit it last, since
-        the way back in is `run-app.sh down` and `up` again, which signs in
-        with the smoke password without printing it.
+      - Tap app_shell.more, scroll-to more_view.sign_out and tap it. Visit
+        it last, since the way back in is `run-app.sh down` and `up`
+        again, which signs in with the smoke password without printing it.
     does: >-
       The only screen a signed-out user sees: email, then the six-digit
       code Supabase mails (or a password, for the review accounts and a
