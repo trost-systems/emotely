@@ -240,9 +240,17 @@ class SupabaseStub() {
 AuthRound codeSent() =>
     () async => _json(const {}, 200);
 
-/// Supabase accepted the code and granted a session.
-AuthRound sessionGranted({String sub = SupabaseStub.userId}) =>
-    () async => _json(SupabaseStub.session(sub: sub), 200);
+/// Supabase accepted the code (or a provider's token) and granted a session
+/// for an account of [provider], with sign-in address [email].
+AuthRound sessionGranted({
+  String sub = SupabaseStub.userId,
+  String email = SupabaseStub.email,
+  String? provider,
+}) =>
+    () async => _json(
+      SupabaseStub.session(sub: sub, email: email, provider: provider),
+      200,
+    );
 
 /// Supabase applied an `updateUser` and returns the user as it now stands,
 /// e.g. after a confirmed email change; the SDK then emits `userUpdated`.

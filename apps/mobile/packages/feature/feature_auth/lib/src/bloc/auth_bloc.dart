@@ -5,6 +5,7 @@ import 'package:feature_auth/src/providers/provider_sign_in.dart';
 import 'package:feature_auth/src/review_accounts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:profile_repository/profile_repository.dart';
 // gotrue has its own AuthState (the stream event); ours is the bloc state.
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
@@ -36,16 +37,17 @@ class AuthBloc({
     on<AuthEmailChangeRequested>(_onEmailChangeRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
     on<AuthSessionChanged>(_onSessionChanged);
-    if (state case AuthSignedIn(:final userId)) {
-      _identify(userId, _supabase.auth.currentSession?.user.email);
+    if (state case AuthSignedIn(:final userId, :final identity)) {
+      _identify(userId, identity.email);
     }
     _sessionChanges = _supabase.auth.onAuthStateChange.listen(
-      (change) => add(
-        AuthEvent.sessionChanged(
-          change.session?.user.id,
-          change.session?.user.email,
+      (change) => add(switch (change.session?.user) {
+        null => const AuthEvent.sessionChanged(null, null),
+        final user => AuthEvent.sessionChanged(
+          user.id,
+          SignInIdentity.ofUser(user),
         ),
-      ),
+      }),
       // A failed background refresh is reported here; the SDK keeps the
       // session until it really expires and signs out through the stream
       // then, so there is nothing to do with the error itself.
@@ -57,7 +59,10 @@ class AuthBloc({
 
   static AuthState _initial(Session? session) => session == null
       ? const AuthState.signedOut()
-      : AuthState.signedIn(userId: session.user.id);
+      : AuthState.signedIn(
+          userId: session.user.id,
+          identity: SignInIdentity.ofUser(session.user),
+        );
 
   /// Whether [email] is one of [_passwordAccounts], normalised the way
   /// [isReviewAccount] normalises.
@@ -108,7 +113,7 @@ class AuthBloc({
         // code did not sign anyone in.
         if (response.session case final session?) {
           unawaited(_analytics.signedIn(SignInMethod.code));
-          _signedIn(session.user.id, session.user.email, emit);
+          _signedIn(session.user, emit);
         } else {
           _rejected(email, wrongCodeMessage, emit);
         }
@@ -135,7 +140,7 @@ class AuthBloc({
           password: event.password,
         );
         unawaited(_analytics.signedIn(SignInMethod.password));
-        _signedIn(session.user.id, session.user.email, emit);
+        _signedIn(session.user, emit);
       } on Exception catch (error, stackTrace) {
         unawaited(_errors.passwordSignInFailed(error, stackTrace));
         _passwordRefused(
@@ -172,7 +177,7 @@ class AuthBloc({
         nonce: token.nonce,
       );
       unawaited(_analytics.signedIn(provider.method));
-      _signedIn(session.user.id, session.user.email, emit);
+      _signedIn(session.user, emit);
     } on Exception catch (error, stackTrace) {
       unawaited(_analytics.providerFailed(provider.method));
       unawaited(
@@ -219,19 +224,32 @@ class AuthBloc({
   /// Supabase's own view of the session, which wins: a sign-out, an expiry
   /// or a deleted account ends the signed-in state wherever the UI is.
   void _onSessionChanged(AuthSessionChanged event, Emitter<AuthState> emit) {
-    switch (event.userId) {
-      case null:
+    switch ((event.userId, event.identity)) {
+      case (final userId?, final identity?):
+        if (state case AuthSignedIn(userId: final current)
+            when current == userId) {
+          _stillSignedIn(userId, identity, emit);
+        } else {
+          _signed(userId, identity, emit);
+        }
+      case _:
         if (state is AuthSignedIn) {
           emit(const AuthState.signedOut());
         }
-      case final userId:
-        if (state != AuthState.signedIn(userId: userId)) {
-          _signedIn(userId, event.email, emit);
-        } else if (_isInternal(event.email) != _internal) {
-          // The same user with a new address (a confirmed email change):
-          // no new sign-in, but the flag may have flipped.
-          _identify(userId, event.email);
-        }
+    }
+  }
+
+  /// The same user, as the SDK reports on every token refresh — or with a
+  /// new address (a confirmed email change): no new sign-in, but the state
+  /// shows the new address, and PostHog's flag may have flipped.
+  void _stillSignedIn(
+    String userId,
+    SignInIdentity identity,
+    Emitter<AuthState> emit,
+  ) {
+    emit(AuthState.signedIn(userId: userId, identity: identity));
+    if (_isInternal(identity.email) != _internal) {
+      _identify(userId, identity.email);
     }
   }
 
@@ -245,9 +263,16 @@ class AuthBloc({
     emit(AuthState.passwordRequired(email: email, error: error));
   }
 
-  void _signedIn(String userId, String? email, Emitter<AuthState> emit) {
-    _identify(userId, email);
-    emit(AuthState.signedIn(userId: userId));
+  void _signedIn(User user, Emitter<AuthState> emit) =>
+      _signed(user.id, SignInIdentity.ofUser(user), emit);
+
+  void _signed(
+    String userId,
+    SignInIdentity identity,
+    Emitter<AuthState> emit,
+  ) {
+    _identify(userId, identity.email);
+    emit(AuthState.signedIn(userId: userId, identity: identity));
   }
 
   /// The flag last sent to PostHog, so a session change can tell whether

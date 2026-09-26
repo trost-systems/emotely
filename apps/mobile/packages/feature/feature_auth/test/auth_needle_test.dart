@@ -2,6 +2,7 @@ import 'package:feature_auth/src/bloc/auth_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart'
     show GoogleSignInExceptionCode;
+import 'package:profile_repository/profile_repository.dart';
 // gotrue has its own AuthState (the stream event); ours is the bloc state.
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:testing/testing.dart';
@@ -202,7 +203,10 @@ void main() {
         const AuthState.passwordRequired(email: address, error: 'needle'),
         const AuthState.checkingPassword(email: address),
         const AuthState.codeSent(email: address, error: 'needle'),
-        const AuthState.signedIn(userId: 'needle'),
+        const AuthState.signedIn(
+          userId: 'needle',
+          identity: SignInIdentity(email: address, method: SignInVia.emailCode),
+        ),
       ]) {
         expect('$state', isNot(contains('@')));
         expect('$state', isNot(contains('needle')));
