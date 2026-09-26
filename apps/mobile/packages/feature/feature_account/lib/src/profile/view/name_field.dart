@@ -55,6 +55,9 @@ class _NameFieldState() extends State<NameField> {
       key: widget.fieldKey,
       controller: _controller,
       focusNode: _focus,
+      // A tap anywhere else leaves the field, and so saves; on a phone the
+      // platform would otherwise keep it focused, keyboard up.
+      onTapOutside: (_) => _focus.unfocus(),
       textInputAction: TextInputAction.done,
       textCapitalization: TextCapitalization.words,
       autofillHints: const [AutofillHints.givenName],
@@ -63,6 +66,8 @@ class _NameFieldState() extends State<NameField> {
       onChanged: (_) => setState(() {}),
       decoration: InputDecoration(
         labelText: 'Name',
+        // The label stays up so the empty field shows its question.
+        floatingLabelBehavior: FloatingLabelBehavior.always,
         hintText: widget.hint,
         helper: widget.helper,
         counterText: '${_controller.text.runes.length}/$maxDisplayNameLength',

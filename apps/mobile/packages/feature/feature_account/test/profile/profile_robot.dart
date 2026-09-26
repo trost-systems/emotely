@@ -86,9 +86,9 @@ class ProfileRobot(
     await settle();
   }
 
-  /// Leaves the field without the done key, as a tap elsewhere does.
+  /// Leaves the field without the done key: a tap elsewhere on the screen.
   Future<void> leaveField() async {
-    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.tap(find.text(ProfileView.signedInAsLabel));
     await settle();
   }
 
