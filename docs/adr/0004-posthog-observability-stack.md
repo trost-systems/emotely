@@ -92,3 +92,81 @@ skill); "campaign → waitlist → app account" is then a join on the email in
 Postgres, no cookie involved. The day paid campaigns or on-page experiments
 start, the site switches to `cookieless_mode: "on_reject"` plus a consent
 banner; that switch is tracked as an issue, not decided here.
+
+## Amendment 2026-09-26: usage analytics only after consent
+
+Until now the app called `Posthog().setup()` on every launch, before it had
+asked anything. Setup generates an id, stores it on the phone and sends it
+with every event. **Usage analytics in the app — events, crash reports and
+surveys, everything the SDK does — now needs the user's consent, and the SDK
+is not set up at all until the user allows it.** Found while planning
+onboarding (#204, ADR 0019).
+
+**Why consent.** § 25 (1) TDDDG permits storing information on a user's
+device, or reading it back, only with consent; the exception in § 25 (2)
+Nr. 2 covers only what is strictly necessary for a service the user
+expressly asked for
+([§ 25 TDDDG](https://www.gesetze-im-internet.de/ttdsg/__25.html)). The
+German supervisory authorities read that exception technically, not
+commercially (DSK, Orientierungshilfe Digitale Dienste v1.2, 20 Nov 2024,
+Rn. 78). Measurement and A/B tests are not per se part of the service
+(Rn. 77), and they decline to call audience measurement consent-free in
+general (Rn. 87–90). Personal data is not a precondition (section III.1.d),
+so calling the data anonymous does not help. The EDPB counts an SDK that
+makes the device send an identifier as gaining access to the device
+(Guidelines 2/2023 on Art. 5 (3) ePrivacy, v2.0, paras 34 and 63). The
+processing that follows needs its own basis, and a missing § 25 consent
+carries over to it (DSK Rn. 97–98); Art. 6 (1) (f) holds for tracking "only
+in few constellations" (Rn. 109). So the basis is **consent under
+§ 25 (1) TDDDG together with Art. 6 (1) (a) GDPR**, asked once for both, as
+the DSK allows (section III.1.e). Apple asks the same of every app: usage
+data needs consent "even if such data is considered to be anonymous", and
+withdrawing it must be easy (App Review Guideline 5.1.1 (ii)).
+
+**Why not set up and opt out.** `PostHogConfig.optOut` exists, but on iOS
+setup still loads remote config and preloads feature flags with a generated,
+persisted anonymous id; that path has no opt-out check
+(`PostHogRemoteConfig.swift`, read 2026-09-26). The mobile SDKs have no
+cookieless mode either: `cookieless_mode`, which lets the web site run
+without a banner, exists only in posthog-js. The one configuration that
+provably stores and sends nothing is not calling `setup()`, so no device id
+exists before Allow. Auto-init is already off in `Info.plist` and
+`AndroidManifest.xml`.
+
+**How it is asked.**
+
+- On first launch, as a sheet over Welcome: "May I count how you use the
+  app?". It comes before anything else because tracking would otherwise
+  start on Welcome.
+- **Don't allow** and **Allow** have equal weight: same size, colour and
+  type (DSK Rn. 134–137). Nothing is preselected, and carrying on without
+  answering is not consent (Rn. 45; CJEU C-673/17 *Planet49*).
+- It can be withdrawn at any time with a switch in Privacy settings, which
+  turns both ways. Withdrawing stops the SDK and resets its id.
+- **Signing out resets it**, and the sheet asks again. The choice belongs to
+  a person, not to the phone.
+- Before an account exists the choice is kept on the device. After sign-in
+  it is appended to the consent record as its own kind (ADR 0014 amendment),
+  and `identify()` with the user's id links the events sent since Allow to
+  that person.
+
+**Rejected.** Legitimate interest with an opt-out, which is what comparable
+wellbeing apps claim: the DSK reading above leaves it no room for a German
+provider, and Apple's 5.1.1 (ii) asks for consent either way. The EU Digital
+Omnibus would allow consent-free, aggregated first-party measurement
+(proposed Art. 88a GDPR), but it is a proposal, not law, and a per-user
+funnel is not aggregated.
+
+**What it costs.**
+
+- **Crash reports now come only from people who allowed analytics.** Error
+  tracking was one reason for skipping Sentry; that holds, but a crash on a
+  phone that declined is never seen.
+- **Every metric is among those who allowed.** The onboarding funnel, the
+  surveys and the beta dashboard all lose the people who declined, and the
+  decline rate itself cannot be measured.
+- **The web site is unchanged.** It already runs cookieless and stores
+  nothing on the visitor's device.
+- **The agent's server-side events are unchanged.** `@posthog/ai` runs in
+  the agent and touches no device, so § 25 does not reach it; it stays
+  content-free under ADR 0005.

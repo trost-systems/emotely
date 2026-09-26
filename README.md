@@ -3,8 +3,8 @@
 [![TestFlight internal](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Ftrost-systems%2Femotely%2Fstatus%2Fstatus.json&query=%24.ios.internal.label&label=TestFlight%20internal&logo=apple&color=blue)](https://github.com/trost-systems/emotely/commits/status)
 [![Play internal](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Ftrost-systems%2Femotely%2Fstatus%2Fstatus.json&query=%24.android.internal.label&label=Play%20internal&logo=googleplay&color=blue)](https://github.com/trost-systems/emotely/commits/status)
 
-A daily journaling app with an AI **Journaling Assistant** that walks you through
-a structured reflection — walking a chosen question set — and produces a summarized
+A daily journaling app with an AI **companion** that walks you through a
+structured reflection — walking a chosen question set — and produces a summarized
 journal entry. This is a ground-up rebuild of the original emotely (a shipped
 Flutter + Firebase app, sunset in early 2025) around a modern, tools-first AI
 harness.
@@ -23,7 +23,7 @@ The load-bearing decisions and their rationale live in [`docs/adr/`](docs/adr/):
 1. [Monorepo](docs/adr/0001-monorepo.md) — agent + app + shared contract in one repo
 2. [Tools-first harness](docs/adr/0002-tools-first-harness.md) — tool calls, not prompted JSON
 3. [Model gateway + cost ceiling](docs/adr/0003-model-gateway-and-cost-ceiling.md) — provider-agnostic, cheap-model constraint
-4. [PostHog observability stack](docs/adr/0004-posthog-observability-stack.md) — full bundle, no Sentry
+4. [PostHog observability stack](docs/adr/0004-posthog-observability-stack.md) — full bundle, no Sentry; in the app only after the user allows usage analytics
 5. [Journal content privacy](docs/adr/0005-journal-content-privacy-mode.md) — content never recorded, metadata only (leak-tested)
 6. [Flutter iOS + Android only](docs/adr/0006-flutter-ios-android-only.md) — no web, demand-driven expansion
 7. [Protected `main`](docs/adr/0007-protected-main-for-autonomous-agents.md) — PR + CI gate, because agents write here
@@ -33,10 +33,12 @@ The load-bearing decisions and their rationale live in [`docs/adr/`](docs/adr/):
 11. [Public waitlist writes to Postgres](docs/adr/0011-public-waitlist-writes-to-postgres.md) — insert-only for the world, rate limits and the double-opt-in mail in triggers, no server in between
 12. [Reuse the original store listings](docs/adr/0012-reuse-the-original-store-listings.md) — keep the existing Play record and its install base
 13. [Fastlane release pipeline](docs/adr/0013-fastlane-release-pipeline.md) — match signing, ASC API key, TestFlight and the Play internal track from CI
-14. [Explicit consent, append-only](docs/adr/0014-explicit-consent-as-an-append-only-record.md) — Art. 9 (2) (a) consent before the first session, every grant and withdrawal its own immutable row, wording versioned and CI-enforced
+14. [Explicit consent, append-only](docs/adr/0014-explicit-consent-as-an-append-only-record.md) — Art. 9 (2) (a) consent before the first session, every grant and withdrawal its own immutable row, wording versioned and CI-enforced; usage-analytics consent recorded as a second kind
 15. [Lego package layering](docs/adr/0015-lego-package-layering.md) — utilities, features, app as glue; a pub workspace with melos, every gate per package and scoped to what changed
 16. [Declarative routing with go_router](docs/adr/0016-declarative-routing-with-go-router.md) — each feature declares its own typed routes and the app mounts them, the auth guard as a redirect over the live bloc state, nothing as `extra`
 17. [State management stays on bloc](docs/adr/0017-state-management-stays-on-bloc.md) — Riverpod weighed and deferred; four conditions reopen the decision
+18. [Custom checks are engine rules first](docs/adr/0018-custom-checks-are-engine-rules-first.md) — ast-grep or analyzer rules before any program of our own; Rust prebuilt only as a last resort
+19. [Onboarding before sign-up](docs/adr/0019-onboarding-before-sign-up.md) — a versioned list of typed steps on the device, sign-up last, the name asked (never taken from Apple or Google) and sent to the companion as `userContext`
 
 The project's language is defined in [`CONTEXT.md`](CONTEXT.md).
 
@@ -118,7 +120,8 @@ The old `ColorText` / `ColorTextEditingController` feature becomes just one
 
 Adopted day one (all free at our scale, ~0€ at 1k MAU):
 
-- **Product analytics** — `posthog_flutter` (app) + `posthog-node` (agent).
+- **Product analytics** — `posthog_flutter` (app) + `posthog-node` (agent). In the app, only
+  after the user allows usage analytics (ADR 0004 amendment 2026-09-26).
 - **AI Observability** — `@posthog/ai` with `experimental_telemetry` on AI SDK
   calls → `$ai_generation` events (tokens, cost, latency, traces per model).
   **content recording OFF at the source** (`recordInputs`/`recordOutputs`

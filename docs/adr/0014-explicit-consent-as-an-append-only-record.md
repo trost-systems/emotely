@@ -109,3 +109,30 @@ have.
 - Store reviewers meet the gate like any user. `reviewer-accounts.sh`
   recreating an account deletes its consent history with it, so the gate
   reappears on the next run — expected, not a regression.
+
+## Amendment 2026-09-26: a second kind, and a new journal wording
+
+**Usage analytics is a second kind of consent in the same record.** The app
+now asks before it sets PostHog up (ADR 0004 amendment 2026-09-26), and
+that consent has to be demonstrable too (Art. 7 (1)). It is a different
+purpose asked at a different moment — the first launch, not the first
+session — so it is its own kind, never folded into journal consent, and it
+has its own version: a new analytics wording does not re-gate sessions, and
+a new journal wording does not re-ask the analytics choice. Its wording is
+versioned and pinned by a digest exactly as decision 5 describes.
+Everything else above holds for both kinds: append-only, no write privilege,
+the functions as the only way in, the sequence as the order. Existing rows
+are journal consent.
+
+**It is given before an account exists.** The choice is made on the device,
+before sign-up (ADR 0019), and appended to the record once the user signs
+in. The row's time is when the server recorded it, not when the phone says
+it was given: a client-supplied time is the backdating hole decision 3
+closed. Declining records nothing, as for journal consent; switching it off
+later in Privacy settings appends a withdrawal.
+
+**The journal wording changes, and its version is bumped.** Sessions now
+send the user's display name to the model provider (`userContext`,
+ADR 0019), so what the user agrees to has changed in meaning, not only in
+words — the expensive direction of decision 5, taken on purpose. There are
+no testers yet, so in practice nobody is re-gated.
