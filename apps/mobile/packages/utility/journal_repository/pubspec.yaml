@@ -15,6 +15,7 @@ dependencies:
   get_it: 9.2.1
   json_annotation: 4.12.0
   supabase_flutter: 3.0.0-dev.7
+  supabase_schema: any
 
 dev_dependencies:
   analysis: any
@@ -23,5 +24,4 @@ dev_dependencies:
     sdk: flutter
   freezed: 4.0.1
   json_serializable: 6.14.1
-  supabase_typegen: 0.4.0
   testing: any

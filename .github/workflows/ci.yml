@@ -59,8 +59,8 @@ jobs:
               # The typed tables generated from the schema, the pin of their
               # generator, and the melos script that runs it with its flags
               # (see the supabase job).
-              - 'apps/mobile/packages/utility/journal_repository/lib/src/supabase_schema.g.dart'
-              - 'apps/mobile/packages/utility/journal_repository/pubspec.yaml'
+              - 'apps/mobile/packages/utility/supabase_schema/lib/src/supabase_schema.g.dart'
+              - 'apps/mobile/packages/utility/supabase_schema/pubspec.yaml'
               - 'apps/mobile/pubspec.yaml'
               - '.github/workflows/ci.yml'
             web:
@@ -252,7 +252,7 @@ jobs:
       - run: dart pub global activate melos 8.7.0
       - run: melos run schema:generate
         working-directory: apps/mobile
-      - run: git diff --exit-code -- apps/mobile/packages/utility/journal_repository/lib/src/supabase_schema.g.dart
+      - run: git diff --exit-code -- apps/mobile/packages/utility/supabase_schema/lib/src/supabase_schema.g.dart
 
   # Merging is deploying for the schema too: migrations and auth config go to
   # the hosted project from main, never by hand (ADR 0010). Secrets live in the

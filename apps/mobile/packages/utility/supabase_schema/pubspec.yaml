@@ -1,0 +1,16 @@
+name: supabase_schema
+description: The typed Supabase tables, generated from the migrations and shared by every repository that reads or writes them (ADR 0010).
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  supabase_flutter: 3.0.0-dev.7
+
+dev_dependencies:
+  analysis: any
+  # Generates lib/src/supabase_schema.g.dart from the running local database
+  # (`melos run schema:generate`); CI regenerates it and fails on drift.
+  supabase_typegen: 0.4.0

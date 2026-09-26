@@ -65,10 +65,10 @@ melos:
       description: The suite with the hard 100% coverage gate on hand-written code; packages without a test/ directory (analysis, testing) are not measured.
       run: melos exec --fail-fast --concurrency=1 --dir-exists=test $EMOTELY_SCOPE -- dart pub global run very_good_cli:very_good test --coverage --min-coverage 100 --exclude-coverage "'**/*.{freezed,g,mocks}.dart'"
     schema:generate:
-      description: Typed Supabase tables for journal_repository, generated from the running local database (`supabase db start` first, from the repo root).
+      description: Typed Supabase tables for every repository (the supabase_schema package), generated from the running local database (`supabase db start` first, from the repo root).
       # supabase_typegen defaults to importing package:postgrest, which the
       # package does not depend on; supabase_flutter re-exports the same types.
-      run: melos exec --scope=journal_repository -- dart run supabase_typegen --local --output lib/src/supabase_schema.g.dart --import package:supabase_flutter/supabase_flutter.dart
+      run: melos exec --scope=supabase_schema -- dart run supabase_typegen --local --output lib/src/supabase_schema.g.dart --import package:supabase_flutter/supabase_flutter.dart
     complexity:
       description: Per function in lib/, cognitive complexity at most 15 and at most 60 lines; per file at most 400 lines. Generated files and tests are exempt. Lists every function from 10 up; violations are always listed.
       # The target is absolute because the tool changes directory to

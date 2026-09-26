@@ -56,10 +56,12 @@ supabase stop
    (cd apps/mobile && melos run schema:generate)
    ```
 
-   It writes `journal_repository/lib/src/supabase_schema.g.dart` with
-   `supabase_typegen` (pinned as that package's dev dependency). `jsonb`
-   columns come out as `Object?` and `check` constraints as plain `String`,
-   so the freezed models still own those shapes.
+   It writes `supabase_schema/lib/src/supabase_schema.g.dart` with
+   `supabase_typegen` (pinned as that package's dev dependency); every
+   repository (`journal_repository`, `profile_repository`) imports its
+   tables from `package:supabase_schema`. `jsonb` columns come out as
+   `Object?` and `check` constraints as plain `String`, so the freezed
+   models still own those shapes.
 
 Rules: grant privileges explicitly (nothing inherits from defaults), enable
 RLS on every table, `(select auth.uid())` in policies, never a service-role

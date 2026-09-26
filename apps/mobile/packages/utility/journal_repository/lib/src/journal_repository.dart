@@ -6,14 +6,14 @@
 import 'package:agent_client/agent_client.dart';
 import 'package:contract/contract.dart';
 import 'package:journal_repository/src/journal_models.dart';
-import 'package:journal_repository/src/supabase_schema.g.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_schema/supabase_schema.dart';
 
 /// The app's side of ADR 0010: journal rows written and read straight from
 /// Supabase under the signed-in user's own rights. Nothing here goes through
 /// the agent, and nothing here can reach another user's rows.
 ///
-/// Tables and columns come from `supabase_schema.g.dart`, generated from the
+/// Tables and columns come from `supabase_schema`, generated from the
 /// migrations, so a renamed column or a missing required value fails to
 /// compile instead of failing at the server.
 class const JournalRepository({required final SupabaseClient supabase}) {
