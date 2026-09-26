@@ -2,12 +2,14 @@
 #
 # Input (jq -n, everything through --slurpfile / --argjson / --arg):
 #   $budget     [the budget file as JSON]
-#   $summaries  [{"<path>": <flutter_driver timeline summary>, ...}]
-#   $requests   [{"<path>": ["<service> <METHOD> <path>", ...], ...}]
+#   $runs       [{summaries: {"<path>": <flutter_driver timeline summary>},
+#                 requests: {"<path>": ["<service> <METHOD> <path>", ...]}}],
+#               one per run of the same commit
 #   $latency    [] or [latency.json]
-#   $env        the environment the run measured on (a key of .environments)
+#   $env        the environment the runs measured on (a key of .environments)
 #
-# Output: {env, pass, checks: [{path, check, value, limit, status}]}, where
+# Output: {env, runs, pass, checks: [{path, check, value, limit, status}],
+# requests}, where
 # status is "pass", "fail", "warn" (over the 120 fps target), "under" (fewer
 # requests than budgeted: pass, and lower the budget) or "reported"
 # (measured, not gated).
@@ -133,9 +135,30 @@ def latency_checks($samples; $ceilings):
       status: judged($value; $limit; $limit != null)
     };
 
+def median: sort | if length % 2 == 1 then .[length / 2 | floor] else (.[length / 2 - 1] + .[length / 2]) / 2 end;
+
+# Several runs of one commit as one: each p90 is the median of the runs'
+# (one slow runner is not a slow app), the frame times are pooled, and the
+# frame count is the fewest any run drew. A path any run lacks is missing.
+def merged_summary($path):
+  [$runs[].summaries[$path]] as $all
+  | if any($all[]; . == null) then null
+    else {
+      frame_count: ($all | map(.frame_count) | min),
+      "90th_percentile_frame_build_time_millis": ($all | map(."90th_percentile_frame_build_time_millis") | median),
+      "90th_percentile_frame_rasterizer_time_millis": ($all | map(."90th_percentile_frame_rasterizer_time_millis") | median),
+      frame_build_times: ($all | map(.frame_build_times // []) | add),
+      frame_rasterizer_times: ($all | map(.frame_rasterizer_times // []) | add)
+    }
+    end;
+
+# Each path's requests as the run that made the most of them made them:
+# counts are exact, so any run over budget is over budget.
+def most_requests($path): [$runs[].requests[$path] // []] | max_by(length);
+
 $budget[0] as $b
-| $requests[0] as $r
-| $summaries[0] as $s
+| ($b.requests | keys | map({key: ., value: most_requests(.)}) | from_entries) as $r
+| ($b.requests | keys | map({key: ., value: merged_summary(.)}) | from_entries) as $s
 | ($b.environments[$env] // error("no environment \"\($env)\" in the budget")) as $e
 | [
     ($b.requests | to_entries[]
@@ -146,6 +169,8 @@ $budget[0] as $b
   ] as $checks
 | {
     env: $env,
+    runs: ($runs | length),
     pass: ($checks | all(.status != "fail")),
-    checks: $checks
+    checks: $checks,
+    requests: $r
   }

@@ -1,6 +1,5 @@
 # The gate's verdict as Markdown: what the nightly issue and the local run
-# print. Input: result.json (perf-gate.jq's output); $requests is the run's
-# requests.json, slurped.
+# print. Input: result.json (perf-gate.jq's output).
 
 def status_cell: if . == "fail" then "**fail**" else . end;
 def cell: if . == null then "—" else tostring end;
@@ -16,7 +15,7 @@ def cell: if . == null then "—" else tostring end;
   "",
   "### Requests per path",
   "",
-  ($requests[0] | to_entries[]
+  ($result.requests | to_entries[]
     | "- **\(.key)**: " + (.value | group_by(.) | map("\(length) × `\(.[0])`") | join(", "))),
   "",
   "A frame check over budget: open `<path>.timeline.json` from the run in https://ui.perfetto.dev (or chrome://tracing) and look for the longest `Frame` (build) and `GPURasterizer::Draw` (raster) slices."

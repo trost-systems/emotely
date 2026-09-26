@@ -47,8 +47,9 @@ Usage: perf.sh <command>
   latency <dir>    Measure the deployed backend as the smoke account:
                    $READ_SAMPLES Supabase reads and $AGENT_SAMPLES agent first rounds, into
                    <dir>/latency.json. Takes the smoke account's lock.
-  gate <dir> --env <name>
-                   Judge a run directory again (after editing the budget).
+  gate <dir>... --env <name>
+                   Judge a run directory again (after editing the budget),
+                   or the median of several runs of one commit.
   baseline <dir>...
                    Each path's baseline from several runs on one
                    environment: the slowest p90 seen, for the budget file.
@@ -267,39 +268,53 @@ cmd_latency() {
 
 # --- gate -----------------------------------------------------------------------
 
-# gate <run dir> --env <name> [--budget <file>]: judges the run, writes
-# result.json and summary.md into it and exits 1 over budget.
+# One run directory as the gate reads it: its paths' timeline summaries and
+# its requests.
+run_json() {
+  [[ -f "$1/requests.json" ]] || die "no requests.json in $1"
+  local file
+  for file in "$1"/*.timeline_summary.json; do
+    [[ -e "$file" ]] || continue
+    jq --arg path "$(basename "$file" .timeline_summary.json)" '{($path): .}' "$file"
+  done | jq -s --slurpfile requests "$1/requests.json" \
+    '{summaries: (add // {}), requests: $requests[0]}'
+}
+
+# gate <run dir>... --env <name> [--budget <file>]: judges one run, or the
+# median of several of the same commit on one environment (the nightly
+# runs three side by side, as one runner can be a quarter slower than the
+# next). Writes result.json and summary.md into the first run directory and
+# exits 1 over budget.
 cmd_gate() {
   STEP="gate"
-  local run="${1:?gate needs a run directory}" env="" budget="$BUDGET"
-  shift
+  local runs=() env="" budget="$BUDGET"
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --env) env="${2:?--env needs a name}"; shift 2 ;;
       --budget) budget="${2:?--budget needs a file}"; shift 2 ;;
-      *) die "unknown option $1" ;;
+      -*) die "unknown option $1" ;;
+      *) runs+=("$1"); shift ;;
     esac
   done
-  [[ -f "$run/requests.json" ]] || die "no requests.json in $run"
-  local summaries
-  summaries="$(for file in "$run"/*.timeline_summary.json; do
-    [[ -e "$file" ]] || continue
-    jq --arg path "$(basename "$file" .timeline_summary.json)" '{($path): .}' "$file"
-  done | jq -s 'add // {}')"
-  yq -o json "$budget" >"$run/budget.json"
-  # Measured only where the run had the smoke account (`perf.sh latency`).
-  local latency="[]"
-  [[ -f "$run/latency.json" ]] && latency="$(jq -s . "$run/latency.json")"
-  jq -n --slurpfile budget "$run/budget.json" \
-    --argjson summaries "[$summaries]" \
-    --slurpfile requests "$run/requests.json" \
+  [[ ${#runs[@]} -gt 0 ]] || die "gate needs a run directory"
+  local out="${runs[0]}" run all latency="[]"
+  all="$(for run in "${runs[@]}"; do run_json "$run"; done | jq -s .)"
+  # Measured only where a run had the smoke account (`perf.sh latency`).
+  for run in "${runs[@]}"; do
+    if [[ -f "$run/latency.json" ]]; then
+      latency="$(jq -s . "$run/latency.json")"
+      break
+    fi
+  done
+  yq -o json "$budget" >"$out/budget.json"
+  jq -n --slurpfile budget "$out/budget.json" \
+    --argjson runs "$all" \
     --argjson latency "$latency" \
     --arg env "$env" \
-    -f "$SCRIPTS_DIR/perf-gate.jq" >"$run/result.json"
-  rm -f "$run/budget.json"
-  jq -r --slurpfile requests "$run/requests.json" -f "$SCRIPTS_DIR/perf-summary.jq" \
-    "$run/result.json" >"$run/summary.md"
-  jq -e '.pass' "$run/result.json" >/dev/null || return 1
+    -f "$SCRIPTS_DIR/perf-gate.jq" >"$out/result.json"
+  rm -f "$out/budget.json"
+  jq -r -f "$SCRIPTS_DIR/perf-summary.jq" "$out/result.json" >"$out/summary.md"
+  jq -e '.pass' "$out/result.json" >/dev/null || return 1
 }
 
 # baseline <run dir>...: each path's baseline over several runs on one

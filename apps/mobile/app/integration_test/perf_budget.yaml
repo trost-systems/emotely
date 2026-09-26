@@ -61,7 +61,8 @@ latency:
 # - a shared host stalls the emulator now and then (single frames of
 #   50-120 ms), which alone breaks "under 1%": the runner missed 1.5-11%;
 # - the runner's build p90 swings 1.5x from one runner to the next, up to
-#   17.2 ms on the journal scroll, over the floor on its own.
+#   17.2 ms on the journal scroll, over the floor on its own. The nightly
+#   runs three runners side by side and gates their median.
 # A phone gates the whole floor.
 environments:
   # The nightly: GitHub's ubuntu-latest runner, Android 34 x86_64 emulator
@@ -90,31 +91,23 @@ environments:
           build_p90_ms: [4.651, 5.207, 8.05, 4.912, 8.698]
           raster_p90_ms: [62.765, 66.203, 70.334, 65.304, 72.947]
   # `perf.sh run` without --device: a fresh Android 34 arm64 emulator with
-  # the host GPU. Five runs, 2026-09-26, commit c5957d5, on an Apple M4 Pro
-  # with other agent sessions busy beside it. A slower machine may need its
-  # own baseline.
+  # the host GPU. No baseline, so frames are reported and only the request
+  # counts gate: a developer's machine runs other agents' builds beside the
+  # emulator, and its load moves the build p90 more than any headroom
+  # allows. Ten clean runs on an Apple M4 Pro, 2026-09-26, commit c5957d5:
+  # quiet, then busy. The busiest journal scroll (4.97 ms) was slower than
+  # one with 2 ms of extra work in every list item (4.42 ms).
   local-emulator:
     raster: reported
     floor: reported
-    baseline:
+    baseline: {}
+    reference:
       journal_scroll:
-        build_p90_ms: 3.196 # limit 3.835
-        raster_p90_ms: 17.316
-        measured:
-          build_p90_ms: [2.585, 2.501, 3.196, 2.887, 2.851]
-          raster_p90_ms: [2.362, 16.619, 4.61, 16.989, 17.316]
+        build_p90_ms: [2.585, 2.501, 3.196, 2.887, 2.851, 2.535, 4.965, 3.269, 4.763, 3.932]
       entry_open:
-        build_p90_ms: 2.49 # limit 2.988
-        raster_p90_ms: 17.45
-        measured:
-          build_p90_ms: [1.947, 2.229, 2.366, 2.49, 2.092]
-          raster_p90_ms: [17.355, 17.256, 17.369, 17.21, 17.45]
+        build_p90_ms: [1.947, 2.229, 2.366, 2.49, 2.092, 2.023, 2.658, 3.004, 3.583, 2.683]
       session_round:
-        build_p90_ms: 1.632 # limit 1.958
-        raster_p90_ms: 17.27
-        measured:
-          build_p90_ms: [1.51, 1.465, 1.57, 1.632, 1.564]
-          raster_p90_ms: [1.766, 16.722, 16.454, 17.27, 17.071]
+        build_p90_ms: [1.51, 1.465, 1.57, 1.632, 1.564, 1.45, 1.645, 1.921, 3.582, 1.682]
   # A phone (`perf.sh run --device <id>`): frames as users get them, and
   # the whole floor gates. No baseline yet: the floor alone.
   device:

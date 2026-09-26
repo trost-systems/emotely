@@ -266,6 +266,53 @@ test_warns_without_failing_when_a_p90_misses_the_120_fps_target() {
     fail "warns on the target: build.target_ms is not a warning of 9 over 8.3"
 }
 
+# --- several runs -----------------------------------------------------------------
+
+# three_runs <name> <build ms>...: three runs of `scroll` under $work/<name>,
+# identical but for their build p90.
+three_runs() {
+  local name="$1" i=0 build
+  shift
+  for build in "$@"; do
+    i=$((i + 1))
+    new_run "$work/$name/$i"
+    frames 200 "$build" 4 >"$work/$name/$i/scroll.timeline_summary.json"
+  done
+}
+
+test_judges_the_median_of_several_runs() {
+  # One slow runner out of three: the median is a normal night.
+  three_runs one-slow 1.5 2.9 1.6
+  status=0
+  bash "$PERF" gate "$work/one-slow/1" "$work/one-slow/2" "$work/one-slow/3" \
+    --env test --budget "$work/budget.yaml" >"$work/gate.out" 2>&1 || status=$?
+  ((status == 0)) || fail "judges the median of several runs: exit $status, $(cat "$work/gate.out")"
+  check "$work/one-slow/1" '.runs == 3 and (.checks[] | select(.path == "scroll" and .check == "build.p90_ms")
+    | .value == 1.6 and .status == "pass")' ||
+    fail "judges the median of several runs: build.p90_ms is not the median 1.6"
+}
+
+test_fails_when_most_runs_are_slow() {
+  three_runs two-slow 2.5 2.9 1.6
+  status=0
+  bash "$PERF" gate "$work/two-slow/1" "$work/two-slow/2" "$work/two-slow/3" \
+    --env test --budget "$work/budget.yaml" >"$work/gate.out" 2>&1 || status=$?
+  ((status == 1)) || fail "fails when most runs are slow: exit $status"
+  check "$work/two-slow/1" '.checks[] | select(.path == "scroll" and .check == "build.p90_ms")
+    | .value == 2.5 and .status == "fail"' ||
+    fail "fails when most runs are slow: build.p90_ms is not a failure at the median 2.5"
+}
+
+test_fails_an_extra_request_in_any_run() {
+  three_runs one-extra 1.5 1.5 1.5
+  jq '.scroll += ["supabase GET /rest/v1/entries"]' "$work/one-extra/3/requests.json" >"$work/r" &&
+    mv "$work/r" "$work/one-extra/3/requests.json"
+  status=0
+  bash "$PERF" gate "$work/one-extra/1" "$work/one-extra/2" "$work/one-extra/3" \
+    --env test --budget "$work/budget.yaml" >"$work/gate.out" 2>&1 || status=$?
+  ((status == 1)) || fail "fails an extra request in any run: exit $status"
+}
+
 # --- baseline ---------------------------------------------------------------------
 
 test_takes_the_baseline_as_the_slowest_of_several_runs() {

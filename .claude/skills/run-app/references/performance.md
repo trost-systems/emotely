@@ -57,8 +57,8 @@ The budget judges a run by where it measured (`--env`):
 
 | env | where | what gates |
 | --- | --- | --- |
-| `github-emulator` | the nightly: ubuntu runner, x86_64 emulator, software rendering | requests, build p90 against the baseline |
-| `local-emulator` | `perf.sh run`: arm64 emulator, host GPU (baseline from an Apple M4 Pro) | requests, build p90 against the baseline |
+| `github-emulator` | the nightly: three ubuntu runners, x86_64 emulator, software rendering | requests, the median build p90 against the runner's baseline plus 20% |
+| `local-emulator` | `perf.sh run`: arm64 emulator, host GPU | requests; frames reported |
 | `device` | `perf.sh run --device <phone>` | requests, the whole 60 fps floor, raster included |
 
 On an emulator the 60 fps floor measures the host, not the app, so the
@@ -66,7 +66,14 @@ budget marks it `floor: reported` there: raster is the host's graphics
 stack (a 16.7 ms swap locally, 80-160 ms of software rendering on the
 runner), a shared host stalls single frames (the runner missed 1.5-11%),
 and the runner's build p90 swings 1.5x from one runner to the next, up to
-17.2 ms. There the build p90 limit is the baseline plus 20% alone.
+17.2 ms. So the nightly samples three runners and holds their median to
+the baseline plus 20%. Locally, other sessions' builds move the build p90
+more than any headroom allows (2.5 to 5.0 ms on the same commit), so a
+local run reports frames and gates only the request counts: to check a
+frame change locally, compare it with a run of `main` made just before,
+or push and let the pull request's run of this workflow judge it (it runs
+when the measurement changes), or `gh workflow run nightly-perf.yml --ref
+<branch>` once the workflow is on `main`.
 
 Flutter runs only debug builds on the iOS simulator, so there is no iOS
 emulator environment. A phone gets the profile build installed over
