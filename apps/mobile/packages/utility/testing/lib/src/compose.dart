@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:journal_repository/journal_repository.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
+import 'package:profile_repository/profile_repository.dart';
 import 'package:testing/src/agent_stub.dart';
 import 'package:testing/src/analytics_spy.dart';
 import 'package:testing/src/config_stub.dart';
@@ -76,6 +77,7 @@ void registerUtilitiesUnderTest(
   // hears queues behind it instead, so the order is the same.
   unawaited(getIt<PostHogGate>().restore());
   registerJournalRepository(getIt, supabase: supabase.supabase);
+  registerProfileRepository(getIt, supabase: supabase.supabase);
   registerConsentRepository(
     getIt,
     supabase: supabase.supabase,

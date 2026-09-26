@@ -58,6 +58,8 @@ void main() {
       await reporter.consentLoadFailed(saveRefused, trace);
       await reporter.consentWriteFailed(saveRefused, trace);
       await reporter.usageAnalyticsRecordFailed(saveRefused, trace);
+      await reporter.profileLoadFailed(saveRefused, trace);
+      await reporter.profileSaveFailed(saveRefused, trace);
 
       expect(spy.exceptions, [
         captured(refused, {'step': 'session_round', 'status_code': 429}),
@@ -124,6 +126,14 @@ void main() {
         captured(
           withheld(PostgrestApiException, code: '42501', statusCode: 403),
           {'step': 'usage_analytics_record'},
+        ),
+        captured(
+          withheld(PostgrestApiException, code: '42501', statusCode: 403),
+          {'step': 'profile_load'},
+        ),
+        captured(
+          withheld(PostgrestApiException, code: '42501', statusCode: 403),
+          {'step': 'profile_save'},
         ),
       ]);
       for (final exception in spy.exceptions) {

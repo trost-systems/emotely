@@ -1,0 +1,15 @@
+# Codegen defaults (see .claude/skills/freezed). Per-class annotations only
+# carry what genuinely differs from these.
+targets:
+  $default:
+    builders:
+      freezed:
+        options:
+          # Union discriminator values follow the wire casing (textList -> text_list).
+          union_value_case: snake
+      json_serializable:
+        options:
+          # Nested freezed objects and lists serialize recursively, not as
+          # `.toJson` references; keys follow the agent's snake_case wire names.
+          explicit_to_json: true
+          field_rename: snake

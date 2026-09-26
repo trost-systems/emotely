@@ -15,6 +15,7 @@ export 'src/consent_rounds.dart';
 export 'src/identity_providers.dart';
 export 'src/journal_rows.dart';
 export 'src/mocks.dart';
+export 'src/profile_rows.dart';
 export 'src/pump_app.dart';
 export 'src/questions.dart';
 export 'src/slider.dart';

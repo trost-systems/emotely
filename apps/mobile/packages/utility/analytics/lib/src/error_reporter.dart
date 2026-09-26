@@ -137,6 +137,17 @@ class const ErrorReporter({required final PostHogGate gate}) {
     StackTrace stackTrace,
   ) => _report(error, stackTrace, step: 'usage_analytics_record');
 
+  /// The profile could not be read. The screens fall back to asking for a
+  /// name, so the user may type one they already gave.
+  Future<void> profileLoadFailed(Exception error, StackTrace stackTrace) =>
+      _report(error, stackTrace, step: 'profile_load');
+
+  /// A new name could not be saved; the field went back to the last one
+  /// that was. The refusal is withheld like every Postgres error, since it
+  /// can quote the row and so the name (ADR 0005).
+  Future<void> profileSaveFailed(Exception error, StackTrace stackTrace) =>
+      _report(error, stackTrace, step: 'profile_save');
+
   Future<void> _report(
     Exception error,
     StackTrace stackTrace, {
