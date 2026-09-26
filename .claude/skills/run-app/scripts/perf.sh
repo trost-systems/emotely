@@ -173,7 +173,7 @@ cmd_run() {
   # The endless trace buffer: the default ring holds only the last ~300
   # frames of a path and drops the rest without a word, the cold first
   # frames first. The test records only the streams the summary reads, so
-  # a path's trace stays a few megabytes.
+  # a path's trace stays under 20 MB.
   (cd "$APP_DIR" && PERF_OUT="$out" "${flutter[@]}" drive --profile --no-dds \
     --endless-trace-buffer -d "$device" \
     --driver=test_driver/perf_driver.dart --target=integration_test/perf_test.dart) \
