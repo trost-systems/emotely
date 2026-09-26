@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:agent_client/agent_client.dart';
 import 'package:analytics/src/auth_analytics.dart';
+import 'package:analytics/src/post_hog_gate.dart';
 import 'package:http/http.dart' as http;
 import 'package:meta/meta.dart';
-import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Handled failures, reported to PostHog error tracking (ADR 0004) with
@@ -19,7 +19,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// path, where `contentFreeExceptions` (error_tracking.dart) applies the
 /// same rule on the wire. The version is stamped by the SDK
 /// (`$app_version`).
-class const ErrorReporter({required final Posthog posthog}) {
+class const ErrorReporter({required final PostHogGate gate}) {
   /// A session round failed against the agent; [statusCode] is absent when
   /// the server was unreachable.
   Future<void> sessionFailed(
@@ -133,7 +133,7 @@ class const ErrorReporter({required final Posthog posthog}) {
     StackTrace stackTrace, {
     required String step,
     Map<String, Object> properties = const {},
-  }) => posthog.captureException(
+  }) => gate.captureException(
     error: contentFree(error),
     stackTrace: stackTrace,
     properties: {'step': step, ...properties},

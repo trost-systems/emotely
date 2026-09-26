@@ -49,15 +49,24 @@ void main() {
       ]);
     });
 
-    test("forgets the device's user on sign-out and on deletion", () async {
+    test("forgets the device's user and their choice on sign-out", () async {
       final spy = AnalyticsSpy();
-      final analytics = spy.authAnalytics;
 
-      await analytics.signedOut();
-      await analytics.accountDeleted();
+      await spy.authAnalytics.signedOut();
 
-      expect(spy.events, [event('signed_out'), event('account_deleted')]);
-      expect(spy.resets, 2);
+      expect(spy.events, [event('signed_out')]);
+      expect(spy.lifecycle, ['setup', 'reset', 'disable', 'close']);
+      expect(spy.gate.choice, isNull);
+    });
+
+    test("forgets the device's user and their choice on deletion", () async {
+      final spy = AnalyticsSpy();
+
+      await spy.authAnalytics.accountDeleted();
+
+      expect(spy.events, [event('account_deleted')]);
+      expect(spy.lifecycle, ['setup', 'reset', 'disable', 'close']);
+      expect(spy.gate.choice, isNull);
     });
   });
 }

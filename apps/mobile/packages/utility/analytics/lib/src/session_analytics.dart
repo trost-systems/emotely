@@ -1,30 +1,31 @@
+import 'package:analytics/src/post_hog_gate.dart';
 import 'package:contract/contract.dart';
-import 'package:posthog_flutter/posthog_flutter.dart';
 
 /// Product analytics for the session, content-free by construction
 /// (ADR 0005): only question ids, answer types, counts and status codes
 /// leave the device — never a question text or an answer value. A test
 /// drives a whole session with needle strings and proves none escapes.
-class const SessionAnalytics({required final Posthog posthog}) {
+class const SessionAnalytics({required final PostHogGate gate}) {
   /// The user began a session.
-  Future<void> sessionStarted() =>
-      posthog.capture(eventName: 'session_started');
+  Future<void> sessionStarted() => gate.capture(eventName: 'session_started');
 
   /// The agent asked [question] as the [index]th question (0-based).
   Future<void> questionAsked({
     required AskQuestion question,
     required int index,
-  }) => posthog.capture(
+  }) => gate.capture(
     eventName: 'question_asked',
     properties: {..._describe(question), 'index': index},
   );
 
   /// The user submitted the widget for [question].
-  Future<void> answerSubmitted({required AskQuestion question}) => posthog
-      .capture(eventName: 'answer_submitted', properties: _describe(question));
+  Future<void> answerSubmitted({required AskQuestion question}) => gate.capture(
+    eventName: 'answer_submitted',
+    properties: _describe(question),
+  );
 
   /// The agent completed the session with [answers] recorded answers.
-  Future<void> sessionCompleted({required int answers}) => posthog.capture(
+  Future<void> sessionCompleted({required int answers}) => gate.capture(
     eventName: 'session_completed',
     properties: {'answers': answers},
   );
@@ -38,38 +39,36 @@ class const SessionAnalytics({required final Posthog posthog}) {
   /// the caller's, and nothing about the entry itself travels with it.
   Future<void> entryWritten({required int entries}) async {
     if (entries == 3) {
-      await posthog.capture(eventName: 'third_entry_written');
+      await gate.capture(eventName: 'third_entry_written');
     }
   }
 
   /// A round failed; [statusCode] is absent when the server was unreachable.
-  Future<void> sessionFailed({int? statusCode}) => posthog.capture(
+  Future<void> sessionFailed({int? statusCode}) => gate.capture(
     eventName: 'session_failed',
     properties: {'status_code': ?statusCode},
   );
 
   /// The user picked an unfinished session up from the journal.
-  Future<void> sessionResumed() =>
-      posthog.capture(eventName: 'session_resumed');
+  Future<void> sessionResumed() => gate.capture(eventName: 'session_resumed');
 
   /// The user retried the failed round.
-  Future<void> sessionRetried() =>
-      posthog.capture(eventName: 'session_retried');
+  Future<void> sessionRetried() => gate.capture(eventName: 'session_retried');
 
   /// A round could not be written to the journal; the session went on.
   Future<void> sessionSaveFailed() =>
-      posthog.capture(eventName: 'session_save_failed');
+      gate.capture(eventName: 'session_save_failed');
 
   /// The finished entry could not be filed; the user can retry.
   Future<void> entrySaveFailed() =>
-      posthog.capture(eventName: 'entry_save_failed');
+      gate.capture(eventName: 'entry_save_failed');
 
   /// The server refused [appVersion] and demanded at least [minAppVersion];
   /// the user is on the force-update screen.
   Future<void> updateRequired({
     required String minAppVersion,
     required String appVersion,
-  }) => posthog.capture(
+  }) => gate.capture(
     eventName: 'update_required',
     properties: {'min_app_version': minAppVersion, 'app_version': appVersion},
   );

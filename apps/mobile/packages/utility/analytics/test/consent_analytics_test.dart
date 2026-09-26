@@ -6,10 +6,7 @@ void main() {
   group(ConsentAnalytics, () {
     test('reports each decision with the wording it answered', () async {
       final spy = AnalyticsSpy();
-      final analytics = ConsentAnalytics(
-        posthog: spy.posthog,
-        version: '2026-01-01',
-      );
+      final analytics = ConsentAnalytics(gate: spy.gate, version: '2026-01-01');
 
       await analytics.consentGranted();
       await analytics.consentWithdrawn();

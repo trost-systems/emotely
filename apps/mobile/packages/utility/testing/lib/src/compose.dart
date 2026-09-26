@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:agent_client/agent_client.dart';
 import 'package:analytics/analytics.dart';
 import 'package:consent_repository/consent_repository.dart';
@@ -5,6 +7,7 @@ import 'package:feedback_link/feedback_link.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:journal_repository/journal_repository.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:testing/src/agent_stub.dart';
 import 'package:testing/src/analytics_spy.dart';
 import 'package:testing/src/config_stub.dart';
@@ -62,8 +65,13 @@ void registerUtilitiesUnderTest(
   registerAnalytics(
     getIt,
     posthog: analytics.posthog,
+    config: PostHogConfig('phc_test'),
+    preferences: analytics.preferences,
     consentVersion: consentVersion,
   );
+  // `main` awaits this before the first frame; here every call PostHog
+  // hears queues behind it instead, so the order is the same.
+  unawaited(getIt<PostHogGate>().restore());
   registerJournalRepository(getIt, supabase: supabase.supabase);
   registerConsentRepository(
     getIt,

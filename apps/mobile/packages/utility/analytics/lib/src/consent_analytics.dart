@@ -1,4 +1,4 @@
-import 'package:posthog_flutter/posthog_flutter.dart';
+import 'package:analytics/src/post_hog_gate.dart';
 
 /// Consent analytics, content-free by construction like the rest (ADR 0005).
 ///
@@ -11,7 +11,7 @@ import 'package:posthog_flutter/posthog_flutter.dart';
 /// The methods take no arguments at all, so there is nothing a caller could
 /// pass that should not go out; the version is fixed at construction.
 class const ConsentAnalytics({
-  required final Posthog posthog,
+  required final PostHogGate gate,
 
   /// The wording the app currently asks consent for (its dated version), so
   /// the events say which text was answered. The app owns that constant;
@@ -19,13 +19,13 @@ class const ConsentAnalytics({
   required final String version,
 }) {
   /// The user gave explicit consent, and the server recorded it.
-  Future<void> consentGranted() => posthog.capture(
+  Future<void> consentGranted() => gate.capture(
     eventName: 'consent_granted',
     properties: {'version': version},
   );
 
   /// The user withdrew their consent (Art. 7 (3)).
-  Future<void> consentWithdrawn() => posthog.capture(
+  Future<void> consentWithdrawn() => gate.capture(
     eventName: 'consent_withdrawn',
     properties: {'version': version},
   );
@@ -33,7 +33,7 @@ class const ConsentAnalytics({
   /// The user was asked and said no. Nothing was written to the server, but
   /// how often this happens is the one number that says whether the wording
   /// is frightening people off.
-  Future<void> consentDeclined() => posthog.capture(
+  Future<void> consentDeclined() => gate.capture(
     eventName: 'consent_declined',
     properties: {'version': version},
   );
