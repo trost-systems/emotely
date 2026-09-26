@@ -20,6 +20,12 @@ RouteBase get $moreRoute => GoRouteData.$route(
       hasOverriddenOnExit: false,
       factory: $AccountRoute._fromState,
     ),
+    GoRouteData.$route(
+      path: 'privacy',
+      name: 'privacy_settings',
+      hasOverriddenOnExit: false,
+      factory: $PrivacySettingsRoute._fromState,
+    ),
   ],
 );
 
@@ -48,6 +54,27 @@ mixin $AccountRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/more/account');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $PrivacySettingsRoute on GoRouteData {
+  static PrivacySettingsRoute _fromState(GoRouterState state) =>
+      const PrivacySettingsRoute();
+
+  @override
+  String get location => GoRouteData.$location('/more/privacy');
 
   @override
   void go(BuildContext context) => context.go(location);

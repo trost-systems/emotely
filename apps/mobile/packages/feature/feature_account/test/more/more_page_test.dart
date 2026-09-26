@@ -1,5 +1,7 @@
+import 'package:analytics/analytics.dart';
 import 'package:feature_account/feature_account.dart';
 import 'package:feedback_link/feedback_link.dart';
+import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
@@ -16,22 +18,27 @@ import '../fake_account_navigator.dart';
 class _MoreRobot(
   final WidgetTester tester, {
   required final SupabaseStub supabase,
+  final AnalyticsChoice? stored = AnalyticsChoice.allowed,
 }) {
-  final analytics = AnalyticsSpy();
+  late final analytics = AnalyticsSpy(stored: stored);
   final navigator = FakeAccountNavigator();
 
   Finder get more => find.byType(MorePage);
-  Finder get account => find.byKey(MoreView.accountKey);
-  Finder get withdraw => find.byKey(MoreView.withdrawConsentKey);
-  Finder get restore => find.byKey(MoreView.restoreConsentKey);
-  Finder get consentRetry => find.byKey(MoreView.consentRetryKey);
+  Finder get privacySettings => find.byKey(MoreView.privacySettingsKey);
   Finder get notice => find.byKey(MoreView.privacyNoticeKey);
-  Finder get imprint => find.byKey(MoreView.imprintKey);
   Finder get feedback => find.byKey(MoreView.feedbackKey);
+  Finder get imprint => find.byKey(MoreView.imprintKey);
   Finder get signOut => find.byKey(MoreView.signOutKey);
-  Finder get busy => find.byType(CircularProgressIndicator);
+  Finder get account => find.byKey(MoreView.accountKey);
 
   Finder heading(String title) => find.text(title);
+
+  /// The status line under Privacy settings.
+  String get status => tester
+      .widget<Text>(
+        find.descendant(of: privacySettings, matching: find.byType(Text)).last,
+      )
+      .data!;
 
   /// Reading this composes the container, so read it once per test.
   Widget get app {
@@ -82,41 +89,30 @@ void main() {
       WidgetTester tester, {
       bool granted = true,
       List<AuthRound> reads = const [],
-      List<AuthRound> withdrawals = const [],
+      AnalyticsChoice? stored = AnalyticsChoice.allowed,
     }) {
       final supabase = SupabaseStub()
         ..rest(consentRead, reads)
-        ..always(consentRead, consentStands(granted: granted))
-        ..rest(consentWithdraw, withdrawals);
-      return _MoreRobot(tester, supabase: supabase);
+        ..always(consentRead, consentStands(granted: granted));
+      return _MoreRobot(tester, supabase: supabase, stored: stored);
     }
 
-    testWidgets('lists its sections in order, and sign out last', (
+    testWidgets('lists privacy, about and the account last, in order', (
       tester,
     ) async {
       final robot = robotWith(tester)..showEverything();
       await robot.launch();
 
-      final headings = [
-        MoreView.accountSection,
-        MoreView.consentSection,
-        MoreView.legalSection,
-        MoreView.feedbackSection,
-      ];
-      for (final title in headings) {
-        expect(robot.heading(title), findsOneWidget);
-      }
       final rows = [
+        robot.heading(MoreView.privacySection),
+        robot.privacySettings,
+        robot.notice,
+        robot.signOut,
+        robot.heading(MoreView.aboutSection),
+        robot.feedback,
+        robot.imprint,
         robot.heading(MoreView.accountSection),
         robot.account,
-        robot.heading(MoreView.consentSection),
-        robot.withdraw,
-        robot.heading(MoreView.legalSection),
-        robot.notice,
-        robot.imprint,
-        robot.heading(MoreView.feedbackSection),
-        robot.feedback,
-        robot.signOut,
       ];
       for (var i = 0; i + 1 < rows.length; i++) {
         expect(
@@ -134,18 +130,87 @@ void main() {
       // The gap from the last row of one section to the next heading is
       // what tells the sections apart at a glance; a row-to-row gap is
       // none at all.
-      final gap =
-          tester.getTopLeft(robot.heading(MoreView.consentSection)).dy -
-          tester.getBottomLeft(robot.account).dy;
-      expect(gap, greaterThanOrEqualTo(MoreView.sectionGap));
       final beforeSignOut =
           tester.getTopLeft(robot.signOut).dy -
-          tester.getBottomLeft(robot.feedback).dy;
+          tester.getBottomLeft(robot.notice).dy;
       expect(beforeSignOut, greaterThanOrEqualTo(MoreView.sectionGap));
+      final beforeAccount =
+          tester.getTopLeft(robot.heading(MoreView.accountSection)).dy -
+          tester.getBottomLeft(robot.imprint).dy;
+      expect(beforeAccount, greaterThanOrEqualTo(MoreView.sectionGap));
       expect(
-        tester.getTopLeft(robot.imprint).dy,
-        tester.getBottomLeft(robot.notice).dy,
+        tester.getTopLeft(robot.notice).dy,
+        tester.getBottomLeft(robot.privacySettings).dy,
       );
+    });
+
+    testWidgets('names deletion in the error colour, and signing out in the '
+        'normal one', (tester) async {
+      final robot = robotWith(tester);
+      await robot.launch();
+
+      final colors = Theme.of(tester.element(robot.more)).colorScheme;
+      final delete = tester.widget<Text>(
+        find.descendant(
+          of: robot.account,
+          matching: find.text(MoreView.accountLabel),
+        ),
+      );
+      expect(delete.style?.color, colors.error);
+      expect(find.text(MoreView.accountExplanation), findsOneWidget);
+      final signOut = tester.renderObject<RenderParagraph>(
+        find.descendant(
+          of: robot.signOut,
+          matching: find.text(MoreView.signOutLabel),
+        ),
+      );
+      expect(signOut.text.style?.color, isNot(colors.error));
+    });
+
+    group('privacy settings', () {
+      testWidgets('says in one line where both consents stand', (tester) async {
+        final robot = robotWith(tester);
+        await robot.launch();
+
+        expect(robot.status, 'Journal: allowed · Usage analytics: on');
+      });
+
+      testWidgets('says so when neither stands', (tester) async {
+        final robot = robotWith(
+          tester,
+          granted: false,
+          stored: AnalyticsChoice.denied,
+        );
+        await robot.launch();
+
+        expect(robot.status, 'Journal: off · Usage analytics: off');
+      });
+
+      testWidgets('leaves out what it could not read', (tester) async {
+        final robot = robotWith(tester, reads: [restRefused()]);
+        await robot.launch();
+
+        expect(robot.status, 'Usage analytics: on');
+      });
+
+      testWidgets('opens on its own route, and the line follows what '
+          'changed there', (tester) async {
+        final robot = robotWith(tester);
+        robot.supabase.rest(consentWithdraw, [rpcReturned(null)]);
+        await robot.launch();
+
+        await robot.tap(robot.privacySettings);
+
+        expect(find.byType(PrivacySettingsPage), findsOneWidget);
+
+        await robot.tap(find.byKey(PrivacySettingsPage.usageAnalyticsKey));
+        robot.supabase.rest(consentRead, [consentStands(granted: false)]);
+        await tester.pageBack();
+        await robot.settle();
+
+        expect(robot.more, findsOneWidget);
+        expect(robot.status, 'Journal: off · Usage analytics: off');
+      });
     });
 
     testWidgets('opens the account screen on its own route, and comes back', (
@@ -185,7 +250,7 @@ void main() {
       final screen = tester.getRect(
         find.descendant(of: robot.more, matching: find.byType(Scaffold)),
       );
-      for (final row in [robot.account, robot.notice, robot.feedback]) {
+      for (final row in [robot.privacySettings, robot.notice, robot.feedback]) {
         final rect = tester.getRect(row);
         expect(rect.left, screen.left);
         expect(rect.width, screen.width);
@@ -194,96 +259,6 @@ void main() {
         tester.getRect(find.text(privacyNoticeLabel)).left,
         screen.left + 16,
       );
-    });
-
-    group('consent', () {
-      const version = {'version': testConsentVersion};
-
-      testWidgets('is withdrawn in one tap, and can be given again', (
-        tester,
-      ) async {
-        final robot = robotWith(tester, withdrawals: [rpcReturned(null)]);
-        await robot.launch();
-
-        expect(find.text(withdrawConsentExplanation), findsOneWidget);
-
-        await robot.tap(robot.withdraw);
-
-        expect(robot.supabase.bodies('/rest/v1/rpc/withdraw_consent'), [
-          version,
-        ]);
-        expect(find.text(consentMissingExplanation), findsOneWidget);
-        expect(robot.analytics.events, [event('consent_withdrawn', version)]);
-
-        // Not a one-tap re-grant: the way back is the consent screen itself,
-        // which the app shows. Once it closes, the row asks the server
-        // again rather than trusting what it showed before — and the server
-        // here says consent stands.
-        await robot.tap(robot.restore);
-
-        expect(robot.navigator.consentRequests, 1);
-        expect(find.text(withdrawConsentExplanation), findsOneWidget);
-      });
-
-      testWidgets('shows progress while a withdrawal is written', (
-        tester,
-      ) async {
-        final robot = robotWith(
-          tester,
-          withdrawals: [delayedAuth(rpcReturned(null))],
-        );
-        await robot.launch();
-
-        await tester.tap(robot.withdraw);
-        await tester.pump();
-
-        expect(robot.busy, findsOneWidget);
-        expect(find.text(MoreView.consentBusyLabel), findsOneWidget);
-
-        await robot.settle();
-
-        expect(find.text(consentMissingExplanation), findsOneWidget);
-      });
-
-      testWidgets(
-        'a withdrawal that fails leaves consent standing, and says so',
-        (tester) async {
-          final robot = robotWith(
-            tester,
-            withdrawals: [restRefused(), rpcReturned(null)],
-          );
-          await robot.launch();
-
-          await robot.tap(robot.withdraw);
-
-          expect(find.text(withdrawFailureMessage), findsOneWidget);
-          expect(robot.analytics.events, isEmpty);
-
-          await robot.tap(robot.withdraw);
-
-          expect(robot.supabase.to(consentWithdraw), hasLength(2));
-          expect(find.text(consentMissingExplanation), findsOneWidget);
-        },
-      );
-
-      testWidgets('says so, and retries, when the answer cannot be read', (
-        tester,
-      ) async {
-        final robot = robotWith(tester, reads: [restRefused()]);
-        await robot.launch();
-
-        // A read that failed says nothing about whether consent stands, so
-        // neither row is offered — but never an empty section either.
-        expect(robot.withdraw, findsNothing);
-        expect(robot.restore, findsNothing);
-        expect(find.text(consentUnknownMessage), findsOneWidget);
-        expect(robot.account, findsOneWidget);
-
-        await robot.tap(robot.consentRetry);
-
-        expect(robot.withdraw, findsOneWidget);
-        expect(find.text(consentUnknownMessage), findsNothing);
-      });
     });
 
     testWidgets('links the privacy notice and the imprint', (tester) async {
@@ -350,18 +325,10 @@ void main() {
       expect(launcher.launched.single, isNot(contains(user.email)));
     });
 
-    testWidgets('meets accessibility guidelines with consent standing and '
-        'gone', (tester) async {
-      final standing = robotWith(tester);
-      await standing.supabase.signedIn();
-      await tester.expectMeetsAccessibilityGuidelines(standing.app);
-
-      await GetIt.I.reset();
-      final gone = robotWith(tester, granted: false);
-      await gone.supabase.signedIn();
-      await tester.expectMeetsAccessibilityGuidelines(
-        KeyedSubtree(key: UniqueKey(), child: gone.app),
-      );
+    testWidgets('meets accessibility guidelines', (tester) async {
+      final robot = robotWith(tester);
+      await robot.supabase.signedIn();
+      await tester.expectMeetsAccessibilityGuidelines(robot.app);
     });
   });
 }
