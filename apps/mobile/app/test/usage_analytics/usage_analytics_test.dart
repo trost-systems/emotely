@@ -81,6 +81,48 @@ void main() {
       ]);
     });
 
+    testWidgets('an allow before sign-in is recorded against the account', (
+      tester,
+    ) async {
+      final supabase = SupabaseStub()
+        ..script(otp: [codeSent()], verify: [sessionGranted()])
+        ..rest(usageAnalyticsRead, [rpcReturned(false)])
+        ..rest(usageAnalyticsGrant, [rpcReturned(null)]);
+      await launch(tester, supabase: supabase);
+
+      await tester.tap(find.byKey(UsageAnalyticsSheet.allowKey));
+      await tester.pumpAndSettle();
+
+      // Nobody to record it for yet: the choice lives on the device.
+      expect(supabase.to(usageAnalyticsRead), isEmpty);
+
+      await signInThroughTheScreen(tester);
+
+      const recorded = {
+        'version': usageAnalyticsVersion,
+        'purpose': 'usage_analytics',
+      };
+      expect(supabase.bodies('/rest/v1/rpc/record_consent'), [recorded]);
+    });
+
+    testWidgets('a refusal after a consent is recorded as a withdrawal', (
+      tester,
+    ) async {
+      final supabase = SupabaseStub()
+        ..script(otp: [codeSent()], verify: [sessionGranted()])
+        ..rest(usageAnalyticsRead, [rpcReturned(true)])
+        ..rest(usageAnalyticsWithdraw, [rpcReturned(null)]);
+      await launch(tester, supabase: supabase);
+
+      await tester.tap(find.byKey(UsageAnalyticsSheet.denyKey));
+      await tester.pumpAndSettle();
+      await signInThroughTheScreen(tester);
+
+      expect(supabase.bodies('/rest/v1/rpc/withdraw_consent'), [
+        {'version': usageAnalyticsVersion, 'purpose': 'usage_analytics'},
+      ]);
+    });
+
     testWidgets('wait behind the force-update screen', (tester) async {
       final analytics = await launch(
         tester,

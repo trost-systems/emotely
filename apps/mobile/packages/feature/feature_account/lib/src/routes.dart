@@ -60,7 +60,9 @@ class const PrivacySettingsRoute()
   Widget build(BuildContext context, GoRouterState state) => MultiBlocProvider(
     providers: [
       BlocProvider(
-        create: (_) => GetIt.I<ConsentBloc>()..add(const ConsentEvent.loaded()),
+        create: (_) =>
+            GetIt.I<ConsentBloc>()
+              ..add(const ConsentEvent.loaded(withDate: true)),
       ),
       BlocProvider(
         create: (_) =>

@@ -17,6 +17,10 @@ import 'package:testing/src/supabase_stub.dart';
 /// real one; a feature only ever reports or records whatever it is given.
 const testConsentVersion = '2026-01-01';
 
+/// The usage-analytics wording version a feature test records, for the
+/// same reason (#204).
+const testUsageAnalyticsVersion = '2026-01-02';
+
 /// The build a feature test runs as. Fixed rather than read from the host,
 /// so what a feedback mail says is the same on every machine; the app hands
 /// in the real one, read from `package_info_plus` and the platform.
@@ -76,6 +80,7 @@ void registerUtilitiesUnderTest(
     getIt,
     supabase: supabase.supabase,
     version: consentVersion,
+    usageAnalyticsVersion: testUsageAnalyticsVersion,
   );
   registerFeedbackLink(getIt, build: build);
 }

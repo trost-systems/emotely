@@ -128,6 +128,15 @@ class const ErrorReporter({required final PostHogGate gate}) {
   Future<void> consentWriteFailed(Exception error, StackTrace stackTrace) =>
       _report(error, stackTrace, step: 'consent_write');
 
+  /// The usage-analytics choice could not be recorded against the account
+  /// (#204). The device still obeys the choice, so PostHog is on or off as
+  /// asked; only the evidence lags, and the next sign-in tries again. Only
+  /// ever reported while usage analytics are allowed, like everything else.
+  Future<void> usageAnalyticsRecordFailed(
+    Exception error,
+    StackTrace stackTrace,
+  ) => _report(error, stackTrace, step: 'usage_analytics_record');
+
   Future<void> _report(
     Exception error,
     StackTrace stackTrace, {

@@ -41,6 +41,18 @@ class const PrivacySettingsPage({super.key}) extends StatelessWidget {
       'agree to first.';
   static const journalRetryLabel = 'Check again';
 
+  /// When journal consent was given, on the device's calendar: "Given 20
+  /// Sep 2026." English month names, like every other string here, until
+  /// the app is localised.
+  static String given(DateTime at) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', //
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    final local = at.toLocal();
+    return 'Given ${local.day} ${months[local.month - 1]} ${local.year}.';
+  }
+
   static const confirmTitle = 'Turn off journal sessions?';
   static const confirmMessage = 'New sessions stop; your entries stay.';
   static const confirmLabel = 'Turn off';
@@ -176,7 +188,7 @@ class const _JournalCard() extends StatelessWidget {
   static Future<void> _giveAgain(BuildContext context) async {
     final consent = context.read<ConsentBloc>();
     await GetIt.I<AccountNavigator>().requestConsent(context);
-    consent.add(const ConsentEvent.loaded());
+    consent.add(const ConsentEvent.loaded(withDate: true));
   }
 
   /// Asks once more before sessions stop. The dialog sits above this
@@ -197,6 +209,10 @@ class const _JournalCard() extends StatelessWidget {
 class const _JournalNote(final ConsentState state) extends StatelessWidget {
   @override
   Widget build(BuildContext context) => switch (state) {
+    ConsentKnown(granted: true, :final since?) => _Note(
+      '${PrivacySettingsPage.given(since)} '
+      '${PrivacySettingsPage.journalOnNote}',
+    ),
     ConsentKnown(granted: true) ||
     ConsentBusy() => const _Note(PrivacySettingsPage.journalOnNote),
     ConsentKnown(granted: false) ||
@@ -214,8 +230,9 @@ class const _JournalNote(final ConsentState state) extends StatelessWidget {
         const _Note(consentUnknownMessage, failed: true),
         TextButton(
           key: PrivacySettingsPage.journalRetryKey,
-          onPressed: () =>
-              context.read<ConsentBloc>().add(const ConsentEvent.loaded()),
+          onPressed: () => context.read<ConsentBloc>().add(
+            const ConsentEvent.loaded(withDate: true),
+          ),
           child: const Text(PrivacySettingsPage.journalRetryLabel),
         ),
       ],

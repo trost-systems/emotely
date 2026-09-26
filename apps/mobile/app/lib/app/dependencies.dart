@@ -78,5 +78,10 @@ void registerApp(
 /// with the wordings the app currently asks consent for.
 void _registerRecords(GetIt getIt, SupabaseClient supabase) {
   registerJournalRepository(getIt, supabase: supabase);
-  registerConsentRepository(getIt, supabase: supabase, version: consentVersion);
+  registerConsentRepository(
+    getIt,
+    supabase: supabase,
+    version: consentVersion,
+    usageAnalyticsVersion: usageAnalyticsVersion,
+  );
 }

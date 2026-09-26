@@ -93,6 +93,33 @@ void main() {
     });
 
     group('journal sessions', () {
+      testWidgets('says when consent was given', (tester) async {
+        final given = DateTime(2026, 9, 20, 18, 30);
+        final robot = robotWith(tester);
+        robot.supabase.rest('GET /rest/v1/consent_events', [
+          rows([
+            {'recorded_at': given.toUtc().toIso8601String()},
+          ]),
+        ]);
+        await robot.launch();
+
+        expect(
+          find.text('Given 20 Sep 2026. ${PrivacySettingsPage.journalOnNote}'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('leaves the date out when it cannot be read', (tester) async {
+        final robot = robotWith(tester);
+        robot.supabase.rest('GET /rest/v1/consent_events', [restRefused()]);
+        await robot.launch();
+
+        expect(robot.isOn(robot.journal), isTrue);
+        expect(find.text(PrivacySettingsPage.journalOnNote), findsOneWidget);
+        // Not worth a report: nothing but a line of text depends on it.
+        expect(robot.analytics.exceptions, isEmpty);
+      });
+
       testWidgets('asks before turning off, then withdraws', (tester) async {
         final robot = robotWith(tester, withdrawals: [rpcReturned(null)]);
         await robot.launch();

@@ -57,6 +57,7 @@ void main() {
       await reporter.entryMilestoneFailed(saveRefused, trace);
       await reporter.consentLoadFailed(saveRefused, trace);
       await reporter.consentWriteFailed(saveRefused, trace);
+      await reporter.usageAnalyticsRecordFailed(saveRefused, trace);
 
       expect(spy.exceptions, [
         captured(refused, {'step': 'session_round', 'status_code': 429}),
@@ -119,6 +120,10 @@ void main() {
         captured(
           withheld(PostgrestApiException, code: '42501', statusCode: 403),
           {'step': 'consent_write'},
+        ),
+        captured(
+          withheld(PostgrestApiException, code: '42501', statusCode: 403),
+          {'step': 'usage_analytics_record'},
         ),
       ]);
       for (final exception in spy.exceptions) {

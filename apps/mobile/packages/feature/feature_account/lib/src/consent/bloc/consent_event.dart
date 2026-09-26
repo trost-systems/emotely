@@ -8,7 +8,11 @@ part of 'consent_bloc.dart';
 sealed class ConsentEvent with _$ConsentEvent {
   /// Read from the server whether consent stands. Sent on every start and
   /// whenever the answer may be stale.
-  const factory loaded() = ConsentLoaded;
+  ///
+  /// [withDate] also reads when the standing consent was given, for the
+  /// screens that show it (Privacy settings); the gate does not need it and
+  /// does not wait for it.
+  const factory loaded({@Default(false) bool withDate}) = ConsentLoaded;
 
   /// The user ticked the box and pressed the button.
   const factory granted() = ConsentGranted;
