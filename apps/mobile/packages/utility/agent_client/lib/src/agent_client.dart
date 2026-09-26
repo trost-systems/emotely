@@ -37,10 +37,15 @@ class const AgentClient({
   /// [refreshAccessToken] and the same round is sent once more. A renewal
   /// that cannot happen signs the user out through the auth stream, which
   /// is what takes them to sign-in; nothing here decides that.
+  ///
+  /// [userContext] tells the agent who the user is, on every round: the
+  /// agent keeps nothing between rounds, and the context stays out of the
+  /// signed transcript. Without one the agent knows no name.
   Future<AdvanceResponse> advance({
     List<Object?>? transcript,
     String? signature,
     SessionAnswer? answer,
+    UserContext? userContext,
   }) async {
     final body = jsonEncode({
       'transcript': ?transcript,
@@ -51,6 +56,7 @@ class const AgentClient({
           'value': answer.answer.wireValue,
         },
       'app_version': appVersion,
+      'user_context': ?userContext?.toJson(),
     });
     try {
       return await _post(body);

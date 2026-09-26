@@ -61,6 +61,13 @@ handful, and the same tooling holds.
   fake — and everything else stays concrete. The journal no longer shares
   a consent bloc with the screens it opens: it asks the consent repository
   before every session, which is what it always had to do anyway.
+- *2026-09-26:* the same holds for data. The session needs to tell the
+  agent who the user is (#204), and the name belongs to the profile, not
+  to the session; so `feature_session` declares `UserContextSource`, the
+  app implements and registers it beside the navigators, and a test fakes
+  it. Same shape, same reason — two implementations, the app's and the
+  fake — so it is the navigator's exception applied to data, not a new
+  one.
 
 Decided on #39 (design comment of 2026-09-17), implemented as a stack of
 pull requests starting with the move to `apps/mobile`.

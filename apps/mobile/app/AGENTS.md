@@ -65,6 +65,10 @@ hand-rolled widgets.
   registered next to the feature in `registerApp`. The app is the only
   place that knows two features' pages and blocs together, so cross-feature
   routes, and what the user is told about their outcome, live there.
+- A feature that needs *data* another feature owns declares the same kind
+  of seam: an abstract source the app implements and registers next to
+  the navigators. The session's `UserContextSource` (who the user is, for
+  the agent) is implemented in `lib/app/user_context.dart`.
 - Build-time values (`--dart-define`s) are read and validated in the app
   only (`lib/app/environment.dart`, `urlFrom`) and passed into registration
   functions. No package calls `String.fromEnvironment`.

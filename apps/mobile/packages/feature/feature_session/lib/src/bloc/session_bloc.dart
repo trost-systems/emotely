@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:agent_client/agent_client.dart';
 import 'package:analytics/analytics.dart';
 import 'package:contract/contract.dart';
+import 'package:feature_session/src/user_context_source.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:journal_repository/journal_repository.dart';
@@ -23,6 +24,7 @@ class SessionBloc({
   required final SessionAnalytics _analytics,
   required final ErrorReporter _errors,
   required final JournalRepository _repository,
+  required final UserContextSource _userContext,
 }) extends Bloc<SessionEvent, SessionState> {
   this : super(const SessionState.initial()) {
     on<SessionStarted>(_onStarted);
@@ -68,7 +70,7 @@ class SessionBloc({
       }
     }
     unawaited(_analytics.sessionStarted());
-    await _round(emit, _agentClient.advance);
+    await _round(emit, _advance);
   }
 
   /// Picks a stored session up: the pending question goes straight back on
@@ -93,11 +95,7 @@ class SessionBloc({
       );
       return Future.value();
     }
-    return _round(
-      emit,
-      () =>
-          _agentClient.advance(transcript: _transcript, signature: _signature),
-    );
+    return _round(emit, _advance);
   }
 
   Future<void> _onAnswered(
@@ -108,14 +106,24 @@ class SessionBloc({
       unawaited(_analytics.answerSubmitted(question: pending.question));
       await _round(
         emit,
-        () => _agentClient.advance(
-          transcript: _transcript,
-          signature: _signature,
+        () => _advance(
           answer: (toolCallId: pending.toolCallId, answer: event.answer),
         ),
       );
     }
   }
+
+  /// One round with the agent: the transcript and signature held so far
+  /// (none starts a session), the [answer] if there is one, and who the
+  /// user is as the app knows it now. Every round goes through here, so no
+  /// path can forget the context.
+  Future<AdvanceResponse> _advance({SessionAnswer? answer}) async =>
+      await _agentClient.advance(
+        transcript: _transcript,
+        signature: _signature,
+        answer: answer,
+        userContext: await _userContext.current(),
+      );
 
   Future<void> _onRetried(SessionRetried event, Emitter<SessionState> emit) {
     unawaited(_analytics.sessionRetried());
@@ -188,7 +196,7 @@ class SessionBloc({
     _sessionId = null;
     _asked.clear();
     unawaited(_analytics.sessionStarted());
-    return _round(emit, _agentClient.advance);
+    return _round(emit, _advance);
   }
 
   SessionState _await(PendingQuestion pending) {

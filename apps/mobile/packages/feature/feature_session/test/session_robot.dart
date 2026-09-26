@@ -6,6 +6,7 @@ import 'package:get_it/get_it.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:testing/testing.dart';
 
+import 'fake_user_context_source.dart';
 import 'slide_rating.dart';
 
 /// Drives a journaling session on the feature's own page, composed the way
@@ -24,6 +25,10 @@ class SessionRobot(
 
   /// Signed in before launch unless a test hands in its own.
   late final SupabaseStub supabaseStub = supabase ?? SupabaseStub();
+
+  /// What the app tells the session about the user: nothing, unless a test
+  /// sets a context before or during the session.
+  final userContext = FakeUserContextSource();
 
   Finder get thinking => find.byType(CircularProgressIndicator);
   Finder get question => find.byKey(SessionView.questionKey);
@@ -46,6 +51,7 @@ class SessionRobot(
       analytics: analytics,
     );
     registerSession(GetIt.I);
+    GetIt.I.registerSingleton<UserContextSource>(userContext);
     return featureUnderTest(
       routes: [$sessionRoute],
       initialLocation: SessionRoute(resume: resume).location,
