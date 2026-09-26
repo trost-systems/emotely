@@ -313,6 +313,16 @@ test_fails_an_extra_request_in_any_run() {
   ((status == 1)) || fail "fails an extra request in any run: exit $status"
 }
 
+test_judges_runs_too_large_for_an_argument_list() {
+  # Three nightly runs pool thousands of frame times; this is more than
+  # any argument list holds (the first nightly gate died on it).
+  local run="$work/huge"
+  new_run "$run"
+  frames 200000 1.5 4 >"$run/scroll.timeline_summary.json"
+  gate "$run" --env test
+  ((status == 0)) || fail "judges runs too large for an argument list: exit $status, $(tail -1 "$work/gate.out")"
+}
+
 # --- baseline ---------------------------------------------------------------------
 
 test_takes_the_baseline_as_the_slowest_of_several_runs() {

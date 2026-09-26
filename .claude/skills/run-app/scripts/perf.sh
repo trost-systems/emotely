@@ -297,8 +297,10 @@ cmd_gate() {
     esac
   done
   [[ ${#runs[@]} -gt 0 ]] || die "gate needs a run directory"
-  local out="${runs[0]}" run all latency="[]"
-  all="$(for run in "${runs[@]}"; do run_json "$run"; done | jq -s .)"
+  local out="${runs[0]}" run latency="[]"
+  # One run per JSON value, through a file: the pooled frame times of a few
+  # runs are more than an argument list holds.
+  for run in "${runs[@]}"; do run_json "$run"; done >"$out/runs.json"
   # Measured only where a run had the smoke account (`perf.sh latency`).
   for run in "${runs[@]}"; do
     if [[ -f "$run/latency.json" ]]; then
@@ -308,11 +310,11 @@ cmd_gate() {
   done
   yq -o json "$budget" >"$out/budget.json"
   jq -n --slurpfile budget "$out/budget.json" \
-    --argjson runs "$all" \
+    --slurpfile runs "$out/runs.json" \
     --argjson latency "$latency" \
     --arg env "$env" \
     -f "$SCRIPTS_DIR/perf-gate.jq" >"$out/result.json"
-  rm -f "$out/budget.json"
+  rm -f "$out/budget.json" "$out/runs.json"
   jq -r -f "$SCRIPTS_DIR/perf-summary.jq" "$out/result.json" >"$out/summary.md"
   jq -e '.pass' "$out/result.json" >/dev/null || return 1
 }
