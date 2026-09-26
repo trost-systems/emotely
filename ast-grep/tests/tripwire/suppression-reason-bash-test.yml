@@ -10,7 +10,32 @@ valid:
     # The literal $v$ is the SQL dollar-quote tag below.
     # shellcheck disable=SC2016
     echo '$v$'
+  # ast-grep's own suppression, with its reason after the rule ids or above.
+  - |
+    run
+    # ast-grep-ignore: workaround-tag-bash -- the upstream tool prints this tag
+    echo 'TODO'
+  - |
+    run
+    # The upstream tool prints this tag verbatim.
+    # ast-grep-ignore: workaround-tag-bash
+    echo 'TODO'
 invalid:
+  - |
+    run
+    # ast-grep-ignore
+    echo 'x'
+  - |
+    run
+    # ast-grep-ignore: workaround-tag-bash
+    echo 'x'
+  - |
+    run
+    echo 'x' # ast-grep-ignore: workaround-tag-bash -- needed
+  - |
+    run
+    # - ast-grep-ignore: workaround-tag-bash
+    echo 'x'
   - |
     run
     # shellcheck disable=SC2016

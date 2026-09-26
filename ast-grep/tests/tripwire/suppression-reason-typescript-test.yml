@@ -33,7 +33,32 @@ valid:
   - |
     x;
     /* @ts-ignore */ f(3);
+  # ast-grep's own suppression, with its reason after the rule ids or above.
+  - |
+    x;
+    // ast-grep-ignore: workaround-tag-typescript -- quoting the upstream changelog verbatim
+    y;
+  - |
+    x;
+    // Quoting the upstream changelog verbatim here.
+    // ast-grep-ignore: workaround-tag-typescript
+    y;
 invalid:
+  - |
+    x;
+    // ast-grep-ignore
+    y;
+  - |
+    x;
+    // ast-grep-ignore: workaround-tag-typescript
+    y;
+  - |
+    x;
+    y; // ast-grep-ignore: workaround-tag-typescript, workaround-phrase-typescript, a-b, c-d
+  - |
+    x;
+    /* -- ast-grep-ignore: workaround-tag-typescript */
+    y;
   - |
     // @ts-expect-error
     f(1);

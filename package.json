@@ -10,7 +10,7 @@
     "lint": "biome ci --error-on-warnings .",
     "format": "biome check --write .",
     "typecheck": "tsc --build",
-    "ast-grep:check": "ast-grep test && bash scripts/ast-grep.test.sh && bash scripts/ast-grep.sh",
+    "ast-grep:check": "bash scripts/ast-grep.sh test && bash scripts/ast-grep.test.sh && bash scripts/ast-grep.sh",
     "spell": "cspell lint --no-progress --no-summary --no-cache"
   },
   "devDependencies": {

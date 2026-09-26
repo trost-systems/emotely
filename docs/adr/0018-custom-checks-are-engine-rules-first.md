@@ -91,6 +91,13 @@ shellcheck. The Dart and biome rows were probed on scratch files.
 | Dart | Upper-case `TODO`, `FIXME` and `HACK` in any comment (`todo`, `fixme`, `hack`: errors). A comment that opens with a lower-case `todo` (`flutter_style_todos`). A reason on every `ignore:` and `ignore_for_file:` (`document_ignores`), and stale ignores (`unnecessary_ignore`). | `XXX`, and the lower-case tag forms (`fixme(`, `hack:`, a `todo:` mid-comment). The workaround phrases. A reason on `coverage:ignore-*` and `cognitive_complexity:ignore*`, which neither the analyzer nor those tools check. |
 | TypeScript | `biome-ignore` without an explanation (`suppressions/parse`, an error). Any `@ts-ignore` (`noTsIgnore`). | All four tags and the phrases: biome has no warning-comments rule. A reason on `@ts-expect-error` and `@ts-nocheck`: biome has no ban-ts-comment rule. |
 | Shell | Nothing: shellcheck has no rule for tags and does not want a reason on `disable=`. | All of it. |
+| All three: `ast-grep-ignore` (added 2026-09-26, #165) | Rule ids on it: ast-grep's built-in `no-suppress-all`, which `scripts/ast-grep.sh` turns into an error. No other tool reads ast-grep's own suppression. | A reason, after the rule ids or on the comment line above, the same bar as every other suppression. |
+
+`ast-grep-ignore` silences any rule of the gate, the tripwire included, so
+it needs both halves. A bare one trailing code would silence the finding on
+itself; `no-suppress-all` closes that. One way round stays open and in
+plain sight: a trailing `ast-grep-ignore` that names a `suppression-reason`
+id silences its own finding.
 
 Deferring to those tools accepts their bar, not ours. biome takes any
 explanation after the colon, one word included, where the tripwire wants
@@ -169,9 +176,11 @@ A rule is one file plus its test, and nothing else changes:
    request, and cover only the gap.
 2. Pick the directory by the test above, and write the test first:
    `ast-grep/tests/<directory>/<rule-id>-test.yml`, with `valid` and
-   `invalid` cases. Run `pnpm exec ast-grep test` and see it fail.
-   `ast-grep test` exits 0 on a test whose rule does not exist yet, printing
-   only "Configuration not found", so read the output, not the exit code.
+   `invalid` cases. Run `pnpm exec bash scripts/ast-grep.sh test` and see
+   it fail. Plain `ast-grep test` would pass here: it exits 0 on a test
+   whose rule does not exist, printing only "Configuration not found". The
+   script fails it, so a renamed or deleted rule cannot silently lose its
+   tests either.
 3. Write `ast-grep/rules/<directory>/<rule-id>.yml`: `severity: error`, a
    comment saying why the rule exists, which existing rules fall short, and
    whether it is general or emotely-specific, and a `message` that names

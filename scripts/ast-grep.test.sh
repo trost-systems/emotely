@@ -142,6 +142,50 @@ test_fails_a_define_read_in_a_feature_package() {
 ${output}"
 }
 
+# ast-grep's own suppression silences any rule here, so it must name the
+# rules it silences and give its reason like every other suppression. A bare
+# one on a code line would otherwise silence the finding on itself.
+test_wants_rule_ids_and_a_reason_on_ast_grep_ignore() {
+  local dir
+  dir="$(repo \
+    apps/mobile/packages/feature/feature_x/lib/x.dart "void f() {}\n// ast-grep-ignore: no-from-environment\nconst a = String.fromEnvironment('A');\nconst b = String.fromEnvironment('B'); // ast-grep-ignore\n" \
+    apps/mobile/packages/utility/utility_y/lib/y.dart "void f() {}\n// ast-grep-ignore: no-from-environment -- the harness replays a recorded define\nconst a = String.fromEnvironment('A');\n")"
+
+  local expected
+  expected="$(printf '%s\n' \
+    'apps/mobile/packages/feature/feature_x/lib/x.dart:2: unexplained suppression "ast-grep-ignore: no-from-environment": give its reason in 4 or more words on the same line or on the comment line above' \
+    'apps/mobile/packages/feature/feature_x/lib/x.dart:4: ast-grep-ignore must specify rule IDs.')"
+  local actual
+  actual="$(findings "${dir}")"
+  [[ "${actual}" == "${expected}" ]] ||
+    fail "wants rule ids and a reason on ast-grep-ignore: got
+${actual}"
+}
+
+# `ast-grep test` passes a test whose rule is gone, printing only
+# "Configuration not found"; `ast-grep.sh test` fails it.
+test_rule_tests_pass_with_every_rule_in_place() {
+  local dir
+  dir="$(repo)"
+
+  (cd "${dir}" && bash scripts/ast-grep.sh test >/dev/null 2>&1) ||
+    fail "passes the rule tests of an unchanged rule set: exited non-zero"
+}
+
+test_rule_tests_fail_on_a_test_whose_rule_was_renamed() {
+  local dir output
+  dir="$(repo)"
+  sed -i.orig 's/^id: no-from-environment$/id: no-define-reads/' \
+    "${dir}/ast-grep/rules/architecture/no-from-environment.yml"
+
+  if output="$(cd "${dir}" && bash scripts/ast-grep.sh test 2>&1)"; then
+    fail "fails a test whose rule was renamed: exited 0"
+  fi
+  [[ "${output}" == *'no rule with the id "no-from-environment"'* ]] ||
+    fail "names the orphaned test's rule id: got
+${output}"
+}
+
 test_writes_github_annotations_when_asked() {
   local dir output
   dir="$(repo scripts/a.sh '# TODO\n')"
@@ -165,6 +209,9 @@ test_exempts_generated_files_and_anything_git_does_not_track
 test_reads_defines_only_in_each_apps_environment_file
 test_fails_with_the_file_the_line_and_the_reason
 test_fails_a_define_read_in_a_feature_package
+test_wants_rule_ids_and_a_reason_on_ast_grep_ignore
+test_rule_tests_pass_with_every_rule_in_place
+test_rule_tests_fail_on_a_test_whose_rule_was_renamed
 test_writes_github_annotations_when_asked
 test_passes_a_clean_tree_from_any_directory_inside_it
 

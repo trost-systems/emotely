@@ -8,6 +8,14 @@
 #   `biome-ignore` without its explanation (`suppressions/parse`) and any
 #   `@ts-ignore` (`noTsIgnore`).
 # - Shell: shellcheck's `disable=`.
+# - All three: ast-grep's own `ast-grep-ignore`, which silences any rule of
+#   this gate, the tripwire included. Nothing else checks it: ast-grep's
+#   `no-suppress-all` (turned on in scripts/ast-grep.sh) only wants the rule
+#   ids, so the reason goes after them, and the ids never count as words.
+#   ast-grep skips any punctuation before the directive (`// - ast-grep-
+#   ignore` still suppresses), so its line start here is `[^\p{L}\p{N}\n]*`.
+#   One way round stays open: a trailing `ast-grep-ignore` that names this
+#   rule's own id silences the finding on itself, in plain sight.
 # A comment line is a suppression when it starts with one. A directive that
 # only closes a range (`coverage:ignore-end`) needs no reason; the one that
 # opened it has it. A directive only mentioned inside prose is not one.
@@ -48,13 +56,13 @@ ignores:
 utils:
   directive:
     kind: comment
-    regex: '(?m)^[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*(?:coverage:ignore-(?:file|line|start)|cognitive_complexity:ignore(?:_for_file)?)\b'
+    regex: '(?m)^(?:[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*(?:coverage:ignore-(?:file|line|start)|cognitive_complexity:ignore(?:_for_file)?)|[^\p{L}\p{N}\n]*ast-grep-ignore)\b'
   # The directive followed by four words on the same line.
   reason-beside:
-    regex: '(?m)^[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*(?:coverage:ignore-(?:file|line|start)|cognitive_complexity:ignore(?:_for_file)?)\b(?:[ \t]*(?:[^\s]+[ \t]+)*?[^\s\p{L}]*\p{L}[^\s]*(?:[ \t]|$)){4}'
+    regex: '(?m)^(?:[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*(?:coverage:ignore-(?:file|line|start)|cognitive_complexity:ignore(?:_for_file)?)\b|[^\p{L}\p{N}\n]*ast-grep-ignore(?::[ \t]*[\w-]+(?:[ \t]*,[ \t]*[\w-]+)*)?[^\w,:\n-])(?:[ \t]*(?:[^\s]+[ \t]+)*?[^\s\p{L}]*\p{L}[^\s]*(?:[ \t]|$)){4}'
   suppression:
     kind: comment
-    regex: '(?m)^[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*(?:ignore(?:_for_file)?:[ \t]*(?:type=\w+|\w+_\w+)|biome-ignore(?:-all|-start)?(?:[ \t]+[^\s:*]+)?(?::|[ \t]*(?:\*+/)?[ \t]*$)|coverage:ignore-(?:file|line|start)\b|cognitive_complexity:ignore(?:_for_file)?\b|@ts-(?:ignore|expect-error|nocheck)\b|shellcheck[ \t]+disable=[\w,]+)'
+    regex: '(?m)^[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*(?:ignore(?:_for_file)?:[ \t]*(?:type=\w+|\w+_\w+)|biome-ignore(?:-all|-start)?(?:[ \t]+[^\s:*]+)?(?::|[ \t]*(?:\*+/)?[ \t]*$)|coverage:ignore-(?:file|line|start)\b|cognitive_complexity:ignore(?:_for_file)?\b|@ts-(?:ignore|expect-error|nocheck)\b|shellcheck[ \t]+disable=[\w,]+)|^[^\p{L}\p{N}\n]*ast-grep-ignore\b'
   # A comment whose last line holds four words: the line above a directive.
   reason-above:
     kind: comment
@@ -88,7 +96,7 @@ transform:
   DIRECTIVE:
     replace:
       source: $C
-      replace: '(?s)\A.*?(?m:^)[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*(coverage:ignore-(?:file|line|start)|cognitive_complexity:ignore(?:_for_file)?)\b.*\z'
+      replace: '(?s)\A.*?(?m:^)(?:[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*|[^\p{L}\p{N}\n]*)(coverage:ignore-(?:file|line|start)|cognitive_complexity:ignore(?:_for_file)?|ast-grep-ignore(?::[ \t]*[\w-]+(?:[ \t]*,[ \t]*[\w-]+)*)?)\b.*\z'
       by: "$1"
 message: 'unexplained suppression "$DIRECTIVE": give its reason in 4 or more words on the same line or on the comment line above'
 ---
@@ -98,12 +106,12 @@ severity: error
 utils:
   directive:
     kind: comment
-    regex: '(?m)^[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*@ts-(?:expect-error|nocheck)\b'
+    regex: '(?m)^(?:[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*@ts-(?:expect-error|nocheck)|[^\p{L}\p{N}\n]*ast-grep-ignore)\b'
   reason-beside:
-    regex: '(?m)^[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*@ts-(?:expect-error|nocheck)\b(?:[ \t]*(?:[^\s]+[ \t]+)*?[^\s\p{L}]*\p{L}[^\s]*(?:[ \t]|$)){4}'
+    regex: '(?m)^(?:[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*@ts-(?:expect-error|nocheck)\b|[^\p{L}\p{N}\n]*ast-grep-ignore(?::[ \t]*[\w-]+(?:[ \t]*,[ \t]*[\w-]+)*)?[^\w,:\n-])(?:[ \t]*(?:[^\s]+[ \t]+)*?[^\s\p{L}]*\p{L}[^\s]*(?:[ \t]|$)){4}'
   suppression:
     kind: comment
-    regex: '(?m)^[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*(?:ignore(?:_for_file)?:[ \t]*(?:type=\w+|\w+_\w+)|biome-ignore(?:-all|-start)?(?:[ \t]+[^\s:*]+)?(?::|[ \t]*(?:\*+/)?[ \t]*$)|coverage:ignore-(?:file|line|start)\b|cognitive_complexity:ignore(?:_for_file)?\b|@ts-(?:ignore|expect-error|nocheck)\b|shellcheck[ \t]+disable=[\w,]+)'
+    regex: '(?m)^[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*(?:ignore(?:_for_file)?:[ \t]*(?:type=\w+|\w+_\w+)|biome-ignore(?:-all|-start)?(?:[ \t]+[^\s:*]+)?(?::|[ \t]*(?:\*+/)?[ \t]*$)|coverage:ignore-(?:file|line|start)\b|cognitive_complexity:ignore(?:_for_file)?\b|@ts-(?:ignore|expect-error|nocheck)\b|shellcheck[ \t]+disable=[\w,]+)|^[^\p{L}\p{N}\n]*ast-grep-ignore\b'
   reason-above:
     kind: comment
     regex: '(?m)(?:\A|\n)[ \t]*(?:/{2,}|/\*+|\*+|#+)?(?:[ \t]*(?:[^\s]+[ \t]+)*?[^\s\p{L}]*\p{L}[^\s]*(?:[ \t]|$)){4}[^\n]*\z'
@@ -135,7 +143,7 @@ transform:
   DIRECTIVE:
     replace:
       source: $C
-      replace: '(?s)\A.*?(?m:^)[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*(@ts-(?:expect-error|nocheck))\b.*\z'
+      replace: '(?s)\A.*?(?m:^)(?:[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*|[^\p{L}\p{N}\n]*)(@ts-(?:expect-error|nocheck)|ast-grep-ignore(?::[ \t]*[\w-]+(?:[ \t]*,[ \t]*[\w-]+)*)?)\b.*\z'
       by: "$1"
 message: 'unexplained suppression "$DIRECTIVE": give its reason in 4 or more words on the same line or on the comment line above'
 ---
@@ -145,14 +153,14 @@ severity: error
 utils:
   directive:
     kind: comment
-    regex: '(?m)^[ \t]*#+[ \t]*shellcheck[ \t]+disable=[\w,]+'
+    regex: '(?m)^(?:[ \t]*#+[ \t]*shellcheck[ \t]+disable=[\w,]+|[^\p{L}\p{N}\n]*ast-grep-ignore\b)'
   # After the code list, which the next character must end: otherwise the
   # regex could split `SC2086` and count its tail as a word.
   reason-beside:
-    regex: '(?m)^[ \t]*#+[ \t]*shellcheck[ \t]+disable=[\w,]+[^\w,\n](?:[ \t]*(?:[^\s]+[ \t]+)*?[^\s\p{L}]*\p{L}[^\s]*(?:[ \t]|$)){4}'
+    regex: '(?m)^(?:[ \t]*#+[ \t]*shellcheck[ \t]+disable=[\w,]+[^\w,\n]|[^\p{L}\p{N}\n]*ast-grep-ignore(?::[ \t]*[\w-]+(?:[ \t]*,[ \t]*[\w-]+)*)?[^\w,:\n-])(?:[ \t]*(?:[^\s]+[ \t]+)*?[^\s\p{L}]*\p{L}[^\s]*(?:[ \t]|$)){4}'
   suppression:
     kind: comment
-    regex: '(?m)^[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*(?:ignore(?:_for_file)?:[ \t]*(?:type=\w+|\w+_\w+)|biome-ignore(?:-all|-start)?(?:[ \t]+[^\s:*]+)?(?::|[ \t]*(?:\*+/)?[ \t]*$)|coverage:ignore-(?:file|line|start)\b|cognitive_complexity:ignore(?:_for_file)?\b|@ts-(?:ignore|expect-error|nocheck)\b|shellcheck[ \t]+disable=[\w,]+)'
+    regex: '(?m)^[ \t]*(?:/{2,}|/\*+|\*+|#+)?[ \t]*(?:ignore(?:_for_file)?:[ \t]*(?:type=\w+|\w+_\w+)|biome-ignore(?:-all|-start)?(?:[ \t]+[^\s:*]+)?(?::|[ \t]*(?:\*+/)?[ \t]*$)|coverage:ignore-(?:file|line|start)\b|cognitive_complexity:ignore(?:_for_file)?\b|@ts-(?:ignore|expect-error|nocheck)\b|shellcheck[ \t]+disable=[\w,]+)|^[^\p{L}\p{N}\n]*ast-grep-ignore\b'
   reason-above:
     kind: comment
     regex: '(?m)(?:\A|\n)[ \t]*(?:/{2,}|/\*+|\*+|#+)?(?:[ \t]*(?:[^\s]+[ \t]+)*?[^\s\p{L}]*\p{L}[^\s]*(?:[ \t]|$)){4}[^\n]*\z'
@@ -184,6 +192,6 @@ transform:
   DIRECTIVE:
     replace:
       source: $C
-      replace: '(?s)\A.*?(?m:^)[ \t]*#+[ \t]*(shellcheck[ \t]+disable=[\w,]+).*\z'
+      replace: '(?s)\A.*?(?m:^)(?:[ \t]*#+[ \t]*|[^\p{L}\p{N}\n]*)(shellcheck[ \t]+disable=[\w,]+|ast-grep-ignore(?::[ \t]*[\w-]+(?:[ \t]*,[ \t]*[\w-]+)*)?).*\z'
       by: "$1"
 message: 'unexplained suppression "$DIRECTIVE": give its reason in 4 or more words on the same line or on the comment line above'
