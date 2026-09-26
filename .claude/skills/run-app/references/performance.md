@@ -63,10 +63,10 @@ The budget judges a run by where it measured (`--env`):
 
 On an emulator the 60 fps floor measures the host, not the app, so the
 budget marks it `floor: reported` there: raster is the host's graphics
-stack (a 16.7 ms swap locally, 80-160 ms of software rendering on the
+stack (a 16.7 ms swap locally, 65-170 ms of software rendering on the
 runner), a shared host stalls single frames (the runner missed 1.5-11%),
-and the runner's build p90 swings 1.5x from one runner to the next, up to
-17.2 ms. So the nightly samples three runners and holds their median to
+and the runner's build p90 swings 1.6x from one runner to the next, up to
+17.8 ms. So the nightly samples three runners and holds their median to
 the baseline plus 20%. Locally, other sessions' builds move the build p90
 more than any headroom allows (2.5 to 5.0 ms on the same commit), so a
 local run reports frames and gates only the request counts: to check a

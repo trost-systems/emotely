@@ -32,7 +32,7 @@ def round3: . * 1000 | round / 1000;
 
 # The 60 fps floor gates unless the environment says `floor: reported`: on
 # an emulator the floor measures the host (a shared runner stalls single
-# frames, and its build p90 swings 1.5x from one runner to the next), so
+# frames, and its build p90 swings 1.6x from one runner to the next), so
 # only the baseline gates there.
 def floor_gated($environment): $environment.floor != "reported";
 
