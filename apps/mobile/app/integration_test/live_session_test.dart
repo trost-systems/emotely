@@ -11,6 +11,7 @@
 // user (a password account like the store review accounts; everyone else
 // signs in with a code through the app's own screen).
 
+import 'package:analytics/analytics.dart';
 import 'package:design_system/design_system.dart';
 import 'package:emotely/app/app.dart';
 import 'package:emotely/app/dependencies.dart';
@@ -38,7 +39,6 @@ void main() {
   testWidgets('completes a full session against the deployed agent', (
     tester,
   ) async {
-    await Posthog().setup(PostHogConfig(posthogKey)..host = posthogHost);
     final robot = LiveSessionRobot(tester);
     await robot.launch();
 
@@ -96,6 +96,7 @@ class LiveSessionRobot(final WidgetTester tester) {
       configHttpClient: httpClient,
       supabase: supabase.client,
       posthog: posthog,
+      posthogConfig: PostHogConfig(posthogKey)..host = posthogHost,
       appVersion: packageInfo.version,
       // The real build, as `main` composes it: this runs on a device.
       build: BuildInfo.ofPlatform(
@@ -108,7 +109,11 @@ class LiveSessionRobot(final WidgetTester tester) {
       passwordAccounts: const {},
       google: googleClients,
     );
-    await tester.pumpWidget(const EmotelyApp());
+    // The smoke account has allowed usage analytics, as a tester would on
+    // the first-launch sheet: the run reports to PostHog like one (#204).
+    final gate = GetIt.I<PostHogGate>();
+    await gate.allow();
+    await tester.pumpWidget(EmotelyApp(screenViews: gate.screenObserver()));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(JournalView.startKey));
     await tester.pumpAndSettle();

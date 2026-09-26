@@ -2,6 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:emotely/app/router.dart';
 import 'package:emotely/config/bloc/config_bloc.dart';
 import 'package:emotely/config/view/config_gate.dart';
+import 'package:feature_account/feature_account.dart';
 import 'package:feature_auth/feature_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -13,8 +14,17 @@ import 'package:posthog_flutter/posthog_flutter.dart';
 /// and the router that decides which screen that is (ADR 0016).
 ///
 /// Every dependency comes out of the container `registerApp` filled
-/// (ADR 0015); the widget itself is handed nothing.
-class const EmotelyApp({super.key}) extends StatelessWidget {
+/// (ADR 0015); the widget itself is handed one thing, [screenViews]: the
+/// route observer PostHog counts screens and draws surveys through, built by
+/// the PostHog gate so that it counts nothing until the user allowed usage
+/// analytics (#204). It is built once per mounted app, by whoever mounts it:
+/// it registers itself with the widgets binding and tracks this navigator's
+/// routes, so neither a fresh one each frame nor one shared between apps
+/// would do.
+class const EmotelyApp({
+  required final NavigatorObserver screenViews,
+  super.key,
+}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MultiBlocProvider(
     providers: [
@@ -26,31 +36,26 @@ class const EmotelyApp({super.key}) extends StatelessWidget {
         create: (_) => GetIt.I<ConfigBloc>()..add(const ConfigEvent.loaded()),
       ),
     ],
-    child: const _Router(),
+    child: _Router(screenViews: screenViews),
   );
 }
 
 /// Owns the router for as long as the app is mounted: built once over the
 /// auth bloc above it, never per rebuild, or every rebuild would start the
 /// navigation over.
-class const _Router() extends StatefulWidget {
+class const _Router({required final NavigatorObserver screenViews})
+    extends StatefulWidget {
   @override
   State<_Router> createState() => _RouterState();
 }
 
 class _RouterState() extends State<_Router> {
-  /// One observer per mounted app, built once rather than per rebuild: it
-  /// registers itself with the widgets binding and tracks this navigator's
-  /// routes, so neither a fresh one each frame nor one shared between apps
-  /// would do.
-  final _surveyObserver = PosthogObserver();
-
   late final AuthBloc _auth = context.read<AuthBloc>();
   late final _refresh = SignedInListenable(_auth);
   late final GoRouter _router = createRouter(
     auth: _auth,
     refresh: _refresh,
-    observers: [_surveyObserver],
+    observers: [widget.screenViews],
   );
 
   @override
@@ -77,9 +82,14 @@ class _RouterState() extends State<_Router> {
     // above `MaterialApp` its own state would outlive a remount of the app
     // and keep the old route stack alive with it. The startup gate sits
     // inside it too, over the navigator: nothing below it is built until
-    // the server has said this build may run (#49).
+    // the server has said this build may run (#49). Under the gate, the
+    // usage-analytics question: once this build may run, it comes before
+    // anything else the user sees, over whatever screen the router shows
+    // (#204). The PostHog wrapper does nothing until the SDK is set up.
     builder: (context, child) => PostHogWidget(
-      child: ConfigGate(child: child ?? const SizedBox.shrink()),
+      child: ConfigGate(
+        child: UsageAnalyticsPrompt(child: child ?? const SizedBox.shrink()),
+      ),
     ),
   );
 }

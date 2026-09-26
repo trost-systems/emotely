@@ -35,7 +35,8 @@ hand-rolled widgets.
   it only when that boolean flips. Never gate a screen on auth state
   inside a widget — add to the redirect.
 - The router is built once, in `_RouterState`, over the auth bloc above
-  it. `ConfigGate` and `PostHogWidget` live in `MaterialApp.router`'s
+  it. `ConfigGate`, the usage-analytics sheet (`UsageAnalyticsPrompt`,
+  under the gate) and `PostHogWidget` live in `MaterialApp.router`'s
   `builder`, over the navigator.
 - Signed in, the user lives in two tabs (a `StatefulShellRoute` in
   `routes.dart`, rendered by `lib/app/shell.dart`): the journal with its
@@ -68,6 +69,12 @@ hand-rolled widgets.
   only (`lib/app/environment.dart`, `urlFrom`) and passed into registration
   functions. No package calls `String.fromEnvironment`.
 - Tests compose with the same `registerApp` and replace only the leaves:
-  the two http clients, the Supabase client, the PostHog instance
-  (`test/helpers/app_harness.dart`). `getIt.reset()` runs in teardown;
-  `allowReassignment` stays off so a double registration fails loudly.
+  the two http clients, the Supabase client, the PostHog instance and the
+  preferences store (`test/helpers/app_harness.dart`). `getIt.reset()`
+  runs in teardown; `allowReassignment` stays off so a double registration
+  fails loudly.
+- PostHog is reached only through `PostHogGate` (the `analytics` utility):
+  every event builder and the error reporter take the gate, never
+  `Posthog`, and `main` hands the instance and its config to `registerApp`
+  and nothing else. The gate calls `setup` only once the user allowed
+  usage analytics (#204, § 25 TDDDG), so nothing else calls `setup`.

@@ -16,20 +16,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// user allowed it (#204).
 ///
 /// The gate is registered shut: `main` awaits `PostHogGate.restore` before
-/// the first frame, which reads the choice kept in [preferences] and opens
-/// the gate if it allows. [consentVersion] names the wording the app
+/// the first frame, which reads the choice kept in the platform's
+/// preferences (faked at its platform interface under test) and opens the
+/// gate if it allows. [consentVersion] names the wording the app
 /// currently asks journal consent for.
 void registerAnalytics(
   GetIt getIt, {
   required Posthog posthog,
   required PostHogConfig config,
-  required SharedPreferencesAsync preferences,
   required String consentVersion,
 }) {
   final gate = PostHogGate(
     posthog: posthog,
     config: config,
-    store: AnalyticsChoiceStore(preferences: preferences),
+    store: AnalyticsChoiceStore(preferences: SharedPreferencesAsync()),
   );
   getIt
     ..registerSingleton(gate)

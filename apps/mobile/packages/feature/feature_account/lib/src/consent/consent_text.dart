@@ -101,32 +101,6 @@ const consentDeclinedMessage =
 /// The link to the whole notice, from the consent screen.
 const consentReadNoticeLabel = 'Read the full privacy notice';
 
-/// What the More tab says under the withdraw row while consent stands.
-/// Art. 7 (3): withdrawal must be as easy as giving, and the user should
-/// know what it does before they tap.
-const withdrawConsentExplanation =
-    'You consented to your entries being sent to a model provider so emotely '
-    'can write them with you. Withdraw it and no new session can start. The '
-    'entries you already wrote stay where they are until you delete them, '
-    'and withdrawing does not delete your account.';
-
-/// The More tab's withdraw row.
-const withdrawConsentLabel = 'Withdraw consent';
-
-/// What the More tab says while consent does not stand, with the way
-/// forward. Deliberately silent on *why* it does not stand: a user who has
-/// never been asked reads this too, on their first visit, and "you have
-/// withdrawn" would be untrue for them. Giving it must be no harder than
-/// taking it back.
-const consentMissingExplanation =
-    'emotely does not have your consent to send your entries to a model '
-    'provider, so no session can start. Your entries stay untouched, and '
-    'you can give it whenever you like.';
-
-/// The More tab's row to the consent screen while consent does not stand —
-/// first time or after a withdrawal alike.
-const giveConsentLabel = 'Give consent';
-
 /// Shown when the consent could not be recorded. The session does not start
 /// on a consent that was never written down, so this says what happened
 /// rather than quietly continuing.

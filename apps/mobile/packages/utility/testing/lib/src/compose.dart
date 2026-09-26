@@ -66,7 +66,6 @@ void registerUtilitiesUnderTest(
     getIt,
     posthog: analytics.posthog,
     config: PostHogConfig('phc_test'),
-    preferences: analytics.preferences,
     consentVersion: consentVersion,
   );
   // `main` awaits this before the first frame; here every call PostHog

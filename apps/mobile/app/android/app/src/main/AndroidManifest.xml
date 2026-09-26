@@ -30,7 +30,7 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <!-- PostHog is set up from Dart (main.dart), never from this manifest. -->
+        <!-- PostHog is set up from Dart (PostHogGate), only once the user allowed usage analytics; never from this manifest. -->
         <meta-data
             android:name="com.posthog.posthog.AUTO_INIT"
             android:value="false" />

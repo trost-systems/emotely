@@ -10,7 +10,6 @@ void main() {
       getIt,
       posthog: spy.posthog,
       config: PostHogConfig('phc_test'),
-      preferences: spy.preferences,
       consentVersion: 'v1',
     );
 

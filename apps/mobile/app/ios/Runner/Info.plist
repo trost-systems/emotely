@@ -41,7 +41,7 @@
 	<!-- Only HTTPS, which is exempt: no export-compliance prompt per build. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<!-- PostHog is set up from Dart (main.dart), never from this plist. -->
+	<!-- PostHog is set up from Dart (PostHogGate), only once the user allowed usage analytics; never from this plist. -->
 	<key>com.posthog.posthog.AUTO_INIT</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>

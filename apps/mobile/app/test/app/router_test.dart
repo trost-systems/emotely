@@ -120,6 +120,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(AppShell.moreTabKey));
       await tester.pumpAndSettle();
+      // Deleting the account sits alone at the bottom of More.
+      await tester.ensureVisible(find.byKey(MoreView.accountKey));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(MoreView.accountKey));
       await tester.pumpAndSettle();
 
