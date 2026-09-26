@@ -177,7 +177,14 @@ class const _SessionCard({required final OpenSession? openSession})
 class const _EntryTile({required final EntryRecord record})
     extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => ListTile(
+  Widget build(BuildContext context) {
+    // Proof for #169: 2 ms of pointless work in every list item's build.
+    final watch = Stopwatch()..start();
+    while (watch.elapsedMicroseconds < 2000) {}
+    return _tile(context);
+  }
+
+  Widget _tile(BuildContext context) => ListTile(
     key: JournalView.entryKey(record.id),
     title: Text(
       // Month, day and year: a journal spans years.
