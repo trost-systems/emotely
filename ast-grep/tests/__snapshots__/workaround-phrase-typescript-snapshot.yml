@@ -1,0 +1,25 @@
+id: workaround-phrase-typescript
+snapshots:
+  ? |
+    /* workaround for the SDK's missing type */
+    const a = 1;
+  : labels:
+    - source: /* workaround for the SDK's missing type */
+      style: primary
+      start: 0
+      end: 43
+  ? |
+    // Skip the check for now.
+    const a = 1;
+  : labels:
+    - source: // Skip the check for now.
+      style: primary
+      start: 0
+      end: 26
+  ? |
+    const a = 1; // temporary
+  : labels:
+    - source: // temporary
+      style: primary
+      start: 13
+      end: 25

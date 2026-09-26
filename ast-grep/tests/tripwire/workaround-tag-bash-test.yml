@@ -1,0 +1,19 @@
+id: workaround-tag-bash
+valid:
+  # Quotes, heredoc bodies and parameter expansions hold no comments.
+  - |
+    #!/usr/bin/env bash
+    dir="$(mktemp -d "$PREFIX/.setup-XXXXXX")"
+    echo 'no # TODO here' "nor # TODO here"
+    echo "${#args[@]} $# ${x#TODO}"
+    cat <<'EOF'
+    # TODO in a heredoc body
+    EOF
+invalid:
+  # A comment after code.
+  - |
+    run # TODO: after code
+  # A comment of its own.
+  - |
+    # FIXME
+    run

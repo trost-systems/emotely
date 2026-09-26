@@ -1,0 +1,100 @@
+# The comment tripwire (ADR 0018, issue 166), part 2 of 3: a phrase that
+# announces a workaround, in an implementation comment (`//`, `/* */`, `#`).
+# Documentation comments (Dart `///`, and `/** */`) describe behavior to a
+# caller ("too many codes for now") and may use these words.
+#
+# "workaround" is the noun only; the verb "work around" describes what a user
+# or caller does. "temporary" passes before a thing that exists at run time
+# ("a temporary file"). ast-grep's regex has no lookahead, so that allowance
+# cannot be checked per occurrence: "temporary" fails when nothing follows it
+# on its line, or when no allowed noun follows any "temporary" in the comment.
+# A comment holding both "temporary file" and "temporary fix" passes (ADR 0018).
+#
+# One document per language: an ast-grep rule has exactly one. Keep the three
+# identical apart from `id`, `language`, `ignores` and the documentation
+# comment forms (none in shell).
+id: workaround-phrase-dart
+language: dart
+severity: error
+# Generated code answers to its generator, not to this rule.
+ignores:
+  - "**/*.g.dart"
+  - "**/*.freezed.dart"
+  - "**/*.options.dart"
+  - "**/*.mocks.dart"
+utils:
+  phrase:
+    any:
+      - regex: '(?i)\bwork-?arounds?\b|\bfor now\b|\btemporarily\b'
+      # "temporary" with no word after it on its line.
+      - regex: '(?im)\btemporary[ \t]*(?:[^\w\s]|$)'
+      - all:
+          - regex: '(?i)\btemporary\b'
+          - not:
+              regex: '(?i)\btemporary\s+(?:accounts?|branch(?:es)?|buffers?|cop(?:y|ies)|credentials?|dir(?:ectory|ectories|s)?|files?|folders?|keys?|passwords?|paths?|tables?|tokens?|values?|variables?|worktrees?)\b'
+rule:
+  kind: comment
+  pattern: $C
+  matches: phrase
+  not:
+    # `///` but not `////`; `/**` but not the empty `/**/`.
+    regex: '\A(?:///(?:[^/]|\z)|/\*\*(?:[^/]|\z))'
+transform:
+  PHRASE:
+    replace:
+      source: $C
+      replace: '(?is)\A(?:.*?\b(work-?arounds?)\b|.*?\b(for now)\b|.*?\b(temporarily)\b|.*?\b(temporary)\b).*\z'
+      by: "$1$2$3$4"
+message: 'workaround comment "$PHRASE": record deferred work in an issue, not a comment'
+---
+id: workaround-phrase-typescript
+language: typescript
+severity: error
+utils:
+  phrase:
+    any:
+      - regex: '(?i)\bwork-?arounds?\b|\bfor now\b|\btemporarily\b'
+      - regex: '(?im)\btemporary[ \t]*(?:[^\w\s]|$)'
+      - all:
+          - regex: '(?i)\btemporary\b'
+          - not:
+              regex: '(?i)\btemporary\s+(?:accounts?|branch(?:es)?|buffers?|cop(?:y|ies)|credentials?|dir(?:ectory|ectories|s)?|files?|folders?|keys?|passwords?|paths?|tables?|tokens?|values?|variables?|worktrees?)\b'
+rule:
+  kind: comment
+  pattern: $C
+  matches: phrase
+  not:
+    # `/**` but not the empty `/**/`. TypeScript's `///` is a directive, not
+    # documentation.
+    regex: '\A/\*\*(?:[^/]|\z)'
+transform:
+  PHRASE:
+    replace:
+      source: $C
+      replace: '(?is)\A(?:.*?\b(work-?arounds?)\b|.*?\b(for now)\b|.*?\b(temporarily)\b|.*?\b(temporary)\b).*\z'
+      by: "$1$2$3$4"
+message: 'workaround comment "$PHRASE": record deferred work in an issue, not a comment'
+---
+id: workaround-phrase-bash
+language: bash
+severity: error
+utils:
+  phrase:
+    any:
+      - regex: '(?i)\bwork-?arounds?\b|\bfor now\b|\btemporarily\b'
+      - regex: '(?im)\btemporary[ \t]*(?:[^\w\s]|$)'
+      - all:
+          - regex: '(?i)\btemporary\b'
+          - not:
+              regex: '(?i)\btemporary\s+(?:accounts?|branch(?:es)?|buffers?|cop(?:y|ies)|credentials?|dir(?:ectory|ectories|s)?|files?|folders?|keys?|passwords?|paths?|tables?|tokens?|values?|variables?|worktrees?)\b'
+rule:
+  kind: comment
+  pattern: $C
+  matches: phrase
+transform:
+  PHRASE:
+    replace:
+      source: $C
+      replace: '(?is)\A(?:.*?\b(work-?arounds?)\b|.*?\b(for now)\b|.*?\b(temporarily)\b|.*?\b(temporary)\b).*\z'
+      by: "$1$2$3$4"
+message: 'workaround comment "$PHRASE": record deferred work in an issue, not a comment'

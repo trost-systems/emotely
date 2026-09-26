@@ -1,0 +1,33 @@
+id: workaround-tag-typescript
+valid:
+  # Strings, template literals and regular expressions are not comments.
+  - |
+    const a = `// TODO ${"`"} still // TODO`;
+    const b = /\/\/ TODO/;
+    const c = x.replace(/[/]TODO/g, "");
+    const d = `
+    // TODO in a multi-line template
+    `;
+    const e = 4 / 2; // real comment
+  # Lower case is prose unless written as a tag.
+  - |
+    // the todo list screen
+    const a = 1;
+invalid:
+  # A line comment.
+  - |
+    const a = 1; // FIXME: flaky
+  # A block comment.
+  - |
+    /* HACK */
+    const a = 1;
+  # A documentation comment.
+  - |
+    /**
+     * Returns x. XXX
+     */
+    function f() {}
+  # Lower case written as a tag.
+  - |
+    // todo: later
+    const a = 1;

@@ -1,0 +1,123 @@
+id: suppression-reason-dart
+valid:
+  # A reason of four or more words on the comment line above.
+  - |
+    // The launch sequence composes a graph tested elsewhere.
+    // coverage:ignore-line
+    void main() {}
+  # A reason of four or more words on the same line.
+  - |
+    void f() {
+      old(); // coverage:ignore-line the bridge still needs it
+    }
+  # A directive that opens the file may take its reason from below.
+  - |
+    // coverage:ignore-file
+    // The launch sequence; the graph it composes is tested elsewhere.
+
+    void main() {}
+  # Each directive of a stack carries its own reason.
+  - |
+    // The generated table below is data, not logic to test.
+    // coverage:ignore-start
+    // A state machine whose branches read best kept together.
+    // cognitive_complexity:ignore
+    void h() {}
+  # Closing a range needs no reason; opening it does, and has one here.
+  - |
+    void f() {
+      // The generated table below is data, not logic to test.
+      // coverage:ignore-start
+      g();
+      // coverage:ignore-end
+    }
+  - |
+    void f() {}
+    // coverage:ignore-end
+  # A directive mentioned in prose is not a directive.
+  - |
+    // Never add a bare // coverage:ignore-line here.
+    final s = '// coverage:ignore-line';
+  # The analyzer's own suppressions are its `document_ignores`' to check.
+  - |
+    void f() {
+      // ignore: deprecated_member_use
+      old();
+    }
+  - |
+    // ignore_for_file: use_primary_constructors
+    class A {}
+  # Known gaps (ADR 0018): ast-grep sees no line numbers, so a blank line
+  # between the reason and the directive, or a reason trailing code on the
+  # line above, still counts.
+  - |
+    void f() {
+      // The picker still builds on material, so the bridge stays.
+
+      // coverage:ignore-line
+      old();
+    }
+  - |
+    void f() {
+      final a = b; // the reason sits beside the code
+      // coverage:ignore-line
+      old();
+    }
+invalid:
+  # A bare directive.
+  - |
+    void f() {
+      // coverage:ignore-line
+      old();
+    }
+  # Fewer than four words above.
+  - |
+    void f() {
+      // Needed here.
+      // coverage:ignore-line
+      old();
+    }
+  # Fewer than four words on the same line.
+  - |
+    void f() {
+      old(); // coverage:ignore-line -- needed
+    }
+  # Another directive above is not a reason, even one of another tool that
+  # carries its own.
+  - |
+    // The generated table below is data, not logic to test.
+    // coverage:ignore-start
+    // cognitive_complexity:ignore
+    void h() {}
+  - |
+    void f() {
+      // ignore: deprecated_member_use because the bridge still needs it
+      // coverage:ignore-line
+      old();
+    }
+  # Code above is not a reason, even with a comment behind it.
+  - |
+    void f() {
+      final a = b; // the reason sits beside the code
+      old(); // coverage:ignore-line
+    }
+  # A reason below counts only for a directive that opens the file.
+  - |
+    void f() {}
+    // coverage:ignore-line
+    // A reason below does not count away from the first line.
+  - |
+    // coverage:ignore-start
+    f();
+  - |
+    void f() {
+      // coverage:ignore-start
+      g();
+    }
+  - |
+    void g() {}
+    // cognitive_complexity:ignore
+    void h() {}
+  - |
+    void g() {}
+    // cognitive_complexity:ignore_for_file

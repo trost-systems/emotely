@@ -1,0 +1,48 @@
+id: workaround-tag-dart
+snapshots:
+  ? |
+    /* outer /* inner */ still a comment: XXX */ void f() {}
+  : labels:
+    - source: '/* outer /* inner */ still a comment: XXX */'
+      style: primary
+      start: 0
+      end: 44
+  ? |
+    // Keep this for a while, hack: see the picker.
+    void f() {}
+  : labels:
+    - source: '// Keep this for a while, hack: see the picker.'
+      style: primary
+      start: 0
+      end: 47
+  ? |
+    // fixme(peter): later
+    void f() {}
+  : labels:
+    - source: '// fixme(peter): later'
+      style: primary
+      start: 0
+      end: 22
+  ? |
+    /// XXX: document
+    void f() {}
+  : labels:
+    - source: '/// XXX: document'
+      style: primary
+      start: 0
+      end: 17
+  ? |
+    final u = 'https://x'; // XXX
+  : labels:
+    - source: // XXX
+      style: primary
+      start: 23
+      end: 29
+  ? |
+    void f() {}
+    // XXX: handle later
+  : labels:
+    - source: '// XXX: handle later'
+      style: primary
+      start: 12
+      end: 32

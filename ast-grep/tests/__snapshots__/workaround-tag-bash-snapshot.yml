@@ -1,0 +1,17 @@
+id: workaround-tag-bash
+snapshots:
+  ? |
+    # FIXME
+    run
+  : labels:
+    - source: '# FIXME'
+      style: primary
+      start: 0
+      end: 7
+  ? |
+    run # TODO: after code
+  : labels:
+    - source: '# TODO: after code'
+      style: primary
+      start: 4
+      end: 22

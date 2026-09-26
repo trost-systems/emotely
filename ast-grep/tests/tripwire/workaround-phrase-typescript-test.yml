@@ -1,0 +1,20 @@
+id: workaround-phrase-typescript
+valid:
+  # Documentation comments describe behavior to a caller.
+  - |
+    /** Rejected for now: the quota is spent until midnight. */
+    function f() {}
+  - |
+    // Delete both temporary files once the upload lands.
+    const a = 1;
+  - |
+    const a = "a workaround in a string, for now";
+invalid:
+  - |
+    // Skip the check for now.
+    const a = 1;
+  - |
+    /* workaround for the SDK's missing type */
+    const a = 1;
+  - |
+    const a = 1; // temporary

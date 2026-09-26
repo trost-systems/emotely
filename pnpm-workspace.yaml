@@ -1,6 +1,10 @@
 packages:
   - apps/agent
   - packages/*
+allowBuilds:
+  # Its postinstall only links the prebuilt binary from the matching
+  # @ast-grep/cli-<platform> package into place; nothing is compiled.
+  '@ast-grep/cli': true
 minimumReleaseAgeExclude:
   - '@ai-sdk/gateway@4.0.56'
   - '@ai-sdk/provider-utils@5.0.28'

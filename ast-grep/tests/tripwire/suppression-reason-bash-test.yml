@@ -1,0 +1,27 @@
+id: suppression-reason-bash
+valid:
+  # The reason follows a second #.
+  - |
+    # shellcheck disable=SC2086 # word splitting on $inputs is the point.
+    git diff $inputs
+  # Or sits on the comment line above.
+  - |
+    run
+    # The literal $v$ is the SQL dollar-quote tag below.
+    # shellcheck disable=SC2016
+    echo '$v$'
+invalid:
+  - |
+    run
+    # shellcheck disable=SC2016
+    echo '$x'
+  - |
+    run
+    # Needed.
+    # shellcheck disable=SC2016,SC2086
+    echo '$x'
+  # A code in the list is not a word, even split off from its list.
+  - |
+    run
+    # shellcheck disable=SC2086 fine by me
+    git diff $inputs

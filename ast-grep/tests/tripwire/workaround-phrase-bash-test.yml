@@ -1,0 +1,13 @@
+id: workaround-phrase-bash
+valid:
+  - |
+    # Write the key to a temporary file, then move it.
+    run
+  - |
+    echo "pinned for now"
+invalid:
+  - |
+    # Pinned for now; bump after the release.
+    run
+  - |
+    run # workaround: the runner lacks jq

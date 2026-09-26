@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@ast-grep/cli':
+        specifier: 0.45.3
+        version: 0.45.3
       '@biomejs/biome':
         specifier: 2.5.14
         version: 2.5.14
@@ -89,6 +92,55 @@ packages:
   '@ai-sdk/provider@4.0.17':
     resolution: {integrity: sha512-VYMBxIQdcHqbIf1j+YZlI9Ati6LZ4wJe0GGd4z4a5H/KxTggjeOiyaVYTnfF7LHZK5jMQ+rofmzz4QPqf++NUw==}
     engines: {node: '>=22'}
+
+  '@ast-grep/cli-darwin-arm64@0.45.3':
+    resolution: {integrity: sha512-6RZg4gRMJcSJtEJuaW5z33qfwXD7kRDGZ0T0dTxVxsLSw5BkeAjR8REysxUwPWZn+oOkzPyZ3y7/qNnSI/diIA==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@ast-grep/cli-darwin-x64@0.45.3':
+    resolution: {integrity: sha512-4z6ZknTMSlTirQuJ4xihXoLfG7YwAOxFCqkKuGAxAiP+K70zivib8R19vUoFJDy4s+rjyGNDdrm45/ClC5tITQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@ast-grep/cli-linux-arm64-gnu@0.45.3':
+    resolution: {integrity: sha512-T/N+Fl/pMqNjuyPV9PbTSR2bTlZrLKiCyHzJax6QNaOOVviXjEscROrAc6c0lFfc+Z07gW7Rt3oZKZdLEExutQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@ast-grep/cli-linux-x64-gnu@0.45.3':
+    resolution: {integrity: sha512-HbxIy6tZa8zn4J2hG8KVIo9n4+INAgVB8l2DyHqYxGKxnod8u2B4hfTGxbMm+BjBvYxKW4oGLZtYqInMyxidyQ==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@ast-grep/cli-win32-arm64-msvc@0.45.3':
+    resolution: {integrity: sha512-X0+81Mgr8zsH6hu4Pqdr5h1IyAFUWbKS1PMkKT6awYiiTo/1uhVM/6WzJ+ohOQPmMTyt4poyyg46u2E4WzKECg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@ast-grep/cli-win32-ia32-msvc@0.45.3':
+    resolution: {integrity: sha512-W4H27lU/xzzIOvRo4vDTjzq91PioLCjupR7jLmLVkAqAkX2YiNRixf8NjMcQgzAgr33jUsMlyutiTElLgi1O9g==}
+    engines: {node: '>= 10'}
+    cpu: [ia32]
+    os: [win32]
+
+  '@ast-grep/cli-win32-x64-msvc@0.45.3':
+    resolution: {integrity: sha512-UZrpVbjLQqQIRxWqeMcwyLSIhlDZyhYb8SinssM38Oo6mEB2jMfHCEoigay9UOZTfUR268n72BBV48nW2h+QwA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+
+  '@ast-grep/cli@0.45.3':
+    resolution: {integrity: sha512-Cm07SHb8Q8dJfAQhrPOveAGuuzznmf6IjQa2+0Yvjt8Qfo+XIVbEIo0Prng+UDVMlaCS/FkF2eA8M3F6z4+0Wg==}
+    engines: {node: '>= 12.0.0'}
+    hasBin: true
 
   '@biomejs/biome@2.5.14':
     resolution: {integrity: sha512-0FabLIjd4M/dm8VFI86RMaLLdgepzbdfiAL2R8cr7V81OYYrP1w7Z73KfAwPK5h9SrEBXTzNG2y+mBwPo9xRnw==}
@@ -458,6 +510,10 @@ packages:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
 
+  detect-libc@2.1.2:
+    resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
+    engines: {node: '>=8'}
+
   eventsource-parser@3.1.1:
     resolution: {integrity: sha512-EKN1vKAMcZ8MlYMpaNuxN6R9yakzH6uajHcHVTqWJzvu5pWw9DyhbP35HH8MVBQ+dZjAfDxk+A8NiR9KWaXiyQ==}
     engines: {node: '>=18.0.0'}
@@ -601,6 +657,39 @@ snapshots:
   '@ai-sdk/provider@4.0.17':
     dependencies:
       json-schema: 0.4.0
+
+  '@ast-grep/cli-darwin-arm64@0.45.3':
+    optional: true
+
+  '@ast-grep/cli-darwin-x64@0.45.3':
+    optional: true
+
+  '@ast-grep/cli-linux-arm64-gnu@0.45.3':
+    optional: true
+
+  '@ast-grep/cli-linux-x64-gnu@0.45.3':
+    optional: true
+
+  '@ast-grep/cli-win32-arm64-msvc@0.45.3':
+    optional: true
+
+  '@ast-grep/cli-win32-ia32-msvc@0.45.3':
+    optional: true
+
+  '@ast-grep/cli-win32-x64-msvc@0.45.3':
+    optional: true
+
+  '@ast-grep/cli@0.45.3':
+    dependencies:
+      detect-libc: 2.1.2
+    optionalDependencies:
+      '@ast-grep/cli-darwin-arm64': 0.45.3
+      '@ast-grep/cli-darwin-x64': 0.45.3
+      '@ast-grep/cli-linux-arm64-gnu': 0.45.3
+      '@ast-grep/cli-linux-x64-gnu': 0.45.3
+      '@ast-grep/cli-win32-arm64-msvc': 0.45.3
+      '@ast-grep/cli-win32-ia32-msvc': 0.45.3
+      '@ast-grep/cli-win32-x64-msvc': 0.45.3
 
   '@biomejs/biome@2.5.14':
     optionalDependencies:
@@ -865,6 +954,8 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
+
+  detect-libc@2.1.2: {}
 
   eventsource-parser@3.1.1: {}
 

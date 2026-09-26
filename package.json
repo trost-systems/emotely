@@ -9,9 +9,11 @@
   "scripts": {
     "lint": "biome ci --error-on-warnings .",
     "format": "biome check --write .",
-    "typecheck": "tsc --build"
+    "typecheck": "tsc --build",
+    "tripwire": "ast-grep test && bash scripts/tripwire.test.sh && bash scripts/tripwire.sh"
   },
   "devDependencies": {
+    "@ast-grep/cli": "0.45.3",
     "@biomejs/biome": "2.5.14",
     "typescript": "7.0.2"
   }

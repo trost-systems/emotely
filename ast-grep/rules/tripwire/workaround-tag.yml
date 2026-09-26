@@ -1,0 +1,66 @@
+# The comment tripwire (ADR 0018, issue 166), part 1 of 3: a workaround tag
+# in any comment, documentation comments included. The four tags count in
+# upper case anywhere, and in lower case only written as a tag (followed by a
+# colon or a parenthesis), so the words stay usable in prose.
+#
+# In Dart the analyzer already fails the upper-case TODO, FIXME and HACK
+# (`todo`, `fixme`, `hack`), and a comment that opens with a lower-case
+# `todo` (`flutter_style_todos`), so the Dart rule keeps only what it misses:
+# XXX, and the lower-case tag forms.
+#
+# Only comment nodes are read: the tree-sitter grammar already tells strings,
+# template literals, regular expressions, heredoc bodies and parameter
+# expansions apart from comments.
+#
+# One document per language: an ast-grep rule has exactly one. Keep the
+# TypeScript and shell documents identical apart from `id` and `language`.
+id: workaround-tag-dart
+language: dart
+severity: error
+# Generated code answers to its generator, not to this rule.
+ignores:
+  - "**/*.g.dart"
+  - "**/*.freezed.dart"
+  - "**/*.options.dart"
+  - "**/*.mocks.dart"
+rule:
+  kind: comment
+  pattern: $C
+  regex: '\bXXX\b|\b(?:[Tt]odo|[Ff]ixme|[Hh]ack|[Xx]xx)[ \t]*[:(]'
+transform:
+  TAG:
+    replace:
+      source: $C
+      replace: '(?s)\A(?:.*?\b(XXX)\b|.*?\b([Tt]odo|[Ff]ixme|[Hh]ack|[Xx]xx)[ \t]*[:(]).*\z'
+      by: "$1$2"
+message: 'workaround comment "$TAG": record deferred work in an issue, not a comment'
+---
+id: workaround-tag-typescript
+language: typescript
+severity: error
+rule:
+  kind: comment
+  pattern: $C
+  regex: '\b(?:TODO|FIXME|HACK|XXX)\b|\b(?i:todo|fixme|hack|xxx)[ \t]*[:(]'
+transform:
+  TAG:
+    replace:
+      source: $C
+      replace: '(?s)\A(?:.*?\b(TODO|FIXME|HACK|XXX)\b|.*?\b((?i:todo|fixme|hack|xxx))[ \t]*[:(]).*\z'
+      by: "$1$2"
+message: 'workaround comment "$TAG": record deferred work in an issue, not a comment'
+---
+id: workaround-tag-bash
+language: bash
+severity: error
+rule:
+  kind: comment
+  pattern: $C
+  regex: '\b(?:TODO|FIXME|HACK|XXX)\b|\b(?i:todo|fixme|hack|xxx)[ \t]*[:(]'
+transform:
+  TAG:
+    replace:
+      source: $C
+      replace: '(?s)\A(?:.*?\b(TODO|FIXME|HACK|XXX)\b|.*?\b((?i:todo|fixme|hack|xxx))[ \t]*[:(]).*\z'
+      by: "$1$2"
+message: 'workaround comment "$TAG": record deferred work in an issue, not a comment'

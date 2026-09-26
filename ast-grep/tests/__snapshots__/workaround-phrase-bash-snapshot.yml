@@ -1,0 +1,17 @@
+id: workaround-phrase-bash
+snapshots:
+  ? |
+    # Pinned for now; bump after the release.
+    run
+  : labels:
+    - source: '# Pinned for now; bump after the release.'
+      style: primary
+      start: 0
+      end: 41
+  ? |
+    run # workaround: the runner lacks jq
+  : labels:
+    - source: '# workaround: the runner lacks jq'
+      style: primary
+      start: 4
+      end: 37

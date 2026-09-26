@@ -1,0 +1,12 @@
+# ast-grep: the engine for this repo's custom syntactic checks (ADR 0018).
+# `ast-grep test` checks each rule under ast-grep/rules against its cases in
+# ast-grep/tests; `scripts/tripwire.sh` scans every file git tracks. Both run
+# in CI's tripwire job.
+ruleDirs:
+  - ast-grep/rules
+testConfigs:
+  - testDir: ast-grep/tests
+# Plain JavaScript is read with the TypeScript grammar, a superset of it, so
+# the TypeScript rules cover it without a copy of their own.
+languageGlobs:
+  typescript: ["*.js", "*.mjs", "*.cjs"]

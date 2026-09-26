@@ -1,0 +1,30 @@
+id: suppression-reason-bash
+snapshots:
+  ? |
+    run
+    # Needed.
+    # shellcheck disable=SC2016,SC2086
+    echo '$x'
+  : labels:
+    - source: '# shellcheck disable=SC2016,SC2086'
+      style: primary
+      start: 14
+      end: 48
+  ? |
+    run
+    # shellcheck disable=SC2016
+    echo '$x'
+  : labels:
+    - source: '# shellcheck disable=SC2016'
+      style: primary
+      start: 4
+      end: 31
+  ? |
+    run
+    # shellcheck disable=SC2086 fine by me
+    git diff $inputs
+  : labels:
+    - source: '# shellcheck disable=SC2086 fine by me'
+      style: primary
+      start: 4
+      end: 42

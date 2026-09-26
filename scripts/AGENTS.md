@@ -19,6 +19,11 @@ on purpose: `dart` is the standalone SDK `apps/web` is pinned to, and
 
 `release-status.sh` records one store channel's version and build in the README badges' `status.json`.
 
+`tripwire.sh` runs the ast-grep rules over every file git tracks, so an
+untracked scratch file never fails it; `pnpm tripwire` runs it after the rule
+tests and its own tests (`tripwire.test.sh`), all three of which CI's
+`tripwire` job runs.
+
 Shell here is linted by the `scripts` CI job: `shellcheck --external-sources
 --severity=style scripts/*.sh`, clean; the same job runs
 `bash scripts/release-status.test.sh`.

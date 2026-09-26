@@ -1,0 +1,38 @@
+id: workaround-tag-typescript
+snapshots:
+  ? |
+    /* HACK */
+    const a = 1;
+  : labels:
+    - source: /* HACK */
+      style: primary
+      start: 0
+      end: 10
+  ? |
+    /**
+     * Returns x. XXX
+     */
+    function f() {}
+  : labels:
+    - source: |-
+        /**
+         * Returns x. XXX
+         */
+      style: primary
+      start: 0
+      end: 25
+  ? |
+    // todo: later
+    const a = 1;
+  : labels:
+    - source: '// todo: later'
+      style: primary
+      start: 0
+      end: 14
+  ? |
+    const a = 1; // FIXME: flaky
+  : labels:
+    - source: '// FIXME: flaky'
+      style: primary
+      start: 13
+      end: 28

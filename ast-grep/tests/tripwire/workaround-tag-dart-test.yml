@@ -1,0 +1,48 @@
+id: workaround-tag-dart
+valid:
+  # Dart strings, however they are quoted, are not comments.
+  - |
+    final a = 'see // XXX';
+    final b = "a // xxx: in a string";
+    final c = r'raw // fixme(peter)';
+    final d = '''
+    // XXX inside a multi-line string
+    ''';
+    final e = 'x ${f('// XXX')} y';
+    final g = "it's // XXX";
+  # Lower case is prose unless written as a tag.
+  - |
+    // Opens the todo list screen.
+    void f() {}
+  # The analyzer already fails these (`todo`, `fixme`, `hack`), so the
+  # tripwire leaves them to it.
+  - |
+    void f() {}
+    // TODO: handle later
+  - |
+    /// FIXME: document
+    void f() {}
+  - |
+    /* HACK */ void f() {}
+invalid:
+  # XXX, which the analyzer does not know.
+  - |
+    void f() {}
+    // XXX: handle later
+  # A tag counts in a documentation comment too.
+  - |
+    /// XXX: document
+    void f() {}
+  # The comment after a string that holds a comment opener.
+  - |
+    final u = 'https://x'; // XXX
+  # A nested block comment, read to its true end.
+  - |
+    /* outer /* inner */ still a comment: XXX */ void f() {}
+  # Lower case written as a tag, which the analyzer's tags miss.
+  - |
+    // fixme(peter): later
+    void f() {}
+  - |
+    // Keep this for a while, hack: see the picker.
+    void f() {}

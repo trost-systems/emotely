@@ -1,0 +1,60 @@
+id: workaround-phrase-dart
+valid:
+  # "temporary" before a thing that exists at run time describes that thing.
+  - |
+    // Write the key to a temporary file, then rename it into place.
+    void f() {}
+  - |
+    // Both temporary directories are removed on exit.
+    void f() {}
+  # The verb describes what a user does.
+  - |
+    // The failure is ours to notice, not the user's to work around.
+    void f() {}
+  # Documentation comments describe behavior to a caller.
+  - |
+    /// Rate-limited (HTTP 429): too many codes for now.
+    void f() {}
+  - |
+    /// A temporary hold, released when the session ends.
+    void f() {}
+  - |
+    /** A workaround the caller never sees. */
+    void f() {}
+  # Known gap (ADR 0018): without lookahead the "temporary <noun>" allowance
+  # holds per comment, so an allowed noun excuses a second "temporary".
+  - |
+    // A temporary file now, and a temporary fix.
+    void f() {}
+invalid:
+  # "temporary" with no word after it.
+  - |
+    // Keep it temporary.
+    void f() {}
+  # A thing that is not in the list of runtime things.
+  - |
+    // A temporary filesystem hack.
+    void f() {}
+  - |
+    // Workaround for the picker's layout bug.
+    void f() {}
+  - |
+    // A work-around until the SDK ships the fix.
+    void f() {}
+  - |
+    // Use the cached value for now.
+    void f() {}
+  - |
+    // A temporary fix; revert once upstream lands.
+    void f() {}
+  - |
+    // Temporarily disabled on Android.
+    void f() {}
+  # A runtime thing does not excuse another phrase in the same comment.
+  - |
+    // Temporarily writes a temporary file.
+    void f() {}
+  # Four slashes are not a documentation comment.
+  - |
+    //// Skipped for now.
+    void f() {}
