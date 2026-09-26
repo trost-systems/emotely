@@ -77,7 +77,7 @@ void main() {
       tester.pumpComponent(const DeleteAccount());
 
       expect(find.textContaining('If you still have the app'), findsComponents);
-      expect(find.textContaining('More → Your account'), findsComponents);
+      expect(find.textContaining('More → Delete account'), findsComponents);
       expect(
         find.textContaining('If you no longer have the app'),
         findsComponents,
@@ -439,7 +439,7 @@ void main() {
     testComponents('gives both deletion paths and links the web one', (tester) {
       tester.pumpComponent(const AppPrivacy());
 
-      expect(find.textContaining('More → Your account'), findsComponents);
+      expect(find.textContaining('More → Delete account'), findsComponents);
       expect(find.textContaining('deletion page'), findsComponents);
     });
 

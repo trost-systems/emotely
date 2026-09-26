@@ -136,8 +136,8 @@ first: what is declared today, per console.
 ## Account deletion (store requirements)
 
 - **App Store** (guideline 5.1.1(v)): deletion is in the app. Put the path
-  in the review notes: **Your journal → account icon (top right) → Delete
-  account → confirm**. It calls `public.delete_account()`, which removes
+  in the review notes: **More → Delete account → confirm** (the last row
+  on the More tab). It calls `public.delete_account()`, which removes
   the auth user and every session and entry by cascade, then signs the
   device out.
 - **Google Play** additionally requires a **web** deletion URL declared in
@@ -251,9 +251,9 @@ password above, and these instructions (the field allows 500 characters):
 > password instead of emailing a one-time code; enter the password above.
 > Regular users sign in with a one-time code sent by email. The first
 > session asks for consent to send the conversation to an AI provider:
-> tick the box and tap Start journaling. Account deletion: Your journal ->
-> account icon (top right) -> Delete account -> confirm. Deleting the demo
-> account really deletes it; if it no longer signs in, email
+> tick the box and tap Start journaling. Account deletion: More -> Delete
+> account -> confirm. Deleting the demo account really deletes it; if it
+> no longer signs in, email
 > peter@petertrost.com and we recreate it.
 
 **App Store Connect → version → App Review Information → Sign-in
@@ -267,8 +267,7 @@ Notes:
 > one-time code sent by email. Before the first session the app asks for
 > explicit consent to send the conversation to an AI provider (GDPR
 > Art. 9): tick the box and tap Start journaling. It is not asked again.
-> Account deletion: Your journal -> account icon (top right) -> Delete
-> account -> confirm. Deleting the demo account really deletes it; if it no
+> Account deletion: More -> Delete account -> confirm. Deleting the demo account really deletes it; if it no
 > longer signs in, contact peter@petertrost.com and we recreate it within
 > the hour.
 
