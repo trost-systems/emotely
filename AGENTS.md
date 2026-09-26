@@ -33,6 +33,13 @@ twice was held too low: move it up a layer. A one-off needs only its fix.
 - Before adopting a hosted service that runs per PR (CI runners, coverage,
   anything with a free tier), check its usage limits against tens to hundreds
   of PRs a day; a quota sized for one human's pace runs out at ours.
+- Every skill and script must be safe for several agent sessions on one
+  machine at once. Name anything machine-wide (a simulator, a registered
+  instance, a lock) after the session, keep state in the checkout, let the
+  OS assign ports, and put anything shared that cannot be split, such as a
+  test account, under a lock that fails fast, names its holder and goes
+  stale when the holder dies. The lock in
+  `.claude/skills/run-app/scripts/run-app.sh` is the one to reuse.
 - `main` is protected: all changes land via squash-merged PR through the merge
   queue, `ci-ok` green on the PR and again on the queue's run.
 - Agent guidance is `AGENTS.md`; every `CLAUDE.md` is a symlink to the

@@ -822,6 +822,53 @@ void main() {
       });
     });
 
+    group('an account the app names for a password', () {
+      const smoke = 'smoke@example.com';
+
+      testWidgets('signs in with a password like a review account', (
+        tester,
+      ) async {
+        final supabase = SupabaseStub()..script(password: [sessionGranted()]);
+        final robot = SignInRobot(
+          tester,
+          supabase: supabase,
+          agent: AgentStub(),
+          passwordAccounts: const {smoke},
+        );
+        await robot.launch();
+
+        // Trimmed and case-folded, like the review accounts.
+        await robot.submitEmail('  Smoke@Example.com ');
+
+        expect(supabase.to('POST /auth/v1/otp'), isEmpty);
+        expect(robot.passwordField, findsOneWidget);
+
+        await robot.enterPassword('made-up password');
+        await robot.tapPasswordSignIn();
+        await robot.settle();
+
+        expect(robot.home, findsOneWidget);
+      });
+
+      testWidgets('is sent a code when the app does not name it', (
+        tester,
+      ) async {
+        final supabase = SupabaseStub()..script(otp: [codeSent()]);
+        final robot = SignInRobot(
+          tester,
+          supabase: supabase,
+          agent: AgentStub(),
+        );
+        await robot.launch();
+
+        await robot.submitEmail(smoke);
+
+        expect(supabase.bodies('/auth/v1/otp').single['email'], smoke);
+        expect(robot.codeField, findsOneWidget);
+        expect(robot.passwordField, findsNothing);
+      });
+    });
+
     testWidgets('meets accessibility guidelines on both steps', (tester) async {
       final supabase = SupabaseStub()..script(otp: [codeSent()]);
       final robot = SignInRobot(tester, supabase: supabase, agent: AgentStub());

@@ -80,7 +80,7 @@ class _ColorInputState() extends State<ColorInput> {
         ],
       ),
       SubmitButton(
-        key: ColorInput.submitKey,
+        buttonKey: ColorInput.submitKey,
         onPressed: _colors.isEmpty
             ? null
             : () => widget.onSubmit(Answer.color(List.of(_colors))),

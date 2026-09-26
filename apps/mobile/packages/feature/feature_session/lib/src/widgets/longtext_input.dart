@@ -46,7 +46,7 @@ class _LongtextInputState() extends State<LongtextInput> {
       ),
       AnswerLength(answer: _answer),
       SubmitButton(
-        key: LongtextInput.submitKey,
+        buttonKey: LongtextInput.submitKey,
         onPressed: _submittable ? () => widget.onSubmit(_answer) : null,
       ),
     ],

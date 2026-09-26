@@ -76,7 +76,7 @@ class _EmojiInputState() extends State<EmojiInput> {
         ],
       ),
       SubmitButton(
-        key: EmojiInput.submitKey,
+        buttonKey: EmojiInput.submitKey,
         onPressed: _emoji.isEmpty
             ? null
             : () => widget.onSubmit(Answer.emoji(List.of(_emoji))),

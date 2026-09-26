@@ -55,6 +55,12 @@ dependencies:
   journal_repository: any
   json_annotation: 4.12.0
   legal_links: any
+  # The verification CLI's hands (the run-app skill): VM service extensions
+  # that tap, type and screenshot by widget key. Initialised in `main` only
+  # under kDebugMode, a compile-time constant, so profile and release builds
+  # tree-shake it away. Pure Dart, no native plugin. Keep it at the version
+  # of marionette_cli the skill activates: the two speak one protocol.
+  marionette_flutter: 0.6.0
   material_ui: ^1.1.0
   meta: ^1.19.0
   package_info_plus: 10.2.1

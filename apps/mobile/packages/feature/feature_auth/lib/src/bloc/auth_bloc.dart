@@ -16,7 +16,9 @@ part 'auth_state.dart';
 /// code for an email, then verify it), or a provider's ID token from its own
 /// sheet ([ProviderSignIn]), traded for a session. The app stores' review
 /// accounts ([reviewAccounts]) take a password at the second step instead,
-/// since a reviewer has no mailbox to read. Supabase Auth owns the session
+/// since a reviewer has no mailbox to read, and so do the
+/// [_passwordAccounts] the app names (the smoke account in a debug build,
+/// which has no mailbox either). Supabase Auth owns the session
 /// (persistence, refresh); this bloc mirrors it into UI state and tells
 /// PostHog who the user is.
 class AuthBloc({
@@ -24,6 +26,7 @@ class AuthBloc({
   required final AuthAnalytics _analytics,
   required final ErrorReporter _errors,
   required final ProviderSignIn _providers,
+  final Set<String> _passwordAccounts = const {},
 }) extends Bloc<AuthEvent, AuthState> {
   this : super(_initial(_supabase.auth.currentSession)) {
     on<AuthEmailSubmitted>(_onEmailSubmitted);
@@ -56,13 +59,19 @@ class AuthBloc({
       ? const AuthState.signedOut()
       : AuthState.signedIn(userId: session.user.id);
 
+  /// Whether [email] is one of [_passwordAccounts], normalised the way
+  /// [isReviewAccount] normalises.
+  bool _isPasswordAccount(String email) => _passwordAccounts
+      .map((account) => account.trim().toLowerCase())
+      .contains(email.trim().toLowerCase());
+
   Future<void> _onEmailSubmitted(
     AuthEmailSubmitted event,
     Emitter<AuthState> emit,
   ) async {
     final email = event.email.trim();
     // No code, no email: the review account is asked for its password.
-    if (isReviewAccount(email)) {
+    if (isReviewAccount(email) || _isPasswordAccount(email)) {
       emit(AuthState.passwordRequired(email: email));
       return;
     }

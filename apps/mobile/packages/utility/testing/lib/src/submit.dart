@@ -2,18 +2,14 @@ import 'package:contract/contract.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// The button inside the submit widget under [key] (the widget itself is a
-/// full-width [Align], so its center is empty space).
-Finder submitButton(Key key) =>
-    find.descendant(of: find.byKey(key), matching: find.byType(FilledButton));
-
-/// Whether the submit button under [key] is enabled.
+/// Whether the submit button [key] names is enabled. The key sits on the
+/// button itself, never on the full-width row that aligns it.
 bool isSubmitEnabled(WidgetTester tester, Key key) =>
-    tester.widget<FilledButton>(submitButton(key)).onPressed != null;
+    tester.widget<FilledButton>(find.byKey(key)).onPressed != null;
 
-/// Taps the submit button under [key] and pumps one frame.
+/// Taps the submit button [key] names and pumps one frame.
 Future<void> tapSubmit(WidgetTester tester, Key key) async {
-  await tester.tap(submitButton(key));
+  await tester.tap(find.byKey(key));
   await tester.pump();
 }
 

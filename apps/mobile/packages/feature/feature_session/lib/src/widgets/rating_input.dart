@@ -68,7 +68,7 @@ class _RatingInputState() extends State<RatingInput> {
           onChanged: _slid,
         ),
         SubmitButton(
-          key: RatingInput.submitKey,
+          buttonKey: RatingInput.submitKey,
           onPressed: switch (value) {
             null => null,
             final value => () => widget.onSubmit(Answer.rating(value)),

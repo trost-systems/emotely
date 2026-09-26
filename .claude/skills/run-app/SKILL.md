@@ -1,12 +1,18 @@
 ---
 name: run-app
-description: How to build, run, and drive the Flutter app (apps/mobile/app) on a simulator against the deployed or a local agent, and how to run the on-device acceptance session. Use whenever asked to run the app, see a screen, verify a change on a device, or run integration_test.
+description: How to run, drive and verify the Flutter app (apps/mobile/app) on an iOS simulator — run-app.sh sets it up signed in against the deployed agent, the agent drives it with plain marionette commands, and the CLI records and collects an evidence bundle (screenshots, video, logs, PostHog events); plus the on-device acceptance session and the unit gate. Use whenever asked to run the app, see a screen, verify a change on a device, collect evidence for a pull request, or run integration_test.
 ---
 
 # Running apps/mobile/app
 
-Everything below is agent-executable; the only human step is producing a
-PostHog project token, and one already exists locally.
+## Verify on the simulator
+
+`scripts/run-app.sh` sets the app up signed in on a fresh simulator, you drive
+it with plain `marionette` commands, and it collects the evidence.
+Verifying a change on the simulator, or posting its evidence — read
+[references/verification.md](references/verification.md) first: up → drive →
+collect → down, the worked example, the keys, posting evidence and parallel
+sessions.
 
 ## Build-time configuration
 
@@ -18,63 +24,36 @@ All configuration is `--dart-define`s, read in one place: `lib/app/environment.d
 | `POSTHOG_KEY` | empty = analytics off (the SDK skips setup) | PostHog project token (`phc_…`) |
 | `EMOTELY_SUPABASE_URL` | the hosted project | Supabase project URL; public (ADR 0010) |
 | `EMOTELY_SUPABASE_PUBLISHABLE_KEY` | the hosted project's key | Supabase publishable key; public, acts only under the signed-in user |
-| `SMOKE_EMAIL`, `SMOKE_PASSWORD` | none | integration_test only: the smoke user the acceptance run signs in as |
+| `SMOKE_EMAIL` | none | debug builds only: the one address asked for a password (the CLI sets it); the live integration test signs in with it too |
+| `SMOKE_PASSWORD` | none | integration_test only: the smoke user's password |
 
-The token is public by design but is never committed. Read it **blind** from
-the agent's local env — never print it, never paste it into a message:
+Every secret lives in `apps/agent/.env.local` and is read **blind** — never
+printed, never pasted into a message:
 
 ```bash
 KEY=$(grep -E '^POSTHOG_KEY=' apps/agent/.env.local | cut -d= -f2- | tr -d '"' | tr -d "'")
 ```
 
-The smoke user's credentials live in the same file (`SMOKE_EMAIL`,
-`SMOKE_PASSWORD`) and are read the same way. On a device, sign in by hand:
-the app asks for an email and the six-digit code Supabase mails to it, unless
-the address is a store review account (release-app skill), which is asked
-for a password instead. Against the local Supabase stack (`supabase start`,
-see the supabase skill) the code shows up in Inbucket at
-http://127.0.0.1:54324 instead of a mailbox.
+## What the CLI does not do
+
+- **Another agent, or Android.** The CLI runs the deployed agent on iOS. For
+  anything else build and run by hand: `fvm flutter build ios --simulator`
+  (plus the defines above) from `apps/mobile/app`, then the simulator tool's
+  `launch` with `build/ios/iphonesimulator/Runner.app`, or `fvm flutter run
+  -d <device>`. On a device a person signs in with the emailed six-digit code;
+  against the local Supabase stack (supabase skill) the code shows up in
+  Inbucket at http://127.0.0.1:54324. The app renders a **blank screen** when
+  the `Runner.app` on disk came from `flutter test integration_test`: rebuild.
+- **Toolchain.** Flutter is pinned by FVM (`apps/mobile/app/.fvmrc`); call
+  `fvm flutter` / `fvm dart` from `apps/mobile/app`. CocoaPods comes from the
+  app's `Gemfile`: a fresh worktree has no bundle, so `pod` fails with
+  "CocoaPods not installed or not in valid state" until `bundle config set
+  --local path vendor/bundle && bundle install` runs once per checkout (the
+  CLI does it). It fails under a non-UTF-8 locale (`LANG=en_US.UTF-8`).
+  After adding a CocoaPods plugin the first build may need `pod repo update`.
 
 Driving Sign in with Google or Apple on a device — read
 [references/provider-sign-in.md](references/provider-sign-in.md) first.
-
-## Toolchain
-
-- Flutter is pinned by FVM (`apps/mobile/app/.fvmrc`); always call `fvm flutter` /
-  `fvm dart` from `apps/mobile/app`. The global Flutter also matches the pin so the
-  VGV plugin's MCP tools work, but FVM is the source of truth.
-- `apps/mobile` is a pub workspace (ADR 0015): `flutter pub get` anywhere in
-  it resolves every package into the one `apps/mobile/pubspec.lock`. The
-  per-package gates are melos scripts in `apps/mobile/pubspec.yaml`
-  (`dart pub global activate melos 8.7.0`, and `very_good_cli 1.5.0` for the
-  coverage gate — older very_good releases crash inside a workspace member).
-- First native build after adding a CocoaPods plugin may need
-  `pod repo update` (the error says "specs repository is too out-of-date").
-- In a fresh worktree `pod` fails ("CocoaPods not installed or not in valid
-  state"): it resolves `apps/mobile/app/Gemfile`, which pins CocoaPods, and
-  the worktree has no bundle. From `apps/mobile/app`, once:
-  `bundle config set --local path vendor/bundle && bundle install`, and
-  export `LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8` for every build.
-
-## Run on the iOS simulator
-
-1. Find or boot a device: `xcrun simctl list devices booted`.
-2. Attach the panel first (cheap, opens instantly): the Claude Code iOS
-   Simulator tool, action `attach`, device e.g. `iPhone 17 Pro`.
-3. Build the real app (not the test runner):
-
-   ```bash
-   cd apps/mobile/app && fvm flutter build ios --simulator --dart-define=POSTHOG_KEY="$KEY"
-   ```
-
-4. Launch `build/ios/iphonesimulator/Runner.app` with the simulator tool's
-   `launch` action; wait ~8 s for the first agent round, then `screenshot`.
-   Drive it with `tap` / `text` in device points (402×874 on iPhone 17 Pro).
-
-Gotchas: the app renders a **blank screen** if the `Runner.app` on disk came
-from `flutter test integration_test` (that build idles waiting for a test
-driver) — rebuild with step 3. The simulator keyboard autocorrects typed
-text (German layout); use exact-match finders only in tests, not on device.
 
 ## On-device acceptance (live agent)
 
@@ -87,22 +66,26 @@ SMOKE_PASSWORD=$(grep -E '^SMOKE_PASSWORD=' apps/agent/.env.local | cut -d= -f2-
 cd apps/mobile/app && fvm flutter test integration_test/live_session_test.dart -d <device udid> --dart-define=POSTHOG_KEY="$KEY" --dart-define=SMOKE_EMAIL="$SMOKE_EMAIL" --dart-define=SMOKE_PASSWORD="$SMOKE_PASSWORD"
 ```
 
-Expect ~25 s after the build (about ten live model rounds). Then verify the
-events arrived in PostHog with the personal key, also read blind:
+Expect ~25 s after the build (about ten live model rounds). It starts a new
+session, so it needs the smoke account without an unfinished one: discard
+what a driven session leaves open (above).
+
+## PostHog by hand
+
+`run-app.sh collect` already fetches a session's events. For anything else, the personal key
+(also read blind) reads the events API; properties must be ids, types, counts
+and status codes only — never content (ADR 0005):
 
 ```bash
 PHX=$(grep -E '^POSTHOG_PERSONAL_API_KEY=' apps/agent/.env.local | cut -d= -f2- | tr -d '"' | tr -d "'")
 curl -s -H "Authorization: Bearer $PHX" "https://eu.posthog.com/api/projects/262464/events/?event=session_completed&limit=1&after=$(date -u +%Y-%m-%dT00:00:00Z)" | jq '.results[0].properties | with_entries(select(.key | startswith("$") | not))'
 ```
 
-Properties must be ids, types, counts and status codes only — never content
-(ADR 0005).
-
-The same endpoint answers for error tracking. Provoke a handled failure on
-the device (the cheapest: request a sign-in code for an address Supabase
-refuses, e.g. a second request within 60 s), then list the `$exception`
-events since the run started; the SDK stamps `$app_version`/`$app_build`
-and `ErrorReporter` adds `step`:
+Error tracking answers on the same endpoint. Provoke a handled failure (the
+cheapest: request a sign-in code for an address Supabase refuses, e.g. a
+second request within 60 s), then list the `$exception` events since the run
+started; the SDK stamps `$app_version`/`$app_build` and `ErrorReporter` adds
+`step`:
 
 ```bash
 AFTER=$(date -u +%Y-%m-%dT%H:%M:%SZ)   # take this BEFORE provoking the failure

@@ -3,6 +3,7 @@
 library;
 
 import 'package:feature_auth/feature_auth.dart' show GoogleClientIds;
+import 'package:flutter/foundation.dart' show kDebugMode;
 
 /// Where the agent runs (`--dart-define=EMOTELY_AGENT_URL=…`).
 const agentUrl = String.fromEnvironment(
@@ -43,6 +44,18 @@ const supabasePublishableKey = String.fromEnvironment(
   'EMOTELY_SUPABASE_PUBLISHABLE_KEY',
   defaultValue: 'sb_publishable_di6BB76PPuuoDklt7jtI0w_KlwO_8JF',
 );
+
+/// The smoke account (`--dart-define=SMOKE_EMAIL=…`), in a debug build only:
+/// the verification CLI (the run-app skill) signs in as it through the
+/// sign-in screen, and it has no mailbox to read a code from, so a debug
+/// build asks it for its password the way it asks the store review
+/// accounts. Outside debug the define is never read, so no profile or
+/// release build can carry it.
+const smokeEmail = kDebugMode ? String.fromEnvironment('SMOKE_EMAIL') : '';
+
+/// The accounts beyond the review accounts that sign in with a password:
+/// the smoke account when a debug build names one, otherwise none.
+const passwordAccounts = {if (smokeEmail != '') smokeEmail};
 
 /// The app's Google OAuth clients (Google Cloud project `emotely-sign-in`),
 /// for Sign in with Google (#51). Public identifiers, and deliberately not

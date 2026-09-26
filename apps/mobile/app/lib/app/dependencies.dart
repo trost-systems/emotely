@@ -27,6 +27,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// blocs are factories, created by the screen that owns them. Nothing is
 /// lazy: a dependency that cannot be built fails the launch, not the first
 /// screen that needs it.
+///
+/// [passwordAccounts] are the addresses, beyond the store review accounts,
+/// that sign in with a password: `main` passes the smoke account in a debug
+/// build the verification CLI drives, and nothing in any other build.
 void registerApp(
   GetIt getIt, {
   required http.Client agentHttpClient,
@@ -37,6 +41,7 @@ void registerApp(
   required BuildInfo build,
   required Uri agentUrl,
   required Uri configUrl,
+  required Set<String> passwordAccounts,
   required GoogleClientIds google,
 }) {
   getIt.registerSingleton(supabase);
@@ -58,7 +63,7 @@ void registerApp(
   registerConsentRepository(getIt, supabase: supabase, version: consentVersion);
   registerFeedbackLink(getIt, build: build);
   registerConfig(getIt, appVersion: appVersion);
-  registerAuth(getIt, google: google);
+  registerAuth(getIt, google: google, passwordAccounts: passwordAccounts);
   registerJournal(getIt);
   registerSession(getIt);
   // The app's side of each feature's navigator, next to the feature.

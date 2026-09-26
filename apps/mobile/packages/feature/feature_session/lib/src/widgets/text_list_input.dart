@@ -95,7 +95,7 @@ class _TextListInputState() extends State<TextListInput> {
         ),
       AnswerLength(answer: _answer),
       SubmitButton(
-        key: TextListInput.submitKey,
+        buttonKey: TextListInput.submitKey,
         onPressed: _submittable ? () => widget.onSubmit(_answer) : null,
       ),
     ],

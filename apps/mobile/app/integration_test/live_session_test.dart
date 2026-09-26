@@ -104,6 +104,8 @@ class LiveSessionRobot(final WidgetTester tester) {
       ),
       agentUrl: urlFrom(agentUrl, define: 'EMOTELY_AGENT_URL'),
       configUrl: urlFrom(configUrl, define: 'EMOTELY_CONFIG_URL'),
+      // Signed in above, not through the screen.
+      passwordAccounts: const {},
       google: googleClients,
     );
     await tester.pumpWidget(const EmotelyApp());
@@ -172,9 +174,7 @@ class LiveSessionRobot(final WidgetTester tester) {
   }
 
   Future<void> _submit(Key key) async {
-    await tester.tap(
-      find.descendant(of: find.byKey(key), matching: find.byType(FilledButton)),
-    );
+    await tester.tap(find.byKey(key));
     await tester.pump();
   }
 
