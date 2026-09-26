@@ -1,0 +1,128 @@
+name: Nightly performance budget
+
+# The performance budget (#169): the app's three main paths in profile mode
+# on an Android emulator, judged against
+# apps/mobile/app/integration_test/perf_budget.yaml by the same script an
+# agent runs locally (.claude/skills/run-app/scripts/perf.sh). Over budget,
+# the run fails and opens (or comments on) one issue labelled `performance`
+# with the numbers and a link to the timelines.
+#
+# Where it runs: GitHub's standard ubuntu-latest runner, free for this
+# public repository, with KVM for the emulator. Flutter runs profile mode on
+# an Android emulator but not on the iOS simulator. An emulator's frames are
+# not a phone's: build times track the app's own work, raster times track
+# the host's software renderer, so the budget gates build and request
+# counts here and only reports raster. Frames from a real phone need a
+# device farm or a self-hosted device, which costs money or a human to set
+# up (#169).
+
+on:
+  schedule:
+    # After the nightly evals (03:00) and their live smoke, which signs in
+    # as the same smoke account the latency probe uses.
+    - cron: "30 4 * * *"
+  workflow_dispatch:
+  # A change to the measurement itself proves it still runs: frames and
+  # request counts only, no latency (no secrets, no model spend per PR),
+  # and no issue.
+  pull_request:
+    paths:
+      - apps/mobile/app/integration_test/perf_test.dart
+      - apps/mobile/app/integration_test/perf/**
+      - apps/mobile/app/integration_test/perf_budget.yaml
+      - apps/mobile/app/test_driver/**
+      - .claude/skills/run-app/scripts/perf*
+      - .github/workflows/nightly-perf.yml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  perf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # The smoke account, for the latency probe on the nightly only.
+    environment: ci
+    permissions:
+      contents: read
+      issues: write
+    env:
+      RUN_DIR: ${{ github.workspace }}/perf-run
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version-file: apps/mobile/app/.fvmrc
+          cache: true
+      - run: flutter pub get
+        working-directory: apps/mobile
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      # Frames and request counts. Exit 1 is over budget, anything else a
+      # broken run; the steps below judge again once latency is in.
+      - name: Profile run
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          disable-animations: false
+          script: bash .claude/skills/run-app/scripts/perf.sh run --device emulator-5554 --env github-emulator --out "$RUN_DIR" || echo $? > "$RUNNER_TEMP/perf-status"
+      - name: Latency of the deployed backend
+        if: github.event_name != 'pull_request'
+        env:
+          SMOKE_EMAIL: ${{ secrets.SMOKE_EMAIL }}
+          SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
+        run: bash .claude/skills/run-app/scripts/perf.sh latency "$RUN_DIR"
+      - name: Gate
+        id: gate
+        run: |
+          if [ -f "$RUNNER_TEMP/perf-status" ] && [ "$(cat "$RUNNER_TEMP/perf-status")" != 1 ]; then
+            echo "::error::the profile run broke before the gate (exit $(cat "$RUNNER_TEMP/perf-status"))"
+            exit 2
+          fi
+          status=0
+          bash .claude/skills/run-app/scripts/perf.sh gate "$RUN_DIR" --env github-emulator || status=$?
+          cat "$RUN_DIR/summary.md" >> "$GITHUB_STEP_SUMMARY"
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
+      - name: Upload the timelines
+        if: always()
+        id: upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: perf-run
+          path: perf-run/
+          retention-days: 30
+      - name: Open or update the budget issue
+        if: failure() && steps.gate.outputs.status == '1' && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          {
+            echo "The nightly performance budget failed on $(git rev-parse --short HEAD) ([run]($RUN_URL))."
+            echo
+            echo "Timelines and summaries of every path: [perf-run]($ARTIFACT_URL) (open a \`.timeline.json\` in https://ui.perfetto.dev). Reproduce locally: \`.claude/skills/run-app/scripts/perf.sh run\`."
+            echo
+            cat perf-run/summary.md
+          } > "$RUNNER_TEMP/issue.md"
+          gh label create performance --color FBCA04 --description "The performance budget (#169)" 2>/dev/null || true
+          issue=$(gh issue list --label performance --state open --search "Performance budget exceeded in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --body-file "$RUNNER_TEMP/issue.md"
+          else
+            gh issue create --title "Performance budget exceeded" --label performance --body-file "$RUNNER_TEMP/issue.md"
+          fi
