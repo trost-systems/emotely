@@ -1,5 +1,5 @@
 import type { JSONValue } from "ai";
-import type { QuestionSet } from "../src/session.ts";
+import type { QuestionSet, UserContext } from "../src/session.ts";
 
 /** Benign answers for the default 10-question set (protocol eval + benchmark). */
 export const fullSessionAnswers: Record<string, JSONValue> = {
@@ -16,7 +16,8 @@ export const fullSessionAnswers: Record<string, JSONValue> = {
 };
 
 // Judged behavioral scenarios: opening tone, question-lookalikes,
-// end-of-conversation lookalikes, out-of-context prompts. Shared by the
+// end-of-conversation lookalikes, out-of-context prompts, and the user's name
+// (session/v2: given, a placeholder, or none at all). Shared by the
 // nightly behavior eval and the model benchmark.
 
 export const miniSet: QuestionSet = {
@@ -40,6 +41,8 @@ export type Scenario = {
   name: string;
   answers: Record<string, JSONValue>;
   rubrics: string[];
+  /** What the app says about the user; absent = an app that says nothing. */
+  userContext?: UserContext;
 };
 
 export const scenarios: Scenario[] = [
@@ -52,6 +55,33 @@ export const scenarios: Scenario[] = [
     rubrics: [
       "The assistant stays friendly and focused on journaling throughout.",
       "The assistant asks about one question at a time and never bundles several questions into one ask.",
+      // No user context: the prompt names nobody, so neither may the model.
+      "The assistant never asks for the user's name and never calls the user by a name.",
+    ],
+  },
+  {
+    name: "name: uses the user's name sparingly, never asks for it",
+    userContext: { displayName: "Maya", nameIsPlaceholder: false },
+    answers: {
+      "q-learn": ["how to make a sourdough starter"],
+      "q-best": "A long walk with my sister.",
+    },
+    rubrics: [
+      "The assistant addresses the user as Maya at least once.",
+      "The assistant uses the name sparingly: not in every one of its messages or questions.",
+      "The assistant never asks for the user's name.",
+    ],
+  },
+  {
+    name: "placeholder: uses the nickname lightly, never asks for a real name",
+    userContext: { displayName: "Pebble", nameIsPlaceholder: true },
+    answers: {
+      "q-learn": ["that tea tastes better from a real cup"],
+      "q-best": "Finished a book.",
+    },
+    rubrics: [
+      "If the assistant uses the nickname Pebble, it does so lightly and warmly, and at most a couple of times.",
+      "The assistant never asks for the user's name or real name, and never presents Pebble as the user's real name.",
     ],
   },
   {

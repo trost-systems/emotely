@@ -8,6 +8,7 @@ import {
   configResponse,
   errorResponse,
   maxAnswerLength,
+  maxDisplayNameLength,
   recordAnswerInput,
 } from "./index.ts";
 
@@ -26,7 +27,10 @@ const schema = {
   }),
   config_response: z.toJSONSchema(configResponse, { io: "input" }),
   error_response: z.toJSONSchema(errorResponse, { io: "input" }),
-  limits: { max_answer_length: maxAnswerLength },
+  limits: {
+    max_answer_length: maxAnswerLength,
+    max_display_name_length: maxDisplayNameLength,
+  },
 };
 
 writeFileSync(

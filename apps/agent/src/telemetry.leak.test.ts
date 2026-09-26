@@ -70,6 +70,49 @@ describe("telemetry privacy", () => {
       "usage attributes missing",
     );
   });
+  it("sends the user's name to the model and never to telemetry", async () => {
+    const NAME = "SENTINEL_NAME_71c2";
+    const model = scriptedSessionModel([
+      {
+        ask: {
+          questionId: bestQuestion.id,
+          question: bestQuestion.text,
+          answerType: bestQuestion.answer_type,
+        },
+      },
+      {
+        record: { questionId: "q-best", answerType: "longtext", value: "ok" },
+      },
+      { complete: "A day." },
+    ]);
+    let prompted = false;
+    const inner = model.doGenerate.bind(model);
+    model.doGenerate = async (options) => {
+      prompted ||= JSON.stringify(options.prompt).includes(NAME);
+      return await inner(options);
+    };
+
+    exporter.reset();
+    await runSession({
+      questionSet: set,
+      client: { askQuestion: async () => "ok" },
+      model,
+      userContext: { displayName: NAME, nameIsPlaceholder: false },
+    });
+
+    assert.ok(prompted, "the name never reached the model");
+    const spans = exporter.getFinishedSpans();
+    const leaks = [
+      ...spans.flatMap((sp) => Object.entries(sp.attributes)),
+      ...spans.flatMap((sp) =>
+        sp.events.flatMap((e) => Object.entries(e.attributes ?? {})),
+      ),
+    ]
+      .filter(([, v]) => JSON.stringify(v).includes(NAME))
+      .map(([k]) => k);
+    assert.deepEqual(leaks, [], "the user's name leaked into telemetry");
+  });
+
   it("does not leak journal content through tool validation errors", async () => {
     const model = scriptedSessionModel([
       { ask: { questionId: "q-best", question: "Q?", answerType: "longtext" } },

@@ -103,6 +103,53 @@ describe("advance-session handler", () => {
     assert.equal(seen, "user-1");
   });
 
+  describe("user_context", () => {
+    async function seenBy(body: unknown) {
+      let seen: unknown = "never advanced";
+      const h = createAdvanceSessionHandler({
+        secret: SECRET,
+        verifyCaller: signedIn,
+        advance: async ({ userContext }) => {
+          seen = userContext;
+          return awaiting;
+        },
+      });
+      const res = await h(post(body));
+      return { status: res.status, seen };
+    }
+
+    it("hands the user's name to the session, camelCased", async () => {
+      assert.deepEqual(
+        await seenBy({
+          user_context: { display_name: " Pebble ", name_is_placeholder: true },
+        }),
+        {
+          status: 200,
+          seen: { displayName: "Pebble", nameIsPlaceholder: true },
+        },
+      );
+    });
+
+    it("runs without one, as every app before it does", async () => {
+      assert.deepEqual(await seenBy({ app_version: "1.2.3" }), {
+        status: 200,
+        seen: undefined,
+      });
+    });
+
+    it("runs without one it cannot trust rather than refusing the round", async () => {
+      assert.deepEqual(
+        await seenBy({
+          user_context: {
+            display_name: "x".repeat(41),
+            name_is_placeholder: false,
+          },
+        }),
+        { status: 200, seen: undefined },
+      );
+    });
+  });
+
   it("starts a session and returns a signed transcript with the pending question", async () => {
     const res = await handler()(post({}));
     assert.equal(res.status, 200);

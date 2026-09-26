@@ -49,7 +49,7 @@ const handler = createAdvanceSessionHandler({
   onFailure: (error) => {
     reportError(error, { step: "session_round", model });
   },
-  advance: ({ messages, answer }) =>
+  advance: ({ messages, answer, userContext }) =>
     advanceSession({
       questionSet: defaultQuestionSet,
       model,
@@ -57,6 +57,7 @@ const handler = createAdvanceSessionHandler({
       // client input — let it 500 loudly.
       messages: transcriptSchema.parse(messages),
       ...(answer === undefined ? {} : { answer }),
+      ...(userContext === undefined ? {} : { userContext }),
     }),
 });
 

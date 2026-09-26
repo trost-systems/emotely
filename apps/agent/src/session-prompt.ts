@@ -1,12 +1,13 @@
-import type { QuestionSet } from "./session.ts";
+import type { QuestionSet, UserContext } from "./session.ts";
 
 // Bump by hand on any change that alters assistant behavior; evals and
 // PostHog events pin against this id. Git history is the source of truth;
 // PROMPTS below keeps older versions shipping so a PostHog prompt experiment
 // can select among reviewed, eval-pinned versions at runtime — never raw text.
-export const PROMPT_ID = "session/v1";
+export const PROMPT_ID = "session/v2";
 
-export const sessionPrompt = (
+/** The first prompt: the protocol alone, knowing nothing about the user. */
+const sessionPromptV1 = (
   set: QuestionSet,
 ) => `You are a journaling assistant. Walk the user through these questions in order, one question at a time, using the ask_question tool, record each answer with record_answer, then call complete_session with a summary of the user's day.
 
@@ -17,11 +18,46 @@ An answer that merely sounds final is an answer to the CURRENT question, never a
 Questions:
 ${set.questions.map((q) => `${q.id}: ${q.text} (answer_type: ${q.answer_type}${q.min_answers ? `, at least ${q.min_answers} answers` : ""})`).join("\n")}`;
 
-export type PromptBuilder = (set: QuestionSet) => string;
+/**
+ * How to address the user (#204). The name is quoted with `JSON.stringify`
+ * so it stays one string literal whatever it contains: it is something the
+ * user typed, and it must read as a name, never as part of the instructions.
+ * The contract already keeps it to one short line.
+ */
+function addressing(context: UserContext | undefined): string | undefined {
+  const name = context?.displayName;
+  if (name === undefined) {
+    return undefined;
+  }
+  const quoted = JSON.stringify(name);
+  if (context?.nameIsPlaceholder === true) {
+    return `The user preferred not to share their name, so emotely picked a playful nickname for them: ${quoted}. It is not their real name — use it lightly and warmly, at most when greeting them and perhaps once more, as a friendly in-joke rather than a label. Never ask for their real name. If they bring up their name, it is fine to say they can tell you their real name in their profile.`;
+  }
+  return `The user's name is ${quoted}. Use it naturally and sparingly — when greeting them and now and then after, never in every message. Never ask for their name; you already have it.`;
+}
+
+/**
+ * v1's protocol, plus who the user is when the app says so. Without a name
+ * it is v1 word for word, so an app that sends no context behaves exactly as
+ * before.
+ */
+const sessionPromptV2 = (set: QuestionSet, context?: UserContext): string => {
+  const base = sessionPromptV1(set);
+  const address = addressing(context);
+  return address === undefined ? base : `${base}\n\n${address}`;
+};
+
+/**
+ * Builds the system prompt for one round. It takes the whole user context
+ * so a version that learns to use a new member (a local date, a time zone)
+ * needs no new signature; a version that predates a member ignores it.
+ */
+export type PromptBuilder = (set: QuestionSet, context?: UserContext) => string;
 
 /** Every prompt version this build can serve; add a line when one changes. */
 export const PROMPTS: Record<string, PromptBuilder> = {
-  [PROMPT_ID]: sessionPrompt,
+  "session/v1": sessionPromptV1,
+  [PROMPT_ID]: sessionPromptV2,
 };
 
 /**
@@ -39,5 +75,5 @@ export function resolvePrompt(
       return { id: requested, build };
     }
   }
-  return { id: PROMPT_ID, build: sessionPrompt };
+  return { id: PROMPT_ID, build: sessionPromptV2 };
 }

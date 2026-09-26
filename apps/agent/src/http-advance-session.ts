@@ -5,10 +5,15 @@ import {
   type ErrorCode,
   type ErrorResponse,
   maxAnswerLength,
+  type UserContextWire,
 } from "@emotely/contract";
 import { classifyModelFailure } from "./error-tracking.ts";
 import type { VerifyCaller } from "./request-auth.ts";
-import type { AdvanceResult, SessionAnswer } from "./session-core.ts";
+import type {
+  AdvanceResult,
+  SessionAnswer,
+  UserContext,
+} from "./session-core.ts";
 import { signTranscript, verifyTranscript } from "./transcript-auth.ts";
 
 const MAX_TRANSCRIPT_MESSAGES = 200;
@@ -25,7 +30,24 @@ type Advance = (input: {
   answer?: SessionAnswer;
   /** The signed-in user the round runs for. */
   userId: string;
+  /** Who that user is, when the app said and it validated (#204). */
+  userContext?: UserContext;
 }) => Promise<AdvanceResult>;
+
+/**
+ * The wire's `user_context` in the agent's own casing. The contract has
+ * already trimmed and validated it, or dropped it when it did not validate.
+ */
+function userContextOf(wire: UserContextWire): UserContext {
+  return {
+    ...(wire.display_name === undefined
+      ? {}
+      : { displayName: wire.display_name }),
+    ...(wire.name_is_placeholder === undefined
+      ? {}
+      : { nameIsPlaceholder: wire.name_is_placeholder }),
+  };
+}
 
 function json(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -88,6 +110,9 @@ async function runAdvance(opts: {
     return await opts.advance({
       messages: opts.transcript,
       userId: opts.userId,
+      ...(parsed.user_context === undefined
+        ? {}
+        : { userContext: userContextOf(parsed.user_context) }),
       ...(parsed.answer === undefined
         ? {}
         : {

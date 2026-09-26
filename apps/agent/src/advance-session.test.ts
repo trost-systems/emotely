@@ -38,6 +38,41 @@ describe("advanceSession", () => {
     assert.ok(result.messages.length > 0);
   });
 
+  it("tells the model who the user is on every round, never in the transcript", async () => {
+    const systems: string[] = [];
+    const scripted = scriptedSessionModel([
+      { record: { questionId: "q-rate", answerType: "rating", value: 7 } },
+      {
+        record: { questionId: "q-best", answerType: "longtext", value: "n/a" },
+      },
+      { complete: "Rated 7." },
+    ]);
+    const inner = scripted.doGenerate.bind(scripted);
+    scripted.doGenerate = async (options) => {
+      for (const message of options.prompt) {
+        if (message.role === "system") {
+          systems.push(message.content);
+        }
+      }
+      return await inner(options);
+    };
+
+    const done = await advanceSession({
+      questionSet: set,
+      model: scripted,
+      messages: [],
+      userContext: { displayName: "Maya", nameIsPlaceholder: false },
+    });
+
+    assert.equal(done.status, "completed");
+    assert.equal(done.promptId, "session/v2");
+    assert.equal(systems.length, 3);
+    assert.ok(systems.every((s) => s.includes('"Maya"')));
+    // The context rides on each request, not in the signed transcript the
+    // app stores: a renamed user is addressed by the new name next round.
+    assert.ok(!JSON.stringify(done.messages).includes("Maya"));
+  });
+
   it("shows the client the set's wording, not the model's rendering of it", async () => {
     // Seen live from gpt-oss-120b for "How productive did you feel today?":
     // the id was right, the text was not. The reviewed wording wins.
