@@ -29,7 +29,7 @@ library;
 /// session. That is correct when the wording materially changes, and
 /// needless churn when it does not — so a typo fix is worth a moment's
 /// thought about whether the meaning moved (see ADR 0014).
-const consentVersion = '2026-09-20';
+const consentVersion = '2026-09-26';
 
 /// The heading of the consent screen. Names the moment rather than asking a
 /// question, and stays true when the screen is shown again after a wording
@@ -55,9 +55,11 @@ const consentPoints = <ConsentPoint>[
     lead: 'Your answers are sent to an AI model.',
     body:
         'Each answer goes to our server and on to a language model provider '
-        'through the Vercel AI Gateway, so emotely can ask the next question '
-        'and write your entry. The provider may be outside the EU; where it '
-        'is, the transfer rests on the EU’s standard contractual clauses.',
+        'through the Vercel AI Gateway, together with the name you chose, or '
+        'the nickname emotely picked for you, so emotely can ask the next '
+        'question, address you by name and write your entry. The provider '
+        'may be outside the EU; where it is, the transfer rests on the EU’s '
+        'standard contractual clauses.',
   ),
   (
     lead: 'Never used for training, never kept.',
@@ -121,7 +123,7 @@ const consentUnknownMessage =
 /// Every string the user reads before deciding, in the order the screen
 /// shows them. This is what [consentVersion] names, and what the version
 /// test hashes: if any of it changes, the version must change too, because
-/// a record naming `2026-09-20` has to mean one particular text and not
+/// a record naming `2026-09-26` has to mean one particular text and not
 /// whatever the file happens to say today.
 ///
 /// Deliberately only the *decision* strings — the title, the three points,

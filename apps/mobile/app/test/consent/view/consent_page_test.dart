@@ -90,6 +90,9 @@ void main() {
       expect(robot.consent, findsNothing);
       expect(robot.session, findsOneWidget);
       expect(robot.supabase.to(consentGrant), isEmpty);
+      // The app knows no name to give the agent yet (the profile is #204's
+      // next step), so the round says nothing about the user.
+      expect(robot.agent.lastRequest, {'app_version': AgentStub.appVersion});
     });
 
     testWidgets(
@@ -382,6 +385,11 @@ void main() {
         find.textContaining('standard contractual clauses'),
         findsOneWidget,
       );
+
+      // The name travels with the answers so the companion can address the
+      // user (#204), whether they chose it or emotely picked a nickname.
+      expect(find.textContaining('the name you chose'), findsOneWidget);
+      expect(find.textContaining('nickname emotely picked'), findsOneWidget);
     });
 
     testWidgets('stays usable and complete at double text size', (

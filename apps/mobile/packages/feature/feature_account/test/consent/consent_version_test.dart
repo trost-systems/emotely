@@ -18,7 +18,12 @@ void main() {
     // 2026-09-21: digest alone. "the account screen" became "the More tab"
     // when withdrawal moved there — where the control sits, not what is
     // agreed to — so the version stayed 2026-09-20 and nobody was re-asked.
-    const wordingDigest = 'f809fe48';
+    //
+    // 2026-09-26: version and digest. The name the user chose, or the
+    // nickname emotely picked, now goes to the model provider with the
+    // answers (#204) — a new piece of personal data to a recipient, so the
+    // meaning moved. No tester had consented yet, so nobody was re-asked.
+    const wordingDigest = 'eaf90d83';
 
     /// A stable 32-bit FNV-1a over the wording. Not a security hash and it
     /// does not need to be: it only has to change when the text does, and
