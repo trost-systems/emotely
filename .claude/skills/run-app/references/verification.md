@@ -7,8 +7,12 @@ own reference (`marionette help-ai`).
 
 1. **Up.** `run-app.sh up` builds a debug app, creates and boots a fresh iOS
    simulator for this session, launches the app with `flutter run` against
-   the deployed agent, registers it with marionette and signs in as the
-   smoke account. It ends on the signed-in journal and prints the
+   the deployed agent, registers it with marionette, answers the
+   first-launch usage-analytics sheet (Allow, so `collect` finds the
+   session's PostHog events; `--analytics deny` to run with PostHog never
+   set up) and signs in as the smoke account. Signing out brings the sheet
+   back; answer it with `tap --key usage_analytics_sheet.allow` (or
+   `.deny`). It ends on the signed-in journal and prints the
    **instance** and the **bundle**:
 
    ```
