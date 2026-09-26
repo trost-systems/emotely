@@ -51,7 +51,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sample: ${{ fromJSON(inputs.samples || '[1]') }}
+        sample: ${{ fromJSON(inputs.samples || '[1,2,3,4,5]') }}
     timeout-minutes: 60
     # The smoke account, for the latency probe on the nightly only.
     environment: ci
