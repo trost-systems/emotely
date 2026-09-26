@@ -1,0 +1,60 @@
+# Every typed route the Flutter workspace declares (ADR 0016), for the
+# feature-map check (issue 168): the `@TypedGoRoute<X>(path: ...)` annotation
+# on a feature's route class and each `TypedGoRoute<Y>(path: ...)` nested in
+# its `routes:`, with the route class as $ROUTE and the path as written as
+# $PATH. A nested route is reported on its own, inside its parent's range;
+# scripts/feature-map.sh joins the paths into a location.
+#
+# An extraction, not a lint: `severity: off` keeps it out of the ast-grep
+# gate's scan (scripts/ast-grep.sh), and the script switches it on
+# (`--filter` plus `--info`). Its test runs under `ast-grep test
+# --include-off`.
+id: typed-go-route
+language: dart
+severity: off
+message: a typed route
+utils:
+  # The route class: the one type argument.
+  route-class:
+    has:
+      kind: type_arguments
+      has:
+        kind: type
+        has:
+          kind: type_identifier
+          pattern: $ROUTE
+  # The `path:` argument among its own arguments, not a nested route's.
+  route-path:
+    has:
+      any:
+        - kind: annotation_arguments
+        - kind: arguments
+      has:
+        kind: named_argument
+        all:
+          - has:
+              kind: label
+              regex: '^path\s*:$'
+          - has:
+              kind: string_literal
+              pattern: $PATH
+rule:
+  any:
+    - kind: annotation
+      all:
+        - has:
+            field: name
+            regex: '^Typed(Relative)?GoRoute$'
+        - matches: route-class
+        - matches: route-path
+    - kind: call_expression
+      all:
+        - has:
+            field: function
+            kind: instantiation_expression
+            all:
+              - has:
+                  field: function
+                  regex: '^Typed(Relative)?GoRoute$'
+              - matches: route-class
+        - matches: route-path

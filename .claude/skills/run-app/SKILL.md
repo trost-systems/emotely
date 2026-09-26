@@ -1,6 +1,6 @@
 ---
 name: run-app
-description: How to run, drive and verify the Flutter app (apps/mobile/app) on an iOS simulator — run-app.sh sets it up signed in against the deployed agent, the agent drives it with plain marionette commands, and the CLI records and collects an evidence bundle (screenshots, video, logs, PostHog events); plus the on-device acceptance session and the unit gate. Use whenever asked to run the app, see a screen, verify a change on a device, collect evidence for a pull request, or run integration_test.
+description: How to run, drive and verify the Flutter app (apps/mobile/app) on an iOS simulator — run-app.sh sets it up signed in against the deployed agent, the agent drives it with plain marionette commands, and the CLI records and collects an evidence bundle (screenshots, video, logs, PostHog events); plus the on-device acceptance session and the unit gate. Use whenever asked to run the app, see a screen, find or reach the screen a report or screenshot is about (the feature map), verify a change on a device, collect evidence for a pull request, or run integration_test.
 ---
 
 # Running apps/mobile/app
@@ -13,6 +13,16 @@ Verifying a change on the simulator, or posting its evidence — read
 [references/verification.md](references/verification.md) first: up → drive →
 collect → down, the worked example, the keys, posting evidence and parallel
 sessions.
+
+## Find a screen
+
+[references/feature-map.yaml](references/feature-map.yaml) lists every screen:
+its route, how to reach it from the signed-in journal (the keys to tap, in
+order), what it does, its bloc states, its keys, and what it looks like. Read
+it first when a report names a screen or brings a screenshot: match the
+screenshot against each entry's `looks`, then follow its `reach` with
+marionette. A new route needs its entry in the same pull request; CI's
+`ast-grep` job fails without it (`scripts/feature-map.sh`).
 
 ## Build-time configuration
 

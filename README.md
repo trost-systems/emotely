@@ -77,6 +77,7 @@ emotely/
 ├─ ast-grep/     custom checks as ast-grep rules + their tests (ADR 0018) · the tripwire:
 │                no workaround comments, no suppression without a reason · the
 │                architecture rules: defines read only in an app's environment file
+│                · the routes the feature map must list
 ├─ supabase/     Postgres schema + RLS tests (pgTAP) + auth config · deploys on merge
 └─ README.md
 ```

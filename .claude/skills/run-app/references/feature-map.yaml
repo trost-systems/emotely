@@ -1,0 +1,302 @@
+# The feature map: every screen of apps/mobile/app, how to reach it from the
+# signed-in journal, what it does and what drives it. Use it to turn a vague
+# report ("this screen looks wrong", a cropped screenshot) into a screen you
+# can reach: find the entry by `looks`, then follow `reach` with marionette
+# after `run-app.sh up` (references/verification.md). It is knowledge, not a
+# script: nothing runs it. Scripted journeys belong in patrol (#38).
+#
+# One entry per typed route (ADR 0016), under `screens`:
+#   route    the GoRouteData class the feature declares in lib/src/routes.dart
+#   package  the package that declares it
+#   path     its full location
+#   reach    from the signed-in journal, where `up` leaves you, in order.
+#            There are no deep links: the app registers no URL scheme, so
+#            every screen is reached by tapping keys.
+#   does     what the screen is for
+#   looks    what tells it apart in a screenshot, even a cropped one
+#   states   per bloc, each state and what the screen shows in it
+#   keys     the widget keys that drive it (`--key` in marionette). The app
+#            sets no semantics identifiers; keys are the handles.
+#
+# CI keeps it honest: scripts/feature-map.sh fails when a package declares a
+# route the map does not list, when an entry names a route that no longer
+# exists or moved, and when an entry lacks one of the fields above. Adding
+# a route means adding its entry here in the same pull request.
+screens:
+  - route: JournalRoute
+    package: feature_journal
+    path: /
+    reach:
+      - "`run-app.sh up` ends here."
+      - From anywhere under the tabs, tap app_shell.journal (twice returns
+        the tab to its first screen).
+    does: >-
+      Home, the Journal tab: the entries so far, newest first, and the way
+      into the next session (start one, or continue or discard the
+      unfinished one). Starting asks the server for consent first and
+      pushes the consent screen when it does not stand.
+    looks: >-
+      App bar "Your journal". A tab bar at the bottom with Journal
+      (selected, a book icon) and More. At the top a full-width "Start a
+      session" button, or "You have an unfinished session." with Continue
+      and "Discard it". Below, a list of dates (month, day, year) with a
+      two-line summary each, or "No entries yet. Your first session writes
+      the first one."
+    states:
+      JournalBloc:
+        JournalLoading: A spinner.
+        JournalReady: The session card and the entries (or the empty text).
+        JournalFailure: '"Could not load your journal." and Try again.'
+    keys:
+      journal_view.start: Start a session (no unfinished one).
+      journal_view.continue: Continue the unfinished session.
+      journal_view.discard: Discard the unfinished session.
+      journal_view.empty: The empty-journal text.
+      journal_view.entry.<id>: One entry row; opens EntryRoute.
+      journal_view.retry: Try again after a failed read.
+      app_shell.journal: The Journal tab.
+      app_shell.more: The More tab.
+
+  - route: EntryRoute
+    package: feature_journal
+    path: /entries/:id
+    reach:
+      - Run get-interactive-elements on the journal and tap the first key
+        that starts with journal_view.entry. (the newest entry). Without
+        an entry, finish a session first (SessionRoute) with made-up
+        answers.
+    does: >-
+      One filed entry, read back by its id: the agent's summary, then
+      every question with the answer recorded for it. Read-only.
+    looks: >-
+      App bar titled with the entry's date (month, day, year) and a back
+      arrow, the tab bar still at the bottom. "Your entry" as a heading,
+      the summary paragraph, then question headings each with an answer
+      under it: bullet lists, "N / 10" ratings, emoji, colour names.
+    states:
+      EntryBloc:
+        EntryLoading: App bar "Entry" and a spinner.
+        EntryReady: The date as the title and the entry.
+        EntryFailure: 'App bar "Entry", "Could not load this entry." and Try again.'
+    keys:
+      entry_view.summary: The summary paragraph.
+      entry_page.retry: Try again after a failed read.
+
+  - route: SessionRoute
+    package: feature_session
+    path: /session
+    reach:
+      - Tap journal_view.start, or journal_view.continue for the
+        unfinished session (?resume=<id>).
+      - Only while the smoke account's consent is missing or out of date,
+        ConsentRoute comes first; agree there and the session follows.
+      - Poll get-interactive-elements until session_view.question shows
+        (a model round takes a few seconds).
+      - Leave with press-back-button, then tap journal_view.discard on the
+        journal, so no open session is left behind.
+    does: >-
+      A journaling session with the deployed agent: one question at a time,
+      each answered with the widget its type asks for (text list, long
+      text, rating, emoji, colour), until the agent files the entry and the
+      screen shows it. Pushed over the tabs, so there is no tab bar.
+    looks: >-
+      App bar "Journaling session" with a back arrow and no tab bar.
+      "Question N" in small type over the question in large type, then an
+      input: numbered text fields, a big text box, a 1-10 slider, emoji or
+      colour slots, and a Submit button. Between rounds a spinner over
+      "Thinking…". At the end, "Your entry" with the summary and answers.
+    states:
+      SessionBloc:
+        SessionInitial: '"Thinking…" and a spinner.'
+        SessionLoading: '"Thinking…" and a spinner.'
+        SessionAwaitingAnswer: '"Question N", the question and its input.'
+        SessionCompleted: The filed entry, as on EntryRoute.
+        SessionFailure: >-
+          The reason in words ("Could not reach the journaling assistant."
+          and five others) and Try again, or Start over when the session
+          cannot continue.
+    keys:
+      session_view.question: The question text.
+      session_view.retry: Try again after a failed round.
+      session_view.start_over: Start a fresh session when this one cannot continue.
+      text_list_input.field.<n>: The n-th item of a text-list answer, from 0.
+      text_list_input.submit: Submit the list.
+      longtext_input.field: The long-text answer.
+      longtext_input.submit: Submit it.
+      rating_input.slider: The 1-10 slider; a tap on it sets 5.
+      rating_input.value: The number shown beside it.
+      rating_input.submit: Submit the rating.
+      emoji_input.slot.<n>: The n-th emoji slot; opens a picker without keys (tap --text).
+      emoji_input.clear: Clear the emoji.
+      emoji_input.submit: Submit the emoji.
+      color_input.slot.<n>: The n-th colour slot; opens a colour dialog.
+      color_input.select: Confirm the colour in the dialog.
+      color_input.cancel: Close the dialog.
+      color_input.clear: Clear the colours.
+      color_input.submit: Submit the colours.
+      answer_length.note: The note under a long answer about its length.
+
+  - route: MoreRoute
+    package: feature_account
+    path: /more
+    reach:
+      - Tap app_shell.more.
+    does: >-
+      The More tab: everything that is not the journal, in sections. The
+      account screen, withdrawing or giving consent, the privacy notice and
+      the imprint (both open the browser), the feedback mail (opens the
+      mail app), and signing out last.
+    looks: >-
+      App bar "More", the tab bar with More selected. Orange section
+      headings Account, Consent, Legal and Feedback over rows: "Your
+      account" (a chevron), "Withdraw consent" or "Give consent" with a
+      long explanation, "Privacy notice" and "Imprint" (open-in-new
+      icons), "Send feedback" (a mail icon), then "Sign out" with a logout
+      icon.
+    states:
+      ConsentBloc:
+        ConsentUnknown: 'The consent row reads "Check again".'
+        ConsentKnown: >-
+          "Withdraw consent" while it stands (granted), "Give consent" while
+          it does not.
+        ConsentBusy: '"Updating your consent…" with a small spinner.'
+        ConsentFailure: '"Check again", in the error colour.'
+        ConsentWriteFailure: '"Give consent".'
+        ConsentWithdrawFailure: '"Withdraw consent", saying the withdrawal did not land, in the error colour.'
+      AccountBloc:
+        AccountIdle: Nothing to show; the bloc only composes the feedback mail here.
+    keys:
+      more_view.account: Opens AccountRoute.
+      more_view.withdraw_consent: Withdraws consent (shown while it stands).
+      more_view.restore_consent: Opens ConsentRoute (shown while consent does not stand).
+      more_view.consent_retry: Reads consent again after a failed read.
+      more_view.privacy_notice: Opens the privacy notice in the browser.
+      more_view.imprint: Opens the imprint in the browser.
+      more_view.feedback: Opens the feedback mail.
+      more_view.sign_out: Signs out; the app lands on SignInRoute.
+
+  - route: AccountRoute
+    package: feature_account
+    path: /more/account
+    reach:
+      - Tap app_shell.more.
+      - Tap more_view.account.
+    does: >-
+      Deleting the account: what it means, and a button that deletes it
+      after a confirmation dialog. Never confirm on the smoke account.
+    looks: >-
+      App bar "Account" with a back arrow, the tab bar still at the bottom.
+      One paragraph, "Deleting your account also deletes every journal
+      entry you wrote. There is no way back.", and an outlined red "Delete
+      account" button. The dialog asks "Delete your account and every
+      entry?" with Cancel and a red Delete.
+    states:
+      AccountBloc:
+        AccountIdle: The paragraph and Delete account.
+        AccountDeleting: A spinner; back is blocked.
+        AccountDeleted: A spinner while the screen pops itself on sign-in.
+        AccountFailure: The failure in red, Try again and Sign out.
+    keys:
+      account_view.delete: Opens the confirmation dialog.
+      account_view.cancel: Closes the dialog; safe.
+      account_view.confirm: Deletes the account. Never on the smoke account.
+      account_view.retry: Try the deletion again after a failure.
+      account_view.sign_out: Signs out after a failed deletion.
+
+  - route: ConsentRoute
+    package: feature_account
+    path: /consent
+    reach:
+      - Tap app_shell.more.
+      - While consent stands, tap more_view.withdraw_consent and wait for
+        more_view.restore_consent (this withdraws the smoke account's
+        consent; give it again below).
+      - Tap more_view.restore_consent.
+      - To leave consent as you found it, scroll-to and tap
+        consent_view.checkbox, then consent_view.agree. The screen pops
+        back to More.
+    does: >-
+      Asks for the explicit consent a session needs (Art. 9 (2) (a) GDPR):
+      what is sent where, an unticked box, agree or decline. Pushed over
+      the tabs; pops with the outcome. Also where the journal sends a user
+      whose consent does not stand when they start a session.
+    looks: >-
+      App bar "Before emotely sends your writing" with a back arrow and no
+      tab bar. Three paragraphs, each opening in bold (the last is
+      "Sensitive, and yours to take back."), a "Read the full privacy
+      notice" link, a checkbox "I consent to my journal entries being sent
+      to a model provider as described above.", a "Start journaling" button
+      (dimmed until ticked) and "Not now".
+    states:
+      ConsentBloc:
+        ConsentUnknown: A spinner.
+        ConsentBusy: A spinner; back is blocked.
+        ConsentKnown: The question (granted pops the screen at once).
+        ConsentWithdrawFailure: The question.
+        ConsentFailure: The read failed, in red; Try again and Back.
+        ConsentWriteFailure: '"Could not record your consent.", in red; Try again and "Not now".'
+    keys:
+      consent_view.checkbox: The consent box; scroll to it first.
+      consent_view.agree: Start journaling; records consent once ticked.
+      consent_view.decline: Not now (Back after a failed read).
+      consent_view.notice: Opens the privacy notice in the browser.
+      consent_view.retry: Try again after a failed read or write.
+
+  - route: SignInRoute
+    package: feature_auth
+    path: /sign-in
+    reach:
+      - Tap app_shell.more, then more_view.sign_out. Visit it last, since
+        the way back in is `run-app.sh down` and `up` again, which signs in
+        with the smoke password without printing it.
+    does: >-
+      The only screen a signed-out user sees: email, then the six-digit
+      code Supabase mails (or a password, for the review accounts and a
+      debug build's smoke account), or Google and Apple in one step. The
+      router sends every signed-out location here and back afterwards
+      (?from=).
+    looks: >-
+      App bar "Sign in", no tab bar, no back arrow. "Enter your email and
+      we send you a six-digit code.", an Email field, a "Send code" button
+      (dimmed until the address looks plausible), "or", the Google and
+      Apple buttons, and "Privacy notice" at the bottom. After Send code:
+      a Code (or Password) field, a Sign in button and a way to change the
+      email.
+    states:
+      AuthBloc:
+        AuthSignedOut: The email step, with the last error if any.
+        AuthRequestingCode: The email step, busy.
+        AuthSigningInWith: The email step, busy while Google or Apple answers.
+        AuthCodeSent: The code step.
+        AuthVerifying: The code step, busy.
+        AuthPasswordRequired: The password step.
+        AuthCheckingPassword: The password step, busy.
+        AuthSignedIn: Nothing; the router leaves for the journal.
+    keys:
+      sign_in_page.email: The email field.
+      sign_in_page.send_code: Send code.
+      sign_in_page.code: The six-digit code field.
+      sign_in_page.sign_in: Sign in with the code.
+      sign_in_page.password: The password field (review and smoke accounts).
+      sign_in_page.password_sign_in: Sign in with the password.
+      sign_in_page.change_email: Back to the email step.
+      sign_in_page.error: The error text under a field.
+      sign_in_page.google: Sign in with Google.
+      sign_in_page.apple: Sign in with Apple (iOS).
+      sign_in_page.privacy_notice: Opens the privacy notice in the browser.
+
+# Screens that are not routes, so the check does not see them. The shell's
+# tab bar is on every screen under JournalRoute and MoreRoute.
+elsewhere:
+  - name: ConfigGate (apps/mobile/app/lib/config)
+    looks: >-
+      Covers everything, before sign-in too: a spinner while the server
+      says whether this build may run; "This version of emotely is no
+      longer supported. Please update to <version> or newer to continue."
+      with Update; or a failure in red with Try again.
+    keys:
+      config_gate.checking: The spinner.
+      config_gate.update_required: The update text.
+      config_gate.update: Opens the store.
+      config_gate.failure: The failure text.
+      config_gate.retry: Asks the server again.

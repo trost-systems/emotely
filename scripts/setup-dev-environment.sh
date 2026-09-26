@@ -665,6 +665,14 @@ if [ "$VERIFY" -eq 1 ]; then
   info "ast-grep: the comment tripwire and the architecture rules"
   (cd "$REPO_ROOT" && pnpm ast-grep:check)
 
+  # CI's runners ship yq; this script does not install it.
+  if command -v yq >/dev/null; then
+    info "feature map: every declared route has its entry in the run-app skill"
+    (cd "$REPO_ROOT" && pnpm feature-map)
+  else
+    SKIPPED+=("feature map (needs yq)")
+  fi
+
   info "spell: the app's copy, English and German, and the words CONTEXT.md avoids"
   (cd "$REPO_ROOT" && pnpm spell)
 
