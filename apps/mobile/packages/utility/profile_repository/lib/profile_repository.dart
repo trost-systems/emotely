@@ -4,6 +4,8 @@
 /// (ADR 0010); nothing here can reach another user's row.
 library;
 
+export 'package:contract/contract.dart' show maxDisplayNameLength;
+
 export 'src/display_name.dart';
 export 'src/profile.dart';
 export 'src/profile_repository.dart';

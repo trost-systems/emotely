@@ -15,6 +15,12 @@ RouteBase get $moreRoute => GoRouteData.$route(
   factory: $MoreRoute._fromState,
   routes: [
     GoRouteData.$route(
+      path: 'profile',
+      name: 'profile',
+      hasOverriddenOnExit: false,
+      factory: $ProfileRoute._fromState,
+    ),
+    GoRouteData.$route(
       path: 'account',
       name: 'account',
       hasOverriddenOnExit: false,
@@ -34,6 +40,26 @@ mixin $MoreRoute on GoRouteData {
 
   @override
   String get location => GoRouteData.$location('/more');
+
+  @override
+  void go(BuildContext context) => context.go(location);
+
+  @override
+  Future<T?> push<T>(BuildContext context) => context.push<T>(location);
+
+  @override
+  void pushReplacement(BuildContext context) =>
+      context.pushReplacement(location);
+
+  @override
+  void replace(BuildContext context) => context.replace(location);
+}
+
+mixin $ProfileRoute on GoRouteData {
+  static ProfileRoute _fromState(GoRouterState state) => const ProfileRoute();
+
+  @override
+  String get location => GoRouteData.$location('/more/profile');
 
   @override
   void go(BuildContext context) => context.go(location);

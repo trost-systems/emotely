@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:feature_account/src/account/bloc/account_bloc.dart';
 import 'package:feature_account/src/consent/bloc/consent_bloc.dart';
-import 'package:feature_account/src/navigator.dart';
+import 'package:feature_account/src/more/view/profile_card.dart';
+import 'package:feature_account/src/profile/bloc/profile_bloc.dart';
 import 'package:feature_account/src/routes.dart';
 import 'package:feature_account/src/usage_analytics/bloc/usage_analytics_bloc.dart';
 import 'package:feedback_link/feedback_link.dart';
@@ -11,15 +12,16 @@ import 'package:get_it/get_it.dart';
 import 'package:legal_links/legal_links.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// The More tab: everything that is not the journal, as sections of rows
-/// with a heading each — privacy, about, and the account at the very
-/// bottom, where deleting it sits alone (#204).
+/// The More tab: everything that is not the journal — the profile card on
+/// top, then sections of rows with a heading each: privacy, about, and the
+/// account at the very bottom, where deleting it sits alone (#204).
+/// Signing out lives on the Profile screen.
 ///
-/// Reads the [ConsentBloc] the route provides, and brings two blocs of its
-/// own: an [AccountBloc] for the feedback mail, which carries the build the
-/// app runs and so goes through a bloc rather than being launched from
-/// here (ADR 0015), and a [UsageAnalyticsBloc] for the status line under
-/// Privacy settings.
+/// Reads the [ConsentBloc] the route provides, and brings three blocs of
+/// its own: an [AccountBloc] for the feedback mail, which carries the build
+/// the app runs and so goes through a bloc rather than being launched from
+/// here (ADR 0015), a [UsageAnalyticsBloc] for the status line under
+/// Privacy settings, and a [ProfileBloc] for the card.
 class const MorePage({super.key}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MultiBlocProvider(
@@ -29,6 +31,9 @@ class const MorePage({super.key}) extends StatelessWidget {
         create: (_) =>
             GetIt.I<UsageAnalyticsBloc>()
               ..add(const UsageAnalyticsEvent.started()),
+      ),
+      BlocProvider(
+        create: (_) => GetIt.I<ProfileBloc>()..add(const ProfileEvent.loaded()),
       ),
     ],
     child: const MoreView(),
@@ -41,8 +46,8 @@ class const MoreView({super.key}) extends StatelessWidget {
   static const privacyNoticeKey = Key('more_view.privacy_notice');
   static const feedbackKey = Key('more_view.feedback');
   static const imprintKey = Key('more_view.imprint');
-  static const signOutKey = Key('more_view.sign_out');
   static const accountKey = Key('more_view.account');
+  static const profileKey = ProfileCard.tileKey;
 
   static const privacySection = 'Privacy';
   static const aboutSection = 'About';
@@ -59,10 +64,8 @@ class const MoreView({super.key}) extends StatelessWidget {
       'Opens your mail app. Carries your app version and device, '
       'nothing from your journal.';
 
-  static const signOutLabel = 'Sign out';
-
-  /// The gap above every section heading, and above the sign-out row: what
-  /// tells one section from the next at a glance.
+  /// The gap above every section heading: what tells one section from the
+  /// next at a glance.
   static const sectionGap = 24.0;
 
   @override
@@ -77,6 +80,7 @@ class const MoreView({super.key}) extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            ProfileCard(),
             // The privacy notice and the imprint are required to be
             // reachable from inside the app — Apple guideline 5.1.1 (i) and
             // Google Play's User Data policy for the notice, § 5 DDG for the
@@ -85,9 +89,6 @@ class const MoreView({super.key}) extends StatelessWidget {
               title: privacySection,
               children: [_PrivacySettingsRow(), _PrivacyNoticeRow()],
             ),
-            // Kept off the Account section, with About between the two, so
-            // a tap meant for signing out never lands on deletion.
-            _SignOutRow(),
             _Section(
               title: aboutSection,
               children: [_FeedbackRow(), _ImprintRow()],
@@ -179,21 +180,6 @@ class const _FeedbackRow() extends StatelessWidget {
     trailing: const Icon(Icons.mail_outline),
     onTap: () =>
         context.read<AccountBloc>().add(const AccountEvent.feedbackRequested()),
-  );
-}
-
-/// Signing out, in the normal text colour — it loses nothing — and set off
-/// from the section above by [MoreView.sectionGap].
-class const _SignOutRow() extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: MoreView.sectionGap),
-    child: ListTile(
-      key: MoreView.signOutKey,
-      leading: const Icon(Icons.logout),
-      title: const Text(MoreView.signOutLabel),
-      onTap: () => GetIt.I<AccountNavigator>().signOut(context),
-    ),
   );
 }
 
