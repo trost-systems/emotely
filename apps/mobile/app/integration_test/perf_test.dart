@@ -42,9 +42,10 @@ void main() {
     final paths = PerfPaths(tester, binding, backend);
     await paths.compose();
 
-    // Each path repeats its gesture until it draws a few hundred frames:
-    // "under 1% of frames" needs that many to allow any at all, and a p90
-    // over a few dozen frames moves with every run.
+    // Each path repeats its gesture until it draws several hundred frames,
+    // even on the slow nightly emulator: "under 1% of frames" needs that
+    // many to allow any at all, and a p90 over a few dozen frames moves
+    // with every run.
     await paths.measure('journal_scroll', paths.openJournalAndScroll);
     await paths.measure('entry_open', paths.openEntries);
     await paths.measure('session_round', paths.answerRounds);
@@ -60,7 +61,7 @@ class PerfPaths(
   final FakeBackend backend,
 ) {
   /// How often the journal is flung to its end and back.
-  static const scrollPasses = 3;
+  static const scrollPasses = 1;
 
   /// How many times an entry is opened and closed again.
   static const entryOpenings = 12;

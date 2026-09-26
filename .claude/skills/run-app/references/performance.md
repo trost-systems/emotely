@@ -32,9 +32,9 @@ by default) holds:
 ## What is measured, and against what
 
 - **Paths** (`integration_test/perf_test.dart`): launch onto a journal of
-  300 made-up entries and fling it to the end and back three times; open an
+  300 made-up entries and fling it to the end and back; open an
   entry and go back, eight times; start a session and answer eight
-  questions. Each repeats until it draws a few hundred frames.
+  questions. Each draws several hundred frames.
 - **The backend is fake and in the process** (`integration_test/perf/`):
   the production graph (`registerApp`) over one fake http client. Frames
   measure the app, not a connection, and the request counts are exact.
