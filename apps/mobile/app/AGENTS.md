@@ -40,10 +40,11 @@ hand-rolled widgets.
   `builder`, over the navigator.
 - Signed in, the user lives in two tabs (a `StatefulShellRoute` in
   `routes.dart`, rendered by `lib/app/shell.dart`): the journal with its
-  entries, and More (`feature_account`'s `MorePage`) with the account
-  under it. A screen that must cover the tab bar — the session, the
-  consent screen — is declared by its feature with a root path (`/session`,
-  `/consent`), mounted outside the shell, and pushed.
+  entries, and More (`feature_account`'s `MorePage`) with the Profile
+  and account screens under it. A screen that must cover the tab bar —
+  the session, the consent screen — is declared by its feature with a
+  root path (`/session`, `/consent`), mounted outside the shell, and
+  pushed.
 
 ## Dependencies (ADR 0015)
 
@@ -68,7 +69,8 @@ hand-rolled widgets.
 - A feature that needs *data* another feature owns declares the same kind
   of seam: an abstract source the app implements and registers next to
   the navigators. The session's `UserContextSource` (who the user is, for
-  the agent) is implemented in `lib/app/user_context.dart`.
+  the agent) is implemented in `lib/app/user_context.dart`, over
+  the profile repository.
 - Build-time values (`--dart-define`s) are read and validated in the app
   only (`lib/app/environment.dart`, `urlFrom`) and passed into registration
   functions. No package calls `String.fromEnvironment`.
