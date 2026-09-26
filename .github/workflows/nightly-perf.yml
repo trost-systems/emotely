@@ -22,6 +22,13 @@ on:
     # as the same smoke account the latency probe uses.
     - cron: "30 4 * * *"
   workflow_dispatch:
+    inputs:
+      samples:
+        description: >-
+          Runs side by side, as a JSON list (`[1,2,3,4,5]`), to measure a new
+          baseline (`perf.sh baseline` over their artifacts). More than one
+          opens no issue.
+        default: "[1]"
   # A change to the measurement itself proves it still runs: frames and
   # request counts only, no latency (no secrets, no model spend per PR),
   # and no issue.
@@ -41,6 +48,10 @@ concurrency:
 jobs:
   perf:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: ${{ fromJSON(inputs.samples || '[1]') }}
     timeout-minutes: 60
     # The smoke account, for the latency probe on the nightly only.
     environment: ci
@@ -102,11 +113,11 @@ jobs:
         id: upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: perf-run
+          name: perf-run-${{ matrix.sample }}
           path: perf-run/
           retention-days: 30
       - name: Open or update the budget issue
-        if: failure() && steps.gate.outputs.status == '1' && github.event_name != 'pull_request'
+        if: failure() && steps.gate.outputs.status == '1' && github.event_name != 'pull_request' && strategy.job-total == 1
         env:
           GH_TOKEN: ${{ github.token }}
           ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}

@@ -20,7 +20,7 @@ frames:
   # cannot get slower unnoticed while it stays under 16.7 ms.
   headroom_percent: 20
   # "Under 1%" allows no miss at all below 100 frames; a path that draws
-  # fewer measures nothing. Each path repeats its gesture to draw ~250.
+  # fewer measures nothing. Each path repeats its gesture to draw more.
   min_frames: 100
 
 # Requests per path and service, against the in-process fake backend, so the
@@ -33,13 +33,13 @@ requests:
   journal_scroll:
     config: 1
     supabase: 2 # the entries, the open session
-  # Open the newest entry and go back, 8 times.
+  # Open the newest entry and go back, 12 times.
   entry_open:
-    supabase: 8 # the entry, each time
-  # Start a session and answer 8 rating questions.
+    supabase: 12 # the entry, each time
+  # Start a session and answer 16 rating questions.
   session_round:
-    supabase: 11 # consent check, clear + create the session, 8 saved rounds
-    agent: 9 # the first round, then one per answer
+    supabase: 19 # consent check, clear + create the session, 16 saved rounds
+    agent: 17 # the first round, then one per answer
 
 # The deployed backend, measured from the runner as the smoke account
 # (`perf.sh latency`): loose ceilings for the beta, to tighten later. The
@@ -52,22 +52,31 @@ latency:
 # Where a run measured, and what it measured there before. A baseline is the
 # slowest p90 over several runs (`perf.sh baseline <run>...`), which covers
 # the run-to-run noise; a path without one is held to the floor alone.
+#
+# On an emulator two parts of the floor say nothing about the app, so they
+# are reported and never gated there:
+# - raster: it runs through the host's graphics stack (software rendering
+#   on the runner: 80-170 ms p90), not a phone's GPU;
+# - missed frames: a shared host stalls the emulator now and then (single
+#   frames of 50-120 ms mid-scroll), which alone breaks "under 1%".
+# Build p90 against the baseline and the request counts gate everywhere.
 environments:
   # The nightly: GitHub's ubuntu-latest runner, Android 34 x86_64 emulator
-  # under KVM, software rendering (SwiftShader).
+  # under KVM, SwiftShader.
   github-emulator:
-    # An emulator rasterises through the host's graphics stack, so its
-    # raster times say nothing about a phone's: reported, never gated.
     raster: reported
+    missed_frames: reported
     baseline: {}
   # `perf.sh run` without --device: a fresh Android 34 arm64 emulator with
   # the host GPU, measured on an Apple M4 Pro. A slower machine may need
   # its own baseline.
   local-emulator:
     raster: reported
+    missed_frames: reported
     baseline: {}
-  # A phone (`perf.sh run --device <id>`): frames as users get them, raster
-  # included. No baseline yet: the floor alone.
+  # A phone (`perf.sh run --device <id>`): frames as users get them, and
+  # the whole floor gates. No baseline yet: the floor alone.
   device:
     raster: gated
+    missed_frames: gated
     baseline: {}

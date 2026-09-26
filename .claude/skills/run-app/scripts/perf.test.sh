@@ -44,6 +44,7 @@ environments:
         raster_p90_ms: 5.0
   emulator:
     raster: reported
+    missed_frames: reported
     baseline: {}
 EOF
 }
@@ -181,6 +182,18 @@ test_passes_when_under_one_percent_of_frames_miss_the_floor() {
   check "$run" '.checks[] | select(.path == "scroll" and .check == "raster.missed_percent")
     | .status == "pass" and .value == 0.5' ||
     fail "passes under 1% missed frames: raster.missed_percent is not a pass at 0.5"
+}
+
+test_reports_missed_frames_without_gating_them_where_the_budget_says_so() {
+  local run="$work/emulator-missed"
+  new_run "$run"
+  # A shared runner's software renderer starves the UI thread now and then.
+  with_slow_frames "$run" build 6 # 3%
+  gate "$run" --env emulator
+  ((status == 0)) || fail "reports missed frames without gating them: exit $status"
+  check "$run" '.checks[] | select(.path == "scroll" and .check == "build.missed_percent")
+    | .status == "reported" and .value == 3' ||
+    fail "reports missed frames without gating them: build.missed_percent is not reported at 3"
 }
 
 test_fails_a_path_that_drew_too_few_frames_to_judge() {

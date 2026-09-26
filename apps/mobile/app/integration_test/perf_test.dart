@@ -63,10 +63,10 @@ class PerfPaths(
   static const scrollPasses = 3;
 
   /// How many times an entry is opened and closed again.
-  static const entryOpenings = 8;
+  static const entryOpenings = 12;
 
   /// How many questions the session answers.
-  static const sessionRounds = 8;
+  static const sessionRounds = 16;
 
   /// Each path's requests as `service METHOD /path`, in order.
   final requests = <String, List<String>>{};

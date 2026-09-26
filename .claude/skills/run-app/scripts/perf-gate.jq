@@ -84,14 +84,19 @@ def thread_checks($path; $summary; $frames; $environment):
       limit: $frames.target_ms,
       status: (if $p90 > $frames.target_ms then "warn" else "pass" end)
     }),
-    {
+    # A shared emulator misses frames of its own (its software renderer
+    # starves the UI thread), so its budget can report the share without
+    # gating it.
+    ($gated and $environment.missed_frames != "reported") as $missed_gated
+    | {
       path: $path,
       check: "\($metric).missed_percent",
       value: $missed,
       limit: $frames.max_missed_percent,
       # "Under 1%": reaching the limit already fails.
-      status: (if $gated and $missed >= $frames.max_missed_percent then "fail"
-               else judged($missed; $frames.max_missed_percent; $gated) end)
+      status: (if $missed_gated | not then "reported"
+               elif $missed >= $frames.max_missed_percent then "fail"
+               else "pass" end)
     };
 
 def frame_checks($path; $summary; $frames; $environment):
