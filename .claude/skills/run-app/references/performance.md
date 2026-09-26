@@ -42,7 +42,7 @@ by default) holds:
 - **Frames**: p90 build and p90 raster at most 16.7 ms (60 fps), and under
   1% of frames over it. A baseline tightens this: each limit is the lower
   of 16.7 ms and the environment's baseline plus 20%. Over 8.3 ms (120 fps)
-  is a warning.
+  is a warning. An emulator gates less (Environments, below).
 - **Requests**: the count per path and service. Any increase fails; a
   decrease passes and asks for a lower number in the budget.
 - **Latency** (`--latency`, and nightly): 20 Supabase reads and 5 agent first
@@ -55,20 +55,23 @@ by default) holds:
 
 The budget judges a run by where it measured (`--env`):
 
-| env | where | raster, missed frames |
+| env | where | what gates |
 | --- | --- | --- |
-| `github-emulator` | the nightly: ubuntu runner, x86_64 emulator, software rendering | reported |
-| `local-emulator` | `perf.sh run`: arm64 emulator, host GPU (baseline from an Apple M4 Pro) | reported |
-| `device` | `perf.sh run --device <phone>` | gated |
+| `github-emulator` | the nightly: ubuntu runner, x86_64 emulator, software rendering | requests, build p90 against the baseline |
+| `local-emulator` | `perf.sh run`: arm64 emulator, host GPU (baseline from an Apple M4 Pro) | requests, build p90 against the baseline |
+| `device` | `perf.sh run --device <phone>` | requests, the whole 60 fps floor, raster included |
 
-On an emulator, raster time is the host's graphics stack (a 16.7 ms swap
-locally, 80-170 ms of software rendering on the runner), and a shared host
-stalls single frames now and then, which alone breaks "under 1% missed".
-Both are reported there and never gated. Build p90 against the baseline
-and the request counts gate everywhere; a phone gates the whole floor. Flutter runs only debug builds on the iOS
-simulator, so there is no iOS emulator environment. A phone gets the
-profile build installed over whatever emotely build is on it: never use
-someone's personal phone without asking.
+On an emulator the 60 fps floor measures the host, not the app, so the
+budget marks it `floor: reported` there: raster is the host's graphics
+stack (a 16.7 ms swap locally, 80-160 ms of software rendering on the
+runner), a shared host stalls single frames (the runner missed 1.5-11%),
+and the runner's build p90 swings 1.5x from one runner to the next, up to
+17.2 ms. There the build p90 limit is the baseline plus 20% alone.
+
+Flutter runs only debug builds on the iOS simulator, so there is no iOS
+emulator environment. A phone gets the profile build installed over
+whatever emotely build is on it: never use someone's personal phone
+without asking.
 
 ## A run went over budget
 

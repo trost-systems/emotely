@@ -20,7 +20,9 @@ fail() {
 # --- fixtures ---------------------------------------------------------------------
 
 # A budget for one path, `scroll`: two Supabase requests, frames at the
-# 60 fps floor with a 20% headroom over the baseline, raster gated.
+# 60 fps floor with a 20% headroom over the baseline. `test` gates it all;
+# `emulator` and `new-emulator` report raster and the floor, as the budget
+# does for an emulator; `phone` has no baseline yet.
 write_budget() {
   cat >"$1" <<'EOF'
 frames:
@@ -44,7 +46,16 @@ environments:
         raster_p90_ms: 5.0
   emulator:
     raster: reported
-    missed_frames: reported
+    floor: reported
+    baseline:
+      scroll:
+        build_p90_ms: 15.0
+  new-emulator:
+    raster: reported
+    floor: reported
+    baseline: {}
+  phone:
+    raster: gated
     baseline: {}
 EOF
 }
@@ -184,16 +195,40 @@ test_passes_when_under_one_percent_of_frames_miss_the_floor() {
     fail "passes under 1% missed frames: raster.missed_percent is not a pass at 0.5"
 }
 
-test_reports_missed_frames_without_gating_them_where_the_budget_says_so() {
+test_reports_missed_frames_where_the_floor_is_only_reported() {
   local run="$work/emulator-missed"
   new_run "$run"
-  # A shared runner's software renderer starves the UI thread now and then.
+  # A shared runner stalls the emulator now and then.
   with_slow_frames "$run" build 6 # 3%
   gate "$run" --env emulator
   ((status == 0)) || fail "reports missed frames without gating them: exit $status"
   check "$run" '.checks[] | select(.path == "scroll" and .check == "build.missed_percent")
     | .status == "reported" and .value == 3' ||
     fail "reports missed frames without gating them: build.missed_percent is not reported at 3"
+}
+
+test_holds_a_p90_to_the_baseline_alone_where_the_floor_is_only_reported() {
+  local run="$work/emulator-over-floor"
+  new_run "$run"
+  # The runner's baseline is 15 ms: 17.5 ms is over the floor but within
+  # the baseline plus 20% (18 ms), which is all that gates there.
+  frames 200 17.5 90 >"$run/scroll.timeline_summary.json"
+  gate "$run" --env emulator
+  ((status == 0)) || fail "holds a p90 to the baseline alone: exit $status, $(cat "$work/gate.out")"
+  check "$run" '.checks[] | select(.path == "scroll" and .check == "build.p90_ms")
+    | .status == "pass" and .limit == 18' ||
+    fail "holds a p90 to the baseline alone: build.p90_ms is not a pass at limit 18"
+}
+
+test_only_reports_a_p90_without_a_baseline_where_the_floor_is_only_reported() {
+  local run="$work/new-emulator"
+  new_run "$run"
+  frames 200 17.5 90 >"$run/scroll.timeline_summary.json"
+  gate "$run" --env new-emulator
+  ((status == 0)) || fail "only reports a p90 without a baseline: exit $status"
+  check "$run" '.checks[] | select(.path == "scroll" and .check == "build.p90_ms")
+    | .status == "reported" and .limit == 16.7' ||
+    fail "only reports a p90 without a baseline: build.p90_ms is not reported against the floor"
 }
 
 test_fails_a_path_that_drew_too_few_frames_to_judge() {
@@ -222,9 +257,9 @@ test_fails_a_path_without_a_timeline() {
 test_warns_without_failing_when_a_p90_misses_the_120_fps_target() {
   local run="$work/under-target"
   new_run "$run"
-  # No baseline on the emulator: the 16.7 ms floor is the limit.
+  # No baseline on the phone: the 16.7 ms floor is the limit.
   frames 200 9 4 >"$run/scroll.timeline_summary.json"
-  gate "$run" --env emulator
+  gate "$run" --env phone
   ((status == 0)) || fail "warns on the target: exit $status, $(cat "$work/gate.out")"
   check "$run" '.checks[] | select(.path == "scroll" and .check == "build.target_ms")
     | .status == "warn" and .value == 9 and .limit == 8.3' ||
@@ -239,7 +274,9 @@ test_takes_the_baseline_as_the_slowest_of_several_runs() {
   new_run "$two"
   frames 200 1.9 4.5 >"$two/scroll.timeline_summary.json"
   out="$(bash "$PERF" baseline "$one" "$two")" || fail "baseline: exit $?"
-  jq -e '.scroll == {build_p90_ms: 1.9, raster_p90_ms: 4.5, runs: 2}' <<<"$out" >/dev/null ||
+  # The measurements behind it go into the budget file beside it.
+  jq -e '.scroll == {build_p90_ms: 1.9, raster_p90_ms: 4.5,
+      measured: {build_p90_ms: [1.5, 1.9], raster_p90_ms: [4, 4.5]}}' <<<"$out" >/dev/null ||
     fail "takes the slowest of several runs as the baseline: got $out"
 }
 

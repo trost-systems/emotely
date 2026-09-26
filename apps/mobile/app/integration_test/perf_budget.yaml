@@ -50,33 +50,73 @@ latency:
   agent_first_byte_p95_ms: 5000
 
 # Where a run measured, and what it measured there before. A baseline is the
-# slowest p90 over several runs (`perf.sh baseline <run>...`), which covers
-# the run-to-run noise; a path without one is held to the floor alone.
+# slowest p90 over five runs (`perf.sh baseline <run>...`), so it covers the
+# run-to-run noise; `measured` holds each run's p90 behind it.
 #
-# On an emulator two parts of the floor say nothing about the app, so they
-# are reported and never gated there:
-# - raster: it runs through the host's graphics stack (software rendering
-#   on the runner: 80-170 ms p90), not a phone's GPU;
-# - missed frames: a shared host stalls the emulator now and then (single
-#   frames of 50-120 ms mid-scroll), which alone breaks "under 1%".
-# Build p90 against the baseline and the request counts gate everywhere.
+# On an emulator the 60 fps floor measures the host, not the app, so there
+# it is reported and never gated (`floor: reported`), and only the build
+# p90 against the baseline plus 20% gates, with the request counts:
+# - raster runs through the host's graphics stack: 80-160 ms p90 under the
+#   runner's software renderer, a 16.7 ms swap on a Mac, never a phone's GPU;
+# - a shared host stalls the emulator now and then (single frames of
+#   50-120 ms), which alone breaks "under 1%": the runner missed 1.5-11%;
+# - the runner's build p90 swings 1.5x from one runner to the next, up to
+#   17.2 ms on the journal scroll, over the floor on its own.
+# A phone gates the whole floor.
 environments:
   # The nightly: GitHub's ubuntu-latest runner, Android 34 x86_64 emulator
-  # under KVM, SwiftShader.
+  # under KVM, SwiftShader. Five runners side by side, 2026-09-26, commit
+  # c5957d5: https://github.com/trost-systems/emotely/actions/runs/36267427425
   github-emulator:
     raster: reported
-    missed_frames: reported
-    baseline: {}
+    floor: reported
+    baseline:
+      journal_scroll:
+        build_p90_ms: 17.219 # limit 20.663
+        raster_p90_ms: 86.856
+        measured:
+          build_p90_ms: [11.976, 11.131, 17.219, 13.241, 16.715]
+          raster_p90_ms: [79.456, 80.624, 86.856, 77.547, 85.478]
+      entry_open:
+        build_p90_ms: 12.576 # limit 15.091
+        raster_p90_ms: 159.758
+        measured:
+          build_p90_ms: [11.08, 8.686, 11.915, 8.42, 12.576]
+          raster_p90_ms: [141.686, 135.723, 155.612, 140.596, 159.758]
+      session_round:
+        build_p90_ms: 8.698 # limit 10.438
+        raster_p90_ms: 72.947
+        measured:
+          build_p90_ms: [4.651, 5.207, 8.05, 4.912, 8.698]
+          raster_p90_ms: [62.765, 66.203, 70.334, 65.304, 72.947]
   # `perf.sh run` without --device: a fresh Android 34 arm64 emulator with
-  # the host GPU, measured on an Apple M4 Pro. A slower machine may need
-  # its own baseline.
+  # the host GPU. Five runs, 2026-09-26, commit c5957d5, on an Apple M4 Pro
+  # with other agent sessions busy beside it. A slower machine may need its
+  # own baseline.
   local-emulator:
     raster: reported
-    missed_frames: reported
-    baseline: {}
+    floor: reported
+    baseline:
+      journal_scroll:
+        build_p90_ms: 3.196 # limit 3.835
+        raster_p90_ms: 17.316
+        measured:
+          build_p90_ms: [2.585, 2.501, 3.196, 2.887, 2.851]
+          raster_p90_ms: [2.362, 16.619, 4.61, 16.989, 17.316]
+      entry_open:
+        build_p90_ms: 2.49 # limit 2.988
+        raster_p90_ms: 17.45
+        measured:
+          build_p90_ms: [1.947, 2.229, 2.366, 2.49, 2.092]
+          raster_p90_ms: [17.355, 17.256, 17.369, 17.21, 17.45]
+      session_round:
+        build_p90_ms: 1.632 # limit 1.958
+        raster_p90_ms: 17.27
+        measured:
+          build_p90_ms: [1.51, 1.465, 1.57, 1.632, 1.564]
+          raster_p90_ms: [1.766, 16.722, 16.454, 17.27, 17.071]
   # A phone (`perf.sh run --device <id>`): frames as users get them, and
   # the whole floor gates. No baseline yet: the floor alone.
   device:
     raster: gated
-    missed_frames: gated
     baseline: {}

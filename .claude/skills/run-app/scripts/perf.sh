@@ -320,7 +320,7 @@ cmd_baseline() {
   done | jq -s 'group_by(.path) | map({key: .[0].path, value: {
       build_p90_ms: (map(.build) | max),
       raster_p90_ms: (map(.raster) | max),
-      runs: length}}) | from_entries'
+      measured: {build_p90_ms: map(.build), raster_p90_ms: map(.raster)}}}) | from_entries'
 }
 
 # Whatever this command took, given back however it ends: the secrets, the

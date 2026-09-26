@@ -10,11 +10,12 @@ name: Nightly performance budget
 # Where it runs: GitHub's standard ubuntu-latest runner, free for this
 # public repository, with KVM for the emulator. Flutter runs profile mode on
 # an Android emulator but not on the iOS simulator. An emulator's frames are
-# not a phone's: build times track the app's own work, raster times track
-# the host's software renderer, so the budget gates build and request
-# counts here and only reports raster. Frames from a real phone need a
-# device farm or a self-hosted device, which costs money or a human to set
-# up (#169).
+# not a phone's: raster is the host's software renderer, and the shared
+# runner stalls frames and swings 1.5x between runners. So here the budget
+# gates the request counts and the build p90 against this runner's own
+# baseline, and only reports the 60 fps floor. The floor on a real phone
+# needs a device farm or a self-hosted device, which costs money or a human
+# to set up (#169).
 
 on:
   schedule:
@@ -51,7 +52,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sample: ${{ fromJSON(inputs.samples || '[1,2,3,4,5]') }}
+        sample: ${{ fromJSON(inputs.samples || '[1]') }}
     timeout-minutes: 60
     # The smoke account, for the latency probe on the nightly only.
     environment: ci

@@ -1,14 +1,16 @@
 # The performance budget's gate: judges one profile run against the budget.
 #
-# Input (jq -n, everything through --slurpfile / --arg):
+# Input (jq -n, everything through --slurpfile / --argjson / --arg):
 #   $budget     [the budget file as JSON]
 #   $summaries  [{"<path>": <flutter_driver timeline summary>, ...}]
 #   $requests   [{"<path>": ["<service> <METHOD> <path>", ...], ...}]
+#   $latency    [] or [latency.json]
 #   $env        the environment the run measured on (a key of .environments)
 #
 # Output: {env, pass, checks: [{path, check, value, limit, status}]}, where
-# status is "pass", "fail", "under" (fewer requests than budgeted: pass, and
-# lower the budget) or "reported" (measured, not gated).
+# status is "pass", "fail", "warn" (over the 120 fps target), "under" (fewer
+# requests than budgeted: pass, and lower the budget) or "reported"
+# (measured, not gated).
 
 def request_checks($path; $made; $allowed):
   ($made | map(split(" ")[0]) | group_by(.) | map({key: .[0], value: length}) | from_entries) as $counts
@@ -26,14 +28,23 @@ def request_checks($path; $made; $allowed):
 
 def round3: . * 1000 | round / 1000;
 
+# The 60 fps floor gates unless the environment says `floor: reported`: on
+# an emulator the floor measures the host (a shared runner stalls single
+# frames, and its build p90 swings 1.5x from one runner to the next), so
+# only the baseline gates there.
+def floor_gated($environment): $environment.floor != "reported";
+
 # The limit of a p90: the floor, or the baseline plus the headroom when that
-# is lower, so a path that is fast today cannot quietly get slower.
-def p90_limit($frames; $baseline):
+# is lower, so a path that is fast today cannot quietly get slower. Where
+# the floor is only reported, the baseline plus the headroom alone.
+def p90_limit($frames; $baseline; $floor_gated):
   if $baseline == null then $frames.floor_ms
-  else [$frames.floor_ms, $baseline * (1 + $frames.headroom_percent / 100)] | min | round3
+  else ($baseline * (1 + $frames.headroom_percent / 100)) as $tightened
+    | if $floor_gated then [$frames.floor_ms, $tightened] | min else $tightened end
+    | round3
   end;
 
-# Whether a frame metric fails the run. An emulator's raster thread draws
+# Whether a frame metric gates at all. An emulator's raster thread draws
 # through the host's graphics stack, so its budget can report raster
 # without gating it; build always gates.
 def gated($metric; $environment):
@@ -65,36 +76,36 @@ def thread_checks($path; $summary; $frames; $environment):
   ("build", "raster") as $metric
   | (if $metric == "build" then "build" else "rasterizer" end) as $thread
   | gated($metric; $environment) as $gated
-  | ($summary["90th_percentile_frame_\($thread)_time_millis"]) as $p90
-  | p90_limit($frames; $environment.baseline[$path]["\($metric)_p90_ms"]) as $limit
+  | floor_gated($environment) as $floor
+  | $environment.baseline[$path]["\($metric)_p90_ms"] as $baseline
+  | $summary["90th_percentile_frame_\($thread)_time_millis"] as $p90
+  | p90_limit($frames; $baseline; $floor) as $limit
   | missed_percent($summary["frame_\($thread)_times"] // []; $frames.floor_ms) as $missed
   | {
       path: $path,
       check: "\($metric).p90_ms",
       value: $p90,
       limit: $limit,
-      status: judged($p90; $limit; $gated)
+      # Without the floor and without a baseline there is nothing to hold
+      # the p90 to yet.
+      status: judged($p90; $limit; $gated and ($floor or $baseline != null))
     },
     # The 120 fps target: a warning until the baseline holds it, when the
     # budget makes it the floor. Only where the floor gates.
-    (select($gated) | {
+    (select($gated and $floor) | {
       path: $path,
       check: "\($metric).target_ms",
       value: $p90,
       limit: $frames.target_ms,
       status: (if $p90 > $frames.target_ms then "warn" else "pass" end)
     }),
-    # A shared emulator misses frames of its own (its software renderer
-    # starves the UI thread), so its budget can report the share without
-    # gating it.
-    ($gated and $environment.missed_frames != "reported") as $missed_gated
-    | {
+    {
       path: $path,
       check: "\($metric).missed_percent",
       value: $missed,
       limit: $frames.max_missed_percent,
       # "Under 1%": reaching the limit already fails.
-      status: (if $missed_gated | not then "reported"
+      status: (if ($gated and $floor) | not then "reported"
                elif $missed >= $frames.max_missed_percent then "fail"
                else "pass" end)
     };
