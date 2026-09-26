@@ -9,12 +9,15 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// A row of the `consent_events` table.
-/// Append-only history of explicit consent (Art. 9 (2) (a) GDPR) per user and
-/// notice version.
+/// Append-only history of consent per user, purpose and notice version: journal
+/// (Art. 9 (2) (a) GDPR) and usage_analytics (§ 25 TDDDG).
 extension type const ConsentEventsRow(Map<String, dynamic> _json)
     implements Object {
   /// granted, or withdrawn (Art. 7 (3)). The latest one is the current state.
   String get action => _json['action'] as String;
+
+  /// What the consent is to; each purpose has its own versions and history.
+  String get purpose => _json['purpose'] as String;
   DateTime get recordedAt => DateTime.parse(_json['recorded_at'] as String);
   int get seq => _json['seq'] as int;
   String get userId => _json['user_id'] as String;
@@ -35,11 +38,13 @@ extension type const ConsentEventsInsert._(Map<String, dynamic> _json)
     implements Object {
   ConsentEventsInsert({
     required String action,
+    required String purpose,
     DateTime? recordedAt,
     required String userId,
     required String version,
   }) : this._({
          'action': action,
+         'purpose': purpose,
          'recorded_at': ?recordedAt?.toUtc().toIso8601String(),
          'user_id': userId,
          'version': version,
@@ -53,11 +58,13 @@ extension type const ConsentEventsUpdate._(Map<String, dynamic> _json)
     implements Object {
   ConsentEventsUpdate({
     String? action,
+    String? purpose,
     DateTime? recordedAt,
     String? userId,
     String? version,
   }) : this._({
          'action': ?action,
+         'purpose': ?purpose,
          'recorded_at': ?recordedAt?.toUtc().toIso8601String(),
          'user_id': ?userId,
          'version': ?version,
@@ -82,6 +89,7 @@ class ConsentEvents {
       );
 
   static const action = PostgrestColumn<ConsentEventsRow, String>('action');
+  static const purpose = PostgrestColumn<ConsentEventsRow, String>('purpose');
   static const recordedAt = PostgrestColumn<ConsentEventsRow, DateTime>(
     'recorded_at',
   );
@@ -195,6 +203,90 @@ class Entries {
     referencedTable: 'sessions',
     referencedColumns: [Sessions.id],
   );
+}
+
+/// A row of the `profiles` table.
+/// What the user asked to be called; one row per user, deleted with the
+/// account.
+extension type const ProfilesRow(Map<String, dynamic> _json) implements Object {
+  DateTime get createdAt => DateTime.parse(_json['created_at'] as String);
+
+  /// 1-40 Unicode code points, trimmed as Dart trims, no control characters.
+  String get displayName => _json['display_name'] as String;
+
+  /// True when the app chose the name on Skip rather than the user typing it.
+  bool get nameIsPlaceholder => _json['name_is_placeholder'] as bool;
+  DateTime get updatedAt => DateTime.parse(_json['updated_at'] as String);
+  String get userId => _json['user_id'] as String;
+
+  /// The row as decoded from the response.
+  Map<String, dynamic> toJson() => _json;
+}
+
+/// Values for inserting a row into `profiles`. Columns that are nullable,
+/// identity, or covered by a database default are optional; passing `null`
+/// omits the column so the database default applies. Columns the database
+/// always generates itself are left out entirely. Use the `set…ToNull` methods
+/// to insert SQL NULL explicitly.
+extension type const ProfilesInsert._(Map<String, dynamic> _json)
+    implements Object {
+  ProfilesInsert({
+    DateTime? createdAt,
+    required String displayName,
+    bool? nameIsPlaceholder,
+    DateTime? updatedAt,
+    String? userId,
+  }) : this._({
+         'created_at': ?createdAt?.toUtc().toIso8601String(),
+         'display_name': displayName,
+         'name_is_placeholder': ?nameIsPlaceholder,
+         'updated_at': ?updatedAt?.toUtc().toIso8601String(),
+         'user_id': ?userId,
+       });
+}
+
+/// Values for updating rows of `profiles`. All columns are optional; passing
+/// `null` omits the column, leaving it unchanged. Use the `set…ToNull` methods
+/// to write SQL NULL explicitly.
+extension type const ProfilesUpdate._(Map<String, dynamic> _json)
+    implements Object {
+  ProfilesUpdate({
+    DateTime? createdAt,
+    String? displayName,
+    bool? nameIsPlaceholder,
+    DateTime? updatedAt,
+    String? userId,
+  }) : this._({
+         'created_at': ?createdAt?.toUtc().toIso8601String(),
+         'display_name': ?displayName,
+         'name_is_placeholder': ?nameIsPlaceholder,
+         'updated_at': ?updatedAt?.toUtc().toIso8601String(),
+         'user_id': ?userId,
+       });
+}
+
+/// Typed access to the `profiles` table.
+class Profiles {
+  const Profiles._();
+
+  /// Table definition for [PostgrestClient.table].
+  static const table =
+      PostgrestTable<ProfilesRow, ProfilesInsert, ProfilesUpdate>(
+        'profiles',
+        ProfilesRow.new,
+        schema: 'public',
+        primaryKey: [userId],
+      );
+
+  static const createdAt = PostgrestColumn<ProfilesRow, DateTime>('created_at');
+  static const displayName = PostgrestColumn<ProfilesRow, String>(
+    'display_name',
+  );
+  static const nameIsPlaceholder = PostgrestColumn<ProfilesRow, bool>(
+    'name_is_placeholder',
+  );
+  static const updatedAt = PostgrestColumn<ProfilesRow, DateTime>('updated_at');
+  static const userId = PostgrestColumn<ProfilesRow, String>('user_id');
 }
 
 /// A row of the `sessions` table.
