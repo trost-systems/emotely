@@ -97,9 +97,11 @@ class ProfileBloc({
   static ProfileNotice _refusal(DisplayNameProblem problem) =>
       switch (problem) {
         DisplayNameProblem.empty => ProfileNotice.nameEmpty,
-        // The field stops at the limit, so only a name pasted with a tab
-        // or the like gets here; both say the name cannot be used.
+        // The field stops at the limit, so only a name pasted with a tab,
+        // a line separator or the like gets here; all say the name cannot
+        // be used.
         DisplayNameProblem.tooLong ||
-        DisplayNameProblem.controlCharacter => ProfileNotice.nameRefused,
+        DisplayNameProblem.controlCharacter ||
+        DisplayNameProblem.layoutCharacter => ProfileNotice.nameRefused,
       };
 }

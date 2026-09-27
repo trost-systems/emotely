@@ -41,7 +41,7 @@ const nameUse =
     'Only used to greet you – in the app and in your sessions. '
     'Change it any time in your profile.';
 const nameTooLong = 'That is a little long for me – 40 characters at most.';
-const nameControlCharacter =
+const nameInvisibleCharacter =
     'Please leave out tabs and other invisible characters.';
 const skipLabel = 'Skip for now';
 
