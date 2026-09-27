@@ -3,26 +3,34 @@ import 'dart:async';
 import 'package:feature_journal/src/bloc/journal_bloc.dart';
 import 'package:feature_journal/src/navigator.dart';
 import 'package:feature_journal/src/routes.dart';
+import 'package:feature_journal/src/view/greeting.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:journal_repository/journal_repository.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// Home: the journal so far and the way into the next session.
+/// Home: the user greeted by name, the journal so far and the way into the
+/// next session.
 ///
 /// Everything it leads to — the session, the consent screen, and its own
 /// entries on their routes — is the app's to show, so it asks for them
-/// through [JournalNavigator] (ADR 0015, ADR 0016).
-class const JournalPage({super.key}) extends StatelessWidget {
+/// through [JournalNavigator] (ADR 0015, ADR 0016). With [startSession] it
+/// starts one as soon as the journal is read, the way "Start a session"
+/// does: how a new account goes from sign-up straight into its first
+/// reflection (#204).
+class const JournalPage({final bool startSession = false, super.key})
+    extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) => GetIt.I<JournalBloc>()..add(const JournalEvent.loaded()),
-    child: const JournalView(),
+    child: JournalView(startSession: startSession),
   );
 }
 
-/// One widget per [JournalState]; entries and the session card when ready.
-class const JournalView({super.key}) extends StatelessWidget {
+/// One widget per [JournalState]; the greeting, entries and the session
+/// card when ready.
+class const JournalView({final bool startSession = false, super.key})
+    extends StatefulWidget {
   static const startKey = Key('journal_view.start');
   static const continueKey = Key('journal_view.continue');
   static const discardKey = Key('journal_view.discard');
@@ -33,51 +41,73 @@ class const JournalView({super.key}) extends StatelessWidget {
   static const failureMessage = 'Could not load your journal.';
 
   @override
+  State<JournalView> createState() => _JournalViewState();
+}
+
+class _JournalViewState() extends State<JournalView> {
+  /// Whether the session asked for on the way in is still to start: once,
+  /// however often the journal is read again.
+  late var _toStart = widget.startSession;
+
+  @override
   Widget build(BuildContext context) => Scaffold(
-    // The account and signing out live on the More tab, next to it.
-    appBar: AppBar(title: const Text('Your journal')),
     body: SafeArea(
-      child: BlocBuilder<JournalBloc, JournalState>(
+      child: BlocConsumer<JournalBloc, JournalState>(
+        listenWhen: (_, state) => _toStart && state is JournalReady,
+        listener: (context, state) {
+          _toStart = false;
+          unawaited(_SessionCard.open(context, resume: null));
+        },
         builder: (context, state) => switch (state) {
           JournalLoading() => const Center(child: CircularProgressIndicator()),
           JournalFailure() => const _Failure(),
-          JournalReady(:final entries, :final openSession) => _Journal(
-            entries: entries,
-            openSession: openSession,
-          ),
+          JournalReady(
+            :final entries,
+            :final openSession,
+            :final displayName,
+            :final now,
+          ) =>
+            _Journal(
+              entries: entries,
+              openSession: openSession,
+              greeting: JournalGreeting(now: now, name: displayName),
+            ),
         },
       ),
     ),
   );
 }
 
+/// The greeting, the session card and the entries, scrolling as one so a
+/// large text size never pushes the card off a small screen.
 class const _Journal({
   required final List<EntryRecord> entries,
   required final OpenSession? openSession,
+  required final Widget greeting,
 }) extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget build(BuildContext context) => ListView(
+    padding: const EdgeInsets.symmetric(vertical: 16),
     children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+        child: greeting,
+      ),
       Padding(
         padding: const EdgeInsets.all(16),
         child: _SessionCard(openSession: openSession),
       ),
-      Expanded(
-        child: entries.isEmpty
-            ? const Center(
-                child: Text(
-                  'No entries yet. Your first session writes the first one.',
-                  key: JournalView.emptyKey,
-                  textAlign: TextAlign.center,
-                ),
-              )
-            : ListView(
-                children: [
-                  for (final record in entries) _EntryTile(record: record),
-                ],
-              ),
-      ),
+      if (entries.isEmpty)
+        const Padding(
+          padding: EdgeInsets.all(32),
+          child: Text(
+            'No entries yet. Your first session writes the first one.',
+            key: JournalView.emptyKey,
+            textAlign: TextAlign.center,
+          ),
+        )
+      else
+        for (final record in entries) _EntryTile(record: record),
     ],
   );
 }
@@ -89,7 +119,7 @@ class const _SessionCard({required final OpenSession? openSession})
   Widget build(BuildContext context) => switch (openSession) {
     null => FilledButton(
       key: JournalView.startKey,
-      onPressed: () => unawaited(_open(context, resume: null)),
+      onPressed: () => unawaited(open(context, resume: null)),
       child: const Text('Start a session'),
     ),
     final session => Column(
@@ -99,7 +129,7 @@ class const _SessionCard({required final OpenSession? openSession})
         const Text('You have an unfinished session.'),
         FilledButton(
           key: JournalView.continueKey,
-          onPressed: () => unawaited(_open(context, resume: session.id)),
+          onPressed: () => unawaited(open(context, resume: session.id)),
           child: const Text('Continue'),
         ),
         TextButton(
@@ -121,7 +151,7 @@ class const _SessionCard({required final OpenSession? openSession})
   /// way into their next session — which is why the question reads as the
   /// app asking rather than as an error. The answer comes from the server
   /// before every session, never from what this device read at launch.
-  static Future<void> _open(
+  static Future<void> open(
     BuildContext context, {
     required String? resume,
   }) async {

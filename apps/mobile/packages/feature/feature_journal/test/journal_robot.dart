@@ -14,7 +14,12 @@ class JournalRobot(
   final WidgetTester tester, {
   required final SupabaseStub supabase,
   required final AgentStub agent,
+  final bool startSession = false,
 }) {
+  /// What the journal's clock says: an evening, unless a test says
+  /// otherwise.
+  var now = DateTime(2026, 9, 26, 20, 15);
+
   final analytics = AnalyticsSpy();
   final navigator = FakeJournalNavigator();
 
@@ -39,11 +44,11 @@ class JournalRobot(
       supabase: supabase,
       analytics: analytics,
     );
-    registerJournal(GetIt.I);
+    registerJournal(GetIt.I, now: () => now);
     GetIt.I.registerSingleton<JournalNavigator>(navigator);
     return featureUnderTest(
       routes: [$journalRoute],
-      initialLocation: const JournalRoute().location,
+      initialLocation: JournalRoute(startSession: startSession).location,
     );
   }
 

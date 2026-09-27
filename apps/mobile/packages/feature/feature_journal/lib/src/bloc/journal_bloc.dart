@@ -5,17 +5,22 @@ import 'package:consent_repository/consent_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:journal_repository/journal_repository.dart';
+import 'package:profile_repository/profile_repository.dart';
 
 part 'journal_bloc.freezed.dart';
 part 'journal_event.dart';
 part 'journal_state.dart';
 
-/// The journal as the home screen shows it: every filed entry, and the
-/// session still in progress if there is one.
+/// The journal as the home screen shows it: every filed entry, the session
+/// still in progress if there is one, and the name the user is greeted by
+/// (#204) at the time of day [_now] says it is.
 class JournalBloc({
   required final JournalRepository _repository,
   required final ConsentRepository _consent,
   required final JournalAnalytics _analytics,
+  required final ProfileRepository _profiles,
+  required final ErrorReporter _errors,
+  final DateTime Function() _now = DateTime.now,
 }) extends Bloc<JournalEvent, JournalState> {
   this : super(const JournalState.loading()) {
     on<JournalLoaded>(_onLoaded);
@@ -28,6 +33,7 @@ class JournalBloc({
     Emitter<JournalState> emit,
   ) async {
     emit(const JournalState.loading());
+    final name = _displayName();
     try {
       final entries = await _repository.entries();
       final openSession = await _repository.openSession();
@@ -37,9 +43,27 @@ class JournalBloc({
           openSession: openSession != null,
         ),
       );
-      emit(JournalState.ready(entries: entries, openSession: openSession));
+      emit(
+        JournalState.ready(
+          entries: entries,
+          openSession: openSession,
+          displayName: await name,
+          now: _now(),
+        ),
+      );
     } on Exception {
       emit(const JournalState.failure());
+    }
+  }
+
+  /// The name the journal greets by. A profile that cannot be read leaves
+  /// the greeting without a name, never the journal without its entries.
+  Future<String?> _displayName() async {
+    try {
+      return (await _profiles.profile())?.displayName;
+    } on Exception catch (error, stackTrace) {
+      unawaited(_errors.profileLoadFailed(error, stackTrace));
+      return null;
     }
   }
 
