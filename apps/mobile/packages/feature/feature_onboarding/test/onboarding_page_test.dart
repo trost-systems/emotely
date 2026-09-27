@@ -433,6 +433,7 @@ void main() {
       await robot.settle();
 
       expect(robot.eventNames, [
+        'usage_analytics_allowed',
         'onboarding_started',
         'onboarding_step_viewed',
       ]);

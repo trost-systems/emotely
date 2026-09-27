@@ -1,6 +1,6 @@
 import 'package:emotely/config/view/config_gate.dart';
-import 'package:feature_auth/feature_auth.dart';
 import 'package:feature_journal/feature_journal.dart';
+import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -24,7 +24,7 @@ class ConfigRobot(
   Finder get updateButton => find.byKey(ConfigGate.updateKey);
   Finder get failure => find.byKey(ConfigGate.failureKey);
   Finder get retryButton => find.byKey(ConfigGate.retryKey);
-  Finder get signIn => find.byType(SignInPage);
+  Finder get welcome => find.byType(WelcomeStepView);
   Finder get journal => find.byType(JournalPage);
 
   Widget get app => appUnderTest(

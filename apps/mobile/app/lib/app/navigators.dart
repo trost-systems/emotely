@@ -1,8 +1,13 @@
+import 'dart:async';
+
+import 'package:analytics/analytics.dart' show OnboardingNext;
 import 'package:feature_account/feature_account.dart';
 import 'package:feature_auth/feature_auth.dart';
 import 'package:feature_journal/feature_journal.dart';
+import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:feature_session/feature_session.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The app's side of every feature's navigator (ADR 0015): a feature says
@@ -10,7 +15,45 @@ import 'package:material_ui/material_ui.dart';
 /// feature's route (ADR 0016), from the context of the tap that asked. A
 /// feature's own screens it reaches itself.
 
-/// Signing out is the auth feature's act: the router lands on sign-in once
+/// What onboarding leads to outside itself: sign-in behind "I have an
+/// account", and, once the account holds the name, the journal — or the
+/// first session straight away for a new account (#204), through the
+/// journal's own way in, so the consent gate is the one "Start a session"
+/// uses. A deep link the user was following wins over both.
+class const AppOnboardingNavigator() implements OnboardingNavigator {
+  @override
+  void signIn(BuildContext context, {String? from}) =>
+      SignInRoute(from: from).go(context);
+
+  @override
+  void finish(
+    BuildContext context, {
+    required OnboardingNext next,
+    String? from,
+  }) => from == null
+      ? JournalRoute(startSession: next == OnboardingNext.session).go(context)
+      : context.go(from);
+}
+
+/// What sign-in needs of onboarding: the name to greet a new account by,
+/// and the way back. Back from sign-up reopens the greeting on the device,
+/// and the redirect takes the user there; back from sign-in is Welcome.
+class const AppSignInNavigator(final OnboardingStore _onboarding)
+    implements SignInNavigator {
+  @override
+  String? signUpName() => switch (_onboarding.progress.displayName) {
+    '' => null,
+    final name => name,
+  };
+
+  @override
+  void leave(BuildContext context, SignInMode mode) => switch (mode) {
+    SignInMode.signUp => unawaited(_onboarding.reopen()),
+    SignInMode.signIn => const OnboardingRoute().go(context),
+  };
+}
+
+/// Signing out is the auth feature's act: the router lands on Welcome once
 /// the auth bloc has ended the session. The consent screen is the account
 /// feature's own route, pushed here so the More tab, which lives in the
 /// tab shell, gets it on the root navigator above the bar.

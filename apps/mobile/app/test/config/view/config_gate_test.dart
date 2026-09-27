@@ -45,7 +45,7 @@ void main() {
       await tester.pump();
 
       expect(robot.checking, findsOneWidget);
-      expect(robot.signIn, findsNothing);
+      expect(robot.welcome, findsNothing);
 
       await robot.settle();
     });
@@ -62,7 +62,7 @@ void main() {
       expect(robot.updateRequired, findsOneWidget);
       // The whole point of gating above auth: a build the server refuses
       // never reaches a screen that may depend on a wire shape that is gone.
-      expect(robot.signIn, findsNothing);
+      expect(robot.welcome, findsNothing);
       expect(robot.journal, findsNothing);
     });
 
@@ -163,7 +163,7 @@ void main() {
       // Fails shut: an unreachable server is not permission to run.
       expect(robot.failure, findsOneWidget);
       expect(robot.retryButton, findsOneWidget);
-      expect(robot.signIn, findsNothing);
+      expect(robot.welcome, findsNothing);
     });
 
     testWidgets('blocks when the server refuses', (tester) async {
@@ -213,7 +213,7 @@ void main() {
       await robot.tapRetry();
 
       expect(robot.failure, findsNothing);
-      expect(robot.signIn, findsOneWidget);
+      expect(robot.welcome, findsOneWidget);
       expect(config.calls, 2);
     });
 
@@ -252,7 +252,7 @@ void main() {
 
       expect(robot.failure, findsOneWidget);
       expect(robot.updateRequired, findsNothing);
-      expect(robot.signIn, findsNothing);
+      expect(robot.welcome, findsNothing);
       expect(
         robot.analytics.exceptions.single.properties,
         containsPair('step', 'config_load'),

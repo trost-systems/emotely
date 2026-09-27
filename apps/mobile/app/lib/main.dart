@@ -6,6 +6,7 @@ import 'package:analytics/analytics.dart';
 import 'package:emotely/app/app.dart';
 import 'package:emotely/app/dependencies.dart';
 import 'package:emotely/app/environment.dart';
+import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:feedback_link/feedback_link.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 import 'package:flutter/widgets.dart';
@@ -69,6 +70,9 @@ Future<void> main() async {
   // awaited so the first identify of a restored session finds it open.
   final gate = GetIt.I<PostHogGate>();
   await gate.restore();
+  // Where a signed-out user belongs is asked of the onboarding store before
+  // the first frame, so it has to have read what this device kept.
+  await GetIt.I<OnboardingStore>().restore();
   runApp(EmotelyApp(screenViews: gate.screenObserver()));
 }
 

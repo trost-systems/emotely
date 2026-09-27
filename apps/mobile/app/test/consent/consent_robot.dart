@@ -2,6 +2,7 @@ import 'package:emotely/app/shell.dart';
 import 'package:feature_account/feature_account.dart';
 import 'package:feature_auth/feature_auth.dart';
 import 'package:feature_journal/feature_journal.dart';
+import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:feature_session/feature_session.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -21,7 +22,8 @@ class ConsentRobot(
 
   Finder get home => find.byType(JournalPage);
   Finder get more => find.byType(MorePage);
-  Finder get signIn => find.byType(SignInPage);
+  Finder get welcome => find.byType(WelcomeStepView);
+  Finder get haveAccount => find.byKey(WelcomeStepView.haveAccountKey);
   Finder get signInNotice => find.byKey(SignInPage.privacyNoticeKey);
   Finder get consent => find.byType(ConsentPage);
   Finder get session => find.byType(SessionPage);

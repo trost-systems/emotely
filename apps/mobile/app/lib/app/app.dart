@@ -4,6 +4,7 @@ import 'package:emotely/config/bloc/config_bloc.dart';
 import 'package:emotely/config/view/config_gate.dart';
 import 'package:feature_account/feature_account.dart';
 import 'package:feature_auth/feature_auth.dart';
+import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
@@ -51,9 +52,11 @@ class const _Router({required final NavigatorObserver screenViews})
 
 class _RouterState() extends State<_Router> {
   late final AuthBloc _auth = context.read<AuthBloc>();
-  late final _refresh = SignedInListenable(_auth);
+  final OnboardingStore _onboarding = GetIt.I<OnboardingStore>();
+  late final _refresh = RouteRefresh(_auth, _onboarding);
   late final GoRouter _router = createRouter(
     auth: _auth,
+    onboarding: _onboarding,
     refresh: _refresh,
     observers: [widget.screenViews],
   );

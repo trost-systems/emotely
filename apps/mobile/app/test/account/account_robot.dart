@@ -1,7 +1,7 @@
 import 'package:emotely/app/shell.dart';
 import 'package:feature_account/feature_account.dart';
-import 'package:feature_auth/feature_auth.dart';
 import 'package:feature_journal/feature_journal.dart';
+import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -20,7 +20,7 @@ class AccountRobot(
   Finder get home => find.byType(JournalPage);
   Finder get more => find.byType(MorePage);
   Finder get account => find.byType(AccountPage);
-  Finder get signIn => find.byType(SignInPage);
+  Finder get welcome => find.byType(WelcomeStepView);
   Finder get moreTab => find.byKey(AppShell.moreTabKey);
   Finder get accountRow => find.byKey(MoreView.accountKey);
   Finder get deleteAccount => find.byKey(AccountView.deleteKey);

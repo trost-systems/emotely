@@ -51,7 +51,7 @@ void main() {
 
       expect(robot.supabase.to(deletion), hasLength(1));
       expect(robot.supabase.to(logout), hasLength(1));
-      expect(robot.signIn, findsOneWidget);
+      expect(robot.welcome, findsOneWidget);
       expect(robot.account, findsNothing);
       expect(robot.home, findsNothing);
       expect(robot.analytics.events, [
@@ -97,7 +97,7 @@ void main() {
 
       await robot.settle();
 
-      expect(robot.signIn, findsOneWidget);
+      expect(robot.welcome, findsOneWidget);
     });
 
     testWidgets('cannot be left while the account is being deleted', (
@@ -116,7 +116,7 @@ void main() {
       // leaving now would keep a session for a user who no longer exists.
       await robot.back();
 
-      expect(robot.signIn, findsOneWidget);
+      expect(robot.welcome, findsOneWidget);
       expect(robot.account, findsNothing);
       expect(robot.home, findsNothing);
       expect(robot.supabase.to(logout), hasLength(1));
@@ -157,7 +157,7 @@ void main() {
       await robot.tap(robot.retry);
 
       expect(robot.supabase.to(deletion), hasLength(2));
-      expect(robot.signIn, findsOneWidget);
+      expect(robot.welcome, findsOneWidget);
       expect(robot.analytics.events.last, event('account_deleted'));
       expect(robot.analytics.resets, 1);
     });
@@ -181,7 +181,7 @@ void main() {
 
       await robot.tap(robot.signOut);
 
-      expect(robot.signIn, findsOneWidget);
+      expect(robot.welcome, findsOneWidget);
       expect(robot.account, findsNothing);
       expect(robot.home, findsNothing);
       expect(robot.supabase.to(logout), hasLength(1));
@@ -205,7 +205,7 @@ void main() {
 
       await robot.tap(robot.confirm);
 
-      expect(robot.signIn, findsOneWidget);
+      expect(robot.welcome, findsOneWidget);
       expect(robot.account, findsNothing);
       expect(robot.analytics.events.last, event('account_deleted'));
       expect(robot.analytics.resets, 1);
@@ -238,7 +238,7 @@ void main() {
       await robot.tap(robot.confirm);
       await robot.tap(robot.retry);
 
-      expect(robot.signIn, findsOneWidget);
+      expect(robot.welcome, findsOneWidget);
       expect(robot.analytics.exceptions, hasLength(1));
       final outgoing = robot.analytics.outgoingStrings.toList();
       expect(outgoing, contains('account_deleted'));

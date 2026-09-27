@@ -2,12 +2,6 @@ import 'dart:convert';
 
 import 'package:analytics/analytics.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
-// The step views' keys are not the barrel's to export: the app drives the
-// flow through the page, and only these tests reach into it.
-import 'package:feature_onboarding/src/view/hello_step.dart';
-import 'package:feature_onboarding/src/view/intro_steps.dart';
-import 'package:feature_onboarding/src/view/name_step.dart';
-import 'package:feature_onboarding/src/view/step_frame.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:material_ui/material_ui.dart';

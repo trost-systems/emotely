@@ -2,8 +2,8 @@ import 'package:analytics/analytics.dart';
 import 'package:emotely/app/shell.dart';
 import 'package:emotely/config/view/config_gate.dart';
 import 'package:feature_account/feature_account.dart';
-import 'package:feature_auth/feature_auth.dart';
 import 'package:feature_journal/feature_journal.dart';
+import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/helpers.dart';
@@ -37,13 +37,13 @@ void main() {
       return analytics;
     }
 
-    testWidgets('are asked about first, over sign-in, with nothing set up', (
+    testWidgets('are asked about first, over Welcome, with nothing set up', (
       tester,
     ) async {
       final analytics = await launch(tester);
 
       expect(sheet(), findsOneWidget);
-      expect(find.byType(SignInPage), findsOneWidget);
+      expect(find.byType(WelcomeStepView), findsOneWidget);
       expect(analytics.lifecycle, isEmpty);
       expect(analytics.outgoingStrings, isEmpty);
     });
@@ -72,9 +72,25 @@ void main() {
       await tester.pumpAndSettle();
       await signInThroughTheScreen(tester);
 
+      // Set up and reset once, at the allow, and never again before the
+      // sign-in: the anonymous events before it are the same person's, and
+      // PostHog merges them into the account on identify.
       expect(analytics.lifecycle, ['setup', 'reset']);
       expect(analytics.identified, [SupabaseStub.userId]);
       expect(analytics.events, [
+        event('usage_analytics_allowed'),
+        event('onboarding_started', {
+          'flow_version': onboardingFlowVersion,
+          'variant': 'control',
+          'step_count': 4,
+        }),
+        event('onboarding_step_viewed', {
+          'flow_version': onboardingFlowVersion,
+          'variant': 'control',
+          'step_id': 'welcome',
+          'step_index': 0,
+          'phase': 'before_sign_up',
+        }),
         event('sign_in_code_requested'),
         event('signed_in', {'method': 'code'}),
         event('journal_viewed', {'entries': 0, 'open_session': false}),
@@ -179,8 +195,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // The choice was the person's: PostHog forgets them and switches off,
-      // and whoever signs in next is asked.
-      expect(find.byType(SignInPage), findsOneWidget);
+      // and whoever signs in next is asked, over Welcome.
+      expect(find.byType(WelcomeStepView), findsOneWidget);
       expect(sheet(), findsOneWidget);
       expect(analytics.events.last, event('signed_out'));
       expect(analytics.lifecycle, ['setup', 'reset', 'disable', 'close']);

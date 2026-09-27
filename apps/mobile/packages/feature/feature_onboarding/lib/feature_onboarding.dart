@@ -20,4 +20,10 @@ export 'src/register.dart';
 // Every feature's part file generates a `$appRoutes`; the app composes
 // from the named routes instead, so the collision never reaches it.
 export 'src/routes.dart' hide $appRoutes;
+// The step views for their keys: the app's tests and the verification CLI
+// drive the flow by them.
+export 'src/view/hello_step.dart';
+export 'src/view/intro_steps.dart';
+export 'src/view/name_step.dart';
 export 'src/view/onboarding_page.dart';
+export 'src/view/step_frame.dart' show StepFrame;

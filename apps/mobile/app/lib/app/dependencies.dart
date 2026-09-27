@@ -71,6 +71,7 @@ void registerApp(
   registerAuth(getIt, google: google, passwordAccounts: passwordAccounts);
   registerJournal(getIt);
   registerSession(getIt);
+  registerOnboarding(getIt);
   _registerSeams(getIt);
   registerAccount(getIt);
 }
@@ -95,4 +96,6 @@ void _registerSeams(GetIt getIt) => getIt
     AppUserContextSource(profiles: getIt(), errors: getIt()),
   )
   ..registerSingleton<AccountNavigator>(const AppAccountNavigator())
-  ..registerSingleton<JournalNavigator>(const AppJournalNavigator());
+  ..registerSingleton<JournalNavigator>(const AppJournalNavigator())
+  ..registerSingleton<OnboardingNavigator>(const AppOnboardingNavigator())
+  ..registerSingleton<SignInNavigator>(AppSignInNavigator(getIt()));
