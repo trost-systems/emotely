@@ -431,7 +431,7 @@ analytics_key() {
 }
 
 # The usage-analytics question (#204) comes before anything else on a fresh
-# install, over the sign-in screen, so it is answered before signing in.
+# install, over Welcome, so it is answered before signing in.
 answer_analytics() {
   step "analytics"
   retry 60 m tap --key "$(analytics_key "$ANALYTICS")" ||
@@ -439,18 +439,32 @@ answer_analytics() {
   log "usage analytics: $ANALYTICS"
 }
 
-# Through the app's own screen, which asks a debug build's smoke account for
-# its password. Before any recording, and nothing of it reaches the bundle.
+# Through the app's own screens, as a returning user: "I have an account" on
+# Welcome (#204), then the sign-in screen, which asks a debug build's smoke
+# account for its password. Before any recording, and nothing of it reaches
+# the bundle.
 sign_in() {
   step "sign-in"
+  retry 60 m tap --key onboarding.welcome.have_account \
+    || die "no Welcome to sign in from"
   retry 60 m enter-text --key sign_in_page.email --input "$SMOKE_EMAIL" \
     || die "no email field (a build without SMOKE_EMAIL?)"
   retry 10 m tap --key sign_in_page.send_code || die "could not submit the email"
   retry 20 m enter-text --key sign_in_page.password --input "$SMOKE_PASSWORD" \
     || die "no password step: the build does not name this account (rebuild without --skip-build)"
   retry 10 m tap --key sign_in_page.password_sign_in || die "could not submit the password"
-  retry 60 on_screen app_shell.journal || die "not signed in after 60s"
+  retry 60 signed_in_or_asked_for_a_name || die "not signed in after 60s"
+  # An account without a name is asked for one once after sign-in; the
+  # smoke account skips it and keeps the placeholder from then on.
+  if on_screen onboarding.name.skip; then
+    m tap --key onboarding.name.skip >/dev/null || die "could not skip the name step"
+    retry 60 on_screen app_shell.journal || die "not on the journal after the name step"
+  fi
   log "signed in"
+}
+
+signed_in_or_asked_for_a_name() {
+  on_screen app_shell.journal || on_screen onboarding.name.skip
 }
 
 cmd_up() {
