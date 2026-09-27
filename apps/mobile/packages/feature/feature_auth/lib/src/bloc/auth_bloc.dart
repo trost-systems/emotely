@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:analytics/analytics.dart';
+import 'package:feature_auth/src/last_sign_in/last_sign_in_store.dart';
 import 'package:feature_auth/src/providers/provider_sign_in.dart';
 import 'package:feature_auth/src/review_accounts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,12 +22,14 @@ part 'auth_state.dart';
 /// [_passwordAccounts] the app names (the smoke account in a debug build,
 /// which has no mailbox either). Supabase Auth owns the session
 /// (persistence, refresh); this bloc mirrors it into UI state and tells
-/// PostHog who the user is.
+/// PostHog who the user is. Each sign-in through the screen also leaves the
+/// way in on the device ([LastSignInStore]), for the "Last used" tag.
 class AuthBloc({
   required final SupabaseClient _supabase,
   required final AuthAnalytics _analytics,
   required final ErrorReporter _errors,
   required final ProviderSignIn _providers,
+  required final LastSignInStore _lastSignIn,
   final Set<String> _passwordAccounts = const {},
 }) extends Bloc<AuthEvent, AuthState> {
   this : super(_initial(_supabase.auth.currentSession)) {
@@ -116,6 +119,7 @@ class AuthBloc({
         // code did not sign anyone in.
         if (response.session case final session?) {
           unawaited(_analytics.signedIn(SignInMethod.code));
+          unawaited(_lastSignIn.remember(SignInOption.emailCode));
           _signedIn(session.user, emit);
         } else {
           _rejected(email, wrongCodeMessage, emit);
@@ -143,6 +147,8 @@ class AuthBloc({
           password: event.password,
         );
         unawaited(_analytics.signedIn(SignInMethod.password));
+        // A password starts at the email field, the button it tags.
+        unawaited(_lastSignIn.remember(SignInOption.emailCode));
         _signedIn(session.user, emit);
       } on Exception catch (error, stackTrace) {
         unawaited(_errors.passwordSignInFailed(error, stackTrace));
@@ -180,6 +186,7 @@ class AuthBloc({
         nonce: token.nonce,
       );
       unawaited(_analytics.signedIn(provider.method));
+      unawaited(_lastSignIn.remember(provider.option));
       _signedIn(session.user, emit);
     } on Exception catch (error, stackTrace) {
       unawaited(_analytics.providerFailed(provider.method));

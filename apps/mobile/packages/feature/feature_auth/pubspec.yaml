@@ -19,6 +19,9 @@ dependencies:
   legal_links: any
   material_ui: ^1.1.0
   profile_repository: any
+  # The method last used to sign in stays on the device, to tag it on the
+  # sign-in screen (#204), in the store the usage-analytics choice uses.
+  shared_preferences: 2.5.5
   sign_in_with_apple: 8.2.0
   supabase_flutter: 3.0.0-dev.7
 
@@ -29,6 +32,7 @@ dev_dependencies:
     sdk: flutter
   freezed: 4.0.1
   go_router_builder: 4.5.0
+  shared_preferences_platform_interface: 2.4.2
   testing: any
 
 flutter:

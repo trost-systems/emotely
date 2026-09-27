@@ -14,6 +14,7 @@
 /// because the app hands it to the consent record.
 library;
 
+export 'src/account/account_device_data.dart';
 export 'src/account/view/account_page.dart';
 export 'src/consent/bloc/consent_bloc.dart';
 export 'src/consent/consent_outcome.dart';

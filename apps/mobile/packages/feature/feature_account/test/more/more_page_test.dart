@@ -9,6 +9,7 @@ import 'package:legal_links/legal_links.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:testing/testing.dart';
 
+import '../fake_account_device_data.dart';
 import '../fake_account_navigator.dart';
 
 /// Drives the More tab on its own, composed the way the app composes it:
@@ -50,6 +51,7 @@ class _MoreRobot(
     );
     registerAccount(GetIt.I);
     GetIt.I.registerSingleton<AccountNavigator>(navigator);
+    GetIt.I.registerSingleton<AccountDeviceData>(FakeAccountDeviceData());
     return featureUnderTest(
       routes: [$moreRoute],
       initialLocation: const MoreRoute().location,

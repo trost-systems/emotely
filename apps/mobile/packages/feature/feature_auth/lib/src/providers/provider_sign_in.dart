@@ -4,17 +4,23 @@ import 'dart:math';
 
 import 'package:analytics/analytics.dart';
 import 'package:crypto/crypto.dart';
+import 'package:feature_auth/src/last_sign_in/last_sign_in_store.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show OAuthProvider;
 
 /// A provider the app signs in with natively: the platform's own sheet
-/// issues an ID token, and Supabase trades it for a session (#51).
-enum IdentityProvider(final SignInMethod method, final OAuthProvider oauth) {
-  google(SignInMethod.google, OAuthProvider.google),
+/// issues an ID token, and Supabase trades it for a session (#51). [option]
+/// is its button, as the "Last used" tag remembers it.
+enum IdentityProvider(
+  final SignInMethod method,
+  final OAuthProvider oauth,
+  final SignInOption option,
+) {
+  google(SignInMethod.google, OAuthProvider.google, SignInOption.google),
 
   /// iOS only: Android has no native Apple sheet, only a browser redirect.
-  apple(SignInMethod.apple, OAuthProvider.apple),
+  apple(SignInMethod.apple, OAuthProvider.apple, SignInOption.apple),
 }
 
 /// This app's OAuth clients in the Google Cloud project `emotely-sign-in`.

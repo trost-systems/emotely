@@ -1,6 +1,6 @@
 import 'package:feature_auth/src/bloc/auth_bloc.dart';
 import 'package:feature_auth/src/navigator.dart';
-import 'package:feature_auth/src/providers/provider_sign_in.dart';
+import 'package:feature_auth/src/register.dart';
 import 'package:feature_auth/src/view/sign_in_page.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -517,18 +517,19 @@ void main() {
     ) async {
       final supabase = SupabaseStub();
       await supabase.signedIn();
-      final spy = AnalyticsSpy();
       addTearDown(GetIt.I.reset);
+      registerUtilitiesUnderTest(
+        GetIt.I,
+        agent: AgentStub(),
+        supabase: supabase,
+        analytics: AnalyticsSpy(),
+      );
+      registerAuth(GetIt.I, google: SignInRobot.googleClients);
       GetIt.I.registerSingleton<SignInNavigator>(FakeSignInNavigator());
 
       await tester.pumpWidget(
         BlocProvider(
-          create: (_) => AuthBloc(
-            supabase: supabase.supabase,
-            analytics: spy.authAnalytics,
-            errors: spy.errorReporter,
-            providers: ProviderSignIn(google: SignInRobot.googleClients),
-          ),
+          create: (_) => GetIt.I<AuthBloc>(),
           child: const MaterialApp(home: SignInPage()),
         ),
       );

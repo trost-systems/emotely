@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:testing/testing.dart';
 
+import '../fake_account_device_data.dart';
 import '../fake_account_navigator.dart';
 
 /// Drives the account screen on its own route, composed the way the app
@@ -13,9 +14,11 @@ import '../fake_account_navigator.dart';
 class _AccountRobot(
   final WidgetTester tester, {
   required final SupabaseStub supabase,
+  final bool forgetFails = false,
 }) {
   final analytics = AnalyticsSpy();
   final navigator = FakeAccountNavigator();
+  late final deviceData = FakeAccountDeviceData(fails: forgetFails);
 
   static const openKey = Key('launcher.open');
 
@@ -41,6 +44,7 @@ class _AccountRobot(
     );
     registerAccount(GetIt.I);
     GetIt.I.registerSingleton<AccountNavigator>(navigator);
+    GetIt.I.registerSingleton<AccountDeviceData>(deviceData);
     return pageUnderTest(
       Builder(
         builder: (context) => Scaffold(
@@ -99,11 +103,16 @@ void main() {
       WidgetTester tester, {
       List<AuthRound> deletions = const [],
       AuthRound? logoutAnswer,
+      bool forgetFails = false,
     }) {
       final supabase = SupabaseStub()
         ..rest(deletion, deletions)
         ..script(logout: [logoutAnswer ?? userGone]);
-      return _AccountRobot(tester, supabase: supabase);
+      return _AccountRobot(
+        tester,
+        supabase: supabase,
+        forgetFails: forgetFails,
+      );
     }
 
     testWidgets('deletes the account once the loss is confirmed', (
@@ -126,6 +135,9 @@ void main() {
 
       expect(robot.supabase.to(deletion), hasLength(1));
       expect(robot.supabase.to(logout), hasLength(1));
+      // What this device kept about the account goes with it: the "Last
+      // used" tag has no account left to lead back to.
+      expect(robot.deviceData.forgotten, 1);
       // The route left on its own; the app's root has swapped underneath.
       expect(robot.account, findsNothing);
       expect(robot.launcher, findsOneWidget);
@@ -241,12 +253,36 @@ void main() {
         ),
       ]);
       expect(robot.analytics.resets, 0);
+      // The account may still be there to sign back into.
+      expect(robot.deviceData.forgotten, 0);
 
       await robot.tap(robot.retry);
 
       expect(robot.supabase.to(deletion), hasLength(2));
       expect(robot.account, findsNothing);
       expect(robot.analytics.events.last, event('account_deleted'));
+      expect(robot.analytics.resets, 1);
+      expect(robot.deviceData.forgotten, 1);
+    });
+
+    testWidgets('signs out even when this device cannot forget what it kept', (
+      tester,
+    ) async {
+      final robot = robotWith(
+        tester,
+        deletions: [rpcReturned(null)],
+        forgetFails: true,
+      );
+      await robot.launch();
+      await robot.askToDelete();
+
+      await robot.tap(robot.confirm);
+
+      // A tag left on a button is no reason to keep a session for a user
+      // who no longer exists.
+      expect(robot.deviceData.forgotten, 1);
+      expect(robot.supabase.to(logout), hasLength(1));
+      expect(robot.account, findsNothing);
       expect(robot.analytics.resets, 1);
     });
 

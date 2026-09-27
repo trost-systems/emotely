@@ -1,4 +1,5 @@
 import 'package:feature_account/feature_account.dart';
+import 'package:feature_auth/feature_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
@@ -59,6 +60,23 @@ void main() {
         event('account_deleted'),
       ]);
       expect(robot.analytics.resets, 1);
+    });
+
+    testWidgets('forgets the way in last used along with the account', (
+      tester,
+    ) async {
+      final robot = robotWith(tester, deletions: [rpcReturned(null)]);
+      final lastSignIn = LastSignInStore(
+        preferences: robot.analytics.preferences,
+      );
+      await lastSignIn.remember(SignInOption.google);
+      await robot.launch();
+      await robot.askToDelete();
+
+      await robot.tap(robot.confirm);
+
+      expect(robot.welcome, findsOneWidget);
+      expect(await lastSignIn.read(), isNull);
     });
 
     testWidgets('cancelling the confirmation deletes nothing', (tester) async {
