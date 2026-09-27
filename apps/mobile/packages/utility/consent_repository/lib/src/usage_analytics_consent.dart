@@ -25,11 +25,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// expiry, a revoked refresh token, an account deleted elsewhere, another
 /// account taking its place — the device forgets the choice, PostHog
 /// switches off, and the question is asked again of whoever comes next.
-/// The forget is queued on the gate the moment the session stream says so,
-/// before anything that reacts to the sign-out (the router, the onboarding
+/// The device keeps whose the choice is with it ([PostHogGate.signedInAs],
+/// #216): an answer given before sign-up is adopted by the first account
+/// that signs in, and one that belongs to anyone else is forgotten. The
+/// check is queued on the gate the moment the session stream says so,
+/// before anything that reacts to the change (the router, the onboarding
 /// events waiting for an answer) and before the next sign-in's write reads
-/// the choice, so one person's answer can never be recorded on another
-/// person's consent record.
+/// the choice, and the write records only [PostHogGate.choiceOf] the
+/// account signed in — so one person's answer can never be recorded on
+/// another person's consent record. A session that ended while the app was
+/// closed is caught the same way at launch, by [PostHogGate.restore].
 ///
 /// A write that fails changes nothing on the device and is reported; the
 /// next sign-in, or the next change, tries again.
@@ -94,11 +99,10 @@ class UsageAnalyticsConsent({
   void _onAuthChange(AuthState change) {
     final user = change.session?.user.id;
     if (user != _signedIn) {
-      // Queued before the write below, which waits for it: whatever the
-      // last person answered is gone before anyone else's record is asked.
-      if (_signedIn != null) {
-        unawaited(_gate.forget());
-      }
+      // Queued before the write below, which waits for it: whatever someone
+      // else answered is gone, and an answer given before sign-up is the
+      // new account's, before any record is asked.
+      unawaited(_gate.signedInAs(user));
       _signedIn = user;
       if (user != null) {
         unawaited(_record());
@@ -111,8 +115,13 @@ class UsageAnalyticsConsent({
   Future<void> _write() async {
     await _gate.settled;
     final user = _supabase.auth.currentUser?.id;
-    final choice = _gate.choice;
-    if (user == null || choice == null) {
+    if (user == null) {
+      return;
+    }
+    // Only ever the account's own answer: one that is somebody else's, or
+    // nobody's yet, never reaches this account's record.
+    final choice = _gate.choiceOf(user);
+    if (choice == null) {
       return;
     }
     final params = {'version': _version, 'purpose': 'usage_analytics'};

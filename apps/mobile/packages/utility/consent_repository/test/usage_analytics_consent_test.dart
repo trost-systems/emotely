@@ -15,10 +15,11 @@ void main() {
     /// it, closed when the test ends.
     Future<UsageAnalyticsConsent> consentOver(
       AnalyticsSpy spy,
-      SupabaseStub supabase,
-    ) async {
+      SupabaseStub supabase, {
+      PostHogGate? gate,
+    }) async {
       final consent = UsageAnalyticsConsent(
-        gate: spy.gate,
+        gate: gate ?? spy.gate,
         supabase: supabase.supabase,
         version: version,
         errors: spy.errorReporter,
@@ -249,6 +250,90 @@ void main() {
           expect(supabase.to(usageAnalyticsGrant), isEmpty);
         },
       );
+
+      group('whose the choice is (#216)', () {
+        const alice = '00000000-0000-0000-0000-00000000000c';
+
+        /// A gate over [spy] restored the way `main` restores it: over the
+        /// session Supabase kept, whoever that is.
+        PostHogGate launchedOver(AnalyticsSpy spy, SupabaseStub supabase) =>
+            spy.launchedAs(supabase.supabase.auth.currentUser?.id);
+
+        test('a choice made before sign-up becomes the account’s that '
+            'signs in, and is recorded for it', () async {
+          final supabase = SupabaseStub()
+            ..rest(usageAnalyticsRead, [rpcReturned(false)])
+            ..rest(usageAnalyticsGrant, [rpcReturned(null)]);
+          final spy = AnalyticsSpy(stored: null);
+          final consent = await consentOver(spy, supabase);
+          await consent.allow();
+
+          await supabase.signedIn();
+          await settle(consent);
+
+          expect(supabase.bodies('/rest/v1/rpc/record_consent'), [recorded]);
+          expect(
+            await AnalyticsChoiceStore(preferences: spy.preferences).read(),
+            (choice: AnalyticsChoice.allowed, account: SupabaseStub.userId),
+          );
+        });
+
+        test('never records the choice of someone whose session ended while '
+            'the app was closed', () async {
+          final supabase = SupabaseStub();
+          // Launched signed out, with the last person's allow on the device.
+          final spy = AnalyticsSpy(owner: alice);
+          final consent = await consentOver(
+            spy,
+            supabase,
+            gate: launchedOver(spy, supabase),
+          );
+
+          expect(consent.choice, isNull);
+
+          await supabase.signedIn();
+          await settle(consent);
+
+          expect(consent.choice, isNull);
+          expect(supabase.requests, isEmpty);
+          expect(spy.lifecycle, isEmpty);
+        });
+
+        test('never records the choice of another account the app launches '
+            'signed in as', () async {
+          final supabase = SupabaseStub();
+          await supabase.signedIn();
+          final spy = AnalyticsSpy(owner: alice);
+          final consent = await consentOver(
+            spy,
+            supabase,
+            gate: launchedOver(spy, supabase),
+          );
+          await settle(consent);
+
+          expect(consent.choice, isNull);
+          expect(supabase.requests, isEmpty);
+          expect(spy.lifecycle, isEmpty);
+        });
+
+        test('records the choice of the account the app launches signed in '
+            'as', () async {
+          final supabase = SupabaseStub()
+            ..rest(usageAnalyticsRead, [rpcReturned(false)])
+            ..rest(usageAnalyticsGrant, [rpcReturned(null)]);
+          await supabase.signedIn();
+          final spy = AnalyticsSpy(owner: SupabaseStub.userId);
+          final consent = await consentOver(
+            spy,
+            supabase,
+            gate: launchedOver(spy, supabase),
+          );
+          await settle(consent);
+
+          expect(consent.choice, AnalyticsChoice.allowed);
+          expect(supabase.bodies('/rest/v1/rpc/record_consent'), [recorded]);
+        });
+      });
 
       test('shrugs off an error on the session stream', () async {
         final supabase = SupabaseStub();
