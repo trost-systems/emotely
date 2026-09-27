@@ -90,8 +90,7 @@ void main() {
       expect(robot.consent, findsNothing);
       expect(robot.session, findsOneWidget);
       expect(robot.supabase.to(consentGrant), isEmpty);
-      // The app knows no name to give the agent yet (the profile is #204's
-      // next step), so the round says nothing about the user.
+      // The user has no profile yet, so the round says nothing about them.
       expect(robot.agent.lastRequest, {'app_version': AgentStub.appVersion});
     });
 

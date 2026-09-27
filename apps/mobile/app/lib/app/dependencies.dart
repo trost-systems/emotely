@@ -13,6 +13,7 @@ import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:journal_repository/journal_repository.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
+import 'package:profile_repository/profile_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// The one composition root (ADR 0015): every utility and every feature
@@ -72,10 +73,11 @@ void registerApp(
   registerAccount(getIt);
 }
 
-/// The user's records on the server: the journal, and the consent record
-/// with the wordings the app currently asks consent for.
+/// The user's records on the server: the journal, the profile, and the
+/// consent record with the wordings the app currently asks consent for.
 void _registerRecords(GetIt getIt, SupabaseClient supabase) {
   registerJournalRepository(getIt, supabase: supabase);
+  registerProfileRepository(getIt, supabase: supabase);
   registerConsentRepository(
     getIt,
     supabase: supabase,
@@ -87,6 +89,8 @@ void _registerRecords(GetIt getIt, SupabaseClient supabase) {
 /// The app's side of each feature's navigator, next to the features, and
 /// of the session's question of who the user is.
 void _registerSeams(GetIt getIt) => getIt
-  ..registerSingleton<UserContextSource>(const AppUserContextSource())
+  ..registerSingleton<UserContextSource>(
+    AppUserContextSource(profiles: getIt(), errors: getIt()),
+  )
   ..registerSingleton<AccountNavigator>(const AppAccountNavigator())
   ..registerSingleton<JournalNavigator>(const AppJournalNavigator());

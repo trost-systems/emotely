@@ -1,0 +1,24 @@
+name: profile_repository
+description: The signed-in user's profile — the name they asked to be called and how they signed in — read and written straight from Supabase under their own rights (ADR 0010, ADR 0019).
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  contract: any
+  flutter:
+    sdk: flutter
+  freezed_annotation: 3.1.0
+  get_it: 9.2.1
+  supabase_flutter: 3.0.0-dev.7
+  supabase_schema: any
+
+dev_dependencies:
+  analysis: any
+  build_runner: 2.16.1
+  flutter_test:
+    sdk: flutter
+  freezed: 4.0.1
+  testing: any

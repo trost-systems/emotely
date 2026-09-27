@@ -161,11 +161,21 @@ class SupabaseStub() {
     unless(usageAnalyticsRead, rpcReturned(true));
     unless(usageAnalyticsGrant, rpcReturned(null));
     unless(usageAnalyticsWithdraw, rpcReturned(null));
+    // No profile yet, and a save that goes through: a test about the name
+    // scripts the row it wants.
+    unless('GET /rest/v1/profiles', rows(const []));
+    unless('POST /rest/v1/profiles', rowsChanged());
   }
 
-  /// Starts the client with a live session, as after a restored sign-in.
-  Future<void> signedIn({String email = SupabaseStub.email}) =>
-      supabase.auth.recoverSession(jsonEncode(session(email: email)));
+  /// Starts the client with a live session, as after a restored sign-in,
+  /// for an account that signs in through [provider] (`email`, `google`,
+  /// `apple`; none says nothing about it).
+  Future<void> signedIn({
+    String email = SupabaseStub.email,
+    String? provider,
+  }) => supabase.auth.recoverSession(
+    jsonEncode(session(email: email, provider: provider)),
+  );
 
   /// The requests the app made to `METHOD /path`, in order.
   List<RecordedRequest> to(String endpoint) => [
@@ -180,10 +190,13 @@ class SupabaseStub() {
         request.body! as Map<String, dynamic>,
   ];
 
-  /// A session as Supabase Auth returns it after a verified code.
+  /// A session as Supabase Auth returns it after a verified code; the
+  /// account's [provider] is recorded in `app_metadata` the way Supabase
+  /// records the provider an account was created with.
   static Map<String, Object?> session({
     String sub = userId,
     String email = SupabaseStub.email,
+    String? provider,
   }) => {
     'access_token': jwt(sub: sub),
     'token_type': 'bearer',
@@ -195,7 +208,12 @@ class SupabaseStub() {
       'role': 'authenticated',
       'email': email,
       'created_at': '2026-09-01T00:00:00Z',
-      'app_metadata': <String, Object?>{},
+      'app_metadata': <String, Object?>{
+        if (provider != null) ...{
+          'provider': provider,
+          'providers': [provider],
+        },
+      },
       'user_metadata': <String, Object?>{},
     },
   };
@@ -222,9 +240,17 @@ class SupabaseStub() {
 AuthRound codeSent() =>
     () async => _json(const {}, 200);
 
-/// Supabase accepted the code and granted a session.
-AuthRound sessionGranted({String sub = SupabaseStub.userId}) =>
-    () async => _json(SupabaseStub.session(sub: sub), 200);
+/// Supabase accepted the code (or a provider's token) and granted a session
+/// for an account of [provider], with sign-in address [email].
+AuthRound sessionGranted({
+  String sub = SupabaseStub.userId,
+  String email = SupabaseStub.email,
+  String? provider,
+}) =>
+    () async => _json(
+      SupabaseStub.session(sub: sub, email: email, provider: provider),
+      200,
+    );
 
 /// Supabase applied an `updateUser` and returns the user as it now stands,
 /// e.g. after a confirmed email change; the SDK then emits `userUpdated`.

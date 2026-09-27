@@ -57,13 +57,15 @@ emotely/
 │  │  ├─ app/               the glue: composes the features · iOS + Android
 │  │  └─ packages/
 │  │     ├─ utility/        depend only on utilities: analysis (the rule set), contract
-│  │     │                  (the tool-call shapes), agent_client, analytics, the two
-│  │     │                  repositories (journal, consent), design_system (theme and
+│  │     │                  (the tool-call shapes), agent_client, analytics, the three
+│  │     │                  repositories (journal, consent, profile), supabase_schema
+│  │     │                  (the generated tables), design_system (theme and
 │  │     │                  shared widgets), legal_links, feedback_link, testing
 │  │     │                  (shared test support)
 │  │     └─ feature/        depend only on utilities, never on each other: feature_auth,
 │  │                        feature_journal (home), feature_session, feature_account
-│  │                        (the More tab, the account, the consent gate); each
+│  │                        (the More tab, the profile, the account, the consent
+│  │                        gate); each
 │  │                        reaches the others only
 │  │                        through a navigator the app implements with its
 │  │                        go_router route table

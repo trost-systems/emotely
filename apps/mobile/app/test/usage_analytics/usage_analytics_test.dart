@@ -173,9 +173,9 @@ void main() {
 
       await tester.tap(find.byKey(AppShell.moreTabKey));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.byKey(MoreView.signOutKey));
+      await tester.tap(find.byKey(MoreView.profileKey));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(MoreView.signOutKey));
+      await tester.tap(find.byKey(ProfileView.signOutKey));
       await tester.pumpAndSettle();
 
       // The choice was the person's: PostHog forgets them and switches off,

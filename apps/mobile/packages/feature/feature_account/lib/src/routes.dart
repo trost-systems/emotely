@@ -3,6 +3,7 @@ import 'package:feature_account/src/consent/bloc/consent_bloc.dart';
 import 'package:feature_account/src/consent/view/consent_page.dart';
 import 'package:feature_account/src/more/view/more_page.dart';
 import 'package:feature_account/src/privacy/view/privacy_settings_page.dart';
+import 'package:feature_account/src/profile/view/profile_page.dart';
 import 'package:feature_account/src/usage_analytics/bloc/usage_analytics_bloc.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,11 +13,11 @@ import 'package:go_router/go_router.dart';
 part 'routes.g.dart';
 
 /// The account feature's own screens as routes (ADR 0016): the More tab
-/// with the account screen and Privacy settings under it, and the consent
-/// screen on its own at the root, so that pushing it covers whatever tab
-/// bar the app shows. The feature moves between its own screens itself;
-/// the app mounts the trees and reaches the consent screen through the
-/// feature's navigator.
+/// with the Profile and account screens and Privacy settings under it, and
+/// the consent screen on its own at the root, so that pushing it covers
+/// whatever tab bar the app shows. The feature moves between its own
+/// screens itself; the app mounts the trees and reaches the consent screen
+/// through the feature's navigator.
 
 /// The More tab, with a consent bloc of its own for the status line under
 /// Privacy settings; the journal asks the server again before every
@@ -25,6 +26,7 @@ part 'routes.g.dart';
   path: '/more',
   name: 'more',
   routes: [
+    TypedGoRoute<ProfileRoute>(path: 'profile', name: 'profile'),
     TypedGoRoute<AccountRoute>(path: 'account', name: 'account'),
     TypedGoRoute<PrivacySettingsRoute>(
       path: 'privacy',
@@ -39,6 +41,14 @@ class const MoreRoute() extends GoRouteData with $MoreRoute {
     create: (_) => GetIt.I<ConsentBloc>()..add(const ConsentEvent.loaded()),
     child: const MorePage(),
   );
+}
+
+/// The Profile screen, under More: the name and the sign-in account.
+@immutable
+class const ProfileRoute() extends GoRouteData with $ProfileRoute {
+  @override
+  Widget build(BuildContext context, GoRouterState state) =>
+      const ProfilePage();
 }
 
 /// The account screen, under More: deleting the account.

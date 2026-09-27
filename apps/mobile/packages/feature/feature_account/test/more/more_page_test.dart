@@ -1,7 +1,7 @@
 import 'package:analytics/analytics.dart';
 import 'package:feature_account/feature_account.dart';
+import 'package:feature_account/src/more/view/profile_card.dart';
 import 'package:feedback_link/feedback_link.dart';
-import 'package:flutter/rendering.dart' show RenderParagraph;
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
@@ -28,7 +28,7 @@ class _MoreRobot(
   Finder get notice => find.byKey(MoreView.privacyNoticeKey);
   Finder get feedback => find.byKey(MoreView.feedbackKey);
   Finder get imprint => find.byKey(MoreView.imprintKey);
-  Finder get signOut => find.byKey(MoreView.signOutKey);
+  Finder get profile => find.byKey(MoreView.profileKey);
   Finder get account => find.byKey(MoreView.accountKey);
 
   Finder heading(String title) => find.text(title);
@@ -97,17 +97,17 @@ void main() {
       return _MoreRobot(tester, supabase: supabase, stored: stored);
     }
 
-    testWidgets('lists privacy, about and the account last, in order', (
+    testWidgets('lists the profile, then privacy, about and the account last', (
       tester,
     ) async {
       final robot = robotWith(tester)..showEverything();
       await robot.launch();
 
       final rows = [
+        robot.profile,
         robot.heading(MoreView.privacySection),
         robot.privacySettings,
         robot.notice,
-        robot.signOut,
         robot.heading(MoreView.aboutSection),
         robot.feedback,
         robot.imprint,
@@ -130,10 +130,10 @@ void main() {
       // The gap from the last row of one section to the next heading is
       // what tells the sections apart at a glance; a row-to-row gap is
       // none at all.
-      final beforeSignOut =
-          tester.getTopLeft(robot.signOut).dy -
+      final beforeAbout =
+          tester.getTopLeft(robot.heading(MoreView.aboutSection)).dy -
           tester.getBottomLeft(robot.notice).dy;
-      expect(beforeSignOut, greaterThanOrEqualTo(MoreView.sectionGap));
+      expect(beforeAbout, greaterThanOrEqualTo(MoreView.sectionGap));
       final beforeAccount =
           tester.getTopLeft(robot.heading(MoreView.accountSection)).dy -
           tester.getBottomLeft(robot.imprint).dy;
@@ -144,8 +144,7 @@ void main() {
       );
     });
 
-    testWidgets('names deletion in the error colour, and signing out in the '
-        'normal one', (tester) async {
+    testWidgets('names deletion in the error colour', (tester) async {
       final robot = robotWith(tester);
       await robot.launch();
 
@@ -158,13 +157,6 @@ void main() {
       );
       expect(delete.style?.color, colors.error);
       expect(find.text(MoreView.accountExplanation), findsOneWidget);
-      final signOut = tester.renderObject<RenderParagraph>(
-        find.descendant(
-          of: robot.signOut,
-          matching: find.text(MoreView.signOutLabel),
-        ),
-      );
-      expect(signOut.text.style?.color, isNot(colors.error));
     });
 
     group('privacy settings', () {
@@ -231,13 +223,124 @@ void main() {
       expect(find.byType(AccountPage), findsNothing);
     });
 
-    testWidgets('signs out through the app', (tester) async {
-      final robot = robotWith(tester);
-      await robot.launch();
+    group('profile card', () {
+      testWidgets('shows the initial, the name and the address', (
+        tester,
+      ) async {
+        final robot = robotWith(
+          tester,
+        )..supabase.always(profileRead, rows([profileRow(displayName: 'zoë')]));
+        await robot.launch();
 
-      await robot.tap(robot.signOut);
+        expect(
+          find.descendant(of: robot.profile, matching: find.text('Z')),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(of: robot.profile, matching: find.text('zoë')),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: robot.profile,
+            matching: find.text(SupabaseStub.email),
+          ),
+          findsOneWidget,
+        );
+      });
 
-      expect(robot.navigator.signOuts, 1);
+      testWidgets('invites a name when there is none', (tester) async {
+        final robot = robotWith(tester);
+        await robot.launch();
+
+        expect(
+          find.descendant(
+            of: robot.profile,
+            matching: find.text(ProfileCard.addName),
+          ),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('hides an address Apple made up', (tester) async {
+        const relay = 'x7k2@privaterelay.appleid.com';
+        final robot = robotWith(tester);
+        await robot.supabase.signedIn(email: relay, provider: 'apple');
+        await tester.pumpWidget(robot.app);
+        await robot.settle();
+
+        expect(find.text(relay), findsNothing);
+        expect(
+          find.descendant(
+            of: robot.profile,
+            matching: find.text(ProfileView.hiddenByApple),
+          ),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('names itself until the name is read, or when it cannot '
+          'be', (tester) async {
+        final robot = robotWith(tester)
+          ..supabase.rest(profileRead, [delayedAuth(restRefused())]);
+        await robot.supabase.signedIn();
+        await tester.pumpWidget(robot.app);
+        await tester.pump();
+
+        expect(
+          find.descendant(
+            of: robot.profile,
+            matching: find.text(ProfileCard.title),
+          ),
+          findsOneWidget,
+        );
+
+        await tester.pump(const Duration(seconds: 1));
+        await robot.settle();
+
+        expect(
+          find.descendant(
+            of: robot.profile,
+            matching: find.text(ProfileCard.title),
+          ),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('opens the Profile screen, and shows the name saved there', (
+        tester,
+      ) async {
+        final robot = robotWith(tester)
+          ..supabase.rest(profileRead, [
+            rows([profileRow(displayName: 'Peter')]),
+            rows([profileRow(displayName: 'Peter')]),
+          ])
+          ..supabase.always(
+            profileRead,
+            rows([profileRow(displayName: 'Petra')]),
+          );
+        await robot.launch();
+
+        await robot.tap(robot.profile);
+
+        expect(find.byType(ProfilePage), findsOneWidget);
+
+        await tester.pageBack();
+        await robot.settle();
+
+        expect(robot.more, findsOneWidget);
+        expect(
+          find.descendant(of: robot.profile, matching: find.text('Petra')),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('leaves signing out to the Profile screen', (tester) async {
+        final robot = robotWith(tester);
+        await robot.launch();
+
+        expect(find.text(ProfileView.signOutLabel), findsNothing);
+      });
     });
 
     testWidgets('the rows span the whole width', (tester) async {

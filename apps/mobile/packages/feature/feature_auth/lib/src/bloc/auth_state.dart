@@ -31,6 +31,11 @@ sealed class AuthState with _$AuthState {
   const factory checkingPassword({required String email}) =
       AuthCheckingPassword;
 
-  /// [userId] is signed in.
-  const factory signedIn({required String userId}) = AuthSignedIn;
+  /// [userId] is signed in, as [identity]: the sign-in address and the
+  /// method, for the screens to show on this device. Neither goes to
+  /// analytics (ADR 0005); PostHog gets the id and one boolean.
+  const factory signedIn({
+    required String userId,
+    required SignInIdentity identity,
+  }) = AuthSignedIn;
 }

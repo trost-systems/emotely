@@ -42,6 +42,13 @@ class SignInRobot(
 
   String get errorText => tester.widget<Text>(error).data!;
 
+  /// What the auth bloc above every screen holds now: what the app's other
+  /// screens are handed.
+  AuthState get state => tester
+      .element(find.byType(BlocBuilder<AuthBloc, AuthState>))
+      .read<AuthBloc>()
+      .state;
+
   bool get canTapGoogle =>
       tester.widget<GoogleSignInButton>(googleButton).onPressed != null;
   bool get canSendCode =>

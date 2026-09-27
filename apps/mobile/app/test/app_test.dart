@@ -119,11 +119,11 @@ void main() {
       expect(find.byType(MorePage), findsNothing);
     });
 
-    testWidgets('signs out from the More tab and returns to sign-in', (
+    testWidgets('signs out from the Profile screen and returns to sign-in', (
       tester,
     ) async {
-      // The More tab asks the app to sign out; the app tells the auth bloc,
-      // and the router lands on sign-in.
+      // The Profile screen, under More, asks the app to sign out; the app
+      // tells the auth bloc, and the router lands on sign-in.
       final supabase = SupabaseStub()..script(logout: [signedOut()]);
       await supabase.signedIn();
       final analytics = AnalyticsSpy();
@@ -138,9 +138,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(AppShell.moreTabKey));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.byKey(MoreView.signOutKey));
+      await tester.tap(find.byKey(MoreView.profileKey));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(MoreView.signOutKey));
+      await tester.tap(find.byKey(ProfileView.signOutKey));
       await tester.pumpAndSettle();
 
       expect(find.byType(SignInPage), findsOneWidget);
