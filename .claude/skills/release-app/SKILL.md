@@ -131,13 +131,17 @@ compares those answers with the notice. If the page gains or loses a
 category — a new event, a new provider, a dropped identifier — change the
 declarations in the same release, not later. Changing or checking them —
 read [references/data-declarations.md](references/data-declarations.md)
-first: what is declared today, per console.
+first: what is declared today, per console, and what the onboarding build
+(#204: a name, analytics only after Allow) changes in each — the name's new
+purposes as soon as any Play track carries it, analytics as optional only
+once no distributed build collects it without asking.
 
 ## Account deletion (store requirements)
 
 - **App Store** (guideline 5.1.1(v)): deletion is in the app. Put the path
-  in the review notes: **More → Delete account → confirm** (the last row
-  on the More tab). It calls `public.delete_account()`, which removes
+  in the review notes: **More → Delete account** (the last row on the More
+  tab) **→ Delete account → Delete** (the button on the account screen,
+  then the confirmation). It calls `public.delete_account()`, which removes
   the auth user and every session and entry by cascade, then signs the
   device out.
 - **Google Play** additionally requires a **web** deletion URL declared in
@@ -240,36 +244,44 @@ created on the hosted project through the Auth admin API on 2026-09-13.
   reappears on the next sign-in — expected, and the reason the instructions
   mention the box rather than assuming a clean run to the first question.
 
-### What the consoles say (saved 2026-09-13)
+### What the consoles say
+
+The consoles hold text saved on 2026-09-13 for the build that opened on
+sign-in. **Replace it with the text below in the first store submission of
+the onboarding build (#204)**: that build opens on the usage-analytics
+question and Welcome, not on sign-in, and asks a reviewer account without a
+name for one, once.
 
 **Play Console → App content → App access → Sign-in details.** Entry name
 "Reviewer demo account", user name `google-play-review@getemotely.com`, the
-password above, and these instructions (the field allows 500 characters):
+password above, and these instructions (the field allows 500 characters;
+this is 494):
 
-> Open the app, enter the user name above as the email address and tap
-> Send code. This is a designated reviewer account, so the app asks for a
-> password instead of emailing a one-time code; enter the password above.
-> Regular users sign in with a one-time code sent by email. The first
-> session asks for consent to send the conversation to an AI provider:
-> tick the box and tap Start journaling. Account deletion: More -> Delete
-> account -> confirm. Deleting the demo account really deletes it; if it
-> no longer signs in, email
-> peter@petertrost.com and we recreate it.
+> Open the app, answer the analytics question either way, tap I have an
+> account, enter the user name above as the email and tap Send me a code.
+> This reviewer account gets a password step instead of a code: enter the
+> password above. If asked for a name, type any. The first session asks
+> consent to send the chat to an AI provider: tick the box, tap Start
+> journaling. Delete: More > Delete account > Delete account > Delete. It
+> really deletes the account; email peter@petertrost.com to recreate it.
 
 **App Store Connect → version → App Review Information → Sign-in
 required.** User name `app-store-review@getemotely.com`, the password above,
 Notes:
 
-> Demo account for review. Open the app, enter the user name above as the
-> email address and tap Send code. Because this address is a designated
-> reviewer account, the app asks for a password instead of sending a
-> one-time code; enter the password above. Regular users sign in with a
-> one-time code sent by email. Before the first session the app asks for
-> explicit consent to send the conversation to an AI provider (GDPR
-> Art. 9): tick the box and tap Start journaling. It is not asked again.
-> Account deletion: More -> Delete account -> confirm. Deleting the demo account really deletes it; if it no
-> longer signs in, contact peter@petertrost.com and we recreate it within
-> the hour.
+> Demo account for review. Open the app and answer the usage-analytics
+> question either way (Don’t allow or Allow). On Welcome, tap I have an
+> account, enter the user name above as the email address and tap Send me a
+> code. Because this address is a designated reviewer account, the app asks
+> for a password instead of sending a one-time code; enter the password
+> above. Regular users sign in with a one-time code sent by email, or with
+> Apple or Google. If the app asks what to call you, type any name or skip.
+> Before the first session the app asks for explicit consent to send the
+> conversation to an AI provider (GDPR Art. 9): tick the box and tap Start
+> journaling. It is not asked again. Account deletion: More -> Delete
+> account -> Delete account -> Delete. Deleting the demo account really
+> deletes it; if it no longer signs in, contact peter@petertrost.com and we
+> recreate it within the hour.
 
 ## App Store Connect prep for a new version
 

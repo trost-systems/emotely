@@ -138,8 +138,8 @@ class const Privacy({super.key}) extends StatelessComponent {
     p([
       .text(
         'An account in the app is a different thing from this list, and it '
-        'is deleted whenever you say so: in the app under More → Your '
-        'account → Delete account, or, if you no longer have the app, on ',
+        'is deleted whenever you say so: in the app under More → Delete '
+        'account, or, if you no longer have the app, on ',
       ),
       a(href: '/delete-account', [.text('the deletion page')]),
       .text(
