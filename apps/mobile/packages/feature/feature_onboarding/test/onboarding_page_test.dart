@@ -138,7 +138,17 @@ void main() {
 
       await robot.type('Pe\tter');
       expect(button().onPressed, isNull);
-      expect(find.text(nameControlCharacter), findsOneWidget);
+      expect(find.text(nameInvisibleCharacter), findsOneWidget);
+
+      // A paragraph separator or a right-to-left override is as invisible
+      // as a tab, and gets the same answer (#214).
+      await robot.type('Pe\u2029ter');
+      expect(button().onPressed, isNull);
+      expect(find.text(nameInvisibleCharacter), findsOneWidget);
+
+      await robot.type('Pe\u202eter');
+      expect(button().onPressed, isNull);
+      expect(find.text(nameInvisibleCharacter), findsOneWidget);
 
       // The keyboard's "done" does not slip past the check either.
       await tester.testTextInput.receiveAction(TextInputAction.done);

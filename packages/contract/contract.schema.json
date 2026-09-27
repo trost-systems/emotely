@@ -195,7 +195,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 40,
-            "pattern": "^[^\\p{Cc}]*$"
+            "pattern": "^[^\\p{Cc}\\u2028\\u2029\\u202A-\\u202E\\u2066-\\u2069]*$"
           },
           "name_is_placeholder": {
             "type": "boolean"

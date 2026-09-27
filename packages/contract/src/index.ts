@@ -88,14 +88,20 @@ export const maxDisplayNameLength = 40;
 export const userContext = z.object({
   // What the user wants to be called: the name they typed, or the playful
   // placeholder emotely picked when they preferred not to give one. Any
-  // script; one line (no control characters), so it can only ever be a name
-  // in the prompt, never a layout of its own.
+  // script; one line, so it can only ever be a name in the prompt, never a
+  // layout of its own: no control character (Cc), no line or paragraph
+  // separator (U+2028, U+2029, which JSON.stringify leaves unescaped) and no
+  // bidirectional embedding, override or isolate (U+202A–U+202E,
+  // U+2066–U+2069), which would reorder the text around the name. Other
+  // invisible format characters stay allowed — ZWJ builds emoji, ZWNJ spells
+  // Persian and Indic names — the same rule as the `profiles` table's checks
+  // and Dart's `DisplayName.check` (#214).
   display_name: z
     .string()
     .trim()
     .min(1)
     .max(maxDisplayNameLength)
-    .regex(/^[^\p{Cc}]*$/u)
+    .regex(/^[^\p{Cc}\u2028\u2029\u202A-\u202E\u2066-\u2069]*$/u)
     .optional(),
   // True when `display_name` is that placeholder rather than a real name.
   name_is_placeholder: z.boolean().optional(),

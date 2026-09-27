@@ -228,6 +228,20 @@ void main() {
       expect(robot.message, ProfileView.refusedMessage);
     });
 
+    testWidgets('refuses a name with a line separator in it the same way', (
+      tester,
+    ) async {
+      final robot = robotWith(tester, row: profileRow(displayName: 'Peter'));
+      await robot.launch();
+
+      await robot.type('Pe\u2028ter');
+      await robot.done();
+
+      expect(robot.supabase.to(profileSave), isEmpty);
+      expect(robot.name, 'Peter');
+      expect(robot.message, ProfileView.refusedMessage);
+    });
+
     testWidgets('goes back to the saved name when saving fails, and reports '
         'it', (tester) async {
       final robot = robotWith(

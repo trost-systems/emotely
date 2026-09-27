@@ -56,6 +56,42 @@ void main() {
       expect(_outcome('Pe\u009fter'), DisplayNameProblem.controlCharacter);
     });
 
+    test('refuses a line or paragraph separator anywhere in the name', () {
+      // Zl and Zp are line breaks that are not control characters (#214).
+      expect(_outcome('Pe\u2028ter'), DisplayNameProblem.layoutCharacter);
+      expect(_outcome('Pe\u2029ter'), DisplayNameProblem.layoutCharacter);
+    });
+
+    test('refuses a bidirectional embedding, override or isolate', () {
+      // U+202A–U+202E embed and override, U+2066–U+2069 isolate.
+      for (final rune in [
+        ...[0x202a, 0x202b, 0x202c, 0x202d, 0x202e],
+        ...[0x2066, 0x2067, 0x2068, 0x2069],
+      ]) {
+        expect(
+          _outcome('Pe${String.fromCharCode(rune)}ter'),
+          DisplayNameProblem.layoutCharacter,
+          reason: rune.toRadixString(16),
+        );
+      }
+    });
+
+    test('keeps the invisible characters names and emoji are made of', () {
+      // ZWNJ (U+200C) spells Persian and Indic names, ZWJ (U+200D) builds
+      // emoji, tag characters build subdivision flags, and a right-to-left
+      // mark only affects its own neighbour.
+      const persian = 'مهران\u200cپور';
+      const family = '👨\u200d👩\u200d👧';
+      const england =
+          '🏴\u{e0067}\u{e0062}\u{e0065}\u{e006e}\u{e0067}\u{e007f}';
+      const marked = 'Ana\u200fBel';
+
+      expect(_outcome(persian), persian);
+      expect(_outcome(family), family);
+      expect(_outcome(england), england);
+      expect(_outcome(marked), marked);
+    });
+
     test('says nothing of the name when printed', () {
       final check = DisplayName.check('Needle');
 
