@@ -211,7 +211,9 @@ class Entries {
 extension type const ProfilesRow(Map<String, dynamic> _json) implements Object {
   DateTime get createdAt => DateTime.parse(_json['created_at'] as String);
 
-  /// 1-40 Unicode code points, trimmed as Dart trims, no control characters.
+  /// 1-40 Unicode code points, trimmed as Dart trims, no control characters, no
+  /// line or paragraph separators, no bidirectional embeddings, overrides or
+  /// isolates.
   String get displayName => _json['display_name'] as String;
 
   /// True when the app chose the name on Skip rather than the user typing it.
