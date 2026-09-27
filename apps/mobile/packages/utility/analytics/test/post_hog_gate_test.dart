@@ -204,7 +204,7 @@ void main() {
       await gate.capture(eventName: 'after_sign_out');
 
       expect(gate.choice, isNull);
-      expect(spy.lifecycle, ['setup', 'reset', 'disable', 'close']);
+      expect(spy.lifecycle, ['setup', 'flush', 'reset', 'disable']);
       expect(spy.events, isEmpty);
       expect(
         await AnalyticsChoiceStore(preferences: spy.preferences).read(),
@@ -215,11 +215,48 @@ void main() {
       await gate.allow();
       await gate.capture(eventName: 'journal_viewed');
 
+      expect(spy.lifecycle, [
+        'setup',
+        'flush',
+        'reset',
+        'disable',
+        'enable',
+        'reset',
+      ]);
       expect(spy.identified, ['user-1']);
       expect(spy.events, [
         event('usage_analytics_allowed'),
         event('journal_viewed'),
       ]);
+    });
+
+    test('forgetting still delivers what was said under the consent', () async {
+      // The SDK queues events on disk. Closing it stops the queue before
+      // a `signed_out` is delivered, or before the delivered file is
+      // deleted, so it went out only at the next allow on the device,
+      // under whoever gave it, and again after a flush (#204). Opted out
+      // but not closed, the queue delivers it and nothing new is taken.
+      final spy = AnalyticsSpy();
+      final gate = gateOver(spy);
+      await gate.restore(account: null);
+      await gate.capture(eventName: 'signed_out');
+
+      await gate.forget();
+
+      expect(spy.events, [event('signed_out')]);
+      expect(spy.lifecycle, ['setup', 'flush', 'reset', 'disable']);
+    });
+
+    test('a refusal after forgetting closes PostHog', () async {
+      final spy = AnalyticsSpy();
+      final gate = gateOver(spy);
+      await gate.restore(account: null);
+      await gate.forget();
+
+      await gate.deny();
+
+      expect(gate.choice, AnalyticsChoice.denied);
+      expect(spy.lifecycle.last, 'close');
     });
 
     test('forgetting while nothing runs only forgets the answer', () async {
@@ -360,7 +397,7 @@ void main() {
             await gate.capture(eventName: 'journal_viewed');
 
             expect(gate.choice, isNull);
-            expect(spy.lifecycle, ['setup', 'reset', 'disable', 'close']);
+            expect(spy.lifecycle, ['setup', 'flush', 'reset', 'disable']);
             expect(spy.identified, [alice]);
             expect(spy.events, isEmpty);
             expect(await stored(spy), isNull);

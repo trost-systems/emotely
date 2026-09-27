@@ -55,7 +55,7 @@ void main() {
       await spy.authAnalytics.signedOut();
 
       expect(spy.events, [event('signed_out')]);
-      expect(spy.lifecycle, ['setup', 'reset', 'disable', 'close']);
+      expect(spy.lifecycle, ['setup', 'flush', 'reset', 'disable']);
       expect(spy.gate.choice, isNull);
     });
 
@@ -65,7 +65,7 @@ void main() {
       await spy.authAnalytics.accountDeleted();
 
       expect(spy.events, [event('account_deleted')]);
-      expect(spy.lifecycle, ['setup', 'reset', 'disable', 'close']);
+      expect(spy.lifecycle, ['setup', 'flush', 'reset', 'disable']);
       expect(spy.gate.choice, isNull);
     });
   });

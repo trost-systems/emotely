@@ -57,6 +57,7 @@ class AnalyticsSpy({
       return _lifecycle('disable');
     });
     when(posthog.close()).thenAnswer((_) => _lifecycle('close'));
+    when(posthog.flush()).thenAnswer((_) => _lifecycle('flush'));
     when(posthog.isOptOut()).thenAnswer((_) async => optedOut);
     when(
       posthog.capture(
@@ -123,7 +124,7 @@ class AnalyticsSpy({
   late final preferences = SharedPreferencesAsync();
 
   /// The SDK's lifecycle as the app drove it, in order: `setup`, `enable`,
-  /// `disable`, `close` and `reset`.
+  /// `disable`, `close`, `flush` and `reset`.
   final lifecycle = <String>[];
 
   /// Whether the SDK is opted out, as the native side would persist it:
