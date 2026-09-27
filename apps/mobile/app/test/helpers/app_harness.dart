@@ -74,8 +74,9 @@ Widget appUnderTest({
   // the router first asks it.
   final gate = GetIt.I<PostHogGate>();
   unawaited(gate.restore());
-  unawaited(GetIt.I<OnboardingStore>().restore());
-  return EmotelyApp(screenViews: gate.screenObserver());
+  final onboarding = GetIt.I<OnboardingStore>();
+  unawaited(onboarding.restore());
+  return EmotelyApp(screenViews: gate.screenObserver(), onboarding: onboarding);
 }
 
 /// A deep link arriving while the app runs: the platform's `pushRoute`
