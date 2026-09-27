@@ -70,6 +70,8 @@ void main() {
       final spy = AnalyticsSpy();
 
       expect(await sourceOver(supabase, spy).current(), isNull);
+      // The report is not awaited, and queues behind the analytics gate.
+      await pumpEventQueue();
       expect(spy.exceptions, [
         captured(
           withheld(PostgrestApiException, code: 'XX000', statusCode: 409),
