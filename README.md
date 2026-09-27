@@ -65,7 +65,8 @@ emotely/
 │  │     └─ feature/        depend only on utilities, never on each other: feature_auth,
 │  │                        feature_journal (home), feature_session, feature_account
 │  │                        (the More tab, the profile, the account, the consent
-│  │                        gate); each
+│  │                        gate), feature_onboarding (the steps before sign-up);
+│  │                        each
 │  │                        reaches the others only
 │  │                        through a navigator the app implements with its
 │  │                        go_router route table

@@ -114,6 +114,30 @@ void main() {
       await robot.tap(robot.underneath);
     });
 
+    testWidgets('allowing is the first thing PostHog hears: the top of the '
+        'onboarding funnel', (tester) async {
+      final robot = _PromptRobot(tester);
+      await robot.launch();
+
+      await robot.tap(robot.allow);
+
+      expect(robot.analytics.events, [
+        event('usage_analytics_allowed', {
+          'flow_version': testOnboardingFlowVersion,
+          'variant': 'control',
+        }),
+      ]);
+    });
+
+    testWidgets('refusing tells PostHog nothing at all', (tester) async {
+      final robot = _PromptRobot(tester);
+      await robot.launch();
+
+      await robot.tap(robot.deny);
+
+      expect(robot.analytics.events, isEmpty);
+    });
+
     testWidgets('refusing sets nothing up and goes away', (tester) async {
       final robot = _PromptRobot(tester);
       await robot.launch();

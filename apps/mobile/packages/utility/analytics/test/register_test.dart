@@ -11,6 +11,7 @@ void main() {
       posthog: spy.posthog,
       config: PostHogConfig('phc_test'),
       consentVersion: 'v1',
+      onboardingFlowVersion: 7,
     );
 
     test('puts every builder behind one gate, shut until restored', () async {
@@ -28,6 +29,7 @@ void main() {
       await getIt<AuthAnalytics>().signedIn(SignInMethod.code);
       await getIt<JournalAnalytics>().entryOpened();
       await getIt<ConsentAnalytics>().consentDeclined();
+      await getIt<OnboardingAnalytics>().usageAnalyticsAllowed();
       await getIt<ErrorReporter>().consentLoadFailed(
         Exception('x'),
         StackTrace.empty,
@@ -38,6 +40,10 @@ void main() {
         event('signed_in', {'method': 'code'}),
         event('entry_opened'),
         event('consent_declined', {'version': 'v1'}),
+        event('usage_analytics_allowed', {
+          'flow_version': 7,
+          'variant': 'control',
+        }),
       ]);
       expect(spy.exceptions, hasLength(1));
     });

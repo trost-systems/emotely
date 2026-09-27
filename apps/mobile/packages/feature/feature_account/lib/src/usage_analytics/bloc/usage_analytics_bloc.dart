@@ -26,12 +26,24 @@ enum UsageAnalyticsState() {
 /// first-launch sheet and Privacy settings — over the one
 /// [UsageAnalyticsConsent] they share, so a change made on one is what the
 /// other shows.
-class UsageAnalyticsBloc({required final UsageAnalyticsConsent _consent})
-    extends Bloc<UsageAnalyticsEvent, UsageAnalyticsState> {
+class UsageAnalyticsBloc({
+  required final UsageAnalyticsConsent _consent,
+  required final OnboardingAnalytics _analytics,
+}) extends Bloc<UsageAnalyticsEvent, UsageAnalyticsState> {
   this : super(UsageAnalyticsState.unknown) {
     on<UsageAnalyticsStarted>(_onStarted);
-    on<UsageAnalyticsAllowed>((_, _) => _consent.allow());
+    on<UsageAnalyticsAllowed>(_onAllowed);
     on<UsageAnalyticsDenied>((_, _) => _consent.deny());
+  }
+
+  /// Allows, then says so: the first event of the onboarding funnel, sent
+  /// through the gate this very answer opened (#204).
+  Future<void> _onAllowed(
+    UsageAnalyticsAllowed event,
+    Emitter<UsageAnalyticsState> emit,
+  ) async {
+    await _consent.allow();
+    await _analytics.usageAnalyticsAllowed();
   }
 
   /// Waits for the stored answer, then follows every change of it, from

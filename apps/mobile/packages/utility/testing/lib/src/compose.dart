@@ -22,6 +22,10 @@ const testConsentVersion = '2026-01-01';
 /// same reason (#204).
 const testUsageAnalyticsVersion = '2026-01-02';
 
+/// The onboarding flow version a feature test registers; the onboarding
+/// feature owns the real one, and the app hands it in (#204).
+const testOnboardingFlowVersion = 1;
+
 /// The build a feature test runs as. Fixed rather than read from the host,
 /// so what a feedback mail says is the same on every machine; the app hands
 /// in the real one, read from `package_info_plus` and the platform.
@@ -72,6 +76,7 @@ void registerUtilitiesUnderTest(
     posthog: analytics.posthog,
     config: PostHogConfig('phc_test'),
     consentVersion: consentVersion,
+    onboardingFlowVersion: testOnboardingFlowVersion,
   );
   // `main` awaits this before the first frame; here every call PostHog
   // hears queues behind it instead, so the order is the same.

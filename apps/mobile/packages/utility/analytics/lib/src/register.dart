@@ -3,6 +3,7 @@ import 'package:analytics/src/auth_analytics.dart';
 import 'package:analytics/src/consent_analytics.dart';
 import 'package:analytics/src/error_reporter.dart';
 import 'package:analytics/src/journal_analytics.dart';
+import 'package:analytics/src/onboarding_analytics.dart';
 import 'package:analytics/src/post_hog_gate.dart';
 import 'package:analytics/src/session_analytics.dart';
 import 'package:get_it/get_it.dart';
@@ -19,12 +20,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// the first frame, which reads the choice kept in the platform's
 /// preferences (faked at its platform interface under test) and opens the
 /// gate if it allows. [consentVersion] names the wording the app
-/// currently asks journal consent for.
+/// currently asks journal consent for, and [onboardingFlowVersion] the
+/// onboarding flow it runs; both constants are the app's to own.
 void registerAnalytics(
   GetIt getIt, {
   required Posthog posthog,
   required PostHogConfig config,
   required String consentVersion,
+  required int onboardingFlowVersion,
 }) {
   final gate = PostHogGate(
     posthog: posthog,
@@ -37,5 +40,8 @@ void registerAnalytics(
     ..registerSingleton(AuthAnalytics(gate: gate))
     ..registerSingleton(JournalAnalytics(gate: gate))
     ..registerSingleton(ConsentAnalytics(gate: gate, version: consentVersion))
+    ..registerSingleton(
+      OnboardingAnalytics(gate: gate, flowVersion: onboardingFlowVersion),
+    )
     ..registerSingleton(ErrorReporter(gate: gate));
 }
