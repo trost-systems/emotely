@@ -292,5 +292,63 @@ void main() {
 
       expect(screens, ['/after']);
     });
+
+    testWidgets('counts no screen before the allow itself', (tester) async {
+      // What PostHog hears, in order: events through the injected
+      // instance, screens off the platform channel the observer uses.
+      final heard = <String>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('posthog_flutter'),
+        (call) async {
+          if (call.method == 'screen') {
+            final arguments = call.arguments as Map<Object?, Object?>;
+            heard.add('screen ${arguments['screenName']}');
+          }
+          return null;
+        },
+      );
+      final spy = AnalyticsSpy(stored: null);
+      when(
+        spy.posthog.capture(
+          eventName: anyNamed('eventName'),
+          properties: anyNamed('properties'),
+        ),
+      ).thenAnswer((invocation) async {
+        heard.add(invocation.namedArguments[#eventName] as String);
+      });
+      final gate = gateOver(spy);
+      await gate.restore();
+      final navigator = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(
+        WidgetsApp(
+          color: const Color(0xFF000000),
+          navigatorKey: navigator,
+          navigatorObservers: [gate.screenObserver()],
+          onGenerateRoute: (settings) => PageRouteBuilder<void>(
+            settings: settings,
+            pageBuilder: (_, _, _) => const SizedBox(),
+          ),
+        ),
+      );
+      // Signed in already, so the allow tells PostHog who this is; a
+      // screen comes up while it does.
+      await gate.identify(userId: 'user-1');
+      when(
+        spy.posthog.identify(
+          userId: anyNamed('userId'),
+          userProperties: anyNamed('userProperties'),
+          userPropertiesSetOnce: anyNamed('userPropertiesSetOnce'),
+        ),
+      ).thenAnswer((_) async {
+        navigator.currentState!.pushNamed<void>('/during');
+      });
+
+      await gate.allow();
+      await tester.pumpAndSettle();
+      navigator.currentState!.pushNamed<void>('/after');
+      await tester.pumpAndSettle();
+
+      expect(heard, ['usage_analytics_allowed', 'screen /after']);
+    });
   });
 }
