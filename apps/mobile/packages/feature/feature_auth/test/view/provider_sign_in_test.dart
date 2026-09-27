@@ -424,7 +424,7 @@ void main() {
     await robot.launch();
 
     expect(find.bySemanticsLabel('Sign in with Google'), findsOneWidget);
-    expect(find.bySemanticsLabel('Sign in with Apple'), findsOneWidget);
+    expect(find.bySemanticsLabel('Continue with Apple'), findsOneWidget);
   }, variant: iOS);
 
   testWidgets('a screen reader can press the Google button', (tester) async {

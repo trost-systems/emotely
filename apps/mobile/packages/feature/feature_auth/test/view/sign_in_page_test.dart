@@ -1,4 +1,5 @@
 import 'package:feature_auth/src/bloc/auth_bloc.dart';
+import 'package:feature_auth/src/navigator.dart';
 import 'package:feature_auth/src/providers/provider_sign_in.dart';
 import 'package:feature_auth/src/view/sign_in_page.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -483,6 +484,8 @@ void main() {
       final supabase = SupabaseStub();
       await supabase.signedIn();
       final spy = AnalyticsSpy();
+      addTearDown(GetIt.I.reset);
+      GetIt.I.registerSingleton<SignInNavigator>(FakeSignInNavigator());
 
       await tester.pumpWidget(
         BlocProvider(

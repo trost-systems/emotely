@@ -16,11 +16,12 @@ void main() {
         analytics: AnalyticsSpy(),
       );
       registerAuth(GetIt.I, google: SignInRobot.googleClients);
+      GetIt.I.registerSingleton<SignInNavigator>(FakeSignInNavigator());
 
       await tester.pumpWidget(
         featureUnderTest(
           routes: [$signInRoute],
-          initialLocation: const SignInRoute().location,
+          initialLocation: const SignInRoute(mode: SignInMode.signUp).location,
           // The auth bloc sits above every screen in the app.
           above: (_, child) =>
               BlocProvider(create: (_) => GetIt.I<AuthBloc>(), child: child),
@@ -28,7 +29,18 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(SignInPage), findsOneWidget);
+      expect(
+        tester.widget<SignInPage>(find.byType(SignInPage)).mode,
+        SignInMode.signUp,
+      );
+    });
+
+    test('opens as a sign-in unless it says otherwise', () {
+      expect(const SignInRoute().location, '/sign-in');
+      expect(
+        const SignInRoute(mode: SignInMode.signUp, from: '/x').location,
+        '/sign-in?mode=sign-up&from=%2Fx',
+      );
     });
   });
 }

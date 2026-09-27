@@ -1,18 +1,26 @@
 import 'dart:async';
 
 import 'package:feature_auth/src/bloc/auth_bloc.dart';
+import 'package:feature_auth/src/navigator.dart';
 import 'package:feature_auth/src/view/provider_buttons.dart';
+import 'package:feature_auth/src/view/sign_in_heading.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:legal_links/legal_links.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// Email code sign-in in two steps: the email, then the six-digit code
-/// Supabase sent to it. Nothing to remember, nothing to leave the app for.
-/// Under the email, the providers' own buttons sign in with Google, and
-/// with Apple on iOS, in one step.
-/// The second step is a password instead for the accounts the bloc knows
-/// to ask one of (the app stores' reviewers).
-class const SignInPage({super.key}) extends StatelessWidget {
+/// The account, at the last possible moment (#204, ADR 0019): as the last
+/// step of onboarding ([SignInMode.signUp], "Almost there, {name}") or
+/// behind "I have an account" ([SignInMode.signIn], "Welcome back").
+///
+/// Apple (on iOS) and Google first, in one step each; then an email code in
+/// two steps: the email, then the six-digit code Supabase sent to it.
+/// Nothing to remember, nothing to leave the app for. The second step is a
+/// password instead for the accounts the bloc knows to ask one of (the app
+/// stores' reviewers). From sign-in, an email code never creates an
+/// account.
+class const SignInPage({final SignInMode mode = SignInMode.signIn, super.key})
+    extends StatelessWidget {
   static const emailKey = Key('sign_in_page.email');
   static const sendCodeKey = Key('sign_in_page.send_code');
   static const codeKey = Key('sign_in_page.code');
@@ -22,6 +30,8 @@ class const SignInPage({super.key}) extends StatelessWidget {
   static const changeEmailKey = Key('sign_in_page.change_email');
   static const errorKey = Key('sign_in_page.error');
   static const privacyNoticeKey = Key('sign_in_page.privacy_notice');
+  static const backKey = Key('sign_in_page.back');
+  static const headingKey = Key('sign_in_page.heading');
   static const googleKey = ProviderButtons.googleKey;
   static const appleKey = ProviderButtons.appleKey;
 
@@ -32,42 +42,73 @@ class const SignInPage({super.key}) extends StatelessWidget {
   static const wrongPasswordMessage = AuthBloc.wrongPasswordMessage;
   static const unreachableMessage = AuthBloc.unreachableMessage;
   static const providerFailedMessage = AuthBloc.providerFailedMessage;
+  static const noAccountMessage = AuthBloc.noAccountMessage;
+
+  static String signUpTitle(String? name) =>
+      name == null ? 'Almost there' : 'Almost there, $name';
+  static const signUpBody =
+      'Create your account so your reflections stay safe – and with you on '
+      'any phone.';
+  static const signInTitle = 'Welcome back';
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Sign in')),
-    body: SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // The providers' buttons make the first step taller than a small
-            // phone in landscape.
-            const Expanded(child: SingleChildScrollView(child: _Step())),
-            // Reachable before an account exists, and before an address has
-            // been typed: Play's disclosure expectations are stricter than
-            // Apple's about a policy that lives only behind a menu, and
-            // this is the first screen anyone sees.
-            TextButton(
-              key: privacyNoticeKey,
-              onPressed: () => unawaited(openPrivacyNotice()),
-              child: const Text(privacyNoticeLabel),
+  Widget build(BuildContext context) {
+    final navigator = GetIt.I<SignInNavigator>();
+    void leave() => navigator.leave(context, mode);
+    // The screen is where the redirect put the user, with nothing under it
+    // to pop to: back, by gesture or by arrow, is the flow's way back.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) => didPop ? null : leave(),
+      child: Scaffold(
+        appBar: AppBar(
+          leading: BackButton(key: backKey, onPressed: leave),
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+            child: Column(
+              children: [
+                // The providers' buttons make the first step taller than a
+                // small phone in landscape, or at a large text size.
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      spacing: 32,
+                      children: [
+                        SignInHeading(mode: mode, name: navigator.signUpName()),
+                        _Step(mode: mode),
+                      ],
+                    ),
+                  ),
+                ),
+                // Reachable before an account exists, and before an address
+                // has been typed: Play's disclosure expectations are
+                // stricter than Apple's about a policy that lives only
+                // behind a menu.
+                TextButton(
+                  key: privacyNoticeKey,
+                  onPressed: () => unawaited(openPrivacyNotice()),
+                  child: const Text(privacyNoticeLabel),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// The one step the sign-in state asks for.
-class const _Step() extends StatelessWidget {
+class const _Step({required final SignInMode mode}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocBuilder<AuthBloc, AuthState>(
     builder: (context, state) => switch (state) {
-      AuthSignedOut(:final error) => _EmailStep(error: error),
-      AuthRequestingCode() => const _EmailStep(busy: true),
-      AuthSigningInWith() => const _EmailStep(busy: true),
+      AuthSignedOut(:final error) => _EmailStep(mode: mode, error: error),
+      AuthRequestingCode() => _EmailStep(mode: mode, busy: true),
+      AuthSigningInWith() => _EmailStep(mode: mode, busy: true),
       AuthCodeSent(:final email, :final error) => _CodeStep(
         email: email,
         error: error,
@@ -86,8 +127,11 @@ class const _Step() extends StatelessWidget {
   );
 }
 
-class const _EmailStep({final String? error, final bool busy = false})
-    extends StatefulWidget {
+class const _EmailStep({
+  required final SignInMode mode,
+  final String? error,
+  final bool busy = false,
+}) extends StatefulWidget {
   @override
   State<_EmailStep> createState() => _EmailStepState();
 }
@@ -112,10 +156,8 @@ class _EmailStepState() extends State<_EmailStep> {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     spacing: 16,
     children: [
-      Text(
-        'Enter your email and we send you a six-digit code.',
-        style: Theme.of(context).textTheme.bodyLarge,
-      ),
+      ProviderButtons(enabled: !widget.busy),
+      const OrWithEmail(),
       TextField(
         key: SignInPage.emailKey,
         controller: _controller,
@@ -123,23 +165,30 @@ class _EmailStepState() extends State<_EmailStep> {
         autofillHints: const [AutofillHints.email],
         keyboardType: TextInputType.emailAddress,
         autocorrect: false,
-        decoration: const InputDecoration(labelText: 'Email'),
+        decoration: const InputDecoration(
+          labelText: 'Email address',
+          hintText: 'you@example.com',
+          border: OutlineInputBorder(),
+        ),
         onChanged: (_) => setState(() {}),
       ),
       _ErrorText(widget.error),
       if (widget.busy)
         const _Busy()
       else
-        FilledButton(
+        FilledButton.tonal(
           key: SignInPage.sendCodeKey,
+          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
           onPressed: _plausible
               ? () => context.read<AuthBloc>().add(
-                  AuthEvent.emailSubmitted(_email),
+                  AuthEvent.emailSubmitted(
+                    _email,
+                    createAccount: widget.mode == SignInMode.signUp,
+                  ),
                 )
               : null,
-          child: const Text('Send code'),
+          child: const Text('Send me a code'),
         ),
-      ProviderButtons(enabled: !widget.busy),
     ],
   );
 }

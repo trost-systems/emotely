@@ -83,7 +83,10 @@ class AuthBloc({
     emit(AuthState.requestingCode(email: email));
     unawaited(_analytics.codeRequested());
     try {
-      await _supabase.auth.signInWithOtp(email: email);
+      await _supabase.auth.signInWithOtp(
+        email: email,
+        shouldCreateUser: event.createAccount,
+      );
       emit(AuthState.codeSent(email: email));
     } on Exception catch (error, stackTrace) {
       unawaited(_analytics.codeRequestFailed());
@@ -307,6 +310,9 @@ class AuthBloc({
           tooManyCodesMessage,
         AuthApiException(errorCode: 'over_request_rate_limit') =>
           tooManyAttemptsMessage,
+        // A code asked for with `shouldCreateUser: false` for an address
+        // with no account: GoTrue refuses the sign-up it would take.
+        AuthApiException(errorCode: 'otp_disabled') => noAccountMessage,
         AuthRetryableFetchException() => unreachableMessage,
         _ => fallback,
       };
@@ -321,6 +327,8 @@ class AuthBloc({
       'That code is wrong or has expired. Request a new one if needed.';
   static const wrongPasswordMessage = 'That password was not accepted.';
   static const unreachableMessage = 'Could not reach the sign-in service.';
+  static const noAccountMessage =
+      'I don’t know this email yet – tap Get started to begin.';
   static const providerFailedMessage =
       'That sign-in did not go through. Try again, or use your email.';
 
