@@ -191,15 +191,57 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(MoreView.profileKey));
       await tester.pumpAndSettle();
+      final before = analytics.events.length;
       await tester.tap(find.byKey(ProfileView.signOutKey));
       await tester.pumpAndSettle();
 
       // The choice was the person's: PostHog forgets them and switches off,
-      // and whoever signs in next is asked, over Welcome.
+      // and whoever signs in next is asked, over Welcome. Welcome's own
+      // events wait for that answer; none goes out as the last person.
       expect(find.byType(WelcomeStepView), findsOneWidget);
       expect(sheet(), findsOneWidget);
-      expect(analytics.events.last, event('signed_out'));
+      expect(analytics.events.sublist(before), [event('signed_out')]);
       expect(analytics.lifecycle, ['setup', 'reset', 'disable', 'close']);
+    });
+
+    testWidgets('are asked about again when a session ends on its own, and '
+        'the last answer is never recorded for the next person', (
+      tester,
+    ) async {
+      const next = '00000000-0000-0000-0000-00000000000b';
+      final supabase = SupabaseStub()
+        ..script(
+          logout: [signedOut()],
+          otp: [codeSent()],
+          verify: [sessionGranted(sub: next)],
+        )
+        // The first person's consent stands; the next one has none.
+        ..rest(usageAnalyticsRead, [rpcReturned(true), rpcReturned(false)]);
+      await supabase.signedIn();
+      final analytics = await launch(
+        tester,
+        stored: AnalyticsChoice.allowed,
+        supabase: supabase,
+      );
+      final before = analytics.events.length;
+
+      // Nobody tapped anything: an expiry, a revoked refresh token or an
+      // account deleted elsewhere end the session through the SDK alike.
+      await supabase.supabase.auth.signOut();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WelcomeStepView), findsOneWidget);
+      expect(sheet(), findsOneWidget);
+      expect(analytics.events.sublist(before), isEmpty);
+      expect(analytics.lifecycle, ['setup', 'reset', 'disable', 'close']);
+
+      await tester.tap(find.byKey(UsageAnalyticsSheet.denyKey));
+      await tester.pumpAndSettle();
+      await signInThroughTheScreen(tester);
+
+      expect(find.byType(JournalPage), findsOneWidget);
+      expect(supabase.to(usageAnalyticsGrant), isEmpty);
+      expect(analytics.events.sublist(before), isEmpty);
     });
 
     testWidgets('the sheet meets accessibility guidelines', (tester) async {

@@ -207,10 +207,16 @@ class AuthBloc({
   /// reports that on its stream, which is what moves the UI; whether the
   /// server-side revocation then succeeds changes nothing here, and
   /// neither does a provider that cannot be signed out of.
+  ///
+  /// PostHog hears `signed_out`, and forgets the choice, before any of
+  /// that: once the stream reports the sign-out the router is on Welcome,
+  /// and nothing Welcome sends may go out under this person's id or
+  /// consent (#204).
   Future<void> _onSignOutRequested(
     AuthSignOutRequested event,
     Emitter<AuthState> emit,
   ) async {
+    await _analytics.signedOut();
     try {
       await _supabase.auth.signOut();
     } on Exception {
@@ -221,7 +227,6 @@ class AuthBloc({
     } on Exception {
       // Only the provider's own shortcut back in; the session is gone.
     }
-    unawaited(_analytics.signedOut());
   }
 
   /// Supabase's own view of the session, which wins: a sign-out, an expiry

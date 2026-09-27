@@ -56,7 +56,10 @@ class AccountBloc({
       emit(const AccountState.failure());
       return;
     }
-    unawaited(_analytics.accountDeleted());
+    // Before the session ends: once the auth stream reports that, the app
+    // is on Welcome, and nothing it sends may go out under this person's
+    // id or consent (#204).
+    await _analytics.accountDeleted();
     // The user no longer exists, so only the local session can be ended:
     // the SDK's default `SignOutScope.local` is the right one, since a
     // global sign-out would only be refused (403) and every other device's

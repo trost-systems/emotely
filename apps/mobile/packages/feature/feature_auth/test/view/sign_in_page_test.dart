@@ -436,6 +436,40 @@ void main() {
         expect(robot.analytics.resets, 1);
       });
 
+      testWidgets('tells PostHog, and forgets the choice, before the session '
+          'ends', (tester) async {
+        final supabase = SupabaseStub();
+        await supabase.signedIn();
+        final robot = SignInRobot(
+          tester,
+          supabase: supabase,
+          agent: AgentStub(),
+        );
+        // What PostHog had heard when the SDK told the server; the session
+        // was dropped on the device just before, and the router follows it.
+        late List<CapturedEvent> heard;
+        late int resets;
+        supabase.script(
+          logout: [
+            () {
+              heard = [...robot.analytics.events];
+              resets = robot.analytics.resets;
+              return signedOut()();
+            },
+          ],
+        );
+        await robot.launch();
+
+        tester
+            .element(robot.home)
+            .read<AuthBloc>()
+            .add(const AuthEvent.signOutRequested());
+        await robot.settle();
+
+        expect(heard.last, event('signed_out'));
+        expect(resets, 1);
+      });
+
       testWidgets('signs out even when the server cannot be told', (
         tester,
       ) async {

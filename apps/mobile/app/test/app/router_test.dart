@@ -242,6 +242,10 @@ void main() {
       expect(find.byType(WelcomeStepView), findsOneWidget);
       expect(find.byType(AccountPage), findsNothing);
 
+      // The usage-analytics answer went with the session: whoever signs in
+      // next answers for themselves first.
+      await tester.tap(find.byKey(UsageAnalyticsSheet.allowKey));
+      await tester.pumpAndSettle();
       await signInThroughTheScreen(tester);
 
       expect(find.byType(AccountPage), findsOneWidget);

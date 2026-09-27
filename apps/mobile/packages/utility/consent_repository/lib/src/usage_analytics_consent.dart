@@ -20,6 +20,17 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// recorded as a withdrawal only where one does. A refusal that was never a
 /// consent records nothing, as for the journal.
 ///
+/// **The choice belongs to a person, not the phone.** When the session of
+/// the person who is signed in ends — however it ends: a sign-out, an
+/// expiry, a revoked refresh token, an account deleted elsewhere, another
+/// account taking its place — the device forgets the choice, PostHog
+/// switches off, and the question is asked again of whoever comes next.
+/// The forget is queued on the gate the moment the session stream says so,
+/// before anything that reacts to the sign-out (the router, the onboarding
+/// events waiting for an answer) and before the next sign-in's write reads
+/// the choice, so one person's answer can never be recorded on another
+/// person's consent record.
+///
 /// A write that fails changes nothing on the device and is reported; the
 /// next sign-in, or the next change, tries again.
 class UsageAnalyticsConsent({
@@ -83,6 +94,11 @@ class UsageAnalyticsConsent({
   void _onAuthChange(AuthState change) {
     final user = change.session?.user.id;
     if (user != _signedIn) {
+      // Queued before the write below, which waits for it: whatever the
+      // last person answered is gone before anyone else's record is asked.
+      if (_signedIn != null) {
+        unawaited(_gate.forget());
+      }
       _signedIn = user;
       if (user != null) {
         unawaited(_record());
