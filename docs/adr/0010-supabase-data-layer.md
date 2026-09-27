@@ -95,3 +95,58 @@ precedent: from the first store build on, rules 1 to 4 apply unmodified.
 - **How to run and test the schema locally is a skill**
   (`.claude/skills/supabase`), so an autonomous agent can add a table, prove
   its policies, and ship it without a human step.
+
+## Amendment 2026-09-27: the agent runs in Frankfurt too
+
+Decision 1 put the data in Frankfurt; the agent that every round of a session
+passes through was left on Vercel's default region, `iad1` (Washington, D.C.),
+which nobody chose. Each round carries the transcript — Art. 9 data — and,
+since #204, the user's name, so the one leg of the trip that was ours to place
+crossed the Atlantic before any provider was involved
+([#208](https://github.com/trost-systems/emotely/issues/208)).
+
+**Decision: every `emotely-agent` function runs in `fra1` (Frankfurt,
+AWS `eu-central-1`), pinned by `"regions": ["fra1"]` in `apps/agent/vercel.json`.**
+Vercel documents that `regions` "overrides the Vercel Function Region in
+Project Settings", so the repository decides and the dashboard's setting
+(still `iad1` on 2026-09-27) no longer matters for any deployment built from
+it. `src/function-region.test.ts` fails if the pin goes, grows a second
+region, gains `functionFailoverRegions` or a per-function override, because
+the in-app notice now says Frankfurt and any of those would make it wrong
+without a notice change.
+
+Checked before moving, against Vercel's docs of 2026-08/09:
+
+- **Plan.** Any single region is available on every plan; Pro allows several.
+  One region is the point here, not a limit we are working around.
+- **Fluid compute** is a per-project execution model with no region list; it
+  runs in `fra1` as in `iad1`. Its whole-region failover redirects traffic to
+  the next closest region only when every availability zone in the region is
+  down; configurable failover regions (`functionFailoverRegions`) are
+  Enterprise-only and not set. The residual case — a full `fra1` outage — is
+  the one time a round may run elsewhere, and the nearest regions are EU ones.
+- **Firewall (ADR 0008).** The WAF sits in front of the function and rejects
+  before it is invoked; its counters stay per Vercel region as ADR 0008
+  already says, and neither rule names a function region. Both rules are
+  unchanged, and nothing about them lives in `vercel.json`.
+- **AI Gateway** is called over HTTPS (`ai-gateway.vercel.sh`) from wherever
+  the function runs; routing, ZDR and the training opt-out (ADR 0003) are
+  request options, not regional features. Vercel does not publish where the
+  gateway processes a request, and the providers serving the current model
+  are mostly US-hosted, so **the gateway and provider legs can still leave the
+  EU**; the notice keeps that transfer and its safeguard.
+- **Neighbours.** Supabase (the JWKS the agent verifies against, decision 2)
+  and PostHog EU (ADR 0004) are both in Frankfurt, so those calls become
+  local. The transatlantic hop moves from phone→agent to agent→provider;
+  per-round latency should be roughly unchanged and is watched after the
+  switch in PostHog's AI observability, not assumed.
+- **Cost (ADR 0003).** `fra1` bills Fluid Active CPU at $0.184/h and
+  provisioned memory at $0.0152/GB-h against `iad1`'s $0.128 and $0.0106, about
+  44% more. The agent is I/O-bound on the model call, so for a daily poweruser
+  (~360 rounds a month) that is a fraction of a cent, invisible next to the
+  ~$0.11 of tokens and far inside the €1 ceiling.
+
+**What changes for the reader:** the in-app notice now places the agent in
+Frankfurt and keeps the standard contractual clauses for the gateway and the
+provider. The consent wording already said only that "the provider may be
+outside the EU", which is now exactly true, so `consentVersion` stays.
