@@ -15,28 +15,26 @@ import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// The one composition root (ADR 0015): every utility and every feature
-/// registers into [getIt] here, in dependency order, and nowhere else.
-///
-/// The parameters are the leaves — the http clients, the Supabase client,
-/// the PostHog instance — plus the build-time values the app owns (the
-/// endpoints, the Google sign-in clients). `main`
-/// passes the real ones; a test passes scripted ones and nothing else, so
-/// what a test exercises is the production graph with fake edges.
+/// registers into [getIt] here, in dependency order, and nowhere else. The
+/// parameters are the leaves — the http clients, Supabase, the PostHog
+/// instance and config (used by the gate alone, once allowed, #204) — and
+/// the app's build-time values; a test passes scripted leaves only, so it
+/// exercises the production graph with fake edges.
 ///
 /// Everything registered here is user-agnostic and lives for the process;
-/// blocs are factories, created by the screen that owns them. Nothing is
-/// lazy: a dependency that cannot be built fails the launch, not the first
-/// screen that needs it.
+/// blocs are factories. Nothing is lazy: a dependency that cannot be built
+/// fails the launch, not the first screen that needs it.
 ///
-/// [passwordAccounts] are the addresses, beyond the store review accounts,
-/// that sign in with a password: `main` passes the smoke account in a debug
-/// build the verification CLI drives, and nothing in any other build.
+/// [passwordAccounts] are the addresses beyond the store review accounts
+/// that sign in with a password: the smoke account in a debug build the
+/// verification CLI drives, nothing in any other build.
 void registerApp(
   GetIt getIt, {
   required http.Client agentHttpClient,
   required http.Client configHttpClient,
   required SupabaseClient supabase,
   required Posthog posthog,
+  required PostHogConfig posthogConfig,
   required String appVersion,
   required BuildInfo build,
   required Uri agentUrl,
@@ -52,15 +50,18 @@ void registerApp(
     agentUrl: agentUrl,
     configUrl: configUrl,
     appVersion: appVersion,
-    // Read on every round: the token the app holds now, not at registration.
+    // The token the app holds on every round, refreshed when the agent says
+    // it lapsed; a refresh that cannot happen signs the user out.
     accessToken: () => supabase.auth.currentSession?.accessToken,
-    // When the agent says it lapsed; a refresh that cannot happen signs the
-    // user out through the auth stream, and the router takes it from there.
     refreshAccessToken: supabase.auth.refreshSession,
   );
-  registerAnalytics(getIt, posthog: posthog, consentVersion: consentVersion);
-  registerJournalRepository(getIt, supabase: supabase);
-  registerConsentRepository(getIt, supabase: supabase, version: consentVersion);
+  registerAnalytics(
+    getIt,
+    posthog: posthog,
+    config: posthogConfig,
+    consentVersion: consentVersion,
+  );
+  _registerRecords(getIt, supabase);
   registerFeedbackLink(getIt, build: build);
   registerConfig(getIt, appVersion: appVersion);
   registerAuth(getIt, google: google, passwordAccounts: passwordAccounts);
@@ -71,4 +72,16 @@ void registerApp(
     ..registerSingleton<AccountNavigator>(const AppAccountNavigator())
     ..registerSingleton<JournalNavigator>(const AppJournalNavigator());
   registerAccount(getIt);
+}
+
+/// The user's records on the server: the journal, and the consent record
+/// with the wordings the app currently asks consent for.
+void _registerRecords(GetIt getIt, SupabaseClient supabase) {
+  registerJournalRepository(getIt, supabase: supabase);
+  registerConsentRepository(
+    getIt,
+    supabase: supabase,
+    version: consentVersion,
+    usageAnalyticsVersion: usageAnalyticsVersion,
+  );
 }

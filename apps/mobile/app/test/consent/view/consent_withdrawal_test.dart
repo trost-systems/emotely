@@ -6,8 +6,8 @@ import 'package:material_ui/material_ui.dart';
 import '../../helpers/helpers.dart';
 import '../consent_robot.dart';
 
-/// Taking consent back, and giving it again, from the account screen.
-/// Art. 7 (3): withdrawal must be as easy as giving, and it must never
+/// Taking consent back, and giving it again, from Privacy settings under
+/// More. Art. 7 (3): withdrawal must be as easy as giving, and it must never
 /// require deleting the account.
 void main() {
   group('withdrawing consent', () {
@@ -32,22 +32,23 @@ void main() {
       return ConsentRobot(tester, supabase: supabase, agent: agent);
     }
 
-    /// From the journal over to the More tab, where consent is managed.
-    Future<void> openMore(ConsentRobot robot) async {
+    /// From the journal over to the More tab and into Privacy settings,
+    /// where consent is managed. More reads the record once for its status
+    /// line, Privacy settings once for its switch.
+    Future<void> openPrivacySettings(ConsentRobot robot) async {
       await robot.launch();
       await robot.tap(robot.moreTab);
+      await robot.tap(robot.privacySettings);
     }
 
-    testWidgets('is one tap, and does not touch the account or the entries', (
-      tester,
-    ) async {
+    testWidgets('is a switch and one confirmation, and touches neither the '
+        'account nor the entries', (tester) async {
       final robot = robotWith(tester);
-      await openMore(robot);
+      await openPrivacySettings(robot);
 
-      expect(robot.withdraw, findsOneWidget);
-      expect(find.text(withdrawConsentExplanation), findsOneWidget);
+      expect(robot.journalOn, isTrue);
 
-      await robot.tap(robot.withdraw);
+      await robot.withdraw();
 
       expect(robot.supabase.to(consentWithdraw), hasLength(1));
       expect(robot.supabase.bodies('/rest/v1/rpc/withdraw_consent'), [
@@ -55,8 +56,8 @@ void main() {
       ]);
       // The account is untouched: withdrawing is not deleting.
       expect(robot.supabase.to(deletion), isEmpty);
-      expect(robot.more, findsOneWidget);
-      expect(find.text(consentMissingExplanation), findsOneWidget);
+      expect(robot.journalOn, isFalse);
+      expect(find.text(PrivacySettingsPage.journalOffNote), findsOneWidget);
       expect(robot.analytics.events, [
         event('journal_viewed', journalViewed),
         event('consent_withdrawn', version),
@@ -66,11 +67,16 @@ void main() {
     testWidgets('stops the next session without deleting anything', (
       tester,
     ) async {
-      // The server answers "stands" at launch and "does not" from the
-      // withdrawal on, which is what it would really do.
-      final robot = robotWith(tester, granted: false, reads: [consentStands()]);
-      await openMore(robot);
-      await robot.tap(robot.withdraw);
+      // The server answers "stands" to More and Privacy settings and "does
+      // not" from the withdrawal on, which is what it would really do.
+      final robot = robotWith(
+        tester,
+        granted: false,
+        reads: [consentStands(), consentStands()],
+      );
+      await openPrivacySettings(robot);
+      await robot.withdraw();
+      await robot.back();
 
       await robot.tap(robot.journalTab);
 
@@ -85,27 +91,28 @@ void main() {
     testWidgets('can be given again, through the same question', (
       tester,
     ) async {
-      // Three reads: the account screen's, the consent screen's (on its own
-      // route, with a bloc of its own), and the account screen's again once
+      // Four reads: More's, Privacy settings', the consent screen's (on its
+      // own route, with a bloc of its own), and Privacy settings' again once
       // that route closes — which is when the server says it stands.
       final robot = robotWith(
         tester,
         reads: [
           consentStands(),
+          consentStands(),
           consentStands(granted: false),
           consentStands(),
         ],
       );
-      await openMore(robot);
-      await robot.tap(robot.withdraw);
+      await openPrivacySettings(robot);
+      await robot.withdraw();
 
-      expect(robot.restore, findsOneWidget);
+      expect(robot.journalOn, isFalse);
 
-      await robot.tap(robot.restore);
+      await robot.tap(robot.journalSwitch);
 
-      // Not a one-tap re-grant: the second consent is the same four
-      // paragraphs and the same unticked box as the first. Art. 7 (3) makes
-      // withdrawal as easy as giving, not giving easier the second time.
+      // Not a one-tap re-grant: the second consent is the same paragraphs
+      // and the same unticked box as the first. Art. 7 (3) makes withdrawal
+      // as easy as giving, not giving easier the second time.
       expect(robot.consent, findsOneWidget);
       expect(robot.supabase.to(consentGrant), isEmpty);
       expect(tester.widget<CheckboxListTile>(robot.checkbox).value, isFalse);
@@ -113,7 +120,7 @@ void main() {
       await robot.consentAndContinue();
 
       expect(robot.supabase.to(consentGrant), hasLength(1));
-      expect(find.text(withdrawConsentExplanation), findsOneWidget);
+      expect(robot.journalOn, isTrue);
       expect(robot.analytics.events, [
         event('journal_viewed', journalViewed),
         event('consent_withdrawn', version),
@@ -125,46 +132,46 @@ void main() {
       'a withdrawal that fails leaves consent standing, and says so',
       (tester) async {
         final robot = robotWith(tester, withdrawals: [restRefused()]);
-        await openMore(robot);
+        await openPrivacySettings(robot);
 
-        await robot.tap(robot.withdraw);
+        await robot.withdraw();
 
         // The server still has the consent, so the screen must not pretend
         // otherwise; it offers the same act again.
         expect(robot.withdrawFailure, findsOneWidget);
+        expect(robot.journalOn, isTrue);
         expect(
           robot.analytics.events,
           isNot(contains(event('consent_withdrawn', version))),
         );
 
-        await robot.tap(robot.withdraw);
+        await robot.withdraw();
 
         expect(robot.supabase.to(consentWithdraw), hasLength(2));
-        expect(find.text(consentMissingExplanation), findsOneWidget);
+        expect(robot.journalOn, isFalse);
       },
     );
 
     testWidgets('says so, and retries, when the answer cannot be read', (
       tester,
     ) async {
-      final robot = robotWith(tester, reads: [restRefused()]);
-      await openMore(robot);
+      final robot = robotWith(tester, reads: [consentStands(), restRefused()]);
+      await openPrivacySettings(robot);
 
       // A read that failed says nothing about whether consent stands, so
-      // neither button is offered — but the section must not simply be
-      // empty: someone who came here to withdraw would find nothing and no
-      // reason why, which is the one thing Art. 7 (3) cannot tolerate.
-      expect(robot.withdraw, findsNothing);
-      expect(robot.restore, findsNothing);
+      // the switch is off-limits — but the card says why rather than
+      // leaving someone who came here to withdraw with nothing, which is
+      // the one thing Art. 7 (3) cannot tolerate.
+      expect(
+        tester.widget<SwitchListTile>(robot.journalSwitch).onChanged,
+        isNull,
+      );
       expect(find.text(consentUnknownMessage), findsOneWidget);
-      // The rest of the screen still works.
-      expect(find.byKey(MoreView.accountKey), findsOneWidget);
-      expect(robot.moreNotice, findsOneWidget);
 
-      await robot.tap(find.byKey(MoreView.consentRetryKey));
+      await robot.tap(robot.journalRetry);
 
       // Looking again brings the control back.
-      expect(robot.withdraw, findsOneWidget);
+      expect(robot.journalOn, isTrue);
       expect(find.text(consentUnknownMessage), findsNothing);
     });
 
@@ -189,7 +196,8 @@ void main() {
     ) async {
       final launcher = UrlLauncherSpy.setup();
       final robot = robotWith(tester);
-      await openMore(robot);
+      await robot.launch();
+      await robot.tap(robot.moreTab);
 
       await robot.tap(robot.moreNotice);
       await robot.tap(robot.moreImprint);
@@ -206,8 +214,7 @@ void main() {
         prepare: (tester) async {
           await robot.settle();
           await robot.tap(robot.moreTab);
-          await tester.ensureVisible(find.byKey(MoreView.signOutKey));
-          await robot.settle();
+          await robot.tap(robot.privacySettings);
         },
       );
     });

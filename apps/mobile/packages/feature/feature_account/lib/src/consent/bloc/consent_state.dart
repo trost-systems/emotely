@@ -16,9 +16,13 @@ sealed class ConsentState with _$ConsentState {
   /// moment ago, rather than simply not having a record. The gate is shut
   /// either way; the difference is only what the journal may truthfully say
   /// about why, so nothing but a message depends on it.
+  ///
+  /// [since] is when the standing consent was given, when it was asked for
+  /// and could be read; nothing depends on it but what a screen says.
   const factory known({
     required bool granted,
     @Default(false) bool justDeclined,
+    DateTime? since,
   }) = ConsentKnown;
 
   /// A grant or a withdrawal is being written.

@@ -45,6 +45,31 @@ void main() {
       });
     });
 
+    test('reads when the journal consent was last given', () async {
+      supabase.rest('GET /rest/v1/consent_events', [
+        rows([
+          {'recorded_at': '2026-09-20T18:30:00+00:00'},
+        ]),
+      ]);
+
+      expect(await repository.grantedAt(), DateTime.utc(2026, 9, 20, 18, 30));
+      final query = supabase.to('GET /rest/v1/consent_events').single.query;
+      expect(query, {
+        'select': 'recorded_at',
+        'purpose': 'eq.journal',
+        'version': 'eq.$version',
+        'action': 'eq.granted',
+        'order': 'seq.desc.nullslast',
+        'limit': '1',
+      });
+    });
+
+    test('knows no date for a consent never given', () async {
+      supabase.rest('GET /rest/v1/consent_events', [rows(const [])]);
+
+      expect(await repository.grantedAt(), isNull);
+    });
+
     test('withdraws consent to this version', () async {
       supabase.rest('POST /rest/v1/rpc/withdraw_consent', [rpcReturned(null)]);
 

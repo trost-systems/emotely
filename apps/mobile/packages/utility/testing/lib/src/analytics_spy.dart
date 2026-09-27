@@ -3,6 +3,10 @@ import 'dart:async';
 import 'package:analytics/analytics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 import 'package:testing/testing.dart';
 
 /// One captured PostHog event as `{'event': name, 'properties': {...}}` —
@@ -22,8 +26,29 @@ class const CapturedException({
 });
 
 /// Records everything the app would send to PostHog.
-class AnalyticsSpy() {
+///
+/// `stored` is the usage-analytics choice this device already holds when
+/// the test begins (#204). Allowed by default, so a test about sessions or
+/// sign-in sees its events; a test about the choice itself says what is
+/// stored, `null` for a fresh install. The spy keeps it in the in-memory
+/// preferences store it installs as the platform's.
+class AnalyticsSpy({AnalyticsChoice? stored = AnalyticsChoice.allowed}) {
   this {
+    SharedPreferencesAsyncPlatform.instance =
+        InMemorySharedPreferencesAsync.withData({
+          if (stored != null) AnalyticsChoiceStore.key: stored.name,
+        });
+    when(posthog.setup(any)).thenAnswer((_) => _lifecycle('setup'));
+    when(posthog.enable()).thenAnswer((_) {
+      optedOut = false;
+      return _lifecycle('enable');
+    });
+    when(posthog.disable()).thenAnswer((_) {
+      optedOut = true;
+      return _lifecycle('disable');
+    });
+    when(posthog.close()).thenAnswer((_) => _lifecycle('close'));
+    when(posthog.isOptOut()).thenAnswer((_) async => optedOut);
     when(
       posthog.capture(
         eventName: anyNamed('eventName'),
@@ -74,11 +99,43 @@ class AnalyticsSpy() {
     });
     when(posthog.reset()).thenAnswer((_) {
       resets++;
-      return Future<void>.value();
+      return _lifecycle('reset');
     });
   }
 
+  Future<void> _lifecycle(String call) {
+    lifecycle.add(call);
+    return Future<void>.value();
+  }
+
   final posthog = MockPosthog();
+
+  /// The device's preferences, holding the choice the spy was made with.
+  late final preferences = SharedPreferencesAsync();
+
+  /// The SDK's lifecycle as the app drove it, in order: `setup`, `enable`,
+  /// `disable`, `close` and `reset`.
+  final lifecycle = <String>[];
+
+  /// Whether the SDK is opted out, as the native side would persist it:
+  /// `disable` sets it, `enable` clears it.
+  var optedOut = false;
+
+  /// The gate the builders below go through, over this spy's PostHog and
+  /// the choice it was made with, restored the way `main` restores it.
+  late final PostHogGate gate = _restored(
+    PostHogGate(
+      posthog: posthog,
+      config: PostHogConfig('phc_test'),
+      store: AnalyticsChoiceStore(preferences: preferences),
+    ),
+  );
+
+  static PostHogGate _restored(PostHogGate gate) {
+    unawaited(gate.restore());
+    return gate;
+  }
+
   final events = <CapturedEvent>[];
 
   /// The exceptions the app reported, in order.
@@ -97,16 +154,16 @@ class AnalyticsSpy() {
   var resets = 0;
 
   /// The [SessionAnalytics] the app is given.
-  SessionAnalytics get analytics => SessionAnalytics(posthog: posthog);
+  SessionAnalytics get analytics => SessionAnalytics(gate: gate);
 
   /// The [AuthAnalytics] the app is given.
-  AuthAnalytics get authAnalytics => AuthAnalytics(posthog: posthog);
+  AuthAnalytics get authAnalytics => AuthAnalytics(gate: gate);
 
   /// The [JournalAnalytics] the app is given.
-  JournalAnalytics get journalAnalytics => JournalAnalytics(posthog: posthog);
+  JournalAnalytics get journalAnalytics => JournalAnalytics(gate: gate);
 
   /// The [ErrorReporter] the app is given.
-  ErrorReporter get errorReporter => ErrorReporter(posthog: posthog);
+  ErrorReporter get errorReporter => ErrorReporter(gate: gate);
 
   /// Every string that would leave the device: event names, properties,
   /// identities, and each reported exception's type, text, causes,

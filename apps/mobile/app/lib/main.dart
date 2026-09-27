@@ -24,14 +24,6 @@ Future<void> main() async {
   } else {
     WidgetsFlutterBinding.ensureInitialized();
   }
-  // Error tracking (ADR 0004, no Sentry): uncaught errors are captured by
-  // the SDK outside debug runs, handled failures by ErrorReporter always.
-  await Posthog().setup(
-    withErrorTracking(
-      PostHogConfig(posthogKey)..host = posthogHost,
-      autocapture: !kDebugMode,
-    ),
-  );
   // Sign-in is a typed code, never a link, so no deep links and no PKCE
   // exchange; the session itself is persisted and refreshed by the SDK.
   final supabase = await Supabase.initialize(
@@ -50,7 +42,15 @@ Future<void> main() async {
     agentHttpClient: httpClient,
     configHttpClient: httpClient,
     supabase: supabase.client,
+    // Handed to the gate, which alone calls `setup`, and only once the user
+    // allowed usage analytics (#204). Error tracking (ADR 0004, no Sentry):
+    // uncaught errors are captured by the SDK outside debug runs, handled
+    // failures by ErrorReporter always — both behind the same gate.
     posthog: Posthog(),
+    posthogConfig: withErrorTracking(
+      PostHogConfig(posthogKey)..host = posthogHost,
+      autocapture: !kDebugMode,
+    ),
     // `version` is pubspec's `version` without the build number.
     appVersion: packageInfo.version,
     // What a feedback mail says about the build it came from; the platform
@@ -65,7 +65,11 @@ Future<void> main() async {
     passwordAccounts: passwordAccounts,
     google: googleClients,
   );
-  runApp(const EmotelyApp());
+  // PostHog opens here only if the user allowed it on an earlier launch;
+  // awaited so the first identify of a restored session finds it open.
+  final gate = GetIt.I<PostHogGate>();
+  await gate.restore();
+  runApp(EmotelyApp(screenViews: gate.screenObserver()));
 }
 
 /// The debug build's binding: marionette's VM service extensions, which the

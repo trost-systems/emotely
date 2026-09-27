@@ -1,16 +1,29 @@
 import 'package:analytics/analytics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:testing/testing.dart';
 
 void main() {
   group('registerAnalytics', () {
-    test('registers every builder over the one PostHog instance', () async {
+    void register(GetIt getIt, AnalyticsSpy spy) => registerAnalytics(
+      getIt,
+      posthog: spy.posthog,
+      config: PostHogConfig('phc_test'),
+      consentVersion: 'v1',
+    );
+
+    test('puts every builder behind one gate, shut until restored', () async {
       final getIt = GetIt.asNewInstance();
       final spy = AnalyticsSpy();
+      register(getIt, spy);
 
-      registerAnalytics(getIt, posthog: spy.posthog, consentVersion: 'v1');
+      await getIt<SessionAnalytics>().sessionStarted();
 
+      expect(spy.events, isEmpty);
+      expect(spy.lifecycle, isEmpty);
+
+      await getIt<PostHogGate>().restore();
       await getIt<SessionAnalytics>().sessionStarted();
       await getIt<AuthAnalytics>().signedIn(SignInMethod.code);
       await getIt<JournalAnalytics>().entryOpened();
@@ -29,14 +42,11 @@ void main() {
       expect(spy.exceptions, hasLength(1));
     });
 
-    test('registers each builder once, as a singleton', () {
+    test('registers the gate and each builder once, as singletons', () {
       final getIt = GetIt.asNewInstance();
-      registerAnalytics(
-        getIt,
-        posthog: AnalyticsSpy().posthog,
-        consentVersion: 'v1',
-      );
+      register(getIt, AnalyticsSpy());
 
+      expect(getIt<PostHogGate>(), same(getIt<PostHogGate>()));
       expect(getIt<SessionAnalytics>(), same(getIt<SessionAnalytics>()));
       expect(getIt<ErrorReporter>(), same(getIt<ErrorReporter>()));
     });

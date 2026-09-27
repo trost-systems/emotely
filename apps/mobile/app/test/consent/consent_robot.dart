@@ -10,8 +10,8 @@ import '../helpers/helpers.dart';
 
 /// Drives the consent gate through the real app against a scripted Supabase:
 /// from the journal into the consent screen, through the box and the button,
-/// and into (or away from) a session; and over the More tab to the rows
-/// that take consent back and give it again.
+/// and into (or away from) a session; and over the More tab to Privacy
+/// settings, whose switch takes consent back and gives it again.
 class ConsentRobot(
   final WidgetTester tester, {
   required final SupabaseStub supabase,
@@ -40,8 +40,10 @@ class ConsentRobot(
   Finder get consentFailure => find.text(consentFailureMessage);
   Finder get declined => find.text(consentDeclinedMessage);
 
-  Finder get withdraw => find.byKey(MoreView.withdrawConsentKey);
-  Finder get restore => find.byKey(MoreView.restoreConsentKey);
+  Finder get privacySettings => find.byKey(MoreView.privacySettingsKey);
+  Finder get journalSwitch => find.byKey(PrivacySettingsPage.journalKey);
+  Finder get confirmWithdrawal => find.byKey(PrivacySettingsPage.confirmKey);
+  Finder get journalRetry => find.byKey(PrivacySettingsPage.journalRetryKey);
   Finder get moreNotice => find.byKey(MoreView.privacyNoticeKey);
   Finder get moreImprint => find.byKey(MoreView.imprintKey);
   Finder get withdrawFailure => find.text(withdrawFailureMessage);
@@ -75,6 +77,15 @@ class ConsentRobot(
     await settle();
     await tester.tap(finder);
     await settle();
+  }
+
+  /// Whether the journal switch on Privacy settings is on.
+  bool get journalOn => tester.widget<SwitchListTile>(journalSwitch).value;
+
+  /// Turns journal sessions off: the switch, then the confirmation.
+  Future<void> withdraw() async {
+    await tap(journalSwitch);
+    await tap(confirmWithdrawal);
   }
 
   Future<void> back() async {

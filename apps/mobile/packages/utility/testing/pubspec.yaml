@@ -34,6 +34,9 @@ dependencies:
   mockito: 5.8.1
   plugin_platform_interface: 2.1.8
   posthog_flutter: 5.39.0
+  # The in-memory store the usage-analytics choice is kept in under test.
+  shared_preferences: 2.5.5
+  shared_preferences_platform_interface: 2.4.2
   sign_in_with_apple_platform_interface: 2.0.0
   supabase_flutter: 3.0.0-dev.7
   url_launcher_platform_interface: 2.3.2

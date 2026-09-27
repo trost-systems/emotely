@@ -245,6 +245,21 @@ test_refuses_a_speed_that_is_not_a_positive_integer() {
   (valid_speed 2) || fail "accepts speed 2"
 }
 
+# --- the usage-analytics answer ----------------------------------------------------
+
+test_answers_the_analytics_sheet_by_its_keys() {
+  [[ "$(analytics_key allow)" == 'usage_analytics_sheet.allow' ]] ||
+    fail "answers allow with the sheet's allow key"
+  [[ "$(analytics_key deny)" == 'usage_analytics_sheet.deny' ]] ||
+    fail "answers deny with the sheet's deny key"
+}
+
+test_refuses_an_analytics_answer_the_sheet_does_not_offer() {
+  if analytics_key maybe >/dev/null; then
+    fail "refuses an analytics answer the sheet does not offer"
+  fi
+}
+
 command -v ffmpeg >/dev/null ||
   printf 'skip: no ffmpeg here, so the posting-copy tests do not run\n' >&2
 

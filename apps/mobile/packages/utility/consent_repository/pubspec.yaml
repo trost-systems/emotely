@@ -1,5 +1,5 @@
 name: consent_repository
-description: The consent record — whether the user's explicit consent to the current notice stands, and the two writes that change it (ADR 0014).
+description: The consent record — whether the user's explicit consent to the current notice stands, the two writes that change it (ADR 0014), and consent to usage analytics (#204).
 publish_to: none
 resolution: workspace
 
@@ -7,6 +7,8 @@ environment:
   sdk: ^3.13.0
 
 dependencies:
+  # The usage-analytics choice is applied through its gate (#204).
+  analytics: any
   flutter:
     sdk: flutter
   get_it: 9.2.1

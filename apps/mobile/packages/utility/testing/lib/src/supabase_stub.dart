@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:mockito/mockito.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:testing/src/consent_rounds.dart';
 import 'package:testing/src/mocks.mocks.dart';
 
 /// One scripted Supabase Auth response.
@@ -51,18 +52,15 @@ class SupabaseStub() {
   }
 
   Future<http.Response> _serve(String method, Uri uri, Object? raw) {
-    final key = '$method ${uri.path}';
-    requests.add(
-      RecordedRequest(
-        method: method,
-        path: uri.path,
-        query: uri.queryParameters,
-        // A parameterless RPC is posted as the JSON literal `null`.
-        body: raw is String && raw.isNotEmpty
-            ? jsonDecode(raw) as Object?
-            : null,
-      ),
+    final request = RecordedRequest(
+      method: method,
+      path: uri.path,
+      query: uri.queryParameters,
+      // A parameterless RPC is posted as the JSON literal `null`.
+      body: raw is String && raw.isNotEmpty ? jsonDecode(raw) as Object? : null,
     );
+    requests.add(request);
+    final key = request.endpoint;
     final queue = _rounds[key];
     if (queue != null && queue.isNotEmpty) {
       return queue.removeAt(0)();
@@ -155,6 +153,14 @@ class SupabaseStub() {
     unless('POST /rest/v1/rpc/consent_stands', rpcReturned(true));
     unless('POST /rest/v1/rpc/record_consent', rpcReturned(null));
     unless('POST /rest/v1/rpc/withdraw_consent', rpcReturned(null));
+    // When consent was given is read only where it is shown, and is left
+    // out when there is none to read.
+    unless('GET /rest/v1/consent_events', rows(const []));
+    // The usage-analytics record agrees with the device (allowed, the
+    // spy's default), so signing in writes nothing unless a test says so.
+    unless(usageAnalyticsRead, rpcReturned(true));
+    unless(usageAnalyticsGrant, rpcReturned(null));
+    unless(usageAnalyticsWithdraw, rpcReturned(null));
   }
 
   /// Starts the client with a live session, as after a restored sign-in.
@@ -164,7 +170,7 @@ class SupabaseStub() {
   /// The requests the app made to `METHOD /path`, in order.
   List<RecordedRequest> to(String endpoint) => [
     for (final request in requests)
-      if ('${request.method} ${request.path}' == endpoint) request,
+      if (request.endpoint == endpoint) request,
   ];
 
   /// The JSON object bodies the app posted to [path], in order.
@@ -274,7 +280,18 @@ class const RecordedRequest({
   required final String path,
   required final Map<String, String> query,
   required final Object? body,
-});
+}) {
+  /// What the request is scripted and looked up by: `METHOD /path`, and for a
+  /// consent function called for a purpose other than the journal's, that
+  /// purpose after a `#` — the consent record serves every purpose through
+  /// one set of functions (#204), and a test about one must not eat the
+  /// rounds scripted for the other.
+  String get endpoint => switch (body) {
+    {'purpose': final String purpose} when purpose != 'journal' =>
+      '$method $path#$purpose',
+    _ => '$method $path',
+  };
+}
 
 /// The data API created a row with [id] (`insert(...).select('id').single()`).
 AuthRound rowCreated(String id) =>

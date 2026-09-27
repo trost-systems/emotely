@@ -74,6 +74,11 @@ Options for up:
   --skip-build     Reuse apps/mobile/app/build/ios/iphonesimulator/Runner.app.
                    Only a build \`up\` made carries marionette and the smoke
                    account; anything else fails at sign-in.
+  --analytics <allow|deny>
+                   How to answer the first-launch usage-analytics sheet,
+                   which sits over sign-in on a fresh simulator. Default:
+                   allow, so \`collect\` finds the session's PostHog events.
+                   deny runs with PostHog never set up.
 
 Between up and down, drive the app with marionette:
   marionette -i <instance> get-interactive-elements
@@ -416,6 +421,24 @@ register() {
   retry 60 m get-interactive-elements || die "marionette cannot reach the app"
 }
 
+# The key of the first-launch sheet's button for an --analytics answer, or a
+# failure for anything else.
+analytics_key() {
+  case "$1" in
+    allow | deny) printf 'usage_analytics_sheet.%s' "$1" ;;
+    *) return 1 ;;
+  esac
+}
+
+# The usage-analytics question (#204) comes before anything else on a fresh
+# install, over the sign-in screen, so it is answered before signing in.
+answer_analytics() {
+  step "analytics"
+  retry 60 m tap --key "$(analytics_key "$ANALYTICS")" ||
+    die "no usage-analytics sheet to answer"
+  log "usage analytics: $ANALYTICS"
+}
+
 # Through the app's own screen, which asks a debug build's smoke account for
 # its password. Before any recording, and nothing of it reaches the bundle.
 sign_in() {
@@ -432,13 +455,17 @@ sign_in() {
 
 cmd_up() {
   SKIP_BUILD=0
+  ANALYTICS=allow
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --out) OUT="${2:?--out needs a directory}"; shift 2 ;;
       --skip-build) SKIP_BUILD=1; shift ;;
+      --analytics) ANALYTICS="${2:?--analytics needs allow or deny}"; shift 2 ;;
       *) die "unknown option $1" ;;
     esac
   done
+  analytics_key "$ANALYTICS" >/dev/null ||
+    die "--analytics takes allow or deny, not $ANALYTICS"
   preflight
   claim
   OUT="${OUT:-$APP_DIR/build/evidence/$(date +%Y%m%d-%H%M%S)}"
@@ -455,6 +482,7 @@ cmd_up() {
   simulator
   launch
   register
+  answer_analytics
   sign_in
 
   STEP="up"

@@ -54,11 +54,30 @@ class ConsentBloc({
     Emitter<ConsentState> emit,
   ) async {
     emit(const ConsentState.unknown());
+    final bool granted;
     try {
-      emit(ConsentState.known(granted: await _repository.isGranted()));
+      granted = await _repository.isGranted();
     } on Exception catch (error, stackTrace) {
       unawaited(_errors.consentLoadFailed(error, stackTrace));
       emit(const ConsentState.failure());
+      return;
+    }
+    emit(
+      ConsentState.known(
+        granted: granted,
+        since: granted && event.withDate ? await _since() : null,
+      ),
+    );
+  }
+
+  /// When the standing consent was given, if that can be read: the screen
+  /// says so when it can and simply leaves it out when it cannot, so a
+  /// failed read here is neither shown nor worth a report.
+  Future<DateTime?> _since() async {
+    try {
+      return await _repository.grantedAt();
+    } on Exception {
+      return null;
     }
   }
 

@@ -15,10 +15,15 @@ dependencies:
   http: 1.6.0
   meta: ^1.19.0
   posthog_flutter: 5.39.0
+  # The usage-analytics choice lives on the device until an account exists
+  # (#204); the async API reads the platform store directly, no cache.
+  shared_preferences: 2.5.5
   supabase_flutter: 3.0.0-dev.7
 
 dev_dependencies:
   analysis: any
   flutter_test:
     sdk: flutter
+  mockito: 5.8.1
+  shared_preferences_platform_interface: 2.4.2
   testing: any

@@ -38,7 +38,7 @@ class const DeleteAccount({super.key}) extends StatelessComponent {
         'This is the quickest way, and it needs no code: open emotely and '
         'go to ',
       ),
-      strong([.text('More → Your account → Delete account')]),
+      strong([.text('More → Delete account')]),
       .text(', then confirm. The app signs you out as it finishes.'),
     ]),
 

@@ -126,10 +126,10 @@ return declined(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  loaded,TResult Function()?  granted,TResult Function()?  withdrawn,TResult Function()?  declined,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( bool withDate)?  loaded,TResult Function()?  granted,TResult Function()?  withdrawn,TResult Function()?  declined,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case ConsentLoaded() when loaded != null:
-return loaded();case ConsentGranted() when granted != null:
+return loaded(_that.withDate);case ConsentGranted() when granted != null:
 return granted();case ConsentWithdrawn() when withdrawn != null:
 return withdrawn();case ConsentDeclined() when declined != null:
 return declined();case _:
@@ -150,10 +150,10 @@ return declined();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  loaded,required TResult Function()  granted,required TResult Function()  withdrawn,required TResult Function()  declined,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( bool withDate)  loaded,required TResult Function()  granted,required TResult Function()  withdrawn,required TResult Function()  declined,}) {final _that = this;
 switch (_that) {
 case ConsentLoaded():
-return loaded();case ConsentGranted():
+return loaded(_that.withDate);case ConsentGranted():
 return granted();case ConsentWithdrawn():
 return withdrawn();case ConsentDeclined():
 return declined();}
@@ -170,10 +170,10 @@ return declined();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  loaded,TResult? Function()?  granted,TResult? Function()?  withdrawn,TResult? Function()?  declined,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( bool withDate)?  loaded,TResult? Function()?  granted,TResult? Function()?  withdrawn,TResult? Function()?  declined,}) {final _that = this;
 switch (_that) {
 case ConsentLoaded() when loaded != null:
-return loaded();case ConsentGranted() when granted != null:
+return loaded(_that.withDate);case ConsentGranted() when granted != null:
 return granted();case ConsentWithdrawn() when withdrawn != null:
 return withdrawn();case ConsentDeclined() when declined != null:
 return declined();case _:
@@ -188,33 +188,69 @@ return declined();case _:
 
 
 class ConsentLoaded implements ConsentEvent {
-  const ConsentLoaded();
+  const ConsentLoaded({this.withDate = false});
   
 
+@JsonKey() final  bool withDate;
 
-
+/// Create a copy of ConsentEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ConsentLoadedCopyWith<ConsentLoaded> get copyWith => _$ConsentLoadedCopyWithImpl<ConsentLoaded>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is ConsentLoaded);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ConsentLoaded&&(identical(other.withDate, withDate) || other.withDate == withDate));
 }
 
 
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode {
+    return Object.hash(runtimeType,withDate);
+}
 
 @override
 String toString() {
-    return 'ConsentEvent.loaded()';
+    return 'ConsentEvent.loaded(withDate: $withDate)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $ConsentLoadedCopyWith<$Res> implements $ConsentEventCopyWith<$Res> {
+  factory $ConsentLoadedCopyWith(ConsentLoaded value, $Res Function(ConsentLoaded) _then) = _$ConsentLoadedCopyWithImpl;
+@useResult
+$Res call({
+ bool withDate
+});
 
 
+
+
+}
+/// @nodoc
+class _$ConsentLoadedCopyWithImpl<$Res>
+    implements $ConsentLoadedCopyWith<$Res> {
+  _$ConsentLoadedCopyWithImpl(this._self, this._then);
+
+  final ConsentLoaded _self;
+  final $Res Function(ConsentLoaded) _then;
+
+/// Create a copy of ConsentEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? withDate = null,}) {
+  return _then(ConsentLoaded(
+withDate: null == withDate ? _self.withDate : withDate // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
 
 /// @nodoc
 
@@ -432,11 +468,11 @@ return withdrawFailure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  unknown,TResult Function( bool granted,  bool justDeclined)?  known,TResult Function()?  busy,TResult Function()?  failure,TResult Function()?  writeFailure,TResult Function()?  withdrawFailure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  unknown,TResult Function( bool granted,  bool justDeclined,  DateTime? since)?  known,TResult Function()?  busy,TResult Function()?  failure,TResult Function()?  writeFailure,TResult Function()?  withdrawFailure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case ConsentUnknown() when unknown != null:
 return unknown();case ConsentKnown() when known != null:
-return known(_that.granted,_that.justDeclined);case ConsentBusy() when busy != null:
+return known(_that.granted,_that.justDeclined,_that.since);case ConsentBusy() when busy != null:
 return busy();case ConsentFailure() when failure != null:
 return failure();case ConsentWriteFailure() when writeFailure != null:
 return writeFailure();case ConsentWithdrawFailure() when withdrawFailure != null:
@@ -458,11 +494,11 @@ return withdrawFailure();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  unknown,required TResult Function( bool granted,  bool justDeclined)  known,required TResult Function()  busy,required TResult Function()  failure,required TResult Function()  writeFailure,required TResult Function()  withdrawFailure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  unknown,required TResult Function( bool granted,  bool justDeclined,  DateTime? since)  known,required TResult Function()  busy,required TResult Function()  failure,required TResult Function()  writeFailure,required TResult Function()  withdrawFailure,}) {final _that = this;
 switch (_that) {
 case ConsentUnknown():
 return unknown();case ConsentKnown():
-return known(_that.granted,_that.justDeclined);case ConsentBusy():
+return known(_that.granted,_that.justDeclined,_that.since);case ConsentBusy():
 return busy();case ConsentFailure():
 return failure();case ConsentWriteFailure():
 return writeFailure();case ConsentWithdrawFailure():
@@ -480,11 +516,11 @@ return withdrawFailure();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  unknown,TResult? Function( bool granted,  bool justDeclined)?  known,TResult? Function()?  busy,TResult? Function()?  failure,TResult? Function()?  writeFailure,TResult? Function()?  withdrawFailure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  unknown,TResult? Function( bool granted,  bool justDeclined,  DateTime? since)?  known,TResult? Function()?  busy,TResult? Function()?  failure,TResult? Function()?  writeFailure,TResult? Function()?  withdrawFailure,}) {final _that = this;
 switch (_that) {
 case ConsentUnknown() when unknown != null:
 return unknown();case ConsentKnown() when known != null:
-return known(_that.granted,_that.justDeclined);case ConsentBusy() when busy != null:
+return known(_that.granted,_that.justDeclined,_that.since);case ConsentBusy() when busy != null:
 return busy();case ConsentFailure() when failure != null:
 return failure();case ConsentWriteFailure() when writeFailure != null:
 return writeFailure();case ConsentWithdrawFailure() when withdrawFailure != null:
@@ -532,11 +568,12 @@ String toString() {
 
 
 class ConsentKnown implements ConsentState {
-  const ConsentKnown({required this.granted, this.justDeclined = false});
+  const ConsentKnown({required this.granted, this.justDeclined = false, this.since});
   
 
  final  bool granted;
 @JsonKey() final  bool justDeclined;
+ final  DateTime? since;
 
 /// Create a copy of ConsentState
 /// with the given fields replaced by the non-null parameter values.
@@ -548,18 +585,18 @@ $ConsentKnownCopyWith<ConsentKnown> get copyWith => _$ConsentKnownCopyWithImpl<C
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is ConsentKnown&&(identical(other.granted, granted) || other.granted == granted)&&(identical(other.justDeclined, justDeclined) || other.justDeclined == justDeclined));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ConsentKnown&&(identical(other.granted, granted) || other.granted == granted)&&(identical(other.justDeclined, justDeclined) || other.justDeclined == justDeclined)&&(identical(other.since, since) || other.since == since));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,granted,justDeclined);
+    return Object.hash(runtimeType,granted,justDeclined,since);
 }
 
 @override
 String toString() {
-    return 'ConsentState.known(granted: $granted, justDeclined: $justDeclined)';
+    return 'ConsentState.known(granted: $granted, justDeclined: $justDeclined, since: $since)';
 }
 
 
@@ -570,7 +607,7 @@ abstract mixin class $ConsentKnownCopyWith<$Res> implements $ConsentStateCopyWit
   factory $ConsentKnownCopyWith(ConsentKnown value, $Res Function(ConsentKnown) _then) = _$ConsentKnownCopyWithImpl;
 @useResult
 $Res call({
- bool granted, bool justDeclined
+ bool granted, bool justDeclined, DateTime? since
 });
 
 
@@ -587,11 +624,12 @@ class _$ConsentKnownCopyWithImpl<$Res>
 
 /// Create a copy of ConsentState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? granted = null,Object? justDeclined = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? granted = null,Object? justDeclined = null,Object? since = freezed,}) {
   return _then(ConsentKnown(
 granted: null == granted ? _self.granted : granted // ignore: cast_nullable_to_non_nullable
 as bool,justDeclined: null == justDeclined ? _self.justDeclined : justDeclined // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,since: freezed == since ? _self.since : since // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

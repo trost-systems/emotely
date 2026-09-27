@@ -107,9 +107,11 @@ void main() {
         await robot.startSession();
 
         expect(robot.supabase.to(consentRead), hasLength(1));
-        expect(robot.supabase.bodies('/rest/v1/rpc/consent_stands'), [
-          {'version': consentVersion},
-        ]);
+        // The journal's own purpose, by leaving it out: the wire shape the
+        // app in testers' hands already sends (ADR 0009).
+        expect(robot.supabase.to(consentRead).single.body, {
+          'version': consentVersion,
+        });
         expect(robot.session, findsOneWidget);
       },
     );

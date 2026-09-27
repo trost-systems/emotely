@@ -5,3 +5,4 @@ library;
 
 export 'src/consent_repository.dart';
 export 'src/register.dart';
+export 'src/usage_analytics_consent.dart';

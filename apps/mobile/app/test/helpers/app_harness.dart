@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:analytics/analytics.dart';
 import 'package:emotely/app/app.dart';
 import 'package:emotely/app/dependencies.dart';
 import 'package:feature_auth/feature_auth.dart';
@@ -5,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:testing/testing.dart';
 
 /// The whole app, composed by the production `registerApp` over the scripted
@@ -44,6 +48,7 @@ Widget appUnderTest({
     configHttpClient: configStub.client,
     supabase: supabase.supabase,
     posthog: analytics.posthog,
+    posthogConfig: PostHogConfig('phc_test'),
     appVersion: AgentStub.appVersion,
     build: testBuildInfo,
     agentUrl: AgentStub.endpoint,
@@ -57,7 +62,11 @@ Widget appUnderTest({
       ios: 'ios.apps.googleusercontent.com',
     ),
   );
-  return const EmotelyApp();
+  // `main` awaits the restore before the first frame; here every call
+  // PostHog hears queues behind it instead, so the order is the same.
+  final gate = GetIt.I<PostHogGate>();
+  unawaited(gate.restore());
+  return EmotelyApp(screenViews: gate.screenObserver());
 }
 
 /// A deep link arriving while the app runs: the platform's `pushRoute`
