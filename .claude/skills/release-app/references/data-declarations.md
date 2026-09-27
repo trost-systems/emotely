@@ -4,8 +4,8 @@ App Store Connect (App Privacy) and Play Console (Data safety) each ask which
 data types the app collects, and a reviewer compares the answers with the
 notice at `https://getemotely.com/app-privacy`. Both consoles are human-facing
 forms; an agent edits them in Chrome. **App Store Connect needs Peter signed
-in** in that Chrome profile (a session found signed out on 2026-09-27 could
-not be used); Play Console was signed in then.
+in** in that Chrome profile: a signed-out session is his to sign in to, never
+the agent's. Play Console stays signed in.
 
 ## What is declared
 
@@ -14,28 +14,33 @@ and **no tracking** — contact info (email), user content (the journal),
 identifiers (user id and the analytics library's device id), usage data,
 diagnostics.
 
-Google sign-in (#51) adds a **name**: Google's ID token carries the account's
-name and a profile picture link, and Supabase stores both with the sign-in
-record. So both consoles declare it:
+Google sign-in (#51) added a **name**: Google's ID token carries the
+account's name and a profile picture link, and Supabase stores both with the
+sign-in record. Since #204 the app also asks for a name itself and greets
+the user by it. Both consoles declare it, as changed on 2026-09-27:
 
-- ASC **Contact Info → Name**: Linked, App Functionality, no tracking.
+- ASC **Contact Info → Name**: Linked, **App Functionality and Product
+  Personalization**, no tracking (published).
 - Play **Data safety → Personal info → Name**: collected, not shared,
-  optional, account management.
+  optional, **App functionality, Personalisation, Account management**
+  (sent for review).
 
 The picture link is a URL on Google's servers, not a photo the app holds, and
 needs no category of its own.
 
-Play Data safety as read on 2026-09-27 (no data shared):
+Play Data safety as of 2026-09-27, after the onboarding additions (no data
+shared):
 
 | Data type | Required? | Purposes |
 | --- | --- | --- |
-| Name | optional | Account management |
+| Name | optional | App functionality, Personalisation, Account management |
 | Email address | required | App functionality, Account management |
 | User IDs | required | App functionality, Analytics, Account management |
 | App interactions | required | Analytics |
 | Crash logs | required | Analytics |
 | Diagnostics | required | Analytics |
 | Other user-generated content | — | App functionality |
+| Device or other IDs | declared | (not re-read on 2026-09-27) |
 
 ## Changes for the onboarding build (#204)
 
@@ -62,6 +67,12 @@ is distribution on Google Play (our reading), so:
 
 App Store Connect has one label per app, shown on the product page: change it
 with the App Store submission of the consent-gated build, not before.
+
+**Status (2026-09-27, when #204 merged):** the additions are done — the
+name's purposes in both consoles. The one relaxation still open is making
+App interactions, Crash logs, Diagnostics and Device or other IDs
+**optional** in Play, due once production carries a consent-gated build
+(tracked in #218).
 
 ### Play Console → Policy → App content → Data safety
 
@@ -124,3 +135,13 @@ So the analytics types stay declared exactly as they are.
   purposes, or sharing data … with a data broker" (same page). PostHog is
   first-party product analytics with neither, so ATT does not apply; the
   first-launch sheet is the consent § 25 TDDDG asks for, not ATT.
+
+**Adding a purpose to a data type resets its "linked" answer.** On
+2026-09-27, editing Name to add Product Personalization showed "Yes, linked"
+on the linkage step, but it published as *not linked*: the product page
+preview gained a "Data Not Linked to You → Contact Info" panel beside the
+linked one. Re-running the edit showed "No" selected; choosing "Yes"
+explicitly and publishing again fixed it. So on every edit, click the
+linkage answer even when it looks right, and after **Publish** reload the
+page and check that **Data Not Linked to You** is absent (nothing emotely
+declares is unlinked).
