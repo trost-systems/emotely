@@ -247,12 +247,14 @@ void main() {
       tester.pumpComponent(const AppPrivacy());
 
       expect(find.text('Your email address'), findsOneComponent);
+      expect(find.text('Your name'), findsOneComponent);
       expect(find.text('Your journal entries and sessions'), findsOneComponent);
       expect(
         find.text('The conversation with the assistant'),
         findsOneComponent,
       );
-      expect(find.text('Counting and crash reports'), findsOneComponent);
+      expect(find.text('Usage analytics and crash reports'), findsOneComponent);
+      expect(find.text('What stays on your phone'), findsOneComponent);
       // The h3 subsections appear once; the h2 ones appear twice, because
       // the table of contents names each of them as well.
       expect(find.text('Who else sees any of it'), findsNComponents(2));
@@ -268,6 +270,8 @@ void main() {
       tester.pumpComponent(const AppPrivacy());
 
       expect(find.textContaining('Art. 6 (1) (b)'), findsComponents);
+      // Still the basis of the firewall's rate limit and the agent's
+      // per-round record — no longer of the in-app analytics.
       expect(find.textContaining('Art. 6 (1) (f)'), findsComponents);
       // Journal entries are special-category data, and the page says so.
       expect(find.textContaining('Art. 9 (2) (a)'), findsComponents);
@@ -329,18 +333,107 @@ void main() {
       expect(find.textContaining('Hide My Email'), findsComponents);
       // The provider learns of the sign-in as a controller of its own.
       expect(find.textContaining('learns that you signed in'), findsComponents);
-      // The app still asks for no name itself; it no longer claims that
-      // none ever arrives.
-      expect(find.textContaining('never asks for a name'), findsComponents);
+      // The name the app uses is the one it asks for (#204), never the one
+      // a provider passes on.
+      expect(
+        find.textContaining('does not take a name from Google or Apple'),
+        findsComponents,
+      );
     });
 
-    testComponents('describes analytics by their real event names', (tester) {
+    testComponents('says the app asks what to call you, and where it goes', (
+      tester,
+    ) {
       tester.pumpComponent(const AppPrivacy());
 
-      expect(find.textContaining('session_started'), findsComponents);
-      expect(find.textContaining('sign_in_code_requested'), findsComponents);
-      expect(find.textContaining('sign_in_provider_failed'), findsComponents);
-      expect(find.textContaining('journal_viewed'), findsComponents);
+      // #204: onboarding asks for a name before the account exists.
+      expect(find.textContaining('never asks for a name'), findsNothing);
+      expect(find.textContaining('what to call you'), findsComponents);
+      expect(find.textContaining('placeholder'), findsComponents);
+      expect(find.textContaining('profile'), findsComponents);
+      expect(find.textContaining('Profile'), findsComponents);
+    });
+
+    testComponents(
+      'says the name goes to the model, and the address does not',
+      (tester) {
+        tester.pumpComponent(const AppPrivacy());
+
+        // #204: the companion addresses you by name, so the name rides along
+        // with each round. The old denial must not survive the change.
+        expect(find.textContaining('no name, no email address'), findsNothing);
+        expect(
+          find.textContaining('no email address and no sign-in token'),
+          findsComponents,
+        );
+        expect(
+          find.textContaining('the name the app calls you'),
+          findsComponents,
+        );
+      },
+    );
+
+    testComponents('describes analytics by kind, never by event name', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacy());
+
+      // Readers want what goes where and why; an event list goes stale
+      // with every new event and buries that (#204).
+      expect(find.textContaining('session_started'), findsNothing);
+      expect(find.textContaining('sign_in_code_requested'), findsNothing);
+      expect(find.textContaining('journal_viewed'), findsNothing);
+      expect(find.textContaining('consent_granted'), findsNothing);
+      expect(find.textContaining('screens, taps, timings'), findsComponents);
+    });
+
+    testComponents('asks before counting, and sets nothing up before Allow', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacy());
+
+      // § 25 TDDDG: the device identifier is stored on the phone, so
+      // analytics need consent — bundled with Art. 6 (1) (a) for the
+      // processing (DSK OH Digitale Dienste, Rn. 97–98).
+      expect(find.textContaining('§ 25 (1) TDDDG'), findsComponents);
+      expect(find.textContaining('Art. 6 (1) (a)'), findsComponents);
+      expect(find.textContaining('equal weight'), findsComponents);
+      expect(find.textContaining('before you tap Allow'), findsComponents);
+      expect(find.textContaining('asked again'), findsComponents);
+      expect(find.textContaining('More → Privacy settings'), findsComponents);
+      // The old basis for the in-app counting.
+      expect(
+        find.textContaining('legitimate interest in knowing whether the app'),
+        findsNothing,
+      );
+    });
+
+    testComponents('keeps the last sign-in method on the phone', (tester) {
+      tester.pumpComponent(const AppPrivacy());
+
+      expect(find.textContaining('last used'), findsComponents);
+      expect(find.textContaining('§ 25 (2)'), findsComponents);
+    });
+
+    testComponents('is dated to the rewrite', (tester) {
+      tester.pumpComponent(const AppPrivacy());
+
+      expect(
+        find.textContaining('Last updated 26 September 2026'),
+        findsOneComponent,
+      );
+    });
+
+    testComponents('discloses where the agent runs', (tester) {
+      tester.pumpComponent(const AppPrivacy());
+
+      // The agent's Vercel functions run in iad1 (Washington, D.C.), so the
+      // transcript leaves the EU before it reaches any model provider.
+      expect(find.textContaining('Washington'), findsComponents);
+      expect(
+        find.textContaining('standard contractual clauses'),
+        findsComponents,
+      );
     });
 
     testComponents('gives both deletion paths and links the web one', (tester) {
@@ -373,11 +466,11 @@ void main() {
       tester.pumpComponent(const AppPrivacy());
 
       // Apple 5.1.1(i) wants the revocation path described, and it must be
-      // the one the app actually offers (#97), not "delete your account".
-      expect(find.textContaining('More tab'), findsComponents);
+      // the one the app actually offers (#97, #204), not "delete your
+      // account".
+      expect(find.textContaining('More → Privacy settings'), findsComponents);
       expect(find.textContaining('does not require deleting'), findsComponents);
       expect(find.textContaining('Art. 7 (3)'), findsComponents);
-      expect(find.textContaining('consent_granted'), findsComponents);
     });
 
     testComponents('carries the Art. 13 disclosures that are easy to forget', (
@@ -435,13 +528,15 @@ void main() {
       expect(find.textContaining('not our processors'), findsComponents);
     });
 
-    testComponents('discloses what the SDK collects on its own', (tester) {
+    testComponents('names the identifiers analytics are tied to', (tester) {
       tester.pumpComponent(const AppPrivacy());
 
-      // The event list is not exhaustive without these, and the ASC
-      // declarations name a Device ID that the page has to account for.
-      expect(find.textContaining('device identifier'), findsComponents);
-      expect(find.textContaining('sent to the background'), findsComponents);
+      // The store declarations name a Device ID and a User ID, and the page
+      // has to account for both — including that identify() links what
+      // came before sign-in to the account.
+      expect(find.textContaining('random device identifier'), findsComponents);
+      expect(find.textContaining('account identifier'), findsComponents);
+      expect(find.textContaining('before you signed in'), findsComponents);
     });
 
     testComponents('gives analytics a retention criterion like every other '

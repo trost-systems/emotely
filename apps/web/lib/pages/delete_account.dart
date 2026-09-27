@@ -56,7 +56,12 @@ class const DeleteAccount({super.key}) extends StatelessComponent {
 
     h2([.text('What gets deleted')]),
     ul([
-      li([.text('Your sign-in account and the email address on it.')]),
+      li([
+        .text(
+          'Your sign-in account, the email address on it and your profile '
+          '(the name the app calls you).',
+        ),
+      ]),
       li([
         .text(
           'Every journal entry: the summaries, your answers and the '

@@ -13,6 +13,8 @@ import 'package:jaspr/jaspr.dart';
 /// Every claim below is traceable to a migration, an ADR, the app's code or a
 /// vendor's published policy — an unknown is written as an unknown rather
 /// than smoothed over, because this is a text the controller signs off on.
+/// It stays high level: per kind of data, what, where, why, basis and how
+/// long — the event names live in the code (ADR 0005), not here (#204).
 class const AppPrivacy({super.key}) extends StatelessComponent {
   @override
   Component build(BuildContext context) => const main_(classes: 'page prose', [
@@ -23,8 +25,8 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
       meta: {
         'description':
             'How the emotely app collects, uses and shares data: the '
-            'account, journal entries, the AI conversation, analytics, '
-            'deletion and your GDPR rights.',
+            'account, your name, journal entries, the AI conversation, '
+            'analytics, deletion and your GDPR rights.',
       },
     ),
     h1([.text('App privacy notice')]),
@@ -35,13 +37,13 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
       .text(
         'This notice covers the emotely mobile app (listed on Google Play as '
         '"Reflect Therapy AI: emotely") for iOS and Android. The web site at '
-        'getemotely.com and its waitlist are covered by a separate notice. '
-        'Last updated 25 September 2026.',
+        'getemotely.com and its waitlist have a separate notice. Last '
+        'updated 26 September 2026.',
       ),
     ]),
 
-    // Ten sections is more than a reader should have to scroll blind, and a
-    // store reviewer is looking for one specific thing.
+    // Eleven sections is more than a reader should have to scroll blind,
+    // and a store reviewer is looking for one specific thing.
     nav(classes: 'toc', [
       h2([.text('On this page')]),
       ul([
@@ -98,54 +100,66 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
     h3([.text('Your email address')]),
     p([
       .text(
-        'Signing in needs one thing: an email address. There are three ways '
-        'to give it. The app can send a six-digit code to it that you type '
-        'back in — no password, no link to click. Or you tap Sign in with '
-        'Google (iOS and Android) or Sign in with Apple (iPhone), and that '
-        'provider confirms who you are and tells us your address itself. '
-        'Either way, the address and the sign-in records live in Supabase '
-        'Auth on servers in Frankfurt, Germany (EU). The app has no sign-up '
-        'screen of its own and never asks for a name, a phone number, a date '
-        'of birth, contacts, photos, location or any device identifier for '
-        'advertising.',
+        'Signing in needs an email address, given one of three ways: the '
+        'app mails you a six-digit code to type back in (no password, no '
+        'link), or Sign in with Google (iOS and Android) or Sign in with '
+        'Apple (iPhone) confirms who you are and passes your address on. '
+        'The address and the sign-in records live in Supabase Auth on '
+        'servers in Frankfurt, Germany (EU). The app never asks for a phone '
+        'number, a date of birth, contacts, photos, location or an '
+        'advertising identifier.',
       ),
     ]),
     // #51. What each provider's token carries is what Supabase keeps, so
     // the notice names it — including the name Google sends unasked.
     p([
       .text(
-        'If you sign in with Google or Apple, the provider also passes on an '
-        'identifier for your account with them, which is how the next '
-        'sign-in finds the same account. Google adds the name and profile '
-        'picture link of your Google account, and Supabase keeps them with '
-        'the sign-in records; the app does not show or use them. Apple can '
-        'pass on a name too, but the app does not ask it to. Apple also lets '
-        'you choose Hide My Email: we then receive a relay address that '
-        'forwards to yours. If the address a provider passes on matches an '
-        'account you already have, you land in that same account; a relay '
-        'address never matches, so it starts a new one. We never see your '
-        'Google or Apple password. The provider learns that you signed in '
-        'to emotely — as a controller in its own right, under its own '
-        'privacy policy — and nothing about your journal.',
+        'Google and Apple also pass on an identifier for your account with '
+        'them, which is how the next sign-in finds the same account. Google '
+        'adds the name and profile picture link of your Google account, and '
+        'Supabase keeps them with the sign-in records; the app does not use '
+        'them. It does not take a name from Google or Apple at all — it asks '
+        'you (below). Apple can pass on a name too, but the app does not '
+        'ask it to. With Apple’s Hide My Email we receive a relay address '
+        'that forwards to yours. An address that matches an account you '
+        'already have lands you in that account; a relay address never '
+        'matches, so it starts a new one. We never see your Google or Apple '
+        'password. The provider learns that you signed in to emotely — as a '
+        'controller in its own right, under its own privacy policy — and '
+        'nothing about your journal.',
       ),
     ]),
     p([
       .text(
-        'While you are signed in, every request the app makes to our own '
-        'server carries your sign-in token, which proves a signed-in user is '
-        'asking and carries your account identifier and your address. It '
-        'goes to our server and no further — it is never passed on to the '
+        'While you are signed in, every request to our own server carries '
+        'your sign-in token, which holds your account identifier and your '
+        'address. It stops at our server and is never passed on to the '
         'gateway or the model provider.',
       ),
     ]),
     p([
       .text(
-        'Basis: performing the contract you asked for (Art. 6 (1) (b) GDPR) '
-        '— there is no journal without an account to keep it in. Giving the '
-        'address is not a statutory duty, but it is required to use emotely '
-        'at all: without one there is no account, and without an account '
-        'there is nothing to journal into. Kept until you delete the '
+        'Basis: the contract you asked for (Art. 6 (1) (b) GDPR). Giving the '
+        'address is not a statutory duty, but without one there is no '
+        'account and so nothing to journal into. Kept until you delete the '
         'account.',
+      ),
+    ]),
+
+    // #204: onboarding asks for a name before the account exists.
+    h3([.text('Your name')]),
+    p([
+      .text(
+        'The app asks what to call you, normally before you sign up. '
+        'Answering is optional: if you skip, it picks a placeholder '
+        'nickname and tells you so. Until your account exists the name '
+        'stays on your phone; then it moves to your profile in the same '
+        'Supabase database in Frankfurt, with a note of whether you chose it '
+        'or the app did. The app uses it to greet you, and the assistant '
+        'uses it to address you (see the conversation, below). Change it '
+        'any time in Profile, from the More tab. Basis: the personalised '
+        'service you asked for (Art. 6 (1) (b) GDPR). Kept until you delete '
+        'the account.',
       ),
     ]),
 
@@ -153,8 +167,8 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
     p([
       .text(
         'A session is one guided conversation: the assistant asks a '
-        'question, you answer with a widget, and at the end it writes the '
-        'entry. Three kinds of row are stored for you, and nothing else:',
+        'question, you answer, and at the end it writes the entry. Besides '
+        'your profile, three kinds of record are stored for you:',
       ),
     ]),
     ul([
@@ -162,162 +176,157 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         strong([.text('Sessions')]),
         .text(
           ' — the full transcript of the conversation, every question and '
-          'every answer as the model saw them, plus the question you are '
-          'currently on, the questions asked so far, which question set you '
-          'picked, whether the session is finished, and the version of the '
-          'app that wrote it. This is what lets a closed or crashed app pick '
-          'a session back up.',
+          'every answer as the model saw them, plus where you are in it, '
+          'which question set you picked, whether it is finished and the '
+          'app version that wrote it. This is what lets a closed or crashed '
+          'app pick a session back up.',
         ),
       ]),
       li([
         strong([.text('Entries')]),
         .text(
           ' — the finished entry: the summary the assistant wrote, your '
-          'answers keyed by question, and the questions as they were asked.',
+          'answers and the questions as they were asked.',
         ),
       ]),
       li([
-        strong([.text('Consent')]),
+        strong([.text('Consents')]),
         .text(
-          ' — that you agreed to the conversation being sent to a model '
-          'provider, when, and which version of this notice you were shown; '
-          'and, if you take that consent back, when you did. The wording '
-          'itself is not copied for each person: it is this page, and the '
-          'record only names the version of it.',
+          ' — each time you give or withdraw a consent (to sending sessions '
+          'to a model provider, and to usage analytics), when, and which '
+          'version of the wording you were shown. Records are only ever '
+          'added, never changed. The wording itself is not copied for each '
+          'person; the record names its version.',
         ),
       ]),
     ]),
     p([
       .text(
-        'Both live in one Postgres database at Supabase in Frankfurt, '
-        'Germany (EU), and both are readable only by the account that wrote '
-        'them. That is not a promise about how the app behaves, it is a rule '
-        'the database enforces on every single query (row-level security): '
-        'the app talks to the database with your own sign-in token, and a '
-        'query for somebody else’s rows comes back empty no matter who '
-        'sends it. The rules are in the open-source ',
+        'All of it lives in one Postgres database at Supabase in Frankfurt, '
+        'Germany (EU), readable only by your account. The database enforces '
+        'that on every query (row-level security), not the app: a query for '
+        'somebody else’s rows comes back empty, whoever sends it. The '
+        'rules are in the open-source ',
       ),
       a(href: '$repositoryUrl/blob/main/supabase/migrations', [
         .text('database migrations'),
       ]),
-      .text(
-        ', and a test suite in the repository proves them on every change.',
-      ),
+      .text(', and a test suite proves them on every change.'),
     ]),
     p([
       strong([.text('This is sensitive data, and it is treated as such.')]),
       .text(
-        ' A journal entry can say how you felt, how you slept, what a '
-        'diagnosis or a medication is doing to you, how things stand with a '
-        'partner, a parent or a colleague, or what you believe. That makes '
-        'entries capable of holding health data and other special categories '
-        'under Art. 9 GDPR. The legal basis is your explicit consent '
-        '(Art. 9 (2) (a) GDPR), alongside the contract itself '
+        ' An entry can say how you felt or slept, what a diagnosis or a '
+        'medication is doing to you, how things stand with someone close to '
+        'you, or what you believe. Entries can therefore hold health data '
+        'and other special categories under Art. 9 GDPR. The basis is your '
+        'explicit consent (Art. 9 (2) (a) GDPR), alongside the contract '
         '(Art. 6 (1) (b) GDPR).',
       ),
     ]),
     p([
       .text(
-        'Before your first session the app asks for that consent outright: it '
-        'says what is sent, to whom, and what it can contain, and nothing is '
-        'sent until you tick the box and start. Declining is a real choice — '
-        'nothing is sent, and the entries you already have stay readable. You '
-        'can take the consent back at any time on the More tab of the app. '
-        'It is one tap, it does not require deleting anything, and it does not '
-        'affect what happened while the consent stood. Taking it back is as '
-        'easy as giving it, which is what Art. 7 (3) GDPR requires. Because '
-        'the assistant is what writes your entry, no new session can run '
-        'while the consent is withdrawn — you can give it again from the same '
-        'screen whenever you want to.',
+        'Before your first session the app asks for that consent: it says '
+        'what is sent, to whom, and what it can contain, and nothing is sent '
+        'until you tick the box and start. Declining is a real choice — '
+        'nothing is sent, and your existing entries stay readable. You can '
+        'withdraw it at any time under More → Privacy settings: one switch, '
+        'which does not require deleting anything and does not affect what '
+        'happened before. Taking it back is as easy as giving it '
+        '(Art. 7 (3) GDPR). Because the assistant writes your entry, no new '
+        'session can start while it is withdrawn; turning it back on shows '
+        'you the full consent screen again.',
       ),
     ]),
     p([
       .text(
-        'Entries are kept until you delete them or delete the account. There '
-        'is no automatic expiry: a journal that quietly erased last year '
-        'would not be a journal.',
+        'Entries are kept until you delete them or the account. There is no '
+        'automatic expiry: a journal that quietly erased last year would not '
+        'be a journal.',
       ),
     ]),
 
     h3([.text('The conversation with the assistant')]),
     p([
       .text(
-        'This is the part that leaves your phone, so it is worth being exact '
-        'about. While a session runs, each round sends the emotely agent — a '
-        'small server of ours — four things: the transcript so far (the '
-        'questions and the answers you have given), the version of the app, '
-        'your sign-in token, and a signature proving the transcript is the '
-        'one the server itself produced. The agent then adds the '
+        'This is the part that leaves your phone. Each round of a session '
+        'sends the emotely agent — a small server of ours — the transcript '
+        'so far, the name the app calls you (yours or the placeholder), the '
+        'app version, your sign-in token, and a signature proving the '
+        'transcript is one the server itself produced. The agent adds the '
         'assistant’s instructions and hands the conversation to a language '
         'model through the ',
       ),
       strong([.text('Vercel AI Gateway')]),
       .text(
-        ', which passes it to whichever provider serves the model. What the '
-        'gateway and the provider receive is the conversation and the '
-        'instructions — no name, no email address and no sign-in token; your '
-        'token stops at our server. The model’s reply comes back the same '
-        'way and becomes the next question, or your finished entry.',
+        ', which passes it to whichever provider serves the model. The '
+        'gateway and the provider receive the conversation, the '
+        'instructions and the name the app calls you — no email address and '
+        'no sign-in token. The reply comes back the same way and becomes the '
+        'next question, or your entry.',
       ),
     ]),
     ul([
       li([
         strong([.text('The agent keeps no copy.')]),
         .text(
-          ' It has no database and holds no journal: each request carries the '
-          'whole transcript, is answered, and is forgotten. Nothing that was '
-          'said is written to a log — the server never prints a question, an '
-          'answer or a summary. It does send our analytics provider a '
-          'technical record of each round — how long it took, how many tokens '
-          'it used, what it cost, which version of the assistant’s '
-          'instructions ran — with the content suppressed at the source, so '
-          'the questions, your answers and the summary are never part of it. '
-          'Your journal is stored in Supabase and nowhere else.',
+          ' It has no database: each request carries the whole transcript, '
+          'is answered, and is forgotten, and nothing that was said is '
+          'written to a log. It does send PostHog a technical record of each '
+          'round — how long it took, how many tokens it used, what it cost, '
+          'which version of the instructions ran — with the content '
+          'suppressed at the source. That record runs on our server, stores '
+          'nothing on your phone and is not part of the usage analytics you '
+          'choose in the app; it is how we keep the service working and its '
+          'cost in check (legitimate interest, Art. 6 (1) (f) GDPR).',
+        ),
+      ]),
+      li([
+        strong([.text('Where it runs.')]),
+        .text(
+          ' The agent runs on Vercel’s servers in Washington, D.C., USA. '
+          'The gateway and the model providers can sit outside the EU too; '
+          'which provider answers, and where, depends on where the gateway '
+          'routes at that moment. These transfers rest on the EU standard '
+          'contractual clauses (Art. 46 GDPR), and for the providers on the '
+          'two routing guarantees below.',
         ),
       ]),
       li([
         strong([.text('Which model.')]),
         .text(
-          ' Today it is openai/gpt-oss-120b, an open-weights model, chosen by '
-          'a benchmark rather than by brand. It can change without a new app '
+          ' Today openai/gpt-oss-120b, an open-weights model chosen by a '
+          'benchmark rather than by brand. It can change without a new app '
           'release; the default is in the public repository, and this notice '
-          'names the model in use. Where it runs depends on which provider '
-          'the gateway routes to at that moment.',
+          'names the model in use.',
         ),
       ]),
       li([
         strong([.text('It is not training data, and it is not kept.')]),
         .text(
-          ' Vercel states that the AI Gateway itself does not retain prompts '
-          'or responses and does not use them for training. The providers '
-          'behind it are a separate question, and the answer is not left to '
-          'chance: every single round is sent with two instructions to the '
-          'gateway — route only to providers contractually bound not to train '
-          'on prompts, and route only to providers with a zero-retention '
-          'agreement, meaning the transcript is not kept on their side '
-          'either. Both are enforced by the gateway per request, not by us '
-          'asking nicely, and both fail closed: if no qualifying provider '
-          'were available the round would fail outright rather than quietly '
-          'fall back to one that does not qualify. Checked against the live '
-          'gateway on 15 September 2026, all eight providers that serve the '
-          'current model satisfy both.',
+          ' Vercel states that the gateway itself neither retains prompts or '
+          'responses nor trains on them. For the providers behind it, every '
+          'round tells the gateway to route only to providers contractually '
+          'bound not to train on prompts and bound by a zero-retention '
+          'agreement, so the transcript is not kept on their side either. '
+          'The gateway enforces both per request and both fail closed: with '
+          'no qualifying provider the round fails rather than falling back to '
+          'one that does not qualify. Checked against the live gateway on 15 '
+          'September 2026, all eight providers serving the current model '
+          'qualified. The provider still processes the transcript to answer '
+          'it.',
         ),
       ]),
     ]),
     p([
       .text(
-        'Basis: performing the contract (Art. 6 (1) (b) GDPR) and, because '
-        'the transcript can carry the special-category content described '
-        'above, your explicit consent (Art. 9 (2) (a) GDPR). The gateway and '
-        'the model provider act as processors under Art. 28 GDPR. Providers '
-        'may sit outside the EU; for those transfers the safeguard under '
-        'Art. 46 GDPR is the EU standard contractual clauses, and on top of '
-        'them sit the two routing guarantees above — no training on the '
-        'transcript, and no retention of it at the provider. If that is more '
-        'than you want to share, the honest answer is that the assistant is '
-        'the product and there is no version of it that does not send your '
-        'answers to a model — which is why the app asks before the first '
-        'session rather than after.',
+        'Basis: the contract (Art. 6 (1) (b) GDPR) and, because the '
+        'transcript can carry the special-category data described above, '
+        'your explicit consent (Art. 9 (2) (a) GDPR). Vercel and the model '
+        'provider act as our processors (Art. 28 GDPR). The assistant is the '
+        'product: there is no version of it that does not send your answers '
+        'to a model, which is why the app asks before the first session '
+        'rather than after.',
       ),
     ]),
     // EU AI Act Art. 50, in force since 2 August 2026: a person must be told
@@ -326,113 +335,83 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
     // is not a thing to rest a disclosure obligation on.
     p([
       .text(
-        'Said plainly rather than left to be inferred: the questions you are '
-        'asked and the entry that gets written are produced by an AI system, '
-        'not by a person. Nobody reads along, there is no human on the other '
-        'end of a session, and the summary of your day was written by a '
-        'machine.',
+        'Said plainly: the questions you are asked and the entry that gets '
+        'written are produced by an AI system, not by a person. Nobody reads '
+        'along, and there is no human on the other end of a session.',
       ),
     ]),
 
-    h3([.text('Counting and crash reports')]),
+    // #204: high level on purpose — what, where, why, basis, how long. The
+    // event names live in the code, and a list here went stale with every
+    // new event.
+    h3([.text('Usage analytics and crash reports')]),
     p([
       .text(
-        'The app reports to PostHog on servers in the EU, and what it '
-        'reports is deliberately content-free: not "redacted before '
-        'sending", but built so the text never reaches the reporting code in '
-        'the first place. Events say that something happened and how it '
-        'went, never what was said.',
+        'If you allow it, the app counts how it is used — screens, taps, '
+        'timings and crashes — so we can see what works and fix what does '
+        'not. It never sends what you write in your journal, your name or '
+        'your email address: the reporting code never receives them, and a '
+        'test drives a whole session with planted marker text to prove none '
+        'escapes. Crash reports keep the error’s type, code and stack frames '
+        'but lose its message, because a message can quote what it failed '
+        'on; the only messages let through are wording we wrote ourselves or '
+        'the name of a host. No session replay '
+        'and no screen recording is used. The data goes to PostHog, on '
+        'servers in the EU.',
       ),
     ]),
     p([
       .text(
-        'There is one exception: the app occasionally asks you for feedback '
-        'in a short survey. Answering is optional, and if you do answer, '
-        'what you write is sent to PostHog.',
-      ),
-    ]),
-    ul([
-      li([
-        strong([.text('Sessions')]),
-        .text(
-          ': session_started, question_asked, answer_submitted, '
-          'session_completed, session_resumed, session_retried, '
-          'session_failed, session_save_failed, entry_save_failed, '
-          'update_required.',
-        ),
-      ]),
-      li([
-        strong([.text('Signing in')]),
-        .text(
-          ': sign_in_code_requested, sign_in_code_request_failed, '
-          'sign_in_code_rejected, sign_in_password_failed, '
-          'sign_in_provider_canceled, sign_in_provider_failed, signed_in, '
-          'signed_out, account_deleted. The provider events and signed_in '
-          'say which way you signed in (code, password, Google or Apple) '
-          'and nothing more.',
-        ),
-      ]),
-      li([
-        strong([.text('The journal')]),
-        .text(': journal_viewed, entry_opened, session_discarded.'),
-      ]),
-      li([
-        strong([.text('Consent')]),
-        .text(
-          ': consent_granted, consent_withdrawn, consent_declined — each with '
-          'the version of this notice it answered, and nothing else.',
-        ),
-      ]),
-      li([
-        strong([.text('From the analytics library itself')]),
-        .text(
-          ': it also records, without us writing the code, that the app was '
-          'opened, sent to the background, installed or updated.',
-        ),
-      ]),
-    ]),
-    p([
-      .text(
-        'The properties they carry are of the same kind throughout: a '
-        'question’s identifier (not its text), which sort of widget it '
-        'used, a position in the session, a count of entries or answers, an '
-        'HTTP status code, an app version, the name of the step that failed. '
-        'Your journal text, your email address and your sign-in codes appear '
-        'in none of them, and a test drives a whole session with marker '
-        'strings planted in the question, the answer and the summary to '
-        'prove none of them escapes.',
+        'Now and then the app may ask for feedback in a short survey. '
+        'Answering is optional; if you answer, what you write is sent to '
+        'PostHog.',
       ),
     ]),
     p([
       .text(
-        'Crashes reach the same place. Because an error message often quotes '
-        'what it choked on — a database error names the row, a sign-in error '
-        'names the address — the app strips the message from every crash '
-        'report before it is sent, keeping the error’s type, its code and '
-        'its stack frames. Only a short list of message types is let through, '
-        'and they can only contain our own server’s wording or the name of '
-        'a host. No session replay and no screen recording is used at all.',
+        'The records are tied to a random device identifier the analytics '
+        'library keeps on your phone and, once you sign in, to your account '
+        'identifier (a random ID, not your address); what was counted before '
+        'you signed in is then linked to your account too. That makes them '
+        'pseudonymous, not anonymous.',
       ),
     ]),
     p([
       .text(
-        'These records are tied to two identifiers: your account identifier '
-        '— a random identifier, not your address — and a device identifier '
-        'the analytics library keeps on the phone so events from one device '
-        'hang together. Both are pseudonymous, not anonymous. Signing out or '
-        'deleting the account resets the link between the device identifier '
-        'and you. Basis: our legitimate interest in knowing whether the app '
-        'works and where it breaks (Art. 6 (1) (f) GDPR). Kept for as long as '
-        'the numbers are useful for that and no longer than our analytics '
-        'provider’s retention window for the project, after which they are '
-        'deleted or aggregated past the point of tracing back to a person.',
+        'The app asks on first launch, with Don’t allow and Allow given '
+        'equal weight. Nothing is set up before you tap Allow: no identifier '
+        'exists and nothing is sent. Change your mind any time under More → '
+        'Privacy settings; switching off stops all reporting from then on. '
+        'Signing out resets the choice and the device identifier, and you '
+        'are asked again — the choice belongs to a person, not a phone. '
+        'Basis: your consent, both to storing and reading the identifier on '
+        'your phone (§ 25 (1) TDDDG) and to processing the records '
+        '(Art. 6 (1) (a) GDPR). Withdrawing does not affect what was sent '
+        'before. Kept no longer than PostHog’s retention window for the '
+        'project, then deleted or aggregated past the point of tracing back '
+        'to a person.',
+      ),
+    ]),
+
+    h3([.text('What stays on your phone')]),
+    p([
+      .text(
+        'Some things the app keeps only on the phone, because it cannot work '
+        'without them: your sign-in session, your analytics choice, how far '
+        'you got in the steps before sign-up, the name you gave until your '
+        'account exists, and the sign-in method you last used, so the '
+        'sign-in screen can mark it. The last used method is never sent '
+        'anywhere; it survives signing out and is cleared when you delete '
+        'the account. Storing these needs no consent, because each is '
+        'strictly necessary for the service you asked for '
+        '(§ 25 (2) no. 2 TDDDG).',
       ),
     ]),
     p([
       .text(
-        'Everything the app sends — to our server, to the database and to the '
-        'analytics provider — travels over an encrypted HTTPS connection, and '
-        'the app makes no unencrypted connection at all.',
+        'Everything that does leave the phone — to our server, the database '
+        'and the analytics provider — travels over an encrypted HTTPS '
+        'connection; the app makes no unencrypted connection at all.',
       ),
     ]),
 
@@ -440,9 +419,9 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
     p([
       .text(
         'Two fixed accounts sign in with a password instead of a code, '
-        'because Apple’s and Google’s reviewers have no mailbox to '
-        'read a code from. They belong to the review process, not to any '
-        'user, and nothing in the app can create one.',
+        'because Apple’s and Google’s reviewers have no mailbox to read a '
+        'code from. They belong to the review process, and nothing in the '
+        'app can create one.',
       ),
     ]),
 
@@ -452,36 +431,37 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         strong([.text('Supabase')]),
         .text(
           ' — the database and the sign-in system, Frankfurt, Germany (EU). '
-          'Holds your address, your sessions and your entries.',
+          'Holds your address, your profile, your sessions, your entries and '
+          'your consent records.',
         ),
       ]),
       li([
         strong([.text('Vercel')]),
         .text(
-          ' — runs the emotely agent and the AI Gateway the transcript '
-          'travels through. Stores no journal of ours. Its firewall also '
-          'counts requests per internet address and refuses more than thirty '
-          'a minute to the session endpoint, which is what keeps a public '
-          'endpoint from being abused; that check uses the address and '
-          'nothing else, on our legitimate interest in keeping the service '
-          'working (Art. 6 (1) (f) GDPR).',
+          ' — runs the emotely agent in Washington, D.C., USA, and the AI '
+          'Gateway the conversation passes through. Stores no journal of '
+          'ours. Its firewall also counts requests per internet address and '
+          'refuses more than thirty a minute to the session endpoint, which '
+          'keeps a public endpoint from being abused; that check uses the '
+          'address and nothing else, on our legitimate interest in keeping '
+          'the service working (Art. 6 (1) (f) GDPR).',
         ),
       ]),
       li([
         strong([.text('The model provider')]),
         .text(
           ' — whoever serves the current model through the gateway, for the '
-          'moment it takes to answer. See the section above for what is and '
-          'is not promised there.',
+          'moment it takes to answer. See above for what is and is not '
+          'promised there.',
         ),
       ]),
       li([
         strong([.text('PostHog')]),
         .text(
-          ' — the counting and crash reports described above, on EU servers. '
-          'Never receives journal content or your email address. The one '
-          'free text it does receive is what you type into an in-app '
-          'survey, if you choose to answer one.',
+          ' — usage analytics and crash reports if you allow them, survey '
+          'answers if you give them, and the agent’s technical record of each '
+          'round; EU servers. Never your journal, your name or your email '
+          'address.',
         ),
       ]),
       li([
@@ -530,19 +510,20 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
     ]),
     p([
       .text(
-        'Either way the account, every entry, every session and the consent '
-        'record are removed from the live database as soon as the deletion '
-        'goes through. There is no grace period and no archive to ask for '
-        'afterwards. Three things outlive it:',
+        'Either way the account, your profile, every entry, every session '
+        'and the consent records leave the live database as soon as the '
+        'deletion goes through. There is no grace period and no archive to '
+        'ask for afterwards. Three things outlive it:',
       ),
     ]),
     ul([
       li([
-        strong([.text('Counting.')]),
+        strong([.text('Analytics.')]),
         .text(
-          ' The pseudonymous records described above. Deleting the account '
-          'breaks the link between those identifiers and you, but the counts '
-          'themselves remain. They hold no journal text and no address.',
+          ' The pseudonymous records described above, if you allowed them. '
+          'Deleting the account breaks the link between their identifiers '
+          'and you, but the counts remain. They hold no journal text, no '
+          'name and no address.',
         ),
       ]),
       li([
@@ -575,10 +556,10 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         'is impossible. If personal data here is ever exposed, lost or '
         'reached by someone who should not have it, the supervisory '
         'authority named below is told without undue delay and within 72 '
-        'hours of us becoming aware of it, as Art. 33 GDPR requires. Where '
-        'the breach is likely to put you at high risk — and for journal '
-        'entries it would be — you are told directly, in plain language, '
-        'without waiting to be asked (Art. 34 GDPR).',
+        'hours of us becoming aware of it (Art. 33 GDPR). Where the breach '
+        'is likely to put you at high risk — and for journal entries it '
+        'would be — you are told directly, in plain language, without '
+        'waiting to be asked (Art. 34 GDPR).',
       ),
     ]),
 
@@ -587,50 +568,48 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
       .text(
         'You can ask what is stored about you, have it corrected or deleted, '
         'have its processing restricted, receive it in a portable form, '
-        'object to processing based on legitimate interest, and withdraw '
+        'object to processing based on legitimate interest, and withdraw any '
         'consent at any time — which does not affect what happened before. '
-        'Deleting the account does all of this at once; for anything else, '
+        'Deleting the account does most of this at once; for anything else, '
         'write to ',
       ),
       a(href: 'mailto:$contactEmail', [.text(contactEmail)]),
       .text(
-        ' — the same address for any privacy question, answered by Peter '
-        'Trost personally. You will have an answer within one month of '
-        'asking, as Art. 12 (3) GDPR requires; if a request is genuinely '
-        'complicated we will say so within that month and why. You may also '
-        'complain to a data protection authority. The one responsible for us '
-        'is Der Landesbeauftragte für den Datenschutz und die '
-        'Informationsfreiheit Baden-Württemberg, Lautenschlagerstraße 20, '
-        '70173 Stuttgart, poststelle@lfdi.bwl.de.',
+        ' — the address for any privacy question, answered by Peter Trost '
+        'personally. You will have an answer within one month of asking '
+        '(Art. 12 (3) GDPR); if a request is genuinely complicated we will '
+        'say so within that month, and why. You may also complain to a data '
+        'protection authority. The one responsible for us is Der '
+        'Landesbeauftragte für den Datenschutz und die Informationsfreiheit '
+        'Baden-Württemberg, Lautenschlagerstraße 20, 70173 Stuttgart, '
+        'poststelle@lfdi.bwl.de.',
       ),
     ]),
 
     h2(id: 'automated', [.text('Automated decisions')]),
     p([
       .text(
-        'The assistant works automatically: it picks which question to ask '
-        'next and writes the summary of your entry without anyone reading '
-        'along. That is the whole product, and it is the only automated '
-        'processing here. No decision is made about you that has legal '
-        'effects or similarly significantly affects you — nothing is scored, '
-        'profiled, ranked, or passed to anyone who decides something about '
-        'you — so the rule on automated individual decision-making, '
-        'Art. 22 (1) GDPR, does not apply.',
+        'The assistant works automatically: it picks the next question and '
+        'writes the summary of your entry without anyone reading along. That '
+        'is the only automated processing here. No decision is made about '
+        'you that has legal effects or similarly significantly affects you — '
+        'nothing is scored, ranked, or passed to anyone who decides '
+        'something about you — so Art. 22 (1) GDPR on automated individual '
+        'decision-making does not apply.',
       ),
     ]),
 
     h2(id: 'children', [.text('Children')]),
     p([
       .text(
-        'emotely is for users aged 16 and over. It is not made for children '
-        'and is not directed at them: it collects nothing for advertising '
-        'and shows no ads. Sixteen is the age at which German law lets you '
-        'consent to this processing on your own (Art. 8 GDPR, § 1 TDDDG), '
-        'and because the whole product runs on your consent, that is the '
-        'minimum the app assumes. We do not verify age, and the store age '
-        'ratings are still being set as part of the release — once they '
-        'are, this section will name them too. If you believe a child has '
-        'written entries here, write to ',
+        'emotely is for people aged 16 and over. It is not made for or '
+        'directed at children: it collects nothing for advertising and shows '
+        'no ads. Sixteen is the age from which you can consent to this '
+        'processing on your own in Germany (Art. 8 GDPR), and because the '
+        'product runs on your consent, it is the minimum the app assumes. We '
+        'do not verify age, and the store age ratings are still being set as '
+        'part of the release; once they are, this section will name them. '
+        'If you believe a child has written entries here, write to ',
       ),
       a(href: 'mailto:$contactEmail', [.text(contactEmail)]),
       .text(' and the account will be deleted.'),
@@ -651,18 +630,18 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
     p([
       .text('getemotely.com and the early-access waitlist are covered by the '),
       a(href: '/privacy', [.text('site privacy notice')]),
-      .text(', which is a separate text about separate data.'),
+      .text(', a separate text about separate data.'),
     ]),
 
     h2(id: 'changes', [.text('Changes to this notice')]),
     p([
       .text(
-        'Changes are published on this page with a new date at the top, and '
-        'every version of it is in the public repository, so what changed and '
-        'when is a matter of record. Anything that materially changes what '
-        'happens to your journal will be told to you in the app or by email '
-        'before it takes effect. emotely is open source under the MIT '
-        'licence: you never have to take our word for any of this — ',
+        'Changes are published here with a new date at the top, and every '
+        'version is in the public repository, so what changed and when is a '
+        'matter of record. Anything that materially changes what happens to '
+        'your journal will be told to you in the app or by email before it '
+        'takes effect. emotely is open source under the MIT licence: you '
+        'never have to take our word for any of this — ',
       ),
       a(href: repositoryUrl, [.text('read the code')]),
       .text('.'),
