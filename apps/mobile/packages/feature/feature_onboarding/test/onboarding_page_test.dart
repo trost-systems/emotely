@@ -276,6 +276,103 @@ void main() {
       expect(robot.navigator.asked, ['finish session from null']);
     });
 
+    group('into an account that already has a profile', () {
+      /// The account already holds [name], a placeholder if [placeholder].
+      void accountHolds(
+        OnboardingRobot robot,
+        String name, {
+        bool placeholder = false,
+      }) => robot.supabase.always(
+        profileRead,
+        rows([profileRow(displayName: name, nameIsPlaceholder: placeholder)]),
+      );
+
+      testWidgets('keeps its real name and drops the typed one', (
+        tester,
+      ) async {
+        final robot = OnboardingRobot(tester);
+        accountHolds(robot, 'Alice');
+        await robot.kept(readyForAccount());
+        await robot.launch(phase: OnboardingPhase.afterSignIn);
+
+        expect(robot.saved, isEmpty);
+        expect(robot.store.progress, const OnboardingProgress());
+        expect(robot.navigator.asked, ['finish session from null']);
+        expect(robot.propertiesOf('display_name_changed'), isEmpty);
+        expect(robot.propertiesOf('onboarding_completed'), [
+          {...flow, 'next': 'session', 'name_source': 'existing'},
+        ]);
+      });
+
+      testWidgets('keeps its real name over a placeholder', (tester) async {
+        final robot = OnboardingRobot(tester);
+        accountHolds(robot, 'Alice');
+        await robot.kept(readyForAccount(draft: '', placeholder: 'Pebble'));
+        await robot.launch(phase: OnboardingPhase.afterSignIn);
+
+        expect(robot.saved, isEmpty);
+        expect(robot.store.progress, const OnboardingProgress());
+        expect(robot.propertiesOf('onboarding_completed'), [
+          {...flow, 'next': 'session', 'name_source': 'existing'},
+        ]);
+      });
+
+      testWidgets('takes a typed name over its placeholder', (tester) async {
+        final robot = OnboardingRobot(tester);
+        accountHolds(robot, 'Pebble', placeholder: true);
+        await robot.kept(readyForAccount());
+        await robot.launch(phase: OnboardingPhase.afterSignIn);
+
+        expect(robot.saved, [(name: 'Peter', isPlaceholder: false)]);
+        expect(robot.store.progress, const OnboardingProgress());
+        expect(robot.propertiesOf('display_name_changed'), [
+          {...flow, 'source': 'onboarding'},
+        ]);
+        expect(robot.propertiesOf('onboarding_completed'), [
+          {...flow, 'next': 'session', 'name_source': 'typed'},
+        ]);
+      });
+
+      testWidgets('keeps its placeholder over another one', (tester) async {
+        final robot = OnboardingRobot(tester);
+        accountHolds(robot, 'Pebble', placeholder: true);
+        await robot.kept(readyForAccount(draft: '', placeholder: 'Maple'));
+        await robot.launch(phase: OnboardingPhase.afterSignIn);
+
+        expect(robot.saved, isEmpty);
+        expect(robot.store.progress, const OnboardingProgress());
+        expect(robot.propertiesOf('onboarding_completed'), [
+          {...flow, 'next': 'session', 'name_source': 'existing'},
+        ]);
+      });
+
+      testWidgets('saves nothing it cannot check, and offers a retry', (
+        tester,
+      ) async {
+        final robot = OnboardingRobot(tester);
+        robot.supabase.rest(profileRead, [restRefused()]);
+        await robot.kept(readyForAccount());
+        await robot.launch(phase: OnboardingPhase.afterSignIn);
+
+        // Not knowing whether the account has a name must not overwrite
+        // one it has.
+        expect(robot.saved, isEmpty);
+        expect(robot.retry, findsOneWidget);
+        expect(robot.store.readyForAccount, isTrue);
+        expect(robot.analytics.exceptions, [
+          captured(
+            withheld(PostgrestApiException, code: 'XX000', statusCode: 409),
+            {'step': 'profile_load'},
+          ),
+        ]);
+
+        await robot.tap(robot.retry);
+
+        expect(robot.saved, [(name: 'Peter', isPlaceholder: false)]);
+        expect(robot.navigator.asked, ['finish session from null']);
+      });
+    });
+
     testWidgets('asks again for a name the device kept that the profile would '
         'refuse', (tester) async {
       final robot = OnboardingRobot(tester);

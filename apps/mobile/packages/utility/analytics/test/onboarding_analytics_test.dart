@@ -89,6 +89,10 @@ void main() {
         next: OnboardingNext.journal,
         nameSource: NameSource.placeholder,
       );
+      await analytics.completed(
+        next: OnboardingNext.session,
+        nameSource: NameSource.existing,
+      );
       await analytics.displayNameChanged(NameChangeSource.onboarding);
       await analytics.displayNameChanged(NameChangeSource.profile);
 
@@ -103,6 +107,11 @@ void main() {
           ...flow,
           'next': 'journal',
           'name_source': 'placeholder',
+        }),
+        event('onboarding_completed', {
+          ...flow,
+          'next': 'session',
+          'name_source': 'existing',
         }),
         event('display_name_changed', {...flow, 'source': 'onboarding'}),
         event('display_name_changed', {...flow, 'source': 'profile'}),

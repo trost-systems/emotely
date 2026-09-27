@@ -186,9 +186,11 @@ class OnboardingBloc({
   }
 
   /// After a sign-in: the name this device holds goes to the account —
-  /// the one typed before sign-up, or the one asked for just now — and the
+  /// the one typed before sign-up, or the one asked for just now — unless
+  /// the account already has one it must not replace ([_replaces]), and the
   /// user goes on. Without one, an account that already has a name goes
-  /// straight on, and one without is asked for it once.
+  /// straight on, and one without is asked for it once. The device's name
+  /// is forgotten either way.
   Future<void> _finish(Emitter<OnboardingState> emit) async {
     emit(const OnboardingState.loading());
     final progress = _store.progress;
@@ -209,6 +211,46 @@ class OnboardingBloc({
       return;
     }
     emit(const OnboardingState.saving());
+    final Profile? existing;
+    try {
+      existing = await _profiles.profile();
+    } on Exception catch (error, stackTrace) {
+      // Not knowing what the account holds must not overwrite it: the
+      // user retries rather than the device's name winning blind.
+      unawaited(_errors.profileLoadFailed(error, stackTrace));
+      emit(const OnboardingState.saveFailed());
+      return;
+    }
+    final replaces = _replaces(existing, progress);
+    if (replaces && !await _saved(name, progress, emit)) {
+      return;
+    }
+    unawaited(
+      _analytics.completed(
+        next: next,
+        nameSource: replaces ? progress.nameSource : NameSource.existing,
+      ),
+    );
+    await _store.clear();
+    emit(OnboardingState.finished(next));
+  }
+
+  /// Whether the name the device holds in [progress] may replace what the
+  /// account holds (#204): anything replaces no profile at all, a typed
+  /// name replaces a placeholder, and nothing replaces a real name — a
+  /// returning user who signs into their account from a fresh install
+  /// keeps the name they gave it.
+  static bool _replaces(Profile? existing, OnboardingProgress progress) =>
+      existing == null ||
+      (existing.nameIsPlaceholder && progress.nameSource == NameSource.typed);
+
+  /// Saves [name] from [progress] to the account; on a refusal, reports
+  /// it, offers a retry, and says it did not.
+  Future<bool> _saved(
+    DisplayName name,
+    OnboardingProgress progress,
+    Emitter<OnboardingState> emit,
+  ) async {
     try {
       await _profiles.saveDisplayName(
         name,
@@ -217,14 +259,10 @@ class OnboardingBloc({
     } on Exception catch (error, stackTrace) {
       unawaited(_errors.profileSaveFailed(error, stackTrace));
       emit(const OnboardingState.saveFailed());
-      return;
+      return false;
     }
     unawaited(_analytics.displayNameChanged(NameChangeSource.onboarding));
-    unawaited(
-      _analytics.completed(next: next, nameSource: progress.nameSource),
-    );
-    await _store.clear();
-    emit(OnboardingState.finished(next));
+    return true;
   }
 
   /// An account signed into without a usable name on this device: asked

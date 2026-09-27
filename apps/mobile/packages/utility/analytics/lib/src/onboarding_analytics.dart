@@ -56,6 +56,11 @@ enum NameSource() {
 
   /// The app picked it on "Skip for now".
   placeholder,
+
+  /// The account already had a name, which the one on the device never
+  /// replaces: a real name beats anything, and a placeholder replaces
+  /// nothing (#204).
+  existing,
 }
 
 /// Where the display name was changed.
