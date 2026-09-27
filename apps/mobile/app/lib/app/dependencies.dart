@@ -68,12 +68,7 @@ void registerApp(
   registerAuth(getIt, google: google, passwordAccounts: passwordAccounts);
   registerJournal(getIt);
   registerSession(getIt);
-  // The app's side of each feature's navigator, next to the feature, and
-  // of the session's question of who the user is.
-  getIt
-    ..registerSingleton<UserContextSource>(const AppUserContextSource())
-    ..registerSingleton<AccountNavigator>(const AppAccountNavigator())
-    ..registerSingleton<JournalNavigator>(const AppJournalNavigator());
+  _registerSeams(getIt);
   registerAccount(getIt);
 }
 
@@ -88,3 +83,10 @@ void _registerRecords(GetIt getIt, SupabaseClient supabase) {
     usageAnalyticsVersion: usageAnalyticsVersion,
   );
 }
+
+/// The app's side of each feature's navigator, next to the features, and
+/// of the session's question of who the user is.
+void _registerSeams(GetIt getIt) => getIt
+  ..registerSingleton<UserContextSource>(const AppUserContextSource())
+  ..registerSingleton<AccountNavigator>(const AppAccountNavigator())
+  ..registerSingleton<JournalNavigator>(const AppJournalNavigator());
