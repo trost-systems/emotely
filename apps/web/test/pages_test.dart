@@ -419,7 +419,7 @@ void main() {
       tester.pumpComponent(const AppPrivacy());
 
       expect(
-        find.textContaining('Last updated 26 September 2026'),
+        find.textContaining('Last updated 27 September 2026'),
         findsOneComponent,
       );
     });
@@ -427,9 +427,24 @@ void main() {
     testComponents('discloses where the agent runs', (tester) {
       tester.pumpComponent(const AppPrivacy());
 
-      // The agent's Vercel functions run in iad1 (Washington, D.C.), so the
-      // transcript leaves the EU before it reaches any model provider.
-      expect(find.textContaining('Washington'), findsComponents);
+      // The agent's Vercel functions are pinned to fra1 by apps/agent/
+      // vercel.json (ADR 0010, amendment 2026-09-27). The transcript can
+      // still leave the EU at the gateway and the model provider, so that
+      // transfer and its safeguard stay disclosed.
+      expect(
+        find.textContaining('agent runs on Vercel’s servers in Frankfurt'),
+        findsOneComponent,
+      );
+      expect(
+        find.textContaining('runs the emotely agent in Frankfurt'),
+        findsOneComponent,
+      );
+      expect(find.textContaining('Washington'), findsNothing);
+      expect(find.textContaining('USA'), findsNothing);
+      expect(
+        find.textContaining('model providers can sit outside the EU'),
+        findsOneComponent,
+      );
       expect(
         find.textContaining('standard contractual clauses'),
         findsComponents,

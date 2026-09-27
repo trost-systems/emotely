@@ -38,7 +38,7 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         'This notice covers the emotely mobile app (listed on Google Play as '
         '"Reflect Therapy AI: emotely") for iOS and Android. The web site at '
         'getemotely.com and its waitlist have a separate notice. Last '
-        'updated 26 September 2026.',
+        'updated 27 September 2026.',
       ),
     ]),
 
@@ -284,12 +284,12 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
       li([
         strong([.text('Where it runs.')]),
         .text(
-          ' The agent runs on Vercel’s servers in Washington, D.C., USA. '
-          'The gateway and the model providers can sit outside the EU too; '
-          'which provider answers, and where, depends on where the gateway '
-          'routes at that moment. These transfers rest on the EU standard '
-          'contractual clauses (Art. 46 GDPR), and for the providers on the '
-          'two routing guarantees below.',
+          ' The agent runs on Vercel’s servers in Frankfurt, Germany (EU), '
+          'next to the database. The gateway and the model providers can sit '
+          'outside the EU; which provider answers, and where, depends on '
+          'where the gateway routes at that moment. Those transfers rest on '
+          'the EU standard contractual clauses (Art. 46 GDPR), and for the '
+          'providers on the two routing guarantees below.',
         ),
       ]),
       li([
@@ -438,7 +438,7 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
       li([
         strong([.text('Vercel')]),
         .text(
-          ' — runs the emotely agent in Washington, D.C., USA, and the AI '
+          ' — runs the emotely agent in Frankfurt, Germany (EU), and the AI '
           'Gateway the conversation passes through. Stores no journal of '
           'ours. Its firewall also counts requests per internet address and '
           'refuses more than thirty a minute to the session endpoint, which '
