@@ -1,7 +1,11 @@
 import process from "node:process";
 import type { JSONValue, LanguageModel, ModelMessage } from "ai";
 import { judgeSession } from "../src/judge.ts";
-import type { QuestionSet, SessionClient } from "../src/session.ts";
+import type {
+  QuestionSet,
+  SessionClient,
+  UserContext,
+} from "../src/session.ts";
 import { runSession } from "../src/session.ts";
 import { miniSet, type Scenario } from "./scenarios.ts";
 
@@ -73,6 +77,17 @@ export function describeQuestionSet(set: QuestionSet): string {
   return `The question set has exactly ${set.questions.length} question(s); the session is complete once each has an answer and complete_session was called:\n${set.questions.map((q, i) => `${i + 1}. ${q.id}: "${q.text}" (${q.answer_type})`).join("\n")}`;
 }
 
+/** Tells the judge what the assistant was told about the user, if anything. */
+export function describeUserContext(context: UserContext | undefined): string {
+  const name = context?.displayName;
+  if (name === undefined) {
+    return "The assistant was told nothing about the user, not even a name.";
+  }
+  return context?.nameIsPlaceholder === true
+    ? `The user preferred not to share a name, so the app picked the playful nickname "${name}" for them; the assistant was told so.`
+    : `The assistant was told the user's name: "${name}".`;
+}
+
 /** One scenario run; returns null on pass, a failure description otherwise. */
 export async function runScenarioOnce(
   scenario: Scenario,
@@ -83,7 +98,14 @@ export async function runScenarioOnce(
   let result: Awaited<ReturnType<typeof runSession>>;
   const client = scriptedClient(scenario.answers);
   try {
-    result = await runSession({ questionSet: miniSet, client, model });
+    result = await runSession({
+      questionSet: miniSet,
+      client,
+      model,
+      ...(scenario.userContext === undefined
+        ? {}
+        : { userContext: scenario.userContext }),
+    });
   } catch (err) {
     return `session crashed — ${String(err)}`;
   }
@@ -100,7 +122,10 @@ export async function runScenarioOnce(
     model: judgeModel,
     transcript: formatTranscript(result.messages),
     rubrics: scenario.rubrics,
-    context: describeQuestionSet(miniSet),
+    context: [
+      describeQuestionSet(miniSet),
+      describeUserContext(scenario.userContext),
+    ].join("\n"),
   });
   const failed = verdicts.filter((v) => !v.pass);
 

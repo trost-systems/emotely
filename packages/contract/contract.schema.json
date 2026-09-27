@@ -187,6 +187,20 @@
       "app_version": {
         "type": "string",
         "pattern": "^\\d+\\.\\d+\\.\\d+$"
+      },
+      "user_context": {
+        "type": "object",
+        "properties": {
+          "display_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "pattern": "^[^\\p{Cc}]*$"
+          },
+          "name_is_placeholder": {
+            "type": "boolean"
+          }
+        }
       }
     },
     "$defs": {
@@ -492,6 +506,7 @@
     ]
   },
   "limits": {
-    "max_answer_length": 4096
+    "max_answer_length": 4096,
+    "max_display_name_length": 40
   }
 }

@@ -43,6 +43,40 @@ void main() {
       expect(robot.answerInput, findsOneWidget);
     });
 
+    testWidgets('tells the agent who the user is on every round', (
+      tester,
+    ) async {
+      const pebble = UserContext(
+        displayName: 'Pebble',
+        nameIsPlaceholder: true,
+      );
+      const maya = UserContext(displayName: 'Maya');
+      final agent = AgentStub()
+        ..script([
+          awaiting(toolCallId: 'c1', question: SessionRobot.rate),
+          awaiting(toolCallId: 'c2', question: SessionRobot.best),
+        ]);
+      final robot = SessionRobot(tester, agent)..userContext.context = pebble;
+      await robot.launch();
+      await robot.settle();
+
+      expect(agent.lastRequest['user_context'], {
+        'display_name': 'Pebble',
+        'name_is_placeholder': true,
+      });
+
+      // Renamed mid-session: the agent keeps nothing, so the next round
+      // carries whatever the app knows by then.
+      robot.userContext.context = maya;
+      await robot.answerRating(7);
+
+      expect(agent.lastRequest['user_context'], {
+        'display_name': 'Maya',
+        'name_is_placeholder': false,
+      });
+      expect(robot.userContext.asked, 2);
+    });
+
     testWidgets('walks a whole session and shows the entry', (tester) async {
       const secondTranscript = <Object?>['round', 'round'];
       const secondSignature = 'sig-2';

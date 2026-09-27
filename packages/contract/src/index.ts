@@ -72,6 +72,36 @@ const appVersion = z.string().regex(/^\d+\.\d+\.\d+$/);
 // (ADR 0008).
 export const maxAnswerLength = 4096;
 
+// The longest display name the agent takes, after trimming, in Unicode code
+// points — Dart's `runes.length` and the `profiles` table's check, so a name
+// the profile holds is always one the agent takes. zod counts code points
+// for a string's `max` (JSON Schema's `maxLength` means the same), so forty
+// emoji fit. Emitted under `limits` for the app to cap its name field with.
+export const maxDisplayNameLength = 40;
+
+// Who the session is for, beyond the signed-in user id: what the companion may
+// know about the person it talks to (#204). Every member is optional so the
+// object grows without breaking anyone — `local_date`, `time_zone` and
+// `locale` are expected next, each added here as one more optional key.
+// Personal data goes to the model provider, so a new member is also a change
+// to the journal consent wording (`consent_text.dart`).
+export const userContext = z.object({
+  // What the user wants to be called: the name they typed, or the playful
+  // placeholder emotely picked when they preferred not to give one. Any
+  // script; one line (no control characters), so it can only ever be a name
+  // in the prompt, never a layout of its own.
+  display_name: z
+    .string()
+    .trim()
+    .min(1)
+    .max(maxDisplayNameLength)
+    .regex(/^[^\p{Cc}]*$/u)
+    .optional(),
+  // True when `display_name` is that placeholder rather than a real name.
+  name_is_placeholder: z.boolean().optional(),
+});
+export type UserContextWire = z.infer<typeof userContext>;
+
 export const advanceSessionRequest = z.object({
   transcript: z.array(z.unknown()).optional(),
   signature: z.string().optional(),
@@ -81,6 +111,12 @@ export const advanceSessionRequest = z.object({
   // Optional on the wire so clients that predate it keep working (additive
   // change); the app always sends it.
   app_version: appVersion.optional(),
+  // Optional for the same reason (ADR 0009 rule 1): apps that predate it
+  // omit it, and so does an app that knows nothing about the user yet. One
+  // that does not validate is dropped rather than refused: a name is a
+  // nicety, and a session is not worth failing over one — the round runs as
+  // if the app had sent nothing, which is what an older app does anyway.
+  user_context: userContext.optional().catch(undefined),
 });
 export type AdvanceSessionRequest = z.infer<typeof advanceSessionRequest>;
 

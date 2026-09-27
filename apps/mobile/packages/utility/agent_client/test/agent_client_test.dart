@@ -65,6 +65,23 @@ void main() {
       );
     });
 
+    test('tells the agent who the user is when it knows', () async {
+      final stub = AgentStub()
+        ..script([awaiting(toolCallId: toolCallId, question: question)]);
+
+      await stub.agentClient.advance(
+        userContext: const UserContext(
+          displayName: 'Pebble',
+          nameIsPlaceholder: true,
+        ),
+      );
+
+      expect(stub.lastRequest, {
+        'app_version': AgentStub.appVersion,
+        'user_context': {'display_name': 'Pebble', 'name_is_placeholder': true},
+      });
+    });
+
     test('posts JSON to the endpoint', () async {
       final stub = AgentStub()
         ..script([awaiting(toolCallId: toolCallId, question: question)]);

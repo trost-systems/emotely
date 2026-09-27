@@ -10,7 +10,8 @@ import {
 import { scenarios } from "./scenarios.ts";
 
 // Judged behavioral scenarios: opening tone, question-lookalikes,
-// end-of-conversation lookalikes, out-of-context prompts.
+// end-of-conversation lookalikes, out-of-context prompts, and the user's name
+// (given, a placeholder, or none at all).
 // Nightly gate: 2-of-3 runs must pass; a scenario passes a run when the
 // machine checks hold AND every rubric passes.
 

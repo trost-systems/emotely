@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:testing/testing.dart';
 
+import 'fake_user_context_source.dart';
+
 void main() {
   group('registerSession', () {
     test('registers the bloc as a factory over the utilities', () async {
@@ -16,6 +18,7 @@ void main() {
       );
 
       registerSession(getIt);
+      getIt.registerSingleton<UserContextSource>(FakeUserContextSource());
 
       final first = getIt<SessionBloc>();
       final second = getIt<SessionBloc>();

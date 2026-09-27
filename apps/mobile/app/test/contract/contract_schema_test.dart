@@ -98,6 +98,18 @@ void main() {
       expect(limits['max_answer_length'], maxAnswerLength);
     });
 
+    test('the display name limit is the one the agent keeps to', () {
+      final limits = schema['limits'] as Map<String, dynamic>;
+      final request = schema['advance_session_request'] as Map<String, dynamic>;
+      final userContext =
+          object(request)['user_context'] as Map<String, dynamic>;
+      final displayName =
+          object(userContext)['display_name'] as Map<String, dynamic>;
+
+      expect(limits['max_display_name_length'], maxDisplayNameLength);
+      expect(displayName['maxLength'], maxDisplayNameLength);
+    });
+
     test(
       'request: what AgentClient posts is what the schema describes',
       () async {
@@ -111,14 +123,28 @@ void main() {
           transcript: AgentStub.transcript,
           signature: AgentStub.signature,
           answer: (toolCallId: 'c1', answer: const Answer.rating(5)),
+          userContext: const UserContext(
+            displayName: 'Pebble',
+            nameIsPlaceholder: true,
+          ),
         );
         final posted = stub.lastRequest;
         final answer = posted['answer']! as Map<String, dynamic>;
+        final userContext = posted['user_context']! as Map<String, dynamic>;
 
         expect(object(request).keys, containsAll(posted.keys));
         final answerSchema = object(request)['answer'] as Map<String, dynamic>;
         expect(object(answerSchema).keys, containsAll(answer.keys));
         expect(answer.keys, containsAll(required(answerSchema)));
+        // Every member is optional on the agent's side (it grows), so the
+        // pin is that each key the app sends is one the agent knows.
+        final contextSchema =
+            object(request)['user_context'] as Map<String, dynamic>;
+        expect(
+          object(contextSchema).keys,
+          containsAll(['display_name', 'name_is_placeholder']),
+        );
+        expect(object(contextSchema).keys, containsAll(userContext.keys));
       },
     );
 

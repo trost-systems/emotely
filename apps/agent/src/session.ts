@@ -1,6 +1,10 @@
 import type { AskQuestionInput } from "@emotely/contract";
 import type { JSONValue, LanguageModel } from "ai";
-import type { QuestionSet, SessionResult } from "./session-core.ts";
+import type {
+  QuestionSet,
+  SessionResult,
+  UserContext,
+} from "./session-core.ts";
 import { advanceSession, emptyUsage } from "./session-core.ts";
 
 export type {
@@ -10,6 +14,7 @@ export type {
   QuestionSet,
   SessionAnswer,
   SessionResult,
+  UserContext,
 } from "./session-core.ts";
 export { advanceSession } from "./session-core.ts";
 
@@ -29,6 +34,8 @@ export async function runSession(opts: {
   attribution?: { distinctId: string; sessionId: string };
   /** Prompt version to run (flag payload); unknown ids fall back to current. */
   promptId?: string;
+  /** Who the user is, sent with every round as the app does; absent = none. */
+  userContext?: UserContext;
 }): Promise<SessionResult> {
   const { questionSet, client, model, temperature, attribution } = opts;
   const usage = emptyUsage();
@@ -45,6 +52,9 @@ export async function runSession(opts: {
       ...(temperature === undefined ? {} : { temperature }),
       ...(attribution === undefined ? {} : { attribution }),
       ...(opts.promptId === undefined ? {} : { promptId: opts.promptId }),
+      ...(opts.userContext === undefined
+        ? {}
+        : { userContext: opts.userContext }),
     });
     ({ messages } = step);
     usage.inputTokens += step.usage.inputTokens;

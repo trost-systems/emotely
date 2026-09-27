@@ -39,6 +39,19 @@ export type QuestionSet = {
   questions: Question[];
 };
 
+/**
+ * What the companion may know about the person it talks to (#204), camelCase
+ * here and `user_context` on the wire. Every member is optional: an app that
+ * knows nothing sends nothing, and later members (a local date, a time zone,
+ * a locale) arrive as more optional keys.
+ */
+export type UserContext = {
+  /** The name the user chose, or the placeholder emotely picked for them. */
+  displayName?: string;
+  /** True when [displayName] is that placeholder, not a real name. */
+  nameIsPlaceholder?: boolean;
+};
+
 export type SessionClient = {
   /** Answer an ask_question tool call with the raw widget value. */
   askQuestion: (input: AskQuestionInput) => Promise<JSONValue>;
@@ -208,18 +221,30 @@ export type AdvanceResult = {
     }
 );
 
+/** What one call of [advanceSession] runs on. */
+export type AdvanceOptions = {
+  questionSet: QuestionSet;
+  model: LanguageModel;
+  messages: ModelMessage[];
+  answer?: SessionAnswer;
+  temperature?: number;
+  attribution?: { distinctId: string; sessionId: string };
+  promptId?: string;
+  /** Who the user is, as the app said this round; absent = nothing known. */
+  userContext?: UserContext;
+};
+
 function roundSettings(
-  opts: {
-    questionSet: QuestionSet;
-    model: LanguageModel;
-    temperature?: number;
-    attribution?: { distinctId: string; sessionId: string };
-  },
+  opts: AdvanceOptions,
   prompt: ReturnType<typeof resolvePrompt>,
 ) {
   return {
     model: opts.model,
-    instructions: prompt.build(opts.questionSet),
+    // The user context lives in the instructions, rebuilt each round from
+    // the request, never in the transcript: the transcript is signed and
+    // stored by the app, and a name typed into it would outlive a rename.
+    // `recordInputs: false` keeps the instructions out of telemetry too.
+    instructions: prompt.build(opts.questionSet, opts.userContext),
     stopWhen: isStepCount(1),
     maxOutputTokens: MAX_OUTPUT_TOKENS_PER_ROUND,
     providerOptions: SESSION_PROVIDER_OPTIONS,
@@ -272,15 +297,9 @@ function withAnswer(
  * reconstructed from the transcript, so callers (CLI loop, HTTP endpoint)
  * own persistence.
  */
-export async function advanceSession(opts: {
-  questionSet: QuestionSet;
-  model: LanguageModel;
-  messages: ModelMessage[];
-  answer?: SessionAnswer;
-  temperature?: number;
-  attribution?: { distinctId: string; sessionId: string };
-  promptId?: string;
-}): Promise<AdvanceResult> {
+export async function advanceSession(
+  opts: AdvanceOptions,
+): Promise<AdvanceResult> {
   const { questionSet } = opts;
   const prompt = resolvePrompt(opts.promptId);
   const { answers, asked, pending } = replayTranscript(opts.messages);
