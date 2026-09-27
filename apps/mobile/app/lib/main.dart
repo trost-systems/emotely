@@ -66,15 +66,17 @@ Future<void> main() async {
     passwordAccounts: passwordAccounts,
     google: googleClients,
   );
-  runApp(await _restoredApp());
+  runApp(await _restoredApp(supabase.client));
 }
 
 /// The app over what this device kept, read before the first frame.
-Future<EmotelyApp> _restoredApp() async {
-  // PostHog opens here only if the user allowed it on an earlier launch;
-  // awaited so the first identify of a restored session finds it open.
+Future<EmotelyApp> _restoredApp(SupabaseClient supabase) async {
+  // PostHog opens here only if the user allowed it on an earlier launch
+  // and the answer is the restored session's account's (#216): a session
+  // can end while the app is closed. Awaited so the first identify of a
+  // restored session finds it open.
   final gate = GetIt.I<PostHogGate>();
-  await gate.restore();
+  await gate.restore(account: supabase.auth.currentUser?.id);
   // Where a signed-out user belongs is asked of the onboarding store before
   // the first frame, so it has to have read what this device kept.
   final onboarding = GetIt.I<OnboardingStore>();

@@ -144,7 +144,14 @@ exists before Allow. Auto-init is already off in `Info.plist` and
 - It can be withdrawn at any time with a switch in Privacy settings, which
   turns both ways. Withdrawing stops the SDK and resets its id.
 - **Signing out resets it**, and the sheet asks again. The choice belongs to
-  a person, not to the phone.
+  a person, not to the phone. The device keeps whose it is with it (#216):
+  an account id, or none for an answer given before sign-up, which the
+  first account to sign in adopts. On launch and on every change of
+  session, a choice that belongs to anyone other than the account now
+  signed in is forgotten before PostHog is set up or anything is sent, so
+  a session that ends while the app is closed cannot pass one person's
+  answer to the next. A choice stored without an owner, by the builds
+  before that, is asked again: nothing can tell whose it was.
 - Before an account exists the choice is kept on the device. After sign-in
   it is appended to the consent record as its own kind (ADR 0014 amendment),
   and `identify()` with the user's id links the events sent since Allow to

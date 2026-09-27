@@ -24,7 +24,7 @@ void main() {
       expect(spy.events, isEmpty);
       expect(spy.lifecycle, isEmpty);
 
-      await getIt<PostHogGate>().restore();
+      await getIt<PostHogGate>().restore(account: null);
       await getIt<SessionAnalytics>().sessionStarted();
       await getIt<AuthAnalytics>().signedIn(SignInMethod.code);
       await getIt<JournalAnalytics>().entryOpened();

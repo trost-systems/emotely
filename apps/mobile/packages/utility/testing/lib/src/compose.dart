@@ -78,9 +78,14 @@ void registerUtilitiesUnderTest(
     consentVersion: consentVersion,
     onboardingFlowVersion: testOnboardingFlowVersion,
   );
-  // `main` awaits this before the first frame; here every call PostHog
-  // hears queues behind it instead, so the order is the same.
-  unawaited(getIt<PostHogGate>().restore());
+  // `main` awaits this before the first frame, over the session Supabase
+  // restored; here every call PostHog hears queues behind it instead, so
+  // the order is the same.
+  unawaited(
+    getIt<PostHogGate>().restore(
+      account: supabase.supabase.auth.currentUser?.id,
+    ),
+  );
   registerJournalRepository(getIt, supabase: supabase.supabase);
   registerProfileRepository(getIt, supabase: supabase.supabase);
   registerConsentRepository(

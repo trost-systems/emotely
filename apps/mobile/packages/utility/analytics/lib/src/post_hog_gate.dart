@@ -29,7 +29,12 @@ class PostHogGate({
   required final PostHogConfig _config,
   required final AnalyticsChoiceStore _store,
 }) {
-  AnalyticsChoice? _choice;
+  /// The choice and whose it is, as the store keeps it.
+  StoredChoice? _stored;
+
+  /// Who is signed in, as last told ([restore], [signedInAs]): the account
+  /// an answer given now belongs to.
+  String? _account;
 
   /// Whether `setup` has run and not been undone by `close`.
   var _setUp = false;
@@ -50,7 +55,16 @@ class PostHogGate({
 
   /// The choice as it stands: `null` until one is made, and again after
   /// [forget].
-  AnalyticsChoice? get choice => _choice;
+  AnalyticsChoice? get choice => _stored?.choice;
+
+  /// The choice as it stands if it is [account]'s, else `null`: one made
+  /// before sign-up that no account has adopted yet is nobody's, and one
+  /// made by someone else is never theirs. What the consent record may say
+  /// about [account] (ADR 0014).
+  AnalyticsChoice? choiceOf(String account) => switch (_stored) {
+    (:final choice, account: final owner?) when owner == account => choice,
+    _ => null,
+  };
 
   /// Every change of [choice] from here on.
   Stream<AnalyticsChoice?> get changes => _changes.stream;
@@ -59,14 +73,63 @@ class PostHogGate({
   /// [choice] can be read as the answer rather than a guess.
   Future<void> get settled => _settled;
 
-  /// Reads the stored choice and, if it allows, sets PostHog up as the
-  /// same anonymous person as last launch. `main` awaits this before the
-  /// first frame, so the first `identify` already finds the gate open.
-  Future<void> restore() => _transition(() async {
-    _choice = await _store.read();
-    if (_choice == AnalyticsChoice.allowed) {
+  /// Reads the stored choice and, if it allows and it is [account]'s — the
+  /// account whose session the app starts with, `null` for none — sets
+  /// PostHog up as the same anonymous person as last launch. `main` awaits
+  /// this before the first frame, so the first `identify` already finds the
+  /// gate open.
+  ///
+  /// A session can end while the app is closed (an expiry, a revoked
+  /// refresh token, an account deleted elsewhere), and nothing on the
+  /// device sees it go (#216). So whose the choice is is checked here,
+  /// before PostHog is set up and before anything queued behind this can
+  /// go out: a choice that belongs to an account other than [account],
+  /// or to any account when nobody is signed in, is forgotten and asked
+  /// again. A choice made before sign-up is adopted by [account], if there
+  /// is one. A stored value this build cannot read — including one from a
+  /// build that did not keep whose it was — is removed.
+  Future<void> restore({required String? account}) => _transition(() async {
+    _account = account;
+    _stored = await _store.read();
+    switch (_claimBy(account)) {
+      case _Claim.forget:
+        _stored = null;
+      case _Claim.adopt:
+        await _adopt(account);
+      case _Claim.keep:
+        break;
+    }
+    if (_stored == null) {
+      await _store.clear();
+    }
+    if (choice == AnalyticsChoice.allowed) {
       await _start(fresh: false);
       _open = true;
+    }
+  });
+
+  /// Who is signed in now: [account], or nobody for `null`. The session
+  /// changed while the app was running — a sign-in, a sign-out however it
+  /// came about, another account taking the session's place.
+  ///
+  /// A choice that belongs to anyone other than [account] is forgotten as
+  /// [forget] forgets it: PostHog resets while its owner's consent still
+  /// covers that, switches off, and the question is asked again. A choice
+  /// made before sign-up is adopted by the account that signs in. Queued
+  /// like every transition, so nothing asked for after the session changed
+  /// goes out under a choice that is not the new account's.
+  Future<void> signedInAs(String? account) => _transition(() async {
+    _account = account;
+    if (_identity?.userId != account) {
+      _identity = null;
+    }
+    switch (_claimBy(account)) {
+      case _Claim.forget:
+        await _forget();
+      case _Claim.adopt:
+        await _adopt(account);
+      case _Claim.keep:
+        break;
     }
   });
 
@@ -84,7 +147,7 @@ class PostHogGate({
   /// comes up while the SDK is being set up is not counted ahead of it.
   Future<void> allow() => _transition(() async {
     _update(AnalyticsChoice.allowed);
-    await _store.write(AnalyticsChoice.allowed);
+    await _store.write(AnalyticsChoice.allowed, account: _account);
     await _start(fresh: true);
     await _guarded(
       () => _posthog.capture(eventName: 'usage_analytics_allowed'),
@@ -102,22 +165,14 @@ class PostHogGate({
   Future<void> deny() => _transition(() async {
     _update(AnalyticsChoice.denied);
     await _stop();
-    await _store.write(AnalyticsChoice.denied);
+    await _store.write(AnalyticsChoice.denied, account: _account);
   });
 
   /// Sign-out and account deletion: the choice belongs to a person, not the
   /// phone, so PostHog forgets who this was (`reset`, while that person's
   /// consent still covers it), switches off, and the question is asked
   /// again of whoever comes next.
-  Future<void> forget() => _transition(() async {
-    _update(null);
-    _identity = null;
-    if (_open) {
-      await _guarded(_posthog.reset);
-    }
-    await _stop();
-    await _store.clear();
-  });
+  Future<void> forget() => _transition(_forget);
 
   /// `capture`, if allowed.
   Future<void> capture({
@@ -169,9 +224,38 @@ class PostHogGate({
   Future<void> _transition(Future<void> Function() body) =>
       _settled = _settled.then((_) => _guarded(body));
 
+  /// Records [choice] as the answer of whoever is signed in now, or of
+  /// nobody yet.
   void _update(AnalyticsChoice? choice) {
-    _choice = choice;
+    _stored = choice == null ? null : (choice: choice, account: _account);
     _changes.add(choice);
+  }
+
+  /// What [account] coming or going means for the stored choice.
+  _Claim _claimBy(String? account) => switch (_stored) {
+    null => _Claim.keep,
+    (choice: _, account: null) => account == null ? _Claim.keep : _Claim.adopt,
+    (choice: _, account: final owner?) =>
+      owner == account ? _Claim.keep : _Claim.forget,
+  };
+
+  /// Makes the choice made before sign-up [account]'s, on the device too,
+  /// so the next launch knows whose it is.
+  Future<void> _adopt(String? account) async {
+    if (_stored case (:final choice, account: _)) {
+      _stored = (choice: choice, account: account);
+      await _store.write(choice, account: account);
+    }
+  }
+
+  Future<void> _forget() async {
+    _update(null);
+    _identity = null;
+    if (_open) {
+      await _guarded(_posthog.reset);
+    }
+    await _stop();
+    await _store.clear();
   }
 
   /// Sets the SDK up and tells it who is signed in, without opening the
@@ -223,4 +307,16 @@ class PostHogGate({
       debugPrint('PostHog call failed: ${error.runtimeType}');
     }
   }
+}
+
+/// What a change of who is signed in means for the stored choice.
+enum _Claim() {
+  /// It is the account's, or nobody's while nobody is signed in.
+  keep,
+
+  /// It was made before sign-up, and the account signing in takes it.
+  adopt,
+
+  /// It is someone else's: forgotten, and asked again.
+  forget,
 }
