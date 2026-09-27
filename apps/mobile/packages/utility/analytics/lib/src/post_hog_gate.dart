@@ -72,10 +72,19 @@ class PostHogGate({
   /// The user allowed usage analytics: kept for the next launch, and
   /// PostHog set up afresh. The reset makes sure nothing links this consent
   /// to whoever used the SDK on this device before.
+  ///
+  /// The allow is then the first thing PostHog hears, as
+  /// `usage_analytics_allowed`: the top of the onboarding funnel (#204). It
+  /// is sent here, inside the transition, so that nothing queued behind the
+  /// answer — the screens that came up under the question — goes out
+  /// before it, and so that it is only ever sent by an allow.
   Future<void> allow() => _transition(() async {
     _update(AnalyticsChoice.allowed);
     await _store.write(AnalyticsChoice.allowed);
     await _start(fresh: true);
+    await _guarded(
+      () => _posthog.capture(eventName: 'usage_analytics_allowed'),
+    );
   });
 
   /// The user said no, or withdrew: PostHog is switched off before the

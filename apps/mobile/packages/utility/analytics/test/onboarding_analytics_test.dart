@@ -109,20 +109,6 @@ void main() {
       ]);
     });
 
-    test('reports the allow that opens the funnel', () async {
-      final spy = AnalyticsSpy();
-      final analytics = OnboardingAnalytics(gate: spy.gate, flowVersion: 1);
-
-      await analytics.usageAnalyticsAllowed();
-
-      expect(spy.events, [
-        event('usage_analytics_allowed', {
-          'flow_version': 1,
-          'variant': 'control',
-        }),
-      ]);
-    });
-
     test('holds a step view until the usage-analytics question is answered, '
         'so the first screen under the sheet is counted', () async {
       final spy = AnalyticsSpy(stored: null);
@@ -136,7 +122,9 @@ void main() {
       await spy.gate.allow();
       await viewed;
 
+      // After the allow itself, never before it: the funnel starts there.
       expect(spy.events.map((captured) => captured['event']), [
+        'usage_analytics_allowed',
         'onboarding_step_viewed',
       ]);
     });

@@ -116,7 +116,12 @@ void main() {
       expect(spy.identities, [
         identity('user-1', {r'$internal_or_test_user': false}),
       ]);
-      expect(spy.events, [event('journal_viewed')]);
+      // The allow itself is the first thing PostHog hears: the top of the
+      // onboarding funnel, sent only ever by the allow that opened the gate.
+      expect(spy.events, [
+        event('usage_analytics_allowed'),
+        event('journal_viewed'),
+      ]);
       expect(
         await AnalyticsChoiceStore(preferences: spy.preferences).read(),
         AnalyticsChoice.allowed,
@@ -181,7 +186,10 @@ void main() {
         'reset',
       ]);
       expect(spy.identified, ['user-1', 'user-1']);
-      expect(spy.events, [event('journal_viewed')]);
+      expect(spy.events, [
+        event('usage_analytics_allowed'),
+        event('journal_viewed'),
+      ]);
     });
 
     test('forgetting resets PostHog, switches it off and asks again', () async {
@@ -208,7 +216,10 @@ void main() {
       await gate.capture(eventName: 'journal_viewed');
 
       expect(spy.identified, ['user-1']);
-      expect(spy.events, [event('journal_viewed')]);
+      expect(spy.events, [
+        event('usage_analytics_allowed'),
+        event('journal_viewed'),
+      ]);
     });
 
     test('forgetting while nothing runs only forgets the answer', () async {

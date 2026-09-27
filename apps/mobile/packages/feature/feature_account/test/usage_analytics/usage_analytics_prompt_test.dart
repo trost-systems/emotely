@@ -121,12 +121,7 @@ void main() {
 
       await robot.tap(robot.allow);
 
-      expect(robot.analytics.events, [
-        event('usage_analytics_allowed', {
-          'flow_version': testOnboardingFlowVersion,
-          'variant': 'control',
-        }),
-      ]);
+      expect(robot.analytics.events, [event('usage_analytics_allowed')]);
     });
 
     testWidgets('refusing tells PostHog nothing at all', (tester) async {

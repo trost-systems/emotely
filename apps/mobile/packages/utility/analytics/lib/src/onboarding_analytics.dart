@@ -94,11 +94,6 @@ class const OnboardingAnalytics({
   /// The only variant there is: no experiment runs yet.
   static const variant = 'control';
 
-  /// The user allowed usage analytics: the first step of the funnel, and by
-  /// construction only ever sent when allowed.
-  Future<void> usageAnalyticsAllowed() =>
-      gate.capture(eventName: 'usage_analytics_allowed', properties: _flow);
-
   /// A fresh onboarding of [stepCount] steps began on this device.
   Future<void> started({required int stepCount}) => _afterTheQuestion(
     'onboarding_started',
