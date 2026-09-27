@@ -19,7 +19,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// The gate is registered shut: `main` awaits `PostHogGate.restore` before
 /// the first frame, which reads the choice kept in the platform's
 /// preferences (faked at its platform interface under test) and opens the
-/// gate if it allows. [consentVersion] names the wording the app
+/// gate if it allows and belongs to the account the app starts signed in
+/// as (#216). [consentVersion] names the wording the app
 /// currently asks journal consent for, and [onboardingFlowVersion] the
 /// onboarding flow it runs; both constants are the app's to own.
 void registerAnalytics(

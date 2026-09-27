@@ -5,7 +5,7 @@
 -- name reaches the model in every session, so what the table accepts is the
 -- product rule, not a suggestion: 1 to 40 characters, trimmed, any script.
 begin;
-select plan(42);
+select plan(52);
 
 create function pg_temp.login(uid uuid) returns void language plpgsql as $$
 begin
@@ -202,6 +202,69 @@ select throws_ok(
   '23514',
   null,
   'a tab inside a name is refused'
+);
+-- A line or paragraph separator (Unicode categories Zl, Zp) is a line break
+-- that is not a control character, and JSON.stringify does not escape it, so
+-- it would carry a new line into the prompt all the same (#214).
+select throws_ok(
+  format($$update public.profiles set display_name = %L$$, E'Mary\u2028Ann'),
+  '23514',
+  'new row for relation "profiles" violates check constraint "profiles_display_name_no_layout_character"',
+  'a line separator inside a name is refused'
+);
+select throws_ok(
+  format($$update public.profiles set display_name = %L$$, E'Mary\u2029Ann'),
+  '23514',
+  null,
+  'a paragraph separator inside a name is refused'
+);
+-- A bidirectional embedding, override or isolate reorders the text around
+-- it: a right-to-left override in a name would reverse the rest of the
+-- greeting, and hide what the prompt really says from whoever reads it.
+select throws_ok(
+  format($$update public.profiles set display_name = %L$$, E'Mary\u202aAnn'),
+  '23514',
+  null,
+  'a left-to-right embedding inside a name is refused'
+);
+select throws_ok(
+  format($$update public.profiles set display_name = %L$$, E'Mary\u202eAnn'),
+  '23514',
+  null,
+  'a right-to-left override inside a name is refused'
+);
+select throws_ok(
+  format($$update public.profiles set display_name = %L$$, E'Mary\u2066Ann'),
+  '23514',
+  null,
+  'a left-to-right isolate inside a name is refused'
+);
+select throws_ok(
+  format($$update public.profiles set display_name = %L$$, E'Mary\u2069Ann'),
+  '23514',
+  null,
+  'a pop directional isolate inside a name is refused'
+);
+-- The other invisible format characters are what names and emoji are made
+-- of, and stay allowed.
+select lives_ok(
+  format($$update public.profiles set display_name = %L$$, E'مهران\u200cپور'),
+  'a zero-width non-joiner inside a Persian name is kept'
+);
+select lives_ok(
+  format($$update public.profiles set display_name = %L$$, E'👨\u200d👩\u200d👧'),
+  'a zero-width joiner inside an emoji sequence is kept'
+);
+select lives_ok(
+  format(
+    $$update public.profiles set display_name = %L$$,
+    E'🏴\U000e0067\U000e0062\U000e0065\U000e006e\U000e0067\U000e007f'
+  ),
+  'the tag characters of a subdivision flag are kept'
+);
+select lives_ok(
+  format($$update public.profiles set display_name = %L$$, E'Ana\u200fBel'),
+  'a right-to-left mark inside a name is kept'
 );
 
 -- Length is counted in characters (Unicode code points), never bytes, so

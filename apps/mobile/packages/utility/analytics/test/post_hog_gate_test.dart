@@ -31,7 +31,7 @@ void main() {
       final spy = AnalyticsSpy(stored: null);
       final gate = gateOver(spy);
 
-      await gate.restore();
+      await gate.restore(account: null);
       await sendEverything(gate);
 
       expect(gate.choice, isNull);
@@ -43,7 +43,7 @@ void main() {
       final spy = AnalyticsSpy(stored: AnalyticsChoice.denied);
       final gate = gateOver(spy);
 
-      await gate.restore();
+      await gate.restore(account: null);
       await sendEverything(gate);
 
       expect(gate.choice, AnalyticsChoice.denied);
@@ -57,7 +57,7 @@ void main() {
         final spy = AnalyticsSpy();
         final gate = gateOver(spy);
 
-        await gate.restore();
+        await gate.restore(account: null);
         await sendEverything(gate);
 
         expect(gate.choice, AnalyticsChoice.allowed);
@@ -76,7 +76,7 @@ void main() {
         final gate = gateOver(spy);
 
         // What `main` avoids by awaiting, and a test harness relies on.
-        unawaited(gate.restore());
+        unawaited(gate.restore(account: null));
         final sending = sendEverything(gate);
 
         expect(gate.choice, isNull, reason: 'not read yet');
@@ -96,7 +96,7 @@ void main() {
     test('allowing sets PostHog up afresh and keeps the answer', () async {
       final spy = AnalyticsSpy(stored: null);
       final gate = gateOver(spy);
-      await gate.restore();
+      await gate.restore(account: null);
       // Who is signed in is known before anyone allowed anything; it is
       // held on the device and told PostHog only once allowed.
       await gate.identify(
@@ -122,16 +122,16 @@ void main() {
         event('usage_analytics_allowed'),
         event('journal_viewed'),
       ]);
-      expect(
-        await AnalyticsChoiceStore(preferences: spy.preferences).read(),
-        AnalyticsChoice.allowed,
-      );
+      expect(await AnalyticsChoiceStore(preferences: spy.preferences).read(), (
+        choice: AnalyticsChoice.allowed,
+        account: null,
+      ));
     });
 
     test('opts back in when the SDK remembers an earlier refusal', () async {
       final spy = AnalyticsSpy(stored: null)..optedOut = true;
       final gate = gateOver(spy);
-      await gate.restore();
+      await gate.restore(account: null);
 
       await gate.allow();
 
@@ -141,7 +141,7 @@ void main() {
     test('a refusal switches PostHog off and drops everything after', () async {
       final spy = AnalyticsSpy();
       final gate = gateOver(spy);
-      await gate.restore();
+      await gate.restore(account: null);
 
       await gate.deny();
       await sendEverything(gate);
@@ -151,16 +151,16 @@ void main() {
       // under a fresh id, which is sending something after a refusal.
       expect(spy.lifecycle, ['setup', 'disable', 'close']);
       expect(spy.outgoingStrings, isEmpty);
-      expect(
-        await AnalyticsChoiceStore(preferences: spy.preferences).read(),
-        AnalyticsChoice.denied,
-      );
+      expect(await AnalyticsChoiceStore(preferences: spy.preferences).read(), (
+        choice: AnalyticsChoice.denied,
+        account: null,
+      ));
     });
 
     test('a refusal before PostHog ever ran touches nothing', () async {
       final spy = AnalyticsSpy(stored: null);
       final gate = gateOver(spy);
-      await gate.restore();
+      await gate.restore(account: null);
 
       await gate.deny();
 
@@ -170,7 +170,7 @@ void main() {
     test('allowing again after a refusal starts PostHog over', () async {
       final spy = AnalyticsSpy();
       final gate = gateOver(spy);
-      await gate.restore();
+      await gate.restore(account: null);
       await gate.identify(userId: 'user-1');
       await gate.deny();
 
@@ -195,7 +195,7 @@ void main() {
     test('forgetting resets PostHog, switches it off and asks again', () async {
       final spy = AnalyticsSpy();
       final gate = gateOver(spy);
-      await gate.restore();
+      await gate.restore(account: null);
       await gate.identify(userId: 'user-1');
 
       final changes = expectLater(gate.changes, emits(isNull));
@@ -238,7 +238,7 @@ void main() {
       // but not closed, the queue delivers it and nothing new is taken.
       final spy = AnalyticsSpy();
       final gate = gateOver(spy);
-      await gate.restore();
+      await gate.restore(account: null);
       await gate.capture(eventName: 'signed_out');
 
       await gate.forget();
@@ -250,7 +250,7 @@ void main() {
     test('a refusal after forgetting closes PostHog', () async {
       final spy = AnalyticsSpy();
       final gate = gateOver(spy);
-      await gate.restore();
+      await gate.restore(account: null);
       await gate.forget();
 
       await gate.deny();
@@ -262,12 +262,248 @@ void main() {
     test('forgetting while nothing runs only forgets the answer', () async {
       final spy = AnalyticsSpy(stored: AnalyticsChoice.denied);
       final gate = gateOver(spy);
-      await gate.restore();
+      await gate.restore(account: null);
 
       await gate.forget();
 
       expect(gate.choice, isNull);
       expect(spy.lifecycle, isEmpty);
+    });
+
+    group('whose the choice is', () {
+      const alice = '00000000-0000-0000-0000-00000000000a';
+      const bob = '00000000-0000-0000-0000-00000000000b';
+
+      Future<StoredChoice?> stored(AnalyticsSpy spy) =>
+          AnalyticsChoiceStore(preferences: spy.preferences).read();
+
+      group('on launch', () {
+        test('forgets the choice of someone whose session ended while the '
+            'app was closed', () async {
+          final spy = AnalyticsSpy(owner: alice);
+          final gate = gateOver(spy);
+
+          await gate.restore(account: null);
+          await sendEverything(gate);
+
+          expect(gate.choice, isNull);
+          expect(spy.lifecycle, isEmpty);
+          expect(spy.outgoingStrings, isEmpty);
+          expect(await stored(spy), isNull);
+        });
+
+        test('forgets the choice of someone other than who is signed in, '
+            'before anything is sent', () async {
+          final spy = AnalyticsSpy(owner: alice);
+          final gate = gateOver(spy);
+
+          // Everything the restored session says queues behind the check.
+          unawaited(gate.restore(account: bob));
+          await Future.wait([
+            gate.identify(userId: bob),
+            gate.capture(eventName: 'journal_viewed'),
+          ]);
+
+          expect(gate.choice, isNull);
+          expect(spy.lifecycle, isEmpty);
+          expect(spy.outgoingStrings, isEmpty);
+          expect(await stored(spy), isNull);
+        });
+
+        test('keeps the choice of whoever is signed in', () async {
+          final spy = AnalyticsSpy(owner: alice);
+          final gate = gateOver(spy);
+
+          await gate.restore(account: alice);
+          await gate.identify(userId: alice);
+
+          expect(gate.choice, AnalyticsChoice.allowed);
+          expect(spy.lifecycle, ['setup']);
+          expect(spy.identified, [alice]);
+        });
+
+        test(
+          'keeps a choice made before sign-up while nobody is signed in',
+          () async {
+            final spy = AnalyticsSpy();
+            final gate = gateOver(spy);
+
+            await gate.restore(account: null);
+
+            expect(gate.choice, AnalyticsChoice.allowed);
+            expect(spy.lifecycle, ['setup']);
+            expect(await stored(spy), (
+              choice: AnalyticsChoice.allowed,
+              account: null,
+            ));
+          },
+        );
+
+        test(
+          'gives a choice made before sign-up to whoever signed in',
+          () async {
+            final spy = AnalyticsSpy();
+            final gate = gateOver(spy);
+
+            await gate.restore(account: alice);
+
+            expect(gate.choice, AnalyticsChoice.allowed);
+            expect(spy.lifecycle, ['setup']);
+            expect(await stored(spy), (
+              choice: AnalyticsChoice.allowed,
+              account: alice,
+            ));
+          },
+        );
+
+        test('asks again where an earlier build kept the choice without '
+            'whose it was', () async {
+          for (final account in [null, alice]) {
+            final spy = AnalyticsSpy(stored: null);
+            await spy.preferences.setString(
+              AnalyticsChoiceStore.key,
+              AnalyticsChoice.allowed.name,
+            );
+            final gate = gateOver(spy);
+
+            await gate.restore(account: account);
+            await sendEverything(gate);
+
+            expect(gate.choice, isNull, reason: account);
+            expect(spy.lifecycle, isEmpty, reason: account);
+            expect(spy.outgoingStrings, isEmpty, reason: account);
+            expect(
+              await spy.preferences.getString(AnalyticsChoiceStore.key),
+              isNull,
+              reason: account,
+            );
+          }
+        });
+      });
+
+      group('on a sign-in', () {
+        test(
+          'forgets the choice of someone else, and PostHog with it',
+          () async {
+            final spy = AnalyticsSpy(owner: alice);
+            final gate = gateOver(spy);
+            await gate.restore(account: alice);
+            await gate.identify(userId: alice);
+
+            final changes = expectLater(gate.changes, emits(isNull));
+            await gate.signedInAs(bob);
+            await changes;
+            await gate.identify(userId: bob);
+            await gate.capture(eventName: 'journal_viewed');
+
+            expect(gate.choice, isNull);
+            expect(spy.lifecycle, ['setup', 'flush', 'reset', 'disable']);
+            expect(spy.identified, [alice]);
+            expect(spy.events, isEmpty);
+            expect(await stored(spy), isNull);
+          },
+        );
+
+        test('forgets the choice when nobody is signed in any more', () async {
+          final spy = AnalyticsSpy(
+            owner: alice,
+            stored: AnalyticsChoice.denied,
+          );
+          final gate = gateOver(spy);
+          await gate.restore(account: alice);
+
+          await gate.signedInAs(null);
+
+          expect(gate.choice, isNull);
+          expect(await stored(spy), isNull);
+        });
+
+        test(
+          'gives a choice made before sign-up to whoever signs in',
+          () async {
+            final spy = AnalyticsSpy();
+            final gate = gateOver(spy);
+            await gate.restore(account: null);
+
+            await gate.signedInAs(alice);
+            await gate.identify(userId: alice);
+
+            expect(gate.choice, AnalyticsChoice.allowed);
+            expect(spy.lifecycle, ['setup']);
+            expect(spy.identified, [alice]);
+            expect(await stored(spy), (
+              choice: AnalyticsChoice.allowed,
+              account: alice,
+            ));
+          },
+        );
+
+        test('leaves a choice made before sign-up alone while nobody signs '
+            'in', () async {
+          final spy = AnalyticsSpy();
+          final gate = gateOver(spy);
+          await gate.restore(account: null);
+
+          await gate.signedInAs(null);
+
+          expect(gate.choice, AnalyticsChoice.allowed);
+          expect(await stored(spy), (
+            choice: AnalyticsChoice.allowed,
+            account: null,
+          ));
+        });
+
+        test('keeps who signed out out of the next allow', () async {
+          final spy = AnalyticsSpy(stored: null);
+          final gate = gateOver(spy);
+          await gate.restore(account: alice);
+          await gate.identify(userId: alice);
+
+          await gate.signedInAs(null);
+          await gate.allow();
+
+          expect(spy.identities, isEmpty);
+        });
+      });
+
+      test(
+        'an answer belongs to whoever is signed in when it is given',
+        () async {
+          final spy = AnalyticsSpy(stored: null);
+          final gate = gateOver(spy);
+          await gate.restore(account: null);
+
+          await gate.allow();
+
+          expect(await stored(spy), (
+            choice: AnalyticsChoice.allowed,
+            account: null,
+          ));
+
+          await gate.signedInAs(alice);
+          await gate.deny();
+
+          expect(await stored(spy), (
+            choice: AnalyticsChoice.denied,
+            account: alice,
+          ));
+        },
+      );
+
+      test('tells an account its choice, and no one else’s', () async {
+        final spy = AnalyticsSpy(stored: null);
+        final gate = gateOver(spy);
+        await gate.restore(account: null);
+        await gate.allow();
+
+        // Nobody's yet: not an account's until one signs in and adopts it.
+        expect(gate.choiceOf(alice), isNull);
+
+        await gate.signedInAs(alice);
+
+        expect(gate.choiceOf(alice), AnalyticsChoice.allowed);
+        expect(gate.choiceOf(bob), isNull);
+      });
     });
 
     test('never throws when PostHog does', () async {
@@ -282,7 +518,7 @@ void main() {
       when(spy.posthog.disable()).thenThrow(refusal);
       final gate = gateOver(spy);
 
-      await gate.restore();
+      await gate.restore(account: null);
       await gate.capture(eventName: 'journal_viewed');
       await gate.deny();
 
@@ -307,7 +543,7 @@ void main() {
       );
       final spy = AnalyticsSpy(stored: null);
       final gate = gateOver(spy);
-      await gate.restore();
+      await gate.restore(account: null);
       final navigator = GlobalKey<NavigatorState>();
       await tester.pumpWidget(
         WidgetsApp(
@@ -354,7 +590,7 @@ void main() {
         heard.add(invocation.namedArguments[#eventName] as String);
       });
       final gate = gateOver(spy);
-      await gate.restore();
+      await gate.restore(account: null);
       final navigator = GlobalKey<NavigatorState>();
       await tester.pumpWidget(
         WidgetsApp(

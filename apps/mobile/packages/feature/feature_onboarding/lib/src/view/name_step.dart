@@ -93,7 +93,8 @@ class _NameStepViewState() extends State<NameStepView> {
   /// An empty field needs no telling: Continue is simply not there yet.
   static String? _describe(DisplayNameProblem? problem) => switch (problem) {
     DisplayNameProblem.tooLong => nameTooLong,
-    DisplayNameProblem.controlCharacter => nameControlCharacter,
+    DisplayNameProblem.controlCharacter ||
+    DisplayNameProblem.layoutCharacter => nameInvisibleCharacter,
     DisplayNameProblem.empty || null => null,
   };
 }

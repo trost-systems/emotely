@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:agent_client/agent_client.dart';
 import 'package:contract/contract.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:profile_repository/profile_repository.dart';
 
 import '../helpers/helpers.dart';
 
@@ -108,6 +109,36 @@ void main() {
 
       expect(limits['max_display_name_length'], maxDisplayNameLength);
       expect(displayName['maxLength'], maxDisplayNameLength);
+    });
+
+    test('the agent refuses exactly the characters DisplayName refuses', () {
+      final request = schema['advance_session_request'] as Map<String, dynamic>;
+      final userContext =
+          object(request)['user_context'] as Map<String, dynamic>;
+      final displayName =
+          object(userContext)['display_name'] as Map<String, dynamic>;
+      final pattern = RegExp(displayName['pattern']! as String, unicode: true);
+      // Every C0 and C1 control, the whole General Punctuation block (the
+      // separators, bidi controls and joiners live there) and the other
+      // invisible characters a name or an emoji can hold, each inside a
+      // name so that only the character rules can tell them apart (#214).
+      final runes = [
+        for (var rune = 0x00; rune <= 0xa0; rune++) rune,
+        for (var rune = 0x2000; rune <= 0x206f; rune++) rune,
+        0x061c,
+        0xfeff,
+        0xe0067,
+        0xe007f,
+      ];
+
+      for (final rune in runes) {
+        final name = 'A${String.fromCharCode(rune)}B';
+        expect(
+          pattern.hasMatch(name),
+          DisplayName.check(name) is DisplayNameAccepted,
+          reason: 'U+${rune.toRadixString(16).padLeft(4, '0')}',
+        );
+      }
     });
 
     test(

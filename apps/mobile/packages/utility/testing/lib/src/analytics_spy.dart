@@ -30,13 +30,22 @@ class const CapturedException({
 /// `stored` is the usage-analytics choice this device already holds when
 /// the test begins (#204). Allowed by default, so a test about sessions or
 /// sign-in sees its events; a test about the choice itself says what is
-/// stored, `null` for a fresh install. The spy keeps it in the in-memory
+/// stored, `null` for a fresh install. `owner` is the account it belongs to
+/// (#216): nobody's yet by default, as after the first-launch sheet, so
+/// whoever the test signs in adopts it. The spy keeps both in the in-memory
 /// preferences store it installs as the platform's.
-class AnalyticsSpy({AnalyticsChoice? stored = AnalyticsChoice.allowed}) {
+class AnalyticsSpy({
+  AnalyticsChoice? stored = AnalyticsChoice.allowed,
+  String? owner,
+}) {
   this {
     SharedPreferencesAsyncPlatform.instance =
         InMemorySharedPreferencesAsync.withData({
-          if (stored != null) AnalyticsChoiceStore.key: stored.name,
+          if (stored != null)
+            AnalyticsChoiceStore.key: AnalyticsChoiceStore.valueOf(
+              stored,
+              account: owner,
+            ),
         });
     when(posthog.setup(any)).thenAnswer((_) => _lifecycle('setup'));
     when(posthog.enable()).thenAnswer((_) {
@@ -123,17 +132,21 @@ class AnalyticsSpy({AnalyticsChoice? stored = AnalyticsChoice.allowed}) {
   var optedOut = false;
 
   /// The gate the builders below go through, over this spy's PostHog and
-  /// the choice it was made with, restored the way `main` restores it.
-  late final PostHogGate gate = _restored(
-    PostHogGate(
+  /// the choice it was made with, restored the way `main` restores it with
+  /// nobody signed in: a choice with an `owner` is forgotten there, so a
+  /// test about whose the choice is restores a gate of its own.
+  late final PostHogGate gate = launchedAs(null);
+
+  /// A gate of its own over this spy's PostHog and preferences, restored
+  /// the way `main` restores it when the app launches with [account]'s
+  /// session, or none: for a test about whose the choice is (#216).
+  PostHogGate launchedAs(String? account) {
+    final gate = PostHogGate(
       posthog: posthog,
       config: PostHogConfig('phc_test'),
       store: AnalyticsChoiceStore(preferences: preferences),
-    ),
-  );
-
-  static PostHogGate _restored(PostHogGate gate) {
-    unawaited(gate.restore());
+    );
+    unawaited(gate.restore(account: account));
     return gate;
   }
 

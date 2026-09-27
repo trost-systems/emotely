@@ -18,10 +18,11 @@ void main() {
     Future<AnalyticsSpy> launch(
       WidgetTester tester, {
       AnalyticsChoice? stored,
+      String? owner,
       SupabaseStub? supabase,
       ConfigStub? config,
     }) async {
-      final analytics = AnalyticsSpy(stored: stored);
+      final analytics = AnalyticsSpy(stored: stored, owner: owner);
       await tester.pumpWidget(
         appUnderTest(
           agent: AgentStub(),
@@ -243,6 +244,101 @@ void main() {
       expect(find.byType(JournalPage), findsOneWidget);
       expect(supabase.to(usageAnalyticsGrant), isEmpty);
       expect(analytics.events.sublist(before), isEmpty);
+    });
+
+    group('remember whose they are (#216)', () {
+      const alice = '00000000-0000-0000-0000-00000000000c';
+
+      testWidgets('are asked about again when a session ended while the app '
+          'was closed, and the answer left behind is never recorded', (
+        tester,
+      ) async {
+        final supabase = SupabaseStub()
+          ..script(otp: [codeSent()], verify: [sessionGranted()])
+          ..rest(usageAnalyticsRead, [rpcReturned(false)]);
+        // The last person allowed, and their session died while the app was
+        // closed: the app starts signed out, with their answer on the phone.
+        final analytics = await launch(
+          tester,
+          owner: alice,
+          supabase: supabase,
+        );
+
+        expect(find.byType(WelcomeStepView), findsOneWidget);
+        expect(sheet(), findsOneWidget);
+        expect(analytics.lifecycle, isEmpty);
+        expect(analytics.outgoingStrings, isEmpty);
+
+        await tester.tap(find.byKey(UsageAnalyticsSheet.denyKey));
+        await tester.pumpAndSettle();
+        await signInThroughTheScreen(tester);
+
+        expect(find.byType(JournalPage), findsOneWidget);
+        expect(supabase.to(usageAnalyticsGrant), isEmpty);
+        expect(analytics.lifecycle, isEmpty);
+        expect(analytics.outgoingStrings, isEmpty);
+      });
+
+      testWidgets('are asked about again, before anything is sent, when the '
+          'app starts signed in as someone else', (tester) async {
+        final supabase = SupabaseStub();
+        await supabase.signedIn();
+        final analytics = await launch(
+          tester,
+          owner: alice,
+          supabase: supabase,
+        );
+
+        expect(sheet(), findsOneWidget);
+        // The restored session's identify and the journal's first event
+        // queued behind the check, and found the gate shut.
+        expect(analytics.lifecycle, isEmpty);
+        expect(analytics.outgoingStrings, isEmpty);
+        expect(supabase.to(usageAnalyticsRead), isEmpty);
+      });
+
+      testWidgets('are asked about again where an earlier build kept the '
+          'answer without whose it was', (tester) async {
+        final supabase = SupabaseStub();
+        await supabase.signedIn();
+        final analytics = AnalyticsSpy(stored: null);
+        await analytics.preferences.setString(
+          AnalyticsChoiceStore.key,
+          AnalyticsChoice.allowed.name,
+        );
+        await tester.pumpWidget(
+          appUnderTest(
+            agent: AgentStub(),
+            supabase: supabase,
+            analytics: analytics,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(sheet(), findsOneWidget);
+        expect(analytics.lifecycle, isEmpty);
+        expect(analytics.outgoingStrings, isEmpty);
+        expect(supabase.to(usageAnalyticsRead), isEmpty);
+      });
+
+      testWidgets('an answer given before sign-up becomes the account’s', (
+        tester,
+      ) async {
+        final supabase = SupabaseStub()
+          ..script(otp: [codeSent()], verify: [sessionGranted()])
+          ..rest(usageAnalyticsRead, [rpcReturned(false)])
+          ..rest(usageAnalyticsGrant, [rpcReturned(null)]);
+        final analytics = await launch(tester, supabase: supabase);
+
+        await tester.tap(find.byKey(UsageAnalyticsSheet.allowKey));
+        await tester.pumpAndSettle();
+        await signInThroughTheScreen(tester);
+
+        expect(
+          await AnalyticsChoiceStore(preferences: analytics.preferences).read(),
+          (choice: AnalyticsChoice.allowed, account: SupabaseStub.userId),
+        );
+      });
     });
 
     testWidgets('the sheet meets accessibility guidelines', (tester) async {

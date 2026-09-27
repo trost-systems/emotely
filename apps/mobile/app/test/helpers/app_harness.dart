@@ -68,12 +68,12 @@ Widget appUnderTest({
       ios: 'ios.apps.googleusercontent.com',
     ),
   );
-  // `main` awaits both restores before the first frame; here every call
-  // PostHog hears queues behind the gate's instead, so the order is the
-  // same, and the onboarding store reads the in-memory preferences before
-  // the router first asks it.
+  // `main` awaits both restores before the first frame, the gate's over the
+  // session Supabase restored; here every call PostHog hears queues behind
+  // the gate's instead, so the order is the same, and the onboarding store
+  // reads the in-memory preferences before the router first asks it.
   final gate = GetIt.I<PostHogGate>();
-  unawaited(gate.restore());
+  unawaited(gate.restore(account: supabase.supabase.auth.currentUser?.id));
   final onboarding = GetIt.I<OnboardingStore>();
   unawaited(onboarding.restore());
   return EmotelyApp(screenViews: gate.screenObserver(), onboarding: onboarding);
