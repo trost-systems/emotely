@@ -133,6 +133,31 @@ void main() {
       expect(robot.analytics.resets, 1);
     });
 
+    testWidgets('tells PostHog, and forgets the choice, before the session '
+        'ends', (tester) async {
+      // What PostHog had heard when the SDK told the server; the session
+      // was dropped on the device just before, and the app follows it.
+      late List<CapturedEvent> heard;
+      late int resets;
+      late final _AccountRobot robot;
+      robot = robotWith(
+        tester,
+        deletions: [rpcReturned(null)],
+        logoutAnswer: () {
+          heard = [...robot.analytics.events];
+          resets = robot.analytics.resets;
+          return userGone();
+        },
+      );
+      await robot.launch();
+      await robot.askToDelete();
+
+      await robot.tap(robot.confirm);
+
+      expect(heard, [event('account_deleted')]);
+      expect(resets, 1);
+    });
+
     testWidgets('cancelling the confirmation deletes nothing', (tester) async {
       final robot = robotWith(tester);
       await robot.launch();

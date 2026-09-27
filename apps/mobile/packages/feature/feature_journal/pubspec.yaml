@@ -18,6 +18,7 @@ dependencies:
   go_router: 18.0.1
   journal_repository: any
   material_ui: ^1.1.0
+  profile_repository: any
 
 dev_dependencies:
   agent_client: any
@@ -28,4 +29,5 @@ dev_dependencies:
     sdk: flutter
   freezed: 4.0.1
   go_router_builder: 4.5.0
+  supabase_flutter: 3.0.0-dev.7
   testing: any

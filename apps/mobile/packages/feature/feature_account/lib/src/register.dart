@@ -26,4 +26,6 @@ void registerAccount(GetIt getIt) => getIt
     () => ConsentBloc(repository: getIt(), analytics: getIt(), errors: getIt()),
   )
   ..registerFactory(() => UsageAnalyticsBloc(consent: getIt()))
-  ..registerFactory(() => ProfileBloc(repository: getIt(), errors: getIt()));
+  ..registerFactory(
+    () => ProfileBloc(repository: getIt(), errors: getIt(), analytics: getIt()),
+  );

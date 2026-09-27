@@ -12,9 +12,9 @@ hand-rolled widgets.
   `@TypedGoRoute` annotation, generated into `routes.g.dart` there (`dart
   run build_runner build` in the feature; `melos run codegen:check` is the
   tripwire), exported through the barrel with `hide $appRoutes`. The app's
-  `lib/app/routes.dart` is a plain list that mounts them — sign-in, the
-  shell with its two branches, the session and the consent screen at the
-  root — and generates nothing.
+  `lib/app/routes.dart` is a plain list that mounts them — onboarding,
+  sign-in, the shell with its two branches, the session and the consent
+  screen at the root — and generates nothing.
 - A feature moves between its own screens itself
   (`EntryRoute(id:).go(context)`). It reaches another feature's screen
   only through its navigator, and the app's implementation in
@@ -28,11 +28,14 @@ hand-rolled widgets.
   what it shows by that. A screen that needs an object gets a bloc that
   loads it, not a constructor argument from the caller.
 - Screens are routes; steps are bloc state. Sign-in's email-then-code, the
-  session's questions and the consent screen's states are one page whose
-  bloc picks the widget, not a page stack.
-- The signed-in/out guard is `authRedirect` in `lib/app/router.dart`, pure
-  over "signed in?" and the matched location; `SignedInListenable` re-runs
-  it only when that boolean flips. Never gate a screen on auth state
+  session's questions, the onboarding steps and the consent screen's
+  states are one page whose bloc picks the widget, not a page stack.
+- The guard is `authRedirect` in `lib/app/router.dart`, pure over "signed
+  in?", "is onboarding ready for the account?" (the `OnboardingStore`,
+  restored in `main` before the first frame) and the matched location;
+  its table is `test/app/router_test.dart`. `RouteRefresh` re-runs it only
+  when one of those booleans flips, and forgets the device's onboarding
+  progress on sign-out. Never gate a screen on auth or onboarding state
   inside a widget — add to the redirect.
 - The router is built once, in `_RouterState`, over the auth bloc above
   it. `ConfigGate`, the usage-analytics sheet (`UsageAnalyticsPrompt`,

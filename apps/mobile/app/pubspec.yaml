@@ -43,6 +43,7 @@ dependencies:
   feature_account: any
   feature_auth: any
   feature_journal: any
+  feature_onboarding: any
   feature_session: any
   feedback_link: any
   flutter:

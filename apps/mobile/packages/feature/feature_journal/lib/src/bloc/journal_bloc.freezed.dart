@@ -290,10 +290,6 @@ bool operator ==(Object other) {
 @override
 int get hashCode => runtimeType.hashCode;
 
-@override
-String toString() {
-    return 'JournalState()';
-}
 
 
 }
@@ -385,11 +381,11 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  loading,TResult Function( List<EntryRecord> entries,  OpenSession? openSession)?  ready,TResult Function()?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  loading,TResult Function( List<EntryRecord> entries,  DateTime now,  OpenSession? openSession,  String? displayName)?  ready,TResult Function()?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case JournalLoading() when loading != null:
 return loading();case JournalReady() when ready != null:
-return ready(_that.entries,_that.openSession);case JournalFailure() when failure != null:
+return ready(_that.entries,_that.now,_that.openSession,_that.displayName);case JournalFailure() when failure != null:
 return failure();case _:
   return orElse();
 
@@ -408,11 +404,11 @@ return failure();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  loading,required TResult Function( List<EntryRecord> entries,  OpenSession? openSession)  ready,required TResult Function()  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  loading,required TResult Function( List<EntryRecord> entries,  DateTime now,  OpenSession? openSession,  String? displayName)  ready,required TResult Function()  failure,}) {final _that = this;
 switch (_that) {
 case JournalLoading():
 return loading();case JournalReady():
-return ready(_that.entries,_that.openSession);case JournalFailure():
+return ready(_that.entries,_that.now,_that.openSession,_that.displayName);case JournalFailure():
 return failure();}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -427,11 +423,11 @@ return failure();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  loading,TResult? Function( List<EntryRecord> entries,  OpenSession? openSession)?  ready,TResult? Function()?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  loading,TResult? Function( List<EntryRecord> entries,  DateTime now,  OpenSession? openSession,  String? displayName)?  ready,TResult? Function()?  failure,}) {final _that = this;
 switch (_that) {
 case JournalLoading() when loading != null:
 return loading();case JournalReady() when ready != null:
-return ready(_that.entries,_that.openSession);case JournalFailure() when failure != null:
+return ready(_that.entries,_that.now,_that.openSession,_that.displayName);case JournalFailure() when failure != null:
 return failure();case _:
   return null;
 
@@ -461,10 +457,6 @@ bool operator ==(Object other) {
 @override
 int get hashCode => runtimeType.hashCode;
 
-@override
-String toString() {
-    return 'JournalState.loading()';
-}
 
 
 }
@@ -476,7 +468,7 @@ String toString() {
 
 
 class JournalReady implements JournalState {
-  const JournalReady({required  List<EntryRecord> entries, this.openSession}): _entries = entries;
+  const JournalReady({required  List<EntryRecord> entries, required this.now, this.openSession, this.displayName}): _entries = entries;
   
 
  final  List<EntryRecord> _entries;
@@ -486,7 +478,9 @@ class JournalReady implements JournalState {
   return EqualUnmodifiableListView(_entries);
 }
 
+ final  DateTime now;
  final  OpenSession? openSession;
+ final  String? displayName;
 
 /// Create a copy of JournalState
 /// with the given fields replaced by the non-null parameter values.
@@ -498,19 +492,15 @@ $JournalReadyCopyWith<JournalReady> get copyWith => _$JournalReadyCopyWithImpl<J
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is JournalReady&&const DeepCollectionEquality().equals(other.entries, _entries)&&(identical(other.openSession, openSession) || other.openSession == openSession));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is JournalReady&&const DeepCollectionEquality().equals(other.entries, _entries)&&(identical(other.now, now) || other.now == now)&&(identical(other.openSession, openSession) || other.openSession == openSession)&&(identical(other.displayName, displayName) || other.displayName == displayName));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_entries),openSession);
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_entries),now,openSession,displayName);
 }
 
-@override
-String toString() {
-    return 'JournalState.ready(entries: $entries, openSession: $openSession)';
-}
 
 
 }
@@ -520,7 +510,7 @@ abstract mixin class $JournalReadyCopyWith<$Res> implements $JournalStateCopyWit
   factory $JournalReadyCopyWith(JournalReady value, $Res Function(JournalReady) _then) = _$JournalReadyCopyWithImpl;
 @useResult
 $Res call({
- List<EntryRecord> entries, OpenSession? openSession
+ List<EntryRecord> entries, DateTime now, OpenSession? openSession, String? displayName
 });
 
 
@@ -537,11 +527,13 @@ class _$JournalReadyCopyWithImpl<$Res>
 
 /// Create a copy of JournalState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? entries = null,Object? openSession = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? entries = null,Object? now = null,Object? openSession = freezed,Object? displayName = freezed,}) {
   return _then(JournalReady(
 entries: null == entries ? _self._entries : entries // ignore: cast_nullable_to_non_nullable
-as List<EntryRecord>,openSession: freezed == openSession ? _self.openSession : openSession // ignore: cast_nullable_to_non_nullable
-as OpenSession?,
+as List<EntryRecord>,now: null == now ? _self.now : now // ignore: cast_nullable_to_non_nullable
+as DateTime,openSession: freezed == openSession ? _self.openSession : openSession // ignore: cast_nullable_to_non_nullable
+as OpenSession?,displayName: freezed == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -581,10 +573,6 @@ bool operator ==(Object other) {
 @override
 int get hashCode => runtimeType.hashCode;
 
-@override
-String toString() {
-    return 'JournalState.failure()';
-}
 
 
 }

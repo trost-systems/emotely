@@ -18,6 +18,7 @@ import 'package:emotely/app/dependencies.dart';
 import 'package:emotely/app/environment.dart';
 import 'package:feature_account/feature_account.dart';
 import 'package:feature_journal/feature_journal.dart';
+import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:feature_session/feature_session.dart';
 import 'package:feedback_link/feedback_link.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -113,7 +114,12 @@ class LiveSessionRobot(final WidgetTester tester) {
     // the first-launch sheet: the run reports to PostHog like one (#204).
     final gate = GetIt.I<PostHogGate>();
     await gate.allow();
-    await tester.pumpWidget(EmotelyApp(screenViews: gate.screenObserver()));
+    await tester.pumpWidget(
+      EmotelyApp(
+        screenViews: gate.screenObserver(),
+        onboarding: GetIt.I<OnboardingStore>(),
+      ),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(JournalView.startKey));
     await tester.pumpAndSettle();

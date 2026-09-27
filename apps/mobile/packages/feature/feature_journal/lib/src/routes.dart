@@ -11,17 +11,21 @@ part 'routes.g.dart';
 /// say — an entry travels as its id and the screen reads it back.
 
 /// Home: the journal. Its entries sit under it, so the back button leads
-/// here.
+/// here. With [startSession] it starts a session as soon as it has read the
+/// journal, through the same consent check as "Start a session": where a
+/// new account lands at the end of onboarding (#204).
 @TypedGoRoute<JournalRoute>(
   path: '/',
   name: 'journal',
   routes: [TypedGoRoute<EntryRoute>(path: 'entries/:id', name: 'entry')],
 )
 @immutable
-class const JournalRoute() extends GoRouteData with $JournalRoute {
+class const JournalRoute({final bool startSession = false})
+    extends GoRouteData
+    with $JournalRoute {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
-      const JournalPage();
+      JournalPage(startSession: startSession);
 }
 
 /// One filed entry, by its id; the screen reads it back itself.

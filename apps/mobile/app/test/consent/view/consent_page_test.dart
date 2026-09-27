@@ -81,6 +81,7 @@ void main() {
 
     testWidgets('does not ask again once consent stands', (tester) async {
       final robot = robotWith(tester, granted: true);
+      robot.supabase.always(profileRead, rows(const []));
       await robot.launch();
 
       await robot.startSession();

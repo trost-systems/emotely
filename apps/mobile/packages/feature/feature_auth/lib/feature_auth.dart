@@ -2,10 +2,13 @@
 /// email code (a password instead for the stores' review accounts), Sign in
 /// with Google, and Sign in with Apple on iOS.
 /// The app registers it with `registerAuth`, holds the one `AuthBloc`
-/// above every screen and shows `SignInPage` while nobody is signed in.
+/// above every screen and shows `SignInPage` while nobody is signed in,
+/// as the last step of onboarding or as "I have an account"; it implements
+/// `SignInNavigator`, what the screen asks of onboarding.
 library;
 
 export 'src/bloc/auth_bloc.dart';
+export 'src/navigator.dart';
 export 'src/providers/provider_sign_in.dart' show GoogleClientIds;
 export 'src/register.dart';
 export 'src/review_accounts.dart';

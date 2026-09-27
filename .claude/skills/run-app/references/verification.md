@@ -10,9 +10,16 @@ own reference (`marionette help-ai`).
    the deployed agent, registers it with marionette, answers the
    first-launch usage-analytics sheet (Allow, so `collect` finds the
    session's PostHog events; `--analytics deny` to run with PostHog never
-   set up) and signs in as the smoke account. Signing out brings the sheet
-   back; answer it with `tap --key usage_analytics_sheet.allow` (or
-   `.deny`). It ends on the signed-in journal and prints the
+   set up) and signs in as the smoke account through Welcome's "I have an
+   account" (`onboarding.welcome.have_account`), skipping the name step if
+   the account has no name yet. Signing out lands on Welcome and brings
+   the sheet back; answer it with `tap --key usage_analytics_sheet.allow`
+   (or `.deny`). To walk onboarding itself, sign out and drive from
+   Welcome: `onboarding.welcome.get_started`, `onboarding.value.continue`,
+   `onboarding.name.field` / `.continue` / `.skip`,
+   `onboarding.hello.start` or `onboarding.skipped.start` /
+   `.tell_you`, then sign-up (`sign_in_page.*`). It ends on the signed-in
+   journal and prints the
    **instance** and the **bundle**:
 
    ```

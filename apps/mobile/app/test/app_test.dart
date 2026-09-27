@@ -4,13 +4,14 @@ import 'package:emotely/app/shell.dart';
 import 'package:feature_account/feature_account.dart';
 import 'package:feature_auth/feature_auth.dart';
 import 'package:feature_journal/feature_journal.dart';
+import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'helpers/helpers.dart';
 
 void main() {
   group(EmotelyApp, () {
-    testWidgets('opens on sign-in when nobody is signed in', (tester) async {
+    testWidgets('opens on Welcome when nobody is signed in', (tester) async {
       await tester.pumpWidget(
         appUnderTest(
           agent: AgentStub(),
@@ -21,7 +22,8 @@ void main() {
       // The startup gate reads the config before anything renders (#49).
       await tester.pumpAndSettle();
 
-      expect(find.byType(SignInPage), findsOneWidget);
+      expect(find.byType(WelcomeStepView), findsOneWidget);
+      expect(find.byType(SignInPage), findsNothing);
       expect(find.byType(JournalPage), findsNothing);
     });
 
@@ -42,7 +44,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(JournalPage), findsOneWidget);
-      expect(find.text('Your journal'), findsOneWidget);
+      expect(find.textContaining(', $accountName'), findsOneWidget);
       // The restored user is known to PostHog before anything else happens.
       expect(analytics.identified, [SupabaseStub.userId]);
     });
@@ -119,7 +121,7 @@ void main() {
       expect(find.byType(MorePage), findsNothing);
     });
 
-    testWidgets('signs out from the Profile screen and returns to sign-in', (
+    testWidgets('signs out from the Profile screen and returns to Welcome', (
       tester,
     ) async {
       // The Profile screen, under More, asks the app to sign out; the app
@@ -143,7 +145,7 @@ void main() {
       await tester.tap(find.byKey(ProfileView.signOutKey));
       await tester.pumpAndSettle();
 
-      expect(find.byType(SignInPage), findsOneWidget);
+      expect(find.byType(WelcomeStepView), findsOneWidget);
       expect(find.byType(JournalPage), findsNothing);
       expect(analytics.events.last, event('signed_out'));
     });

@@ -16,15 +16,27 @@ RouteBase get $signInRoute => GoRouteData.$route(
 );
 
 mixin $SignInRoute on GoRouteData {
-  static SignInRoute _fromState(GoRouterState state) =>
-      SignInRoute(from: state.uri.queryParameters['from']);
+  static SignInRoute _fromState(GoRouterState state) => SignInRoute(
+    mode:
+        _$convertMapValue(
+          'mode',
+          state.uri.queryParameters,
+          _$SignInModeEnumMap._$fromName,
+        ) ??
+        SignInMode.signIn,
+    from: state.uri.queryParameters['from'],
+  );
 
   SignInRoute get _self => this as SignInRoute;
 
   @override
   String get location => GoRouteData.$location(
     '/sign-in',
-    queryParams: {if (_self.from != null) 'from': _self.from},
+    queryParams: {
+      if (_self.mode != SignInMode.signIn)
+        'mode': _$SignInModeEnumMap[_self.mode],
+      if (_self.from != null) 'from': _self.from,
+    },
   );
 
   @override
@@ -39,4 +51,23 @@ mixin $SignInRoute on GoRouteData {
 
   @override
   void replace(BuildContext context) => context.replace(location);
+}
+
+const _$SignInModeEnumMap = {
+  SignInMode.signUp: 'sign-up',
+  SignInMode.signIn: 'sign-in',
+};
+
+T? _$convertMapValue<T>(
+  String key,
+  Map<String, String> map,
+  T? Function(String) converter,
+) {
+  final value = map[key];
+  return value == null ? null : converter(value);
+}
+
+extension<T extends Enum> on Map<T, String> {
+  T? _$fromName(String? value) =>
+      entries.where((element) => element.value == value).firstOrNull?.key;
 }

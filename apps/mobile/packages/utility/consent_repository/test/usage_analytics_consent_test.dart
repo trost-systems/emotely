@@ -179,11 +179,76 @@ void main() {
 
         await supabase.supabase.auth.signOut();
         await settle(consent);
+        // The next person answers the question for themselves first.
+        await consent.allow();
         await supabase.signedIn();
         await settle(consent);
 
         expect(supabase.to(usageAnalyticsRead), hasLength(2));
       });
+
+      test('forgets the choice when a session ends, however it ends', () async {
+        final supabase = SupabaseStub()
+          ..rest(usageAnalyticsRead, [rpcReturned(true)])
+          ..rest(logout, [signedOut()]);
+        await supabase.signedIn();
+        final spy = AnalyticsSpy();
+        final consent = await consentOver(spy, supabase);
+        await settle(consent);
+
+        // Nobody asked for this sign-out: an expiry, a revoked refresh
+        // token or an account deleted elsewhere end the session the same
+        // way, through the SDK.
+        await supabase.supabase.auth.signOut();
+        await settle(consent);
+        await consent.settled;
+
+        expect(consent.choice, isNull);
+        expect(spy.lifecycle, ['setup', 'reset', 'disable', 'close']);
+      });
+
+      test('never records the last person’s choice for the next', () async {
+        const next = '00000000-0000-0000-0000-00000000000b';
+        final supabase = SupabaseStub()
+          ..rest(usageAnalyticsRead, [rpcReturned(true), rpcReturned(false)])
+          ..rest(usageAnalyticsGrant, [rpcReturned(null)])
+          ..rest(logout, [signedOut()]);
+        await supabase.signedIn();
+        final consent = await consentOver(AnalyticsSpy(), supabase);
+        await settle(consent);
+
+        // The session ends, and someone else signs in straight away,
+        // before anything else happens on the device.
+        await supabase.supabase.auth.signOut();
+        await supabase.supabase.auth.recoverSession(
+          jsonEncode(SupabaseStub.session(sub: next)),
+        );
+        await settle(consent);
+
+        expect(supabase.to(usageAnalyticsRead), hasLength(1));
+        expect(supabase.to(usageAnalyticsGrant), isEmpty);
+      });
+
+      test(
+        'forgets the choice when another account replaces the session',
+        () async {
+          const next = '00000000-0000-0000-0000-00000000000b';
+          final supabase = SupabaseStub()
+            ..rest(usageAnalyticsRead, [rpcReturned(true), rpcReturned(false)])
+            ..rest(usageAnalyticsGrant, [rpcReturned(null)]);
+          await supabase.signedIn();
+          final consent = await consentOver(AnalyticsSpy(), supabase);
+          await settle(consent);
+
+          await supabase.supabase.auth.recoverSession(
+            jsonEncode(SupabaseStub.session(sub: next)),
+          );
+          await settle(consent);
+
+          expect(consent.choice, isNull);
+          expect(supabase.to(usageAnalyticsGrant), isEmpty);
+        },
+      );
 
       test('shrugs off an error on the session stream', () async {
         final supabase = SupabaseStub();

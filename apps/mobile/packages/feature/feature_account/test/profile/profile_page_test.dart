@@ -123,6 +123,13 @@ void main() {
         'name_is_placeholder': false,
       });
       expect(robot.message, ProfileView.savedMessage);
+      expect(robot.analytics.events, [
+        event('display_name_changed', {
+          'flow_version': testOnboardingFlowVersion,
+          'variant': 'control',
+          'source': 'profile',
+        }),
+      ]);
       expect(robot.name, 'zoë');
       expect(robot.initial, 'Z');
     });

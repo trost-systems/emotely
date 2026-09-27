@@ -4,6 +4,7 @@ import 'package:emotely/config/bloc/config_bloc.dart';
 import 'package:emotely/config/view/config_gate.dart';
 import 'package:feature_account/feature_account.dart';
 import 'package:feature_auth/feature_auth.dart';
+import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
@@ -13,16 +14,21 @@ import 'package:posthog_flutter/posthog_flutter.dart';
 /// Root of the emotely client: the two blocs that sit above every screen,
 /// and the router that decides which screen that is (ADR 0016).
 ///
-/// Every dependency comes out of the container `registerApp` filled
-/// (ADR 0015); the widget itself is handed one thing, [screenViews]: the
-/// route observer PostHog counts screens and draws surveys through, built by
-/// the PostHog gate so that it counts nothing until the user allowed usage
-/// analytics (#204). It is built once per mounted app, by whoever mounts it:
-/// it registers itself with the widgets binding and tracks this navigator's
-/// routes, so neither a fresh one each frame nor one shared between apps
-/// would do.
+/// The blocs come out of the container `registerApp` filled (ADR 0015);
+/// the widget itself is handed the two things the router needs that are
+/// not blocs, by whoever mounts it:
+///
+/// - [screenViews], the route observer PostHog counts screens and draws
+///   surveys through, built by the PostHog gate so that it counts nothing
+///   until the user allowed usage analytics (#204). It is built once per
+///   mounted app: it registers itself with the widgets binding and tracks
+///   this navigator's routes, so neither a fresh one each frame nor one
+///   shared between apps would do.
+/// - [onboarding], the device's onboarding progress the redirect asks
+///   about, restored before it is handed in.
 class const EmotelyApp({
   required final NavigatorObserver screenViews,
+  required final OnboardingStore onboarding,
   super.key,
 }) extends StatelessWidget {
   @override
@@ -36,24 +42,27 @@ class const EmotelyApp({
         create: (_) => GetIt.I<ConfigBloc>()..add(const ConfigEvent.loaded()),
       ),
     ],
-    child: _Router(screenViews: screenViews),
+    child: _Router(screenViews: screenViews, onboarding: onboarding),
   );
 }
 
 /// Owns the router for as long as the app is mounted: built once over the
 /// auth bloc above it, never per rebuild, or every rebuild would start the
 /// navigation over.
-class const _Router({required final NavigatorObserver screenViews})
-    extends StatefulWidget {
+class const _Router({
+  required final NavigatorObserver screenViews,
+  required final OnboardingStore onboarding,
+}) extends StatefulWidget {
   @override
   State<_Router> createState() => _RouterState();
 }
 
 class _RouterState() extends State<_Router> {
   late final AuthBloc _auth = context.read<AuthBloc>();
-  late final _refresh = SignedInListenable(_auth);
+  late final _refresh = RouteRefresh(_auth, widget.onboarding);
   late final GoRouter _router = createRouter(
     auth: _auth,
+    onboarding: widget.onboarding,
     refresh: _refresh,
     observers: [widget.screenViews],
   );

@@ -6,6 +6,18 @@ import 'package:get_it/get_it.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:testing/testing.dart';
 
+/// What the sign-in screen asked of the app, and the name onboarding
+/// would hand it.
+class FakeSignInNavigator({final String? name}) extends SignInNavigator {
+  final left = <SignInMode>[];
+
+  @override
+  String? signUpName() => name;
+
+  @override
+  void leave(BuildContext context, SignInMode mode) => left.add(mode);
+}
+
 /// Drives sign-in on the feature's own screen, composed the way the app
 /// composes it, against a scripted Supabase. The root mirrors the app's:
 /// the sign-in screen while nobody is signed in, a stand-in for the
@@ -15,8 +27,11 @@ class SignInRobot(
   required final SupabaseStub supabase,
   required final AgentStub agent,
   final Set<String> passwordAccounts = const {},
+  final SignInMode mode = SignInMode.signIn,
+  final String? name,
 }) {
   final analytics = AnalyticsSpy();
+  late final navigator = FakeSignInNavigator(name: name);
 
   static const homeKey = Key('home');
 
@@ -39,6 +54,10 @@ class SignInRobot(
   Finder get busy => find.byType(CircularProgressIndicator);
   Finder get googleButton => find.byKey(SignInPage.googleKey);
   Finder get appleButton => find.byKey(SignInPage.appleKey);
+  Finder get back => find.byKey(SignInPage.backKey);
+  Finder get heading => find.byKey(SignInPage.headingKey);
+
+  String get headingText => tester.widget<Text>(heading).data!;
 
   String get errorText => tester.widget<Text>(error).data!;
 
@@ -74,6 +93,7 @@ class SignInRobot(
       google: googleClients,
       passwordAccounts: passwordAccounts,
     );
+    GetIt.I.registerSingleton<SignInNavigator>(navigator);
     return pageUnderTest(
       BlocProvider(
         create: (_) => GetIt.I<AuthBloc>(),
@@ -82,7 +102,7 @@ class SignInRobot(
               ? const Scaffold(
                   body: Center(child: Text('home', key: homeKey)),
                 )
-              : const SignInPage(),
+              : SignInPage(mode: mode),
         ),
       ),
     );

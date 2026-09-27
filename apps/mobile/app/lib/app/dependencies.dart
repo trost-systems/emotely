@@ -7,6 +7,7 @@ import 'package:emotely/config/config_dependencies.dart';
 import 'package:feature_account/feature_account.dart';
 import 'package:feature_auth/feature_auth.dart';
 import 'package:feature_journal/feature_journal.dart';
+import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:feature_session/feature_session.dart';
 import 'package:feedback_link/feedback_link.dart';
 import 'package:get_it/get_it.dart';
@@ -62,6 +63,7 @@ void registerApp(
     posthog: posthog,
     config: posthogConfig,
     consentVersion: consentVersion,
+    onboardingFlowVersion: onboardingFlowVersion,
   );
   _registerRecords(getIt, supabase);
   registerFeedbackLink(getIt, build: build);
@@ -69,6 +71,7 @@ void registerApp(
   registerAuth(getIt, google: google, passwordAccounts: passwordAccounts);
   registerJournal(getIt);
   registerSession(getIt);
+  registerOnboarding(getIt);
   _registerSeams(getIt);
   registerAccount(getIt);
 }
@@ -93,4 +96,6 @@ void _registerSeams(GetIt getIt) => getIt
     AppUserContextSource(profiles: getIt(), errors: getIt()),
   )
   ..registerSingleton<AccountNavigator>(const AppAccountNavigator())
-  ..registerSingleton<JournalNavigator>(const AppJournalNavigator());
+  ..registerSingleton<JournalNavigator>(const AppJournalNavigator())
+  ..registerSingleton<OnboardingNavigator>(const AppOnboardingNavigator())
+  ..registerSingleton<SignInNavigator>(AppSignInNavigator(getIt()));

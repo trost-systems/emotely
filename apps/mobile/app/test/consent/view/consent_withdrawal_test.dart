@@ -178,14 +178,15 @@ void main() {
     testWidgets('the notice is reachable before an account exists', (
       tester,
     ) async {
-      // Play expects the policy to be findable without signing in; this is
-      // the first screen anyone sees, so the link lives here too.
+      // Play expects the policy to be findable without signing in: sign-in
+      // links it, one tap from Welcome, before any account exists.
       final launcher = UrlLauncherSpy.setup();
       final robot = robotWith(tester);
       await tester.pumpWidget(robot.app);
       await robot.settle();
 
-      expect(robot.signIn, findsOneWidget);
+      expect(robot.welcome, findsOneWidget);
+      await robot.tap(robot.haveAccount);
       await robot.tap(robot.signInNotice);
 
       expect(launcher.launched, [privacyNoticeUrl]);

@@ -4,6 +4,7 @@ import 'package:analytics/analytics.dart';
 import 'package:emotely/app/app.dart';
 import 'package:emotely/app/dependencies.dart';
 import 'package:feature_auth/feature_auth.dart';
+import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,8 +37,13 @@ Widget appUnderTest({
         const MethodChannel('posthog_flutter'),
         (call) async => null,
       );
-  // A journal that accepts every write unless the test scripts otherwise.
-  supabase.journalWorks();
+  supabase
+    // An account that already has a name, so a sign-in lands on the
+    // journal rather than on the name step, unless the test scripts the
+    // profile.
+    ..unless(profileRead, rows([profileRow(displayName: accountName)]))
+    // A journal that accepts every write unless the test scripts otherwise.
+    ..journalWorks();
   // A startup gate that opens unless the test scripts otherwise; without it
   // every test would sit on the checking screen.
   final configStub = config ?? (ConfigStub()..serves());
@@ -62,11 +68,15 @@ Widget appUnderTest({
       ios: 'ios.apps.googleusercontent.com',
     ),
   );
-  // `main` awaits the restore before the first frame; here every call
-  // PostHog hears queues behind it instead, so the order is the same.
+  // `main` awaits both restores before the first frame; here every call
+  // PostHog hears queues behind the gate's instead, so the order is the
+  // same, and the onboarding store reads the in-memory preferences before
+  // the router first asks it.
   final gate = GetIt.I<PostHogGate>();
   unawaited(gate.restore());
-  return EmotelyApp(screenViews: gate.screenObserver());
+  final onboarding = GetIt.I<OnboardingStore>();
+  unawaited(onboarding.restore());
+  return EmotelyApp(screenViews: gate.screenObserver(), onboarding: onboarding);
 }
 
 /// A deep link arriving while the app runs: the platform's `pushRoute`
@@ -78,7 +88,11 @@ Future<void> deepLink(WidgetTester tester, String location) async {
   await tester.pumpAndSettle();
 }
 
-/// Signs in through the sign-in screen the way a user does: the email,
+/// The name the harness's account already has.
+const accountName = 'Alice';
+
+/// Signs in through the sign-in screen the way a returning user does: "I
+/// have an account" on Welcome, if that is where they are, then the email,
 /// the code, done. The Supabase stub must have `otp:` and `verify:` rounds
 /// scripted.
 Future<void> signInThroughTheScreen(
@@ -86,6 +100,11 @@ Future<void> signInThroughTheScreen(
   String email = SupabaseStub.email,
   String code = '123456',
 }) async {
+  final haveAccount = find.byKey(WelcomeStepView.haveAccountKey);
+  if (haveAccount.evaluate().isNotEmpty) {
+    await tester.tap(haveAccount);
+    await tester.pumpAndSettle();
+  }
   await tester.enterText(find.byKey(SignInPage.emailKey), email);
   await tester.pump();
   await tester.tap(find.byKey(SignInPage.sendCodeKey));

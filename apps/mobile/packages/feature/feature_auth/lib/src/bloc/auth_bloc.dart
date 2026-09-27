@@ -83,7 +83,10 @@ class AuthBloc({
     emit(AuthState.requestingCode(email: email));
     unawaited(_analytics.codeRequested());
     try {
-      await _supabase.auth.signInWithOtp(email: email);
+      await _supabase.auth.signInWithOtp(
+        email: email,
+        shouldCreateUser: event.createAccount,
+      );
       emit(AuthState.codeSent(email: email));
     } on Exception catch (error, stackTrace) {
       unawaited(_analytics.codeRequestFailed());
@@ -204,10 +207,16 @@ class AuthBloc({
   /// reports that on its stream, which is what moves the UI; whether the
   /// server-side revocation then succeeds changes nothing here, and
   /// neither does a provider that cannot be signed out of.
+  ///
+  /// PostHog hears `signed_out`, and forgets the choice, before any of
+  /// that: once the stream reports the sign-out the router is on Welcome,
+  /// and nothing Welcome sends may go out under this person's id or
+  /// consent (#204).
   Future<void> _onSignOutRequested(
     AuthSignOutRequested event,
     Emitter<AuthState> emit,
   ) async {
+    await _analytics.signedOut();
     try {
       await _supabase.auth.signOut();
     } on Exception {
@@ -218,7 +227,6 @@ class AuthBloc({
     } on Exception {
       // Only the provider's own shortcut back in; the session is gone.
     }
-    unawaited(_analytics.signedOut());
   }
 
   /// Supabase's own view of the session, which wins: a sign-out, an expiry
@@ -307,6 +315,9 @@ class AuthBloc({
           tooManyCodesMessage,
         AuthApiException(errorCode: 'over_request_rate_limit') =>
           tooManyAttemptsMessage,
+        // A code asked for with `shouldCreateUser: false` for an address
+        // with no account: GoTrue refuses the sign-up it would take.
+        AuthApiException(errorCode: 'otp_disabled') => noAccountMessage,
         AuthRetryableFetchException() => unreachableMessage,
         _ => fallback,
       };
@@ -321,6 +332,8 @@ class AuthBloc({
       'That code is wrong or has expired. Request a new one if needed.';
   static const wrongPasswordMessage = 'That password was not accepted.';
   static const unreachableMessage = 'Could not reach the sign-in service.';
+  static const noAccountMessage =
+      'I don’t know this email yet – tap Get started to begin.';
   static const providerFailedMessage =
       'That sign-in did not go through. Try again, or use your email.';
 

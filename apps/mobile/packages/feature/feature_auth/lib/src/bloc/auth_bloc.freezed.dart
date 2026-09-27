@@ -131,10 +131,10 @@ return sessionChanged(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String email)?  emailSubmitted,TResult Function( String code)?  codeSubmitted,TResult Function( String password)?  passwordSubmitted,TResult Function( IdentityProvider provider)?  providerSelected,TResult Function()?  emailChangeRequested,TResult Function()?  signOutRequested,TResult Function( String? userId,  SignInIdentity? identity)?  sessionChanged,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String email,  bool createAccount)?  emailSubmitted,TResult Function( String code)?  codeSubmitted,TResult Function( String password)?  passwordSubmitted,TResult Function( IdentityProvider provider)?  providerSelected,TResult Function()?  emailChangeRequested,TResult Function()?  signOutRequested,TResult Function( String? userId,  SignInIdentity? identity)?  sessionChanged,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AuthEmailSubmitted() when emailSubmitted != null:
-return emailSubmitted(_that.email);case AuthCodeSubmitted() when codeSubmitted != null:
+return emailSubmitted(_that.email,_that.createAccount);case AuthCodeSubmitted() when codeSubmitted != null:
 return codeSubmitted(_that.code);case AuthPasswordSubmitted() when passwordSubmitted != null:
 return passwordSubmitted(_that.password);case AuthProviderSelected() when providerSelected != null:
 return providerSelected(_that.provider);case AuthEmailChangeRequested() when emailChangeRequested != null:
@@ -158,10 +158,10 @@ return sessionChanged(_that.userId,_that.identity);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String email)  emailSubmitted,required TResult Function( String code)  codeSubmitted,required TResult Function( String password)  passwordSubmitted,required TResult Function( IdentityProvider provider)  providerSelected,required TResult Function()  emailChangeRequested,required TResult Function()  signOutRequested,required TResult Function( String? userId,  SignInIdentity? identity)  sessionChanged,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String email,  bool createAccount)  emailSubmitted,required TResult Function( String code)  codeSubmitted,required TResult Function( String password)  passwordSubmitted,required TResult Function( IdentityProvider provider)  providerSelected,required TResult Function()  emailChangeRequested,required TResult Function()  signOutRequested,required TResult Function( String? userId,  SignInIdentity? identity)  sessionChanged,}) {final _that = this;
 switch (_that) {
 case AuthEmailSubmitted():
-return emailSubmitted(_that.email);case AuthCodeSubmitted():
+return emailSubmitted(_that.email,_that.createAccount);case AuthCodeSubmitted():
 return codeSubmitted(_that.code);case AuthPasswordSubmitted():
 return passwordSubmitted(_that.password);case AuthProviderSelected():
 return providerSelected(_that.provider);case AuthEmailChangeRequested():
@@ -181,10 +181,10 @@ return sessionChanged(_that.userId,_that.identity);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String email)?  emailSubmitted,TResult? Function( String code)?  codeSubmitted,TResult? Function( String password)?  passwordSubmitted,TResult? Function( IdentityProvider provider)?  providerSelected,TResult? Function()?  emailChangeRequested,TResult? Function()?  signOutRequested,TResult? Function( String? userId,  SignInIdentity? identity)?  sessionChanged,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String email,  bool createAccount)?  emailSubmitted,TResult? Function( String code)?  codeSubmitted,TResult? Function( String password)?  passwordSubmitted,TResult? Function( IdentityProvider provider)?  providerSelected,TResult? Function()?  emailChangeRequested,TResult? Function()?  signOutRequested,TResult? Function( String? userId,  SignInIdentity? identity)?  sessionChanged,}) {final _that = this;
 switch (_that) {
 case AuthEmailSubmitted() when emailSubmitted != null:
-return emailSubmitted(_that.email);case AuthCodeSubmitted() when codeSubmitted != null:
+return emailSubmitted(_that.email,_that.createAccount);case AuthCodeSubmitted() when codeSubmitted != null:
 return codeSubmitted(_that.code);case AuthPasswordSubmitted() when passwordSubmitted != null:
 return passwordSubmitted(_that.password);case AuthProviderSelected() when providerSelected != null:
 return providerSelected(_that.provider);case AuthEmailChangeRequested() when emailChangeRequested != null:
@@ -202,10 +202,11 @@ return sessionChanged(_that.userId,_that.identity);case _:
 
 
 class AuthEmailSubmitted implements AuthEvent {
-  const AuthEmailSubmitted(this.email);
+  const AuthEmailSubmitted(this.email, {this.createAccount = true});
   
 
  final  String email;
+@JsonKey() final  bool createAccount;
 
 /// Create a copy of AuthEvent
 /// with the given fields replaced by the non-null parameter values.
@@ -217,13 +218,13 @@ $AuthEmailSubmittedCopyWith<AuthEmailSubmitted> get copyWith => _$AuthEmailSubmi
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthEmailSubmitted&&(identical(other.email, email) || other.email == email));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthEmailSubmitted&&(identical(other.email, email) || other.email == email)&&(identical(other.createAccount, createAccount) || other.createAccount == createAccount));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,email);
+    return Object.hash(runtimeType,email,createAccount);
 }
 
 
@@ -235,7 +236,7 @@ abstract mixin class $AuthEmailSubmittedCopyWith<$Res> implements $AuthEventCopy
   factory $AuthEmailSubmittedCopyWith(AuthEmailSubmitted value, $Res Function(AuthEmailSubmitted) _then) = _$AuthEmailSubmittedCopyWithImpl;
 @useResult
 $Res call({
- String email
+ String email, bool createAccount
 });
 
 
@@ -252,10 +253,11 @@ class _$AuthEmailSubmittedCopyWithImpl<$Res>
 
 /// Create a copy of AuthEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? email = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? email = null,Object? createAccount = null,}) {
   return _then(AuthEmailSubmitted(
 null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
-as String,
+as String,createAccount: null == createAccount ? _self.createAccount : createAccount // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

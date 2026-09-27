@@ -20,6 +20,7 @@ part 'profile_state.dart';
 class ProfileBloc({
   required final ProfileRepository _repository,
   required final ErrorReporter _errors,
+  required final OnboardingAnalytics _analytics,
 }) extends Bloc<ProfileEvent, ProfileState> {
   this : super(const ProfileState()) {
     on<ProfileLoaded>(_onLoaded);
@@ -81,6 +82,7 @@ class ProfileBloc({
       final profile = await _repository.saveDisplayName(name);
       emit(state.copyWith(saving: false, profile: profile));
       _notify(emit, ProfileNotice.saved);
+      unawaited(_analytics.displayNameChanged(NameChangeSource.profile));
     } on Exception catch (error, stackTrace) {
       unawaited(_errors.profileSaveFailed(error, stackTrace));
       emit(state.copyWith(saving: false));

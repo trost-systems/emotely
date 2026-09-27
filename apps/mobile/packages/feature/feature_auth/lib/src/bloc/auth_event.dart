@@ -9,8 +9,13 @@ part of 'auth_bloc.dart';
 @Freezed(toStringOverride: false)
 sealed class AuthEvent with _$AuthEvent {
   /// Continue with [email]: a sign-in code is sent to it, unless it is a
-  /// review account, which is asked for its password instead.
-  const factory emailSubmitted(String email) = AuthEmailSubmitted;
+  /// review account, which is asked for its password instead. Without
+  /// [createAccount] ("I have an account") the code only signs into an
+  /// account that exists, and an unknown address is told so.
+  const factory emailSubmitted(
+    String email, {
+    @Default(true) bool createAccount,
+  }) = AuthEmailSubmitted;
 
   /// Verify the [code] the user received.
   const factory codeSubmitted(String code) = AuthCodeSubmitted;

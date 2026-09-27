@@ -66,16 +66,30 @@ class PostHogGate({
     _choice = await _store.read();
     if (_choice == AnalyticsChoice.allowed) {
       await _start(fresh: false);
+      _open = true;
     }
   });
 
   /// The user allowed usage analytics: kept for the next launch, and
   /// PostHog set up afresh. The reset makes sure nothing links this consent
   /// to whoever used the SDK on this device before.
+  ///
+  /// The allow is then the first thing PostHog hears, as
+  /// `usage_analytics_allowed`: the top of the onboarding funnel (#204). It
+  /// is sent here, inside the transition, so that nothing queued behind the
+  /// answer — the screens that came up under the question — goes out
+  /// before it, and so that it is only ever sent by an allow. The gate
+  /// opens only once it is sent: the screen observer reads the gate
+  /// directly rather than queueing behind the transition, so a screen that
+  /// comes up while the SDK is being set up is not counted ahead of it.
   Future<void> allow() => _transition(() async {
     _update(AnalyticsChoice.allowed);
     await _store.write(AnalyticsChoice.allowed);
     await _start(fresh: true);
+    await _guarded(
+      () => _posthog.capture(eventName: 'usage_analytics_allowed'),
+    );
+    _open = true;
   });
 
   /// The user said no, or withdrew: PostHog is switched off before the
@@ -160,6 +174,8 @@ class PostHogGate({
     _changes.add(choice);
   }
 
+  /// Sets the SDK up and tells it who is signed in, without opening the
+  /// gate: the caller opens it once there is nothing left to say first.
   Future<void> _start({required bool fresh}) async {
     if (!_setUp) {
       await _posthog.setup(_config);
@@ -173,7 +189,6 @@ class PostHogGate({
     if (fresh) {
       await _posthog.reset();
     }
-    _open = true;
     if (_identity case (:final userId, :final properties)) {
       await _guarded(
         () => _posthog.identify(userId: userId, userProperties: properties),

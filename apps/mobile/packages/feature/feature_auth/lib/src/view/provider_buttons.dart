@@ -5,8 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
-/// The other ways in, under the email step: Sign in with Apple (iOS only)
-/// above Sign in with Google. Each is the provider's own button, as its
+/// The quickest ways in, above the email: Continue with Apple (iOS only)
+/// above Google. Each is the provider's own button, as its
 /// guidelines require, and Apple's is no smaller than Google's.
 class const ProviderButtons({super.key, final bool enabled = true})
     extends StatelessWidget {
@@ -21,7 +21,6 @@ class const ProviderButtons({super.key, final bool enabled = true})
     crossAxisAlignment: CrossAxisAlignment.stretch,
     spacing: 12,
     children: [
-      const _Or(),
       // Android has no native Apple sheet, and the rule that asks for Apple
       // wherever Google is offered is the App Store's.
       if (defaultTargetPlatform == TargetPlatform.iOS)
@@ -101,10 +100,12 @@ class const GoogleSignInButton({
 class const _AppleButton({required final VoidCallback? onPressed})
     extends StatelessWidget {
   static const height = 48.0;
+  static const label = 'Continue with Apple';
 
   @override
   Widget build(BuildContext context) => SignInWithAppleButton(
     key: ProviderButtons.appleKey,
+    text: label,
     onPressed: onPressed,
     height: height,
     borderRadius: const BorderRadius.all(Radius.circular(height / 2)),
@@ -115,15 +116,24 @@ class const _AppleButton({required final VoidCallback? onPressed})
   );
 }
 
-/// A rule with "or" in it, between the email and the providers.
-class const _Or() extends StatelessWidget {
+/// A rule with "or with your email" in it, between the providers and the
+/// email.
+class const OrWithEmail({super.key}) extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => Row(
-    spacing: 12,
-    children: [
-      const Expanded(child: Divider()),
-      Text('or', style: Theme.of(context).textTheme.bodyMedium),
-      const Expanded(child: Divider()),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      spacing: 12,
+      children: [
+        const Expanded(child: Divider()),
+        Text(
+          'or with your email',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const Expanded(child: Divider()),
+      ],
+    );
+  }
 }
