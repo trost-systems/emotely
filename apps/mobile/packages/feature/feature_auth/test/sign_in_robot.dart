@@ -1,4 +1,5 @@
 import 'package:feature_auth/feature_auth.dart';
+import 'package:feature_auth/src/view/last_used_tag.dart';
 import 'package:feature_auth/src/view/provider_buttons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -56,6 +57,25 @@ class SignInRobot(
   Finder get appleButton => find.byKey(SignInPage.appleKey);
   Finder get back => find.byKey(SignInPage.backKey);
   Finder get heading => find.byKey(SignInPage.headingKey);
+
+  /// The "Last used" tag, over whichever button it marks.
+  Finder get lastUsed => find.byType(LastUsedTag);
+
+  /// The tag's pill itself, as a sighted user reads it.
+  Finder get lastUsedPill => find.text(LastUsedTag.label);
+
+  /// Whether [button] is the one the "Last used" tag marks.
+  bool tagged(Finder button) =>
+      find.ancestor(of: button, matching: lastUsed).evaluate().isNotEmpty;
+
+  /// The way in this device keeps from an earlier sign-in: call before
+  /// [launch], as a relaunch finds it.
+  Future<void> keep(SignInOption option) =>
+      LastSignInStore(preferences: analytics.preferences).remember(option);
+
+  /// The way in this device keeps now.
+  Future<SignInOption?> kept() =>
+      LastSignInStore(preferences: analytics.preferences).read();
 
   String get headingText => tester.widget<Text>(heading).data!;
 
@@ -166,6 +186,16 @@ class SignInRobot(
     await tester.showKeyboard(passwordField);
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pump();
+  }
+
+  /// Signs out from wherever a signed-in user is, as the Profile screen
+  /// asks the app to; the Supabase stub needs a `logout:` round.
+  Future<void> signOut() async {
+    tester
+        .element(find.byType(BlocBuilder<AuthBloc, AuthState>))
+        .read<AuthBloc>()
+        .add(const AuthEvent.signOutRequested());
+    await settle();
   }
 
   /// Enters [email] and goes on to whichever step follows it.

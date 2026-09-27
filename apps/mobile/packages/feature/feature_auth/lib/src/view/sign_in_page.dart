@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:feature_auth/src/bloc/auth_bloc.dart';
+import 'package:feature_auth/src/last_sign_in/last_sign_in_bloc.dart';
+import 'package:feature_auth/src/last_sign_in/last_sign_in_store.dart';
 import 'package:feature_auth/src/navigator.dart';
+import 'package:feature_auth/src/view/last_used_tag.dart';
 import 'package:feature_auth/src/view/provider_buttons.dart';
 import 'package:feature_auth/src/view/sign_in_heading.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -60,39 +63,45 @@ class const SignInPage({final SignInMode mode = SignInMode.signIn, super.key})
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) => didPop ? null : leave(),
-      child: Scaffold(
-        appBar: AppBar(
-          leading: BackButton(key: backKey, onPressed: leave),
-        ),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-            child: Column(
-              children: [
-                // The providers' buttons make the first step taller than a
-                // small phone in landscape, or at a large text size.
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      spacing: 32,
-                      children: [
-                        SignInHeading(mode: mode, name: navigator.signUpName()),
-                        _Step(mode: mode),
-                      ],
+      child: BlocProvider(
+        create: (_) => GetIt.I<LastSignInBloc>(),
+        child: Scaffold(
+          appBar: AppBar(
+            leading: BackButton(key: backKey, onPressed: leave),
+          ),
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              child: Column(
+                children: [
+                  // The providers' buttons make the first step taller than a
+                  // small phone in landscape, or at a large text size.
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        spacing: 32,
+                        children: [
+                          SignInHeading(
+                            mode: mode,
+                            name: navigator.signUpName(),
+                          ),
+                          _Step(mode: mode),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                // Reachable before an account exists, and before an address
-                // has been typed: Play's disclosure expectations are
-                // stricter than Apple's about a policy that lives only
-                // behind a menu.
-                TextButton(
-                  key: privacyNoticeKey,
-                  onPressed: () => unawaited(openPrivacyNotice()),
-                  child: const Text(privacyNoticeLabel),
-                ),
-              ],
+                  // Reachable before an account exists, and before an address
+                  // has been typed: Play's disclosure expectations are
+                  // stricter than Apple's about a policy that lives only
+                  // behind a menu.
+                  TextButton(
+                    key: privacyNoticeKey,
+                    onPressed: () => unawaited(openPrivacyNotice()),
+                    child: const Text(privacyNoticeLabel),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -156,7 +165,10 @@ class _EmailStepState() extends State<_EmailStep> {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     spacing: 16,
     children: [
-      ProviderButtons(enabled: !widget.busy),
+      ProviderButtons(
+        enabled: !widget.busy,
+        lastUsed: context.watch<LastSignInBloc>().state,
+      ),
       const OrWithEmail(),
       TextField(
         key: SignInPage.emailKey,
@@ -176,9 +188,7 @@ class _EmailStepState() extends State<_EmailStep> {
       if (widget.busy)
         const _Busy()
       else
-        FilledButton.tonal(
-          key: SignInPage.sendCodeKey,
-          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+        _SendCode(
           onPressed: _plausible
               ? () => context.read<AuthBloc>().add(
                   AuthEvent.emailSubmitted(
@@ -187,10 +197,31 @@ class _EmailStepState() extends State<_EmailStep> {
                   ),
                 )
               : null,
-          child: const Text('Send me a code'),
         ),
     ],
   );
+}
+
+/// The email's way on, tagged when the email was the way in last time.
+class const _SendCode({required final VoidCallback? onPressed})
+    extends StatelessWidget {
+  static const label = 'Send me a code';
+
+  @override
+  Widget build(BuildContext context) {
+    final lastUsed =
+        context.watch<LastSignInBloc>().state == SignInOption.emailCode;
+    final button = FilledButton.tonal(
+      key: SignInPage.sendCodeKey,
+      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+      onPressed: onPressed,
+      child: Text(
+        label,
+        semanticsLabel: lastUsed ? LastUsedTag.lastUsedLabel(label) : null,
+      ),
+    );
+    return lastUsed ? LastUsedTag(child: button) : button;
+  }
 }
 
 class const _CodeStep({

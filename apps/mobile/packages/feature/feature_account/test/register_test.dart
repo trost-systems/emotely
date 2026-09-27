@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:testing/testing.dart';
 
+import 'fake_account_device_data.dart';
+
 void main() {
   group('registerAccount', () {
     test('registers its blocs as factories over the utilities', () async {
@@ -18,6 +20,7 @@ void main() {
       );
 
       registerAccount(getIt);
+      getIt.registerSingleton<AccountDeviceData>(FakeAccountDeviceData());
 
       final account = getIt<AccountBloc>();
       final consent = getIt<ConsentBloc>();

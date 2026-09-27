@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:analytics/analytics.dart';
+import 'package:feature_account/src/account/account_device_data.dart';
 import 'package:feedback_link/feedback_link.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -13,13 +14,15 @@ part 'account_state.dart';
 /// The one thing the account screen does: delete the account (App Store
 /// guideline 5.1.1). `delete_account` removes the auth user on the server
 /// and, by cascade, every session and entry; what is left is to forget the
-/// user on this device, which ends the signed-in state through Supabase's
-/// own auth stream.
+/// user on this device — what it kept about them ([AccountDeviceData]),
+/// then the session, which ends the signed-in state through Supabase's own
+/// auth stream.
 class AccountBloc({
   required final SupabaseClient _supabase,
   required final AuthAnalytics _analytics,
   required final ErrorReporter _errors,
   required final BuildInfo _build,
+  required final AccountDeviceData _deviceData,
 }) extends Bloc<AccountEvent, AccountState> {
   this : super(const AccountState.idle()) {
     on<AccountDeletionRequested>(_onDeletionRequested);
@@ -60,6 +63,12 @@ class AccountBloc({
     // is on Welcome, and nothing it sends may go out under this person's
     // id or consent (#204).
     await _analytics.accountDeleted();
+    try {
+      await _deviceData.forget();
+    } on Exception {
+      // A stale "Last used" tag misleads nobody into an account; a session
+      // kept for a user who no longer exists would. Sign out regardless.
+    }
     // The user no longer exists, so only the local session can be ended:
     // the SDK's default `SignOutScope.local` is the right one, since a
     // global sign-out would only be refused (403) and every other device's

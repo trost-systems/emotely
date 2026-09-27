@@ -1,6 +1,7 @@
 import 'package:agent_client/agent_client.dart';
 import 'package:analytics/analytics.dart';
 import 'package:consent_repository/consent_repository.dart';
+import 'package:emotely/app/account_device_data.dart';
 import 'package:emotely/app/navigators.dart';
 import 'package:emotely/app/user_context.dart';
 import 'package:emotely/config/config_dependencies.dart';
@@ -89,12 +90,14 @@ void _registerRecords(GetIt getIt, SupabaseClient supabase) {
   );
 }
 
-/// The app's side of each feature's navigator, next to the features, and
-/// of the session's question of who the user is.
+/// The app's side of each feature's navigator, next to the features, of
+/// the session's question of who the user is, and of what a deleted
+/// account leaves on this device.
 void _registerSeams(GetIt getIt) => getIt
   ..registerSingleton<UserContextSource>(
     AppUserContextSource(profiles: getIt(), errors: getIt()),
   )
+  ..registerSingleton<AccountDeviceData>(AppAccountDeviceData(getIt()))
   ..registerSingleton<AccountNavigator>(const AppAccountNavigator())
   ..registerSingleton<JournalNavigator>(const AppJournalNavigator())
   ..registerSingleton<OnboardingNavigator>(const AppOnboardingNavigator())

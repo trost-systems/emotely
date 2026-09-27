@@ -73,7 +73,9 @@ hand-rolled widgets.
   of seam: an abstract source the app implements and registers next to
   the navigators. The session's `UserContextSource` (who the user is, for
   the agent) is implemented in `lib/app/user_context.dart`, over
-  the profile repository.
+  the profile repository; the account's `AccountDeviceData` (what a
+  deleted account leaves on the device, today sign-in's "Last used"
+  method) in `lib/app/account_device_data.dart`.
 - Build-time values (`--dart-define`s) are read and validated in the app
   only (`lib/app/environment.dart`, `urlFrom`) and passed into registration
   functions. No package calls `String.fromEnvironment`.

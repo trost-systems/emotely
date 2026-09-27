@@ -294,4 +294,28 @@ void main() {
     expect(progress.draft, isEmpty);
     expect(progress.completed, isEmpty);
   });
+
+  testWidgets('signing out keeps the way in last used, tagged for the next '
+      'sign-in', (tester) async {
+    final semantics = tester.ensureSemantics();
+    final supabase = SupabaseStub()
+      ..script(
+        otp: [codeSent()],
+        verify: [sessionGranted()],
+        logout: [signedOut()],
+      );
+    await launch(tester, supabase);
+    await signInThroughTheScreen(tester);
+
+    await tap(tester, key(AppShell.moreTabKey));
+    await tap(tester, key(MoreView.profileKey));
+    await tap(tester, key(ProfileView.signOutKey));
+    // The analytics choice is the next person's to make.
+    await tap(tester, key(UsageAnalyticsSheet.denyKey));
+    await tap(tester, key(WelcomeStepView.haveAccountKey));
+
+    expect(find.text('Last used'), findsOneWidget);
+    expect(find.bySemanticsLabel('Send me a code, last used'), findsOneWidget);
+    semantics.dispose();
+  });
 }
