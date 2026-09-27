@@ -201,7 +201,7 @@ void main() {
       expect(find.byType(WelcomeStepView), findsOneWidget);
       expect(sheet(), findsOneWidget);
       expect(analytics.events.sublist(before), [event('signed_out')]);
-      expect(analytics.lifecycle, ['setup', 'reset', 'disable', 'close']);
+      expect(analytics.lifecycle, ['setup', 'flush', 'reset', 'disable']);
     });
 
     testWidgets('are asked about again when a session ends on its own, and '
@@ -233,10 +233,11 @@ void main() {
       expect(find.byType(WelcomeStepView), findsOneWidget);
       expect(sheet(), findsOneWidget);
       expect(analytics.events.sublist(before), isEmpty);
-      expect(analytics.lifecycle, ['setup', 'reset', 'disable', 'close']);
+      expect(analytics.lifecycle, ['setup', 'flush', 'reset', 'disable']);
 
       await tester.tap(find.byKey(UsageAnalyticsSheet.denyKey));
       await tester.pumpAndSettle();
+      expect(analytics.lifecycle.last, 'close');
       await signInThroughTheScreen(tester);
 
       expect(find.byType(JournalPage), findsOneWidget);

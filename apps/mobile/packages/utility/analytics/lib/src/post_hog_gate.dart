@@ -109,13 +109,25 @@ class PostHogGate({
   /// phone, so PostHog forgets who this was (`reset`, while that person's
   /// consent still covers it), switches off, and the question is asked
   /// again of whoever comes next.
+  ///
+  /// What that person already said (`signed_out`, `account_deleted`) must
+  /// still arrive, so the queue is flushed and the SDK is opted out, not
+  /// closed. The SDK keeps its queue on disk and `close` stops it before a
+  /// send completes: the event would go out only at the next [allow] on
+  /// this device, under whoever gave it, and twice if the flush had got it
+  /// out already. Opted out, the SDK takes nothing new and only delivers
+  /// its queue. A later [deny] closes it, an [allow] reopens it without a
+  /// second `setup`, and the next launch does not set it up at all.
   Future<void> forget() => _transition(() async {
     _update(null);
     _identity = null;
     if (_open) {
+      _open = false;
+      await _guarded(_posthog.flush);
       await _guarded(_posthog.reset);
+      // Opted out, not closed: see above.
+      await _guarded(_posthog.disable);
     }
-    await _stop();
     await _store.clear();
   });
 

@@ -204,7 +204,7 @@ void main() {
         await consent.settled;
 
         expect(consent.choice, isNull);
-        expect(spy.lifecycle, ['setup', 'reset', 'disable', 'close']);
+        expect(spy.lifecycle, ['setup', 'flush', 'reset', 'disable']);
       });
 
       test('never records the last person’s choice for the next', () async {
