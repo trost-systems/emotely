@@ -1,0 +1,155 @@
+{
+  "@@locale": "en",
+  "welcomeTitle": "Welcome to emotely",
+  "@welcomeTitle": {
+    "description": "Onboarding, Welcome step (the first screen a new user sees): the heading. emotely is the product name, always lower case, never translated."
+  },
+  "welcomeBody": "A few guided minutes a day to notice how you feel – and why.",
+  "@welcomeBody": {
+    "description": "Onboarding, Welcome step: the one line under the heading saying what emotely is for, a reflective journal that guides the user."
+  },
+  "getStartedButton": "Get started",
+  "@getStartedButton": {
+    "description": "Onboarding, Welcome step: the main button that starts onboarding for someone new."
+  },
+  "haveAccountButton": "I have an account",
+  "@haveAccountButton": {
+    "description": "Onboarding, Welcome step: the quieter button under Get started, for someone who already has an account; it skips onboarding and opens sign-in."
+  },
+  "valueTitle": "Here is what a few minutes gets you",
+  "@valueTitle": {
+    "description": "Onboarding, second step: the heading over three promises of what a few minutes a day with emotely gives the user."
+  },
+  "guidedPromiseTitle": "Guided, one question at a time",
+  "@guidedPromiseTitle": {
+    "description": "Onboarding, second step, first of three promises (next to a speech bubble icon): the companion asks one question at a time."
+  },
+  "guidedPromiseBody": "Pick a set of questions. emotely asks, listens and follows up – no blank page.",
+  "@guidedPromiseBody": {
+    "description": "Onboarding, second step, the line under the first promise. \"No blank page\": unlike a paper diary, the user never faces an empty page."
+  },
+  "answerPromiseTitle": "Answer your way",
+  "@answerPromiseTitle": {
+    "description": "Onboarding, second step, second of three promises (next to a palette icon): the user can answer in many forms."
+  },
+  "answerPromiseBody": "Words, emojis, colours or a quick rating – whatever fits the moment.",
+  "@answerPromiseBody": {
+    "description": "Onboarding, second step, the line under the second promise: the kinds of answer a session accepts."
+  },
+  "journalPromiseTitle": "A journal that writes itself",
+  "@journalPromiseTitle": {
+    "description": "Onboarding, second step, third of three promises (next to a book icon): each session is turned into a journal entry for the user."
+  },
+  "journalPromiseBody": "Every session ends in an entry you can reread – and spot what keeps coming back.",
+  "@journalPromiseBody": {
+    "description": "Onboarding, second step, the line under the third promise: rereading entries shows the user their recurring themes."
+  },
+  "continueButton": "Continue",
+  "@continueButton": {
+    "description": "Onboarding, the main button of the second step and of the name step: goes on to the next step."
+  },
+  "backTooltip": "Back",
+  "@backTooltip": {
+    "description": "Onboarding, every step after the first: tooltip and screen-reader label of the arrow at the top left that goes back one step."
+  },
+  "stepProgress": "Step {step} of {count}",
+  "@stepProgress": {
+    "description": "Onboarding, top of each step: what a screen reader says for the row of dots that shows how far the user is.",
+    "placeholders": {
+      "step": {
+        "type": "int",
+        "example": "2"
+      },
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "nameTitle": "Before we start – what should I call you?",
+  "@nameTitle": {
+    "description": "Onboarding, name step: the heading. The companion speaks as \"I\" and asks, informally, what name to greet the user by."
+  },
+  "nameBody": "A first name or a nickname is perfect.",
+  "@nameBody": {
+    "description": "Onboarding, name step: the line under the heading, reassuring the user that any name will do."
+  },
+  "nameFieldLabel": "Your name",
+  "@nameFieldLabel": {
+    "description": "Onboarding, name step: the label of the one text field, where the user types the name to be called by."
+  },
+  "nameFieldHint": "First name or nickname",
+  "@nameFieldHint": {
+    "description": "Onboarding, name step: the grey hint inside the empty name field."
+  },
+  "nameUse": "Only used to greet you – in the app and in your sessions. Change it any time in your profile.",
+  "@nameUse": {
+    "description": "Onboarding, name step: the small print under the name field, next to a lock icon, saying what the name is used for."
+  },
+  "nameTooLongError": "That is a little long for me – {max} characters at most.",
+  "@nameTooLongError": {
+    "description": "Onboarding, name step: the error under the name field when the typed name is longer than allowed. Spoken by the companion, gently.",
+    "placeholders": {
+      "max": {
+        "type": "int",
+        "example": "40"
+      }
+    }
+  },
+  "nameInvisibleCharacterError": "Please leave out tabs and other invisible characters.",
+  "@nameInvisibleCharacterError": {
+    "description": "Onboarding, name step: the error under the name field when the typed name holds a tab, a line break or another invisible character that rearranges text."
+  },
+  "skipNameButton": "Skip for now",
+  "@skipNameButton": {
+    "description": "Onboarding, name step: the quieter button under Continue that goes on without a name; emotely then picks a playful nickname for the user."
+  },
+  "helloTitle": "Nice to meet you, {name}.",
+  "@helloTitle": {
+    "description": "Onboarding, greeting step after the user typed a name: the heading, greeting them by it.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Peter"
+      }
+    }
+  },
+  "helloBody": "Your first reflection takes about five minutes. I ask, you answer – in words, emojis or colours.",
+  "@helloBody": {
+    "description": "Onboarding, greeting step: the line under the heading, saying what the first session is like. The companion speaks as \"I\"."
+  },
+  "skippedTitle": "Fine, stay mysterious.",
+  "@skippedTitle": {
+    "description": "Onboarding, greeting step after the user skipped the name: a playful, good-natured heading accepting that they did not say."
+  },
+  "skippedBody": "I’ll call you {placeholder} for now. When you’re ready to tell me your real name, it’s in your profile.",
+  "@skippedBody": {
+    "description": "Onboarding, greeting step after a skip: announces the nickname emotely picked (one of placeholderNames) and says the real name can be given later in the profile.",
+    "placeholders": {
+      "placeholder": {
+        "type": "String",
+        "example": "Pebble"
+      }
+    }
+  },
+  "tellYouButton": "Actually, I’ll tell you",
+  "@tellYouButton": {
+    "description": "Onboarding, greeting step after a skip: the quieter button that takes the user back to the name field after all."
+  },
+  "startReflectionButton": "Start my first reflection",
+  "@startReflectionButton": {
+    "description": "Onboarding, greeting step: the main button, the last step before sign-up, which leads on to the user's first session."
+  },
+  "saveFailedMessage": "I could not save your name just now. Check your connection and try again.",
+  "@saveFailedMessage": {
+    "description": "Onboarding, right after sign-up: the name could not be saved to the new account. Shown above a Try again button."
+  },
+  "retryButton": "Try again",
+  "@retryButton": {
+    "description": "Onboarding, right after sign-up: the button under the failed-save message that tries saving the name again."
+  },
+  "placeholderNames": "Pebble, Pip, Maple, Biscuit, Sparrow, Clover, Noodle, Sunny, Juniper, Button, Toffee, Wren",
+  "@placeholderNames": {
+    "description": "Onboarding: the nicknames emotely picks one of, at random, when the user skips the name step. The pick becomes the user's name: shown in the greeting and the profile, and given to the companion, and it stays as picked even if the phone's language changes later. Separated by commas. Do not translate word for word: give equally playful, gender-neutral nicknames that are plainly nobody's real name, each at most 40 characters. The number of names may differ."
+  }
+}

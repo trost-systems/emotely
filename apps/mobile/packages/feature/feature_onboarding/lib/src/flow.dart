@@ -133,20 +133,3 @@ extension OnboardingFlowX on OnboardingFlow {
     phase: step.phase,
   );
 }
-
-/// The names given on "Skip for now": playful, gender-neutral, and plainly
-/// not anyone's real name, so nobody mistakes one for a name they chose.
-const placeholderNames = [
-  'Pebble',
-  'Pip',
-  'Maple',
-  'Biscuit',
-  'Sparrow',
-  'Clover',
-  'Noodle',
-  'Sunny',
-  'Juniper',
-  'Button',
-  'Toffee',
-  'Wren',
-];

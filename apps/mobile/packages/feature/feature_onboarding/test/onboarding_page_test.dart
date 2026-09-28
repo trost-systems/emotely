@@ -1,9 +1,11 @@
 import 'package:analytics/analytics.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
-import 'package:feature_onboarding/src/view/onboarding_text.dart';
+import 'package:feature_onboarding/src/view/nicknames.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:profile_repository/profile_repository.dart'
+    show maxDisplayNameLength;
 import 'package:supabase_flutter/supabase_flutter.dart'
     show PostgrestApiException;
 import 'package:testing/testing.dart';
@@ -40,22 +42,28 @@ void main() {
       final robot = OnboardingRobot(tester);
       await robot.launch();
 
+      final strings = robot.strings;
+
       expect(robot.welcome, findsOneWidget);
-      expect(find.text(welcomeTitle), findsOneWidget);
-      expect(find.bySemanticsLabel('Step 1 of 3'), findsOneWidget);
+      expect(find.text(strings.welcomeTitle), findsOneWidget);
+      expect(find.bySemanticsLabel(strings.stepProgress(1, 3)), findsOneWidget);
 
       await robot.tap(robot.getStarted);
 
       expect(robot.value, findsOneWidget);
-      for (final promise in promises) {
-        expect(find.text(promise.title), findsOneWidget);
+      for (final title in [
+        strings.guidedPromiseTitle,
+        strings.answerPromiseTitle,
+        strings.journalPromiseTitle,
+      ]) {
+        expect(find.text(title), findsOneWidget);
       }
-      expect(find.bySemanticsLabel('Step 2 of 3'), findsOneWidget);
+      expect(find.bySemanticsLabel(strings.stepProgress(2, 3)), findsOneWidget);
 
       await robot.tap(robot.valueContinue);
 
       expect(robot.name, findsOneWidget);
-      expect(find.text(nameTitle), findsOneWidget);
+      expect(find.text(strings.nameTitle), findsOneWidget);
       expect(tester.widget<TextField>(robot.nameField).autofillHints, [
         AutofillHints.givenName,
       ]);
@@ -64,8 +72,8 @@ void main() {
       await robot.tap(robot.nameContinue);
 
       expect(robot.hello, findsOneWidget);
-      expect(find.text(helloTitle('Peter')), findsOneWidget);
-      final title = tester.widget<Text>(find.text(helloTitle('Peter')));
+      expect(find.text(strings.helloTitle('Peter')), findsOneWidget);
+      final title = tester.widget<Text>(find.text(strings.helloTitle('Peter')));
       expect(title.style?.fontStyle, FontStyle.normal);
     });
 
@@ -126,29 +134,32 @@ void main() {
         ),
       );
 
+      final tooLong = robot.strings.nameTooLongError(maxDisplayNameLength);
+      final invisible = robot.strings.nameInvisibleCharacterError;
+
       expect(button().onPressed, isNull);
 
       await robot.type('   ');
       expect(button().onPressed, isNull);
-      expect(find.text(nameTooLong), findsNothing);
+      expect(find.text(tooLong), findsNothing);
 
       await robot.type('a' * 41);
       expect(button().onPressed, isNull);
-      expect(find.text(nameTooLong), findsOneWidget);
+      expect(find.text(tooLong), findsOneWidget);
 
       await robot.type('Pe\tter');
       expect(button().onPressed, isNull);
-      expect(find.text(nameInvisibleCharacter), findsOneWidget);
+      expect(find.text(invisible), findsOneWidget);
 
       // A paragraph separator or a right-to-left override is as invisible
       // as a tab, and gets the same answer (#214).
       await robot.type('Pe\u2029ter');
       expect(button().onPressed, isNull);
-      expect(find.text(nameInvisibleCharacter), findsOneWidget);
+      expect(find.text(invisible), findsOneWidget);
 
       await robot.type('Pe\u202eter');
       expect(button().onPressed, isNull);
-      expect(find.text(nameInvisibleCharacter), findsOneWidget);
+      expect(find.text(invisible), findsOneWidget);
 
       // The keyboard's "done" does not slip past the check either.
       await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -171,11 +182,12 @@ void main() {
       await robot.type('Pe');
       await robot.tap(robot.skip);
 
+      final strings = robot.strings;
       final placeholder = robot.store.progress.placeholder;
-      expect(placeholderNames, contains(placeholder));
+      expect(strings.nicknames, contains(placeholder));
       expect(robot.skipped, findsOneWidget);
-      expect(find.text(skippedTitle), findsOneWidget);
-      expect(find.text(skippedBody(placeholder!)), findsOneWidget);
+      expect(find.text(strings.skippedTitle), findsOneWidget);
+      expect(find.text(strings.skippedBody(placeholder!)), findsOneWidget);
 
       await robot.tap(robot.tellYou);
 
@@ -267,7 +279,7 @@ void main() {
       await robot.launch(phase: OnboardingPhase.afterSignIn);
 
       expect(robot.retry, findsOneWidget);
-      expect(find.text(saveFailedMessage), findsOneWidget);
+      expect(find.text(robot.strings.saveFailedMessage), findsOneWidget);
       expect(robot.store.readyForAccount, isTrue);
       expect(robot.navigator.asked, isEmpty);
       expect(robot.analytics.exceptions, [
@@ -432,7 +444,11 @@ void main() {
 
       expect(robot.name, findsOneWidget);
       expect(robot.back, findsNothing);
-      expect(find.bySemanticsLabel(RegExp('Step')), findsNothing);
+      // Its only step would read as the first of one, were it counted.
+      expect(
+        find.bySemanticsLabel(robot.strings.stepProgress(1, 1)),
+        findsNothing,
+      );
 
       await robot.type('Peter');
       await robot.tap(robot.nameContinue);
@@ -449,7 +465,7 @@ void main() {
       await robot.tap(robot.skip);
 
       expect(robot.saved, hasLength(1));
-      expect(placeholderNames, contains(robot.saved.single.name));
+      expect(robot.strings.nicknames, contains(robot.saved.single.name));
       expect(robot.saved.single.isPlaceholder, isTrue);
       expect(robot.navigator.asked, ['finish journal from null']);
     });
@@ -594,15 +610,94 @@ void main() {
       await after.launch(phase: OnboardingPhase.afterSignIn);
 
       expect(after.saved.single.name, needle);
+      final placeholders = [
+        for (final locale in OnboardingLocalizations.supportedLocales)
+          ...lookupOnboardingLocalizations(locale).nicknames,
+      ];
       for (final spy in [robot.analytics, after.analytics]) {
         expect(spy.events, isNotEmpty);
         for (final sent in spy.outgoingStrings) {
           expect(sent, isNot(contains(needle)));
-          for (final placeholder in placeholderNames) {
+          for (final placeholder in placeholders) {
             expect(sent, isNot(contains(placeholder)));
           }
         }
       }
+    });
+  });
+
+  group('in German', () {
+    const german = Locale('de');
+    final de = lookupOnboardingLocalizations(german);
+
+    testWidgets('walks every step in German, and names a skipper with a '
+        'German nickname', (tester) async {
+      final robot = OnboardingRobot(tester);
+      await robot.launch(locale: german);
+
+      expect(find.text(de.welcomeTitle), findsOneWidget);
+      expect(find.text(de.haveAccountButton), findsOneWidget);
+      expect(find.bySemanticsLabel(de.stepProgress(1, 3)), findsOneWidget);
+
+      await robot.tap(robot.getStarted);
+
+      expect(find.text(de.valueTitle), findsOneWidget);
+      expect(find.text(de.journalPromiseBody), findsOneWidget);
+      expect(find.byTooltip(de.backTooltip), findsOneWidget);
+
+      await robot.tap(robot.valueContinue);
+      await robot.type('a' * 41);
+
+      expect(find.text(de.nameTitle), findsOneWidget);
+      expect(find.text(de.nameFieldLabel), findsOneWidget);
+      expect(
+        find.text(de.nameTooLongError(maxDisplayNameLength)),
+        findsOneWidget,
+      );
+
+      await robot.tap(robot.skip);
+
+      final placeholder = robot.store.progress.placeholder!;
+      expect(de.nicknames, contains(placeholder));
+      expect(find.text(de.skippedBody(placeholder)), findsOneWidget);
+
+      await robot.tap(robot.tellYou);
+      await robot.type('Peter');
+      await robot.tap(robot.nameContinue);
+
+      expect(find.text(de.helloTitle('Peter')), findsOneWidget);
+      expect(find.text(de.startReflectionButton), findsOneWidget);
+    });
+
+    testWidgets('offers the retry in German', (tester) async {
+      final robot = OnboardingRobot(tester);
+      robot.supabase.rest(profileSave, [restRefused()]);
+      await robot.kept(readyForAccount());
+      await robot.launch(phase: OnboardingPhase.afterSignIn, locale: german);
+
+      expect(find.text(de.saveFailedMessage), findsOneWidget);
+      expect(find.text(de.retryButton), findsOneWidget);
+    });
+
+    testWidgets('keeps the nickname it picked when the phone speaks another '
+        'language later', (tester) async {
+      final robot = OnboardingRobot(tester);
+      await robot.kept({
+        'flow_version': onboardingFlowVersion,
+        'completed': ['welcome', 'value', 'name'],
+        'draft': '',
+        'placeholder': de.nicknames.first,
+        'started': true,
+      });
+      await robot.launch(locale: const Locale('en'));
+
+      expect(
+        find.text(
+          lookupOnboardingLocalizations(const Locale('en'))
+              .skippedBody(de.nicknames.first),
+        ),
+        findsOneWidget,
+      );
     });
   });
 

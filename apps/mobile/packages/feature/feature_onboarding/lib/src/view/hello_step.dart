@@ -1,5 +1,5 @@
+import 'package:feature_onboarding/src/l10n/onboarding_localizations.dart';
 import 'package:feature_onboarding/src/view/art.dart';
-import 'package:feature_onboarding/src/view/onboarding_text.dart';
 import 'package:feature_onboarding/src/view/step_frame.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -15,11 +15,12 @@ class const HelloStepView({
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final strings = OnboardingLocalizations.of(context);
     return StepFrame(
       actions: [
         PrimaryAction(
           key: startKey,
-          label: startReflectionLabel,
+          label: strings.startReflectionButton,
           onPressed: onStart,
         ),
       ],
@@ -38,7 +39,7 @@ class const HelloStepView({
               ),
             ),
           ),
-          StepHeading(title: helloTitle(name), body: helloBody),
+          StepHeading(title: strings.helloTitle(name), body: strings.helloBody),
         ],
       ),
     );
@@ -57,26 +58,32 @@ class const SkippedStepView({
   static const tellYouKey = Key('onboarding.skipped.tell_you');
 
   @override
-  Widget build(BuildContext context) => StepFrame(
-    actions: [
-      PrimaryAction(
-        key: startKey,
-        label: startReflectionLabel,
-        onPressed: onStart,
-      ),
-      SecondaryAction(
-        key: tellYouKey,
-        label: tellYouLabel,
-        onPressed: onTellYou,
-      ),
-    ],
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: 28,
-      children: [
-        const PebbleArt(),
-        StepHeading(title: skippedTitle, body: skippedBody(placeholder)),
+  Widget build(BuildContext context) {
+    final strings = OnboardingLocalizations.of(context);
+    return StepFrame(
+      actions: [
+        PrimaryAction(
+          key: startKey,
+          label: strings.startReflectionButton,
+          onPressed: onStart,
+        ),
+        SecondaryAction(
+          key: tellYouKey,
+          label: strings.tellYouButton,
+          onPressed: onTellYou,
+        ),
       ],
-    ),
-  );
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 28,
+        children: [
+          const PebbleArt(),
+          StepHeading(
+            title: strings.skippedTitle,
+            body: strings.skippedBody(placeholder),
+          ),
+        ],
+      ),
+    );
+  }
 }

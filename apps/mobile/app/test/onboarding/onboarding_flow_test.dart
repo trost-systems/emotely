@@ -93,7 +93,13 @@ void main() {
 
       await walkTo(tester, name: 'Peter');
 
-      expect(find.text('Nice to meet you, Peter.'), findsOneWidget);
+      expect(
+        find.text(
+          OnboardingLocalizations.of(tester.element(find.byType(HelloStepView)))
+              .helloTitle('Peter'),
+        ),
+        findsOneWidget,
+      );
 
       await tap(tester, key(HelloStepView.startKey));
 

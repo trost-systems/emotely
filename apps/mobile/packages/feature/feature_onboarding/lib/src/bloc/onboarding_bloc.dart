@@ -24,6 +24,11 @@ part 'onboarding_state.dart';
 ///
 /// Every step shown and left is reported through [OnboardingAnalytics],
 /// which is never handed the name.
+///
+/// A skip names the user with one of the nicknames the skip carries, the
+/// screen's own words in the user's language. The one picked is data from
+/// then on, the user's name like a typed one, and stays as picked whatever
+/// language the phone speaks later.
 class OnboardingBloc({
   required final OnboardingStore _store,
   required final ProfileRepository _profiles,
@@ -104,7 +109,7 @@ class OnboardingBloc({
     }
     _left(step, OnboardingStepAction.skipped);
     final placeholder =
-        placeholderNames[_random.nextInt(placeholderNames.length)];
+        event.nicknames[_random.nextInt(event.nicknames.length)];
     await _forward(
       emit,
       step,

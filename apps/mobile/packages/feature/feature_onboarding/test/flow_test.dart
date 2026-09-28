@@ -1,6 +1,9 @@
 import 'package:analytics/analytics.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
+import 'package:feature_onboarding/src/view/nicknames.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' show Locale;
+import 'package:profile_repository/profile_repository.dart';
 
 void main() {
   group(OnboardingFlow, () {
@@ -130,20 +133,52 @@ void main() {
     });
   });
 
-  test('the placeholders are the twelve agreed names', () {
-    expect(placeholderNames, [
-      'Pebble',
-      'Pip',
-      'Maple',
-      'Biscuit',
-      'Sparrow',
-      'Clover',
-      'Noodle',
-      'Sunny',
-      'Juniper',
-      'Button',
-      'Toffee',
-      'Wren',
-    ]);
+  group(OnboardingLocalizations, () {
+    List<String> nicknamesIn(String language) =>
+        lookupOnboardingLocalizations(Locale(language)).nicknames;
+
+    test(
+      'nicknames the user with one of the twelve agreed names in English',
+      () {
+        expect(nicknamesIn('en'), [
+          'Pebble',
+          'Pip',
+          'Maple',
+          'Biscuit',
+          'Sparrow',
+          'Clover',
+          'Noodle',
+          'Sunny',
+          'Juniper',
+          'Button',
+          'Toffee',
+          'Wren',
+        ]);
+      },
+    );
+
+    test('nicknames the user with distinct names the profile takes, in every '
+        'locale', () {
+      for (final locale in OnboardingLocalizations.supportedLocales) {
+        final names = lookupOnboardingLocalizations(locale).nicknames;
+
+        expect(names, isNotEmpty, reason: '$locale');
+        expect(names.toSet(), hasLength(names.length), reason: '$locale');
+        for (final name in names) {
+          expect(
+            DisplayName.check(name),
+            isA<DisplayNameAccepted>(),
+            reason: '$locale: $name',
+          );
+        }
+      }
+    });
+
+    test('has nicknames of its own in German, not the English ones', () {
+      expect(
+        nicknamesIn('de').toSet().intersection(nicknamesIn('en').toSet()),
+        isEmpty,
+      );
+    });
   });
 }

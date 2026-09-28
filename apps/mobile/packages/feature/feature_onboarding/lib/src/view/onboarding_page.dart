@@ -1,12 +1,13 @@
 import 'package:analytics/analytics.dart';
 import 'package:feature_onboarding/src/bloc/onboarding_bloc.dart';
 import 'package:feature_onboarding/src/flow.dart';
+import 'package:feature_onboarding/src/l10n/onboarding_localizations.dart';
 import 'package:feature_onboarding/src/navigator.dart';
 import 'package:feature_onboarding/src/progress.dart';
 import 'package:feature_onboarding/src/view/hello_step.dart';
 import 'package:feature_onboarding/src/view/intro_steps.dart';
 import 'package:feature_onboarding/src/view/name_step.dart';
-import 'package:feature_onboarding/src/view/onboarding_text.dart';
+import 'package:feature_onboarding/src/view/nicknames.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:material_ui/material_ui.dart';
@@ -108,7 +109,12 @@ class const _Step(final OnboardingShowing state, {required final String? from})
         onBack: state.canGoBack ? back : null,
         onChanged: (text) => bloc.add(OnboardingEvent.nameChanged(text)),
         onContinue: forward,
-        onSkip: () => bloc.add(OnboardingEvent.skipped(id)),
+        onSkip: () => bloc.add(
+          OnboardingEvent.skipped(
+            id,
+            nicknames: OnboardingLocalizations.of(context).nicknames,
+          ),
+        ),
       ),
       HelloStep() => switch (state.progress.placeholder) {
         null => HelloStepView(
@@ -128,26 +134,29 @@ class const _Step(final OnboardingShowing state, {required final String? from})
 /// The name could not be saved to the new account: say so, and try again.
 class const _SaveFailed() extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => Scaffold(
-    body: SafeArea(
-      child: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            spacing: 16,
-            children: [
-              const Text(saveFailedMessage, textAlign: TextAlign.center),
-              FilledButton(
-                key: OnboardingView.retryKey,
-                onPressed: () => context.read<OnboardingBloc>().add(
-                  const OnboardingEvent.retried(),
+  Widget build(BuildContext context) {
+    final strings = OnboardingLocalizations.of(context);
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              spacing: 16,
+              children: [
+                Text(strings.saveFailedMessage, textAlign: TextAlign.center),
+                FilledButton(
+                  key: OnboardingView.retryKey,
+                  onPressed: () => context.read<OnboardingBloc>().add(
+                    const OnboardingEvent.retried(),
+                  ),
+                  child: Text(strings.retryButton),
                 ),
-                child: const Text(retryLabel),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
