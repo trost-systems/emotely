@@ -722,6 +722,20 @@ void main() {
       expect(find.textContaining('survey'), findsComponents);
     });
 
+    // Merges land on the internal tracks only; a beta build is promoted by
+    // hand (release-app skill), so the page must not promise otherwise. What
+    // a tester does need to know is that an old build can be blocked by the
+    // force-update screen.
+    testComponents('promises no build per merge and warns of forced updates', (
+      tester,
+    ) {
+      tester.pumpComponent(const Beta());
+
+      expect(find.textContaining('Every merge'), findsNothing);
+      expect(find.textContaining('without warning'), findsNothing);
+      expect(find.textContaining('ask you to update'), findsComponents);
+    });
+
     testComponents('gives both feedback channels and asks for the version', (
       tester,
     ) {

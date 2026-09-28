@@ -69,8 +69,9 @@ class const Beta({super.key}) extends StatelessComponent {
       ]),
       li([
         .text(
-          'Every merge ships a new build automatically, so updates arrive '
-          'often and without warning.',
+          'A new build arrives every so often, with fixes for what testers '
+          'found. Install it when TestFlight or Play offers it: an old '
+          'build may ask you to update before it lets you journal.',
         ),
       ]),
       li([
