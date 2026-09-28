@@ -1,4 +1,5 @@
 import 'package:contract/contract.dart';
+import 'package:feature_session/src/l10n/session_localizations.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// How much room [answer] has left before the agent refuses it
@@ -17,28 +18,21 @@ class const AnswerLength({required final Answer answer, super.key})
   /// The count stays hidden below this, so short answers carry no clutter.
   static const shownFrom = maxAnswerLength * 9 ~/ 10;
 
-  /// The copy while [remaining] units still fit; one localized string each.
-  static String left(int remaining) => '${_characters(remaining)} left';
-
-  /// The copy once the answer is [excess] units over the limit.
-  static String over(int excess) =>
-      '${_characters(excess)} too many. Shorten your answer to submit it.';
-
-  static String _characters(int count) =>
-      count == 1 ? '1 character' : '$count characters';
-
   @override
   Widget build(BuildContext context) {
     final length = answer.wireLength;
     if (length < shownFrom) {
       return const SizedBox.shrink();
     }
+    final strings = SessionLocalizations.of(context);
     final theme = Theme.of(context);
     final fits = length <= maxAnswerLength;
     return Semantics(
       liveRegion: true,
       child: Text(
-        fits ? left(maxAnswerLength - length) : over(length - maxAnswerLength),
+        fits
+            ? strings.answerLengthLeft(maxAnswerLength - length)
+            : strings.answerLengthOver(length - maxAnswerLength),
         key: noteKey,
         style: theme.textTheme.bodySmall?.copyWith(
           color: fits

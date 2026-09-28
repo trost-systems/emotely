@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:testing/testing.dart';
 
 import '../session_robot.dart';
+import '../session_strings.dart';
 
 /// The session writes itself to the journal as it goes (ADR 0010): every
 /// round updates the user's session row, completion files the entry.
@@ -216,7 +217,7 @@ void main() {
 
       await robot.answerRating(9);
 
-      expect(find.text(SessionRobot.entrySaveFailedMessage), findsOneWidget);
+      expect(find.text(tester.strings.entrySaveFailedMessage), findsOneWidget);
       expect(robot.summary, findsNothing);
       expect(robot.analytics.events.last, event('entry_save_failed'));
       expect(robot.analytics.exceptions, [

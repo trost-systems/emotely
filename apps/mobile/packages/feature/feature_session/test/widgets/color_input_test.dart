@@ -1,4 +1,5 @@
 import 'package:contract/contract.dart';
+import 'package:feature_session/src/l10n/session_localizations.dart';
 import 'package:feature_session/src/widgets/color_input.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,11 +7,16 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:testing/testing.dart';
 
+import '../session_strings.dart';
+
 void main() {
   group(ColorInput, () {
     Future<Submitted> pumpTestWidget(WidgetTester tester) async {
       final submitted = Submitted();
-      await tester.pumpApp(ColorInput(onSubmit: submitted.call));
+      await tester.pumpApp(
+        ColorInput(onSubmit: submitted.call),
+        localizations: sessionLocalizations,
+      );
       return submitted;
     }
 
@@ -53,7 +59,10 @@ void main() {
 
       expect(find.byKey(ColorInput.slotKey(0)), findsOneWidget);
       expect(find.byKey(ColorInput.slotKey(1)), findsNothing);
-      expect(find.bySemanticsLabel(ColorInput.pickLabel), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(tester.strings.colorPickLabel),
+        findsOneWidget,
+      );
       expect(isSubmitEnabled(tester, ColorInput.submitKey), isFalse);
     });
 
@@ -127,9 +136,43 @@ void main() {
       );
     });
 
+    testWidgets('speaks German, the picker included', (tester) async {
+      const german = Locale('de');
+      final strings = lookupSessionLocalizations(german);
+      await tester.pumpApp(
+        const ColorInput(onSubmit: ignoreAnswer),
+        localizations: sessionLocalizations,
+        locale: german,
+      );
+
+      expect(find.bySemanticsLabel(strings.colorPickLabel), findsOneWidget);
+      expect(find.text(strings.submitButton), findsOneWidget);
+
+      await pick(tester, 0, Colors.red);
+      await openSlot(tester, 0);
+
+      for (final text in [
+        strings.colorPickLabel,
+        strings.colorSwatchesTab,
+        strings.colorWheelTab,
+        strings.colorCancelButton,
+        strings.colorClearButton,
+        strings.colorSelectButton,
+      ]) {
+        expect(
+          find.descendant(of: dialog, matching: find.text(text)),
+          findsOneWidget,
+          reason: text,
+        );
+      }
+    });
+
     testWidgets('meets accessibility guidelines', (tester) async {
       await tester.expectMeetsAccessibilityGuidelines(
-        appWrapper(const ColorInput(onSubmit: ignoreAnswer)),
+        appWrapper(
+          const ColorInput(onSubmit: ignoreAnswer),
+          localizations: sessionLocalizations,
+        ),
         prepare: (tester) => pick(tester, 0, Colors.red),
       );
     });

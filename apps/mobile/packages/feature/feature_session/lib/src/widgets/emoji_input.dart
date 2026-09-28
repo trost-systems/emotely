@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:contract/contract.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:feature_session/src/l10n/session_localizations.dart';
 import 'package:feature_session/src/widgets/submit_button.dart';
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform;
@@ -22,9 +23,6 @@ class const EmojiInput({
 
   /// Key of the [index]th slot; the last one is always empty.
   static Key slotKey(int index) => Key('emoji_input.slot.$index');
-
-  /// What the empty slot is called.
-  static const pickLabel = 'Pick an emoji';
 
   @override
   State<EmojiInput> createState() => _EmojiInputState();
@@ -98,7 +96,7 @@ class const _Slot({
     final scheme = Theme.of(context).colorScheme;
     return Semantics(
       button: true,
-      label: emoji ?? EmojiInput.pickLabel,
+      label: emoji ?? SessionLocalizations.of(context).emojiPickLabel,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
@@ -153,17 +151,23 @@ class const _EmojiSheet({required final bool canClear})
           onBackspacePressed: canClear
               ? () => navigator.pop(const _Cleared())
               : null,
-          config: _config(Theme.of(context).colorScheme),
+          config: _config(context),
         ),
       ),
     );
   }
 
-  /// The picker in this screen's colours: search on top, categories below,
-  /// and the clear button only when there is an emoji to clear.
-  Config _config(ColorScheme scheme) {
+  /// The picker in this screen's colours and language: search on top,
+  /// categories below, and the clear button only when there is an emoji to
+  /// clear. The locale picks the emoji names search matches against, so a
+  /// German hint finds German words.
+  Config _config(BuildContext context) {
+    final strings = SessionLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final background = scheme.surfaceContainerLow;
     return Config(
+      locale: Localizations.localeOf(context),
       viewOrderConfig: const ViewOrderConfig(
         top: EmojiPickerItem.searchBar,
         bottom: EmojiPickerItem.categoryBar,
@@ -177,6 +181,13 @@ class const _EmojiSheet({required final bool canClear})
         buttonMode: defaultTargetPlatform == TargetPlatform.iOS
             ? ButtonMode.CUPERTINO
             : ButtonMode.MATERIAL,
+        noRecents: Text(
+          strings.emojiNoRecents,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
       ),
       categoryViewConfig: CategoryViewConfig(
         initCategory: Category.SMILEYS,
@@ -196,12 +207,12 @@ class const _EmojiSheet({required final bool canClear})
         Icons.clear,
         key: EmojiInput.clearKey,
         color: scheme.error,
-        semanticLabel: 'Clear emoji',
+        semanticLabel: strings.emojiClearLabel,
       ),
       searchViewConfig: SearchViewConfig(
         backgroundColor: background,
         buttonIconColor: scheme.primary,
-        hintText: 'Smile, heart, …',
+        hintText: strings.emojiSearchHint,
       ),
     );
   }

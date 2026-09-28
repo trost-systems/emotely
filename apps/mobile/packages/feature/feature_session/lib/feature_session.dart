@@ -5,6 +5,8 @@
 /// app's own end-to-end tests can find and drive them.
 library;
 
+// The app lists the delegate; the session's tests look strings up through it.
+export 'src/l10n/session_localizations.dart' show SessionLocalizations;
 export 'src/register.dart';
 // Every feature's part file generates a `$appRoutes`; the app composes
 // from the named routes instead, so the collision never reaches it.

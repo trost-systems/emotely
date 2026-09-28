@@ -1,17 +1,22 @@
 import 'package:contract/contract.dart';
+import 'package:feature_session/src/l10n/session_localizations.dart';
 import 'package:feature_session/src/widgets/rating_input.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:testing/testing.dart';
 
+import '../session_strings.dart';
 import '../slide_rating.dart';
 
 void main() {
   group(RatingInput, () {
     Future<Submitted> pumpTestWidget(WidgetTester tester) async {
       final submitted = Submitted();
-      await tester.pumpApp(RatingInput(onSubmit: submitted.call));
+      await tester.pumpApp(
+        RatingInput(onSubmit: submitted.call),
+        localizations: sessionLocalizations,
+      );
       return submitted;
     }
 
@@ -27,7 +32,7 @@ void main() {
       expect(slider.max, RatingInput.max);
       // Whole numbers only: one stop per value, plus the "no answer" stop.
       expect(slider.divisions, RatingInput.max);
-      expect(shownValue(tester), RatingInput.noAnswerLabel);
+      expect(shownValue(tester), tester.strings.ratingNoAnswer);
       expect(isSubmitEnabled(tester, RatingInput.submitKey), isFalse);
     });
 
@@ -48,8 +53,24 @@ void main() {
 
       await slideRatingTo(tester, 0);
 
-      expect(shownValue(tester), RatingInput.noAnswerLabel);
+      expect(shownValue(tester), tester.strings.ratingNoAnswer);
       expect(isSubmitEnabled(tester, RatingInput.submitKey), isFalse);
+    });
+
+    testWidgets('speaks German, to the eye and to a screen reader', (
+      tester,
+    ) async {
+      const german = Locale('de');
+      final strings = lookupSessionLocalizations(german);
+      await tester.pumpApp(
+        const RatingInput(onSubmit: ignoreAnswer),
+        localizations: sessionLocalizations,
+        locale: german,
+      );
+
+      expect(shownValue(tester), strings.ratingNoAnswer);
+      expect(find.semantics.byValue(strings.ratingNoAnswer), findsOne);
+      expect(find.text(strings.submitButton), findsOneWidget);
     });
 
     testWidgets('submits the value the slider rests on', (tester) async {
@@ -64,7 +85,10 @@ void main() {
 
     testWidgets('meets accessibility guidelines', (tester) async {
       await tester.expectMeetsAccessibilityGuidelines(
-        appWrapper(const RatingInput(onSubmit: ignoreAnswer)),
+        appWrapper(
+          const RatingInput(onSubmit: ignoreAnswer),
+          localizations: sessionLocalizations,
+        ),
         prepare: (tester) => slideRatingTo(tester, 8),
       );
     });

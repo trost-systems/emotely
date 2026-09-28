@@ -1,4 +1,5 @@
 import 'package:contract/contract.dart';
+import 'package:feature_session/src/l10n/session_localizations.dart';
 import 'package:feature_session/src/widgets/answer_length.dart';
 import 'package:feature_session/src/widgets/submit_button.dart';
 import 'package:material_ui/material_ui.dart';
@@ -78,28 +79,31 @@ class _TextListInputState() extends State<TextListInput> {
   }
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    spacing: 12,
-    children: [
-      for (final (index, field) in _fields.indexed)
-        TextField(
-          key: TextListInput.fieldKey(index),
-          controller: field.controller,
-          focusNode: field.focus,
-          textCapitalization: TextCapitalization.sentences,
-          textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(hintText: 'Write one thing…'),
-          onChanged: (_) => _changed(field),
-          onSubmitted: (_) => _fields[index + 1].focus.requestFocus(),
+  Widget build(BuildContext context) {
+    final hint = SessionLocalizations.of(context).textListHint;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 12,
+      children: [
+        for (final (index, field) in _fields.indexed)
+          TextField(
+            key: TextListInput.fieldKey(index),
+            controller: field.controller,
+            focusNode: field.focus,
+            textCapitalization: TextCapitalization.sentences,
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(hintText: hint),
+            onChanged: (_) => _changed(field),
+            onSubmitted: (_) => _fields[index + 1].focus.requestFocus(),
+          ),
+        AnswerLength(answer: _answer),
+        SubmitButton(
+          buttonKey: TextListInput.submitKey,
+          onPressed: _submittable ? () => widget.onSubmit(_answer) : null,
         ),
-      AnswerLength(answer: _answer),
-      SubmitButton(
-        buttonKey: TextListInput.submitKey,
-        onPressed: _submittable ? () => widget.onSubmit(_answer) : null,
-      ),
-    ],
-  );
+      ],
+    );
+  }
 }
 
 /// One item's controller and focus node, which live and die together.

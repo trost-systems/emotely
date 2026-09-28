@@ -1,16 +1,21 @@
 import 'package:contract/contract.dart';
-import 'package:feature_session/src/widgets/answer_length.dart';
+import 'package:feature_session/src/l10n/session_localizations.dart';
 import 'package:feature_session/src/widgets/text_list_input.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:testing/testing.dart';
 
+import '../session_strings.dart';
+
 void main() {
   group(TextListInput, () {
     Future<Submitted> pumpTestWidget(WidgetTester tester) async {
       final submitted = Submitted();
-      await tester.pumpApp(TextListInput(onSubmit: submitted.call));
+      await tester.pumpApp(
+        TextListInput(onSubmit: submitted.call),
+        localizations: sessionLocalizations,
+      );
       return submitted;
     }
 
@@ -108,17 +113,37 @@ void main() {
       await type(tester, 1, 'a' * 2045);
 
       expect(isSubmitEnabled(tester, TextListInput.submitKey), isFalse);
-      expect(find.text(AnswerLength.over(1)), findsOneWidget);
+      expect(find.text(tester.strings.answerLengthOver(1)), findsOneWidget);
 
       await type(tester, 1, 'a' * 2044);
 
       expect(isSubmitEnabled(tester, TextListInput.submitKey), isTrue);
-      expect(find.text(AnswerLength.left(0)), findsOneWidget);
+      expect(find.text(tester.strings.answerLengthLeft(0)), findsOneWidget);
+    });
+
+    testWidgets('speaks German', (tester) async {
+      const german = Locale('de');
+      final strings = lookupSessionLocalizations(german);
+      await tester.pumpApp(
+        const TextListInput(onSubmit: ignoreAnswer),
+        localizations: sessionLocalizations,
+        locale: german,
+      );
+
+      expect(find.text(strings.textListHint), findsOneWidget);
+
+      // ["…"]: 4090 letters, two quotes and two brackets, two short.
+      await type(tester, 0, 'a' * 4090);
+
+      expect(find.text(strings.answerLengthLeft(2)), findsOneWidget);
     });
 
     testWidgets('meets accessibility guidelines', (tester) async {
       await tester.expectMeetsAccessibilityGuidelines(
-        appWrapper(const TextListInput(onSubmit: ignoreAnswer)),
+        appWrapper(
+          const TextListInput(onSubmit: ignoreAnswer),
+          localizations: sessionLocalizations,
+        ),
         prepare: (tester) => type(tester, 0, 'my wife'),
       );
     });

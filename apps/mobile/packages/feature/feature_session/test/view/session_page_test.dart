@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:agent_client/agent_client.dart';
 import 'package:contract/contract.dart';
 import 'package:design_system/design_system.dart';
+import 'package:feature_session/src/l10n/session_localizations.dart';
 import 'package:feature_session/src/view/session_page.dart';
-import 'package:feature_session/src/widgets/answer_length.dart';
 import 'package:feature_session/src/widgets/longtext_input.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -14,6 +14,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:testing/testing.dart';
 
 import '../session_robot.dart';
+import '../session_strings.dart';
 
 void main() {
   group(SessionPage, () {
@@ -38,7 +39,7 @@ void main() {
       await robot.settle();
 
       expect(robot.thinking, findsNothing);
-      expect(find.text('Question 1'), findsOneWidget);
+      expect(find.text(tester.strings.questionNumber(1)), findsOneWidget);
       expect(robot.questionText, SessionRobot.rate.question);
       expect(robot.answerInput, findsOneWidget);
     });
@@ -115,7 +116,7 @@ void main() {
       expect(robot.lastPostedValue, rating);
       expect(agent.lastRequest['transcript'], AgentStub.transcript);
       expect(agent.lastRequest['signature'], AgentStub.signature);
-      expect(find.text('Question 2'), findsOneWidget);
+      expect(find.text(tester.strings.questionNumber(2)), findsOneWidget);
       expect(robot.questionText, SessionRobot.grateful.question);
 
       await robot.answerTextList(gratefulFor);
@@ -124,7 +125,7 @@ void main() {
       expect(robot.lastPostedValue, gratefulFor);
       expect(agent.lastRequest['transcript'], secondTranscript);
       expect(agent.lastRequest['signature'], secondSignature);
-      expect(find.text('Question 3'), findsOneWidget);
+      expect(find.text(tester.strings.questionNumber(3)), findsOneWidget);
 
       await robot.answerLongtext(bestThing);
 
@@ -198,7 +199,7 @@ void main() {
 
       expect(agent.requests, hasLength(1));
       expect(robot.questionText, SessionRobot.best.question);
-      expect(find.text(AnswerLength.over(1)), findsOneWidget);
+      expect(find.text(tester.strings.answerLengthOver(1)), findsOneWidget);
 
       await robot.writeLongtext('a' * 4094);
       await robot.submitLongtext();
@@ -222,7 +223,7 @@ void main() {
 
       await robot.answerRating(5);
 
-      expect(find.text(SessionRobot.refusedMessage), findsOneWidget);
+      expect(find.text(tester.strings.refusedMessage), findsOneWidget);
       expect(find.text(AgentErrorCode.answerMismatch.wire), findsNothing);
       expect(robot.retry, findsOneWidget);
 
@@ -239,7 +240,7 @@ void main() {
       await robot.launch();
       await robot.settle();
 
-      expect(find.text(SessionRobot.unreachableMessage), findsOneWidget);
+      expect(find.text(tester.strings.unreachableMessage), findsOneWidget);
       expect(robot.retry, findsOneWidget);
     });
 
@@ -252,11 +253,11 @@ void main() {
       await robot.launch();
       await robot.settle();
 
-      expect(find.text(SessionRobot.unavailableMessage), findsOneWidget);
+      expect(find.text(tester.strings.modelUnavailableMessage), findsOneWidget);
       // Neither the server's wording nor the connection story the user would
       // otherwise act on: retrying now cannot work, and their entry is safe.
       expect(find.text(AgentErrorCode.modelUnavailable.wire), findsNothing);
-      expect(find.text(SessionRobot.unreachableMessage), findsNothing);
+      expect(find.text(tester.strings.unreachableMessage), findsNothing);
       // The round never completed, so the same round is still the retry.
       expect(robot.retry, findsOneWidget);
     });
@@ -276,7 +277,7 @@ void main() {
 
       await robot.answerRating(5);
 
-      expect(find.text(SessionRobot.unavailableMessage), findsOneWidget);
+      expect(find.text(tester.strings.modelUnavailableMessage), findsOneWidget);
 
       // The failed round left nothing behind: the retry resends it verbatim,
       // and the session carries on from the answer the user already gave.
@@ -316,9 +317,9 @@ void main() {
       await robot.launch();
       await robot.settle();
 
-      expect(find.text(SessionRobot.refusedMessage), findsOneWidget);
+      expect(find.text(tester.strings.refusedMessage), findsOneWidget);
       expect(find.text(serverMessage), findsNothing);
-      expect(find.text(SessionRobot.unavailableMessage), findsNothing);
+      expect(find.text(tester.strings.modelUnavailableMessage), findsNothing);
       expect(robot.retry, findsOneWidget);
     });
 
@@ -336,7 +337,7 @@ void main() {
       await robot.launch();
       await robot.settle();
 
-      expect(find.text(SessionRobot.unreachableMessage), findsOneWidget);
+      expect(find.text(tester.strings.unreachableMessage), findsOneWidget);
       expect(robot.retry, findsOneWidget);
 
       // Let the stub's late response fire; the client already gave up on it.
@@ -630,7 +631,7 @@ void main() {
         await robot.settle();
 
         expect(robot.questionText, rateQuestion.question);
-        expect(find.text('Question 1'), findsOneWidget);
+        expect(find.text(tester.strings.questionNumber(1)), findsOneWidget);
         expect(agent.requests, isEmpty);
         expect(robot.analytics.events, [event('session_resumed')]);
 
@@ -695,7 +696,7 @@ void main() {
         await robot.settle();
         await robot.answerRating(7);
 
-        expect(find.text(SessionRobot.cannotContinueMessage), findsOneWidget);
+        expect(find.text(tester.strings.cannotContinueMessage), findsOneWidget);
         expect(find.textContaining('signature'), findsNothing);
         // Resending the same transcript can never succeed.
         expect(robot.retry, findsNothing);
@@ -709,7 +710,7 @@ void main() {
         expect(replaced.single.query['status'], 'eq.in_progress');
         expect(robot.supabaseStub.to('POST /rest/v1/sessions'), hasLength(1));
         expect(robot.questionText, SessionRobot.grateful.question);
-        expect(find.text('Question 1'), findsOneWidget);
+        expect(find.text(tester.strings.questionNumber(1)), findsOneWidget);
       });
 
       testWidgets('says so when the stored session cannot be read, and '
@@ -732,7 +733,7 @@ void main() {
         await robot.settle();
 
         expect(
-          find.text(SessionRobot.sessionReadFailedMessage),
+          find.text(tester.strings.sessionReadFailedMessage),
           findsOneWidget,
         );
         expect(agent.requests, isEmpty);
@@ -742,6 +743,75 @@ void main() {
 
         expect(robot.questionText, rateQuestion.question);
         expect(agent.requests, isEmpty);
+      });
+    });
+
+    group('in German', () {
+      const german = Locale('de');
+      final strings = lookupSessionLocalizations(german);
+
+      testWidgets('thinks, asks and shows the entry in German', (tester) async {
+        final agent = AgentStub()
+          ..script([
+            delayed(awaiting(toolCallId: 'c1', question: SessionRobot.rate)),
+            completed(
+              summary: 'Ein ruhiger Tag.',
+              answers: const {'q-rate': Answer.rating(9)},
+            ),
+          ]);
+        final robot = SessionRobot(tester, agent, locale: german);
+        await robot.launch();
+
+        expect(find.text(strings.sessionTitle), findsOneWidget);
+        expect(find.text(strings.thinkingLabel), findsOneWidget);
+
+        await robot.settle();
+
+        expect(find.text(strings.questionNumber(1)), findsOneWidget);
+        // The question is the agent's own text, in the agent's language.
+        expect(robot.questionText, SessionRobot.rate.question);
+        expect(find.text(strings.ratingNoAnswer), findsOneWidget);
+        expect(find.text(strings.submitButton), findsOneWidget);
+
+        await robot.answerRating(9);
+
+        // The heading is the entry component's own, from design_system.
+        expect(find.text('Dein Eintrag'), findsOneWidget);
+        expect(find.text('Ein ruhiger Tag.'), findsOneWidget);
+      });
+
+      testWidgets('words a failure and its retry in German', (tester) async {
+        final agent = AgentStub()
+          ..script([refused(502, AgentErrorCode.modelUnavailable)]);
+        final robot = SessionRobot(tester, agent, locale: german);
+        await robot.launch();
+        await robot.settle();
+
+        expect(find.text(strings.modelUnavailableMessage), findsOneWidget);
+        expect(
+          find.descendant(
+            of: robot.retry,
+            matching: find.text(strings.tryAgainButton),
+          ),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('offers a fresh session in German', (tester) async {
+        final agent = AgentStub()
+          ..script([refused(401, AgentErrorCode.invalidSignature)]);
+        final robot = SessionRobot(tester, agent, locale: german);
+        await robot.launch();
+        await robot.settle();
+
+        expect(find.text(strings.cannotContinueMessage), findsOneWidget);
+        expect(
+          find.descendant(
+            of: robot.startOver,
+            matching: find.text(strings.startOverButton),
+          ),
+          findsOneWidget,
+        );
       });
     });
 

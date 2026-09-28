@@ -4,6 +4,8 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:testing/testing.dart';
 
+import '../session_strings.dart';
+
 void main() {
   group(SubmitButton, () {
     const key = Key('submit');
@@ -18,6 +20,7 @@ void main() {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [SubmitButton(buttonKey: key, onPressed: () => pressed++)],
         ),
+        localizations: sessionLocalizations,
       );
 
       // A driver that knows only the key taps the centre of what it names.
@@ -29,7 +32,10 @@ void main() {
 
     testWidgets('meets accessibility guidelines', (tester) async {
       await tester.expectMeetsAccessibilityGuidelines(
-        appWrapper(const SubmitButton(buttonKey: key, onPressed: null)),
+        appWrapper(
+          const SubmitButton(buttonKey: key, onPressed: null),
+          localizations: sessionLocalizations,
+        ),
       );
     });
   });

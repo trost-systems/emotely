@@ -1,12 +1,12 @@
 import 'package:design_system/design_system.dart';
 import 'package:feature_session/feature_session.dart';
-import 'package:feature_session/src/bloc/session_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:testing/testing.dart';
 
 import 'fake_user_context_source.dart';
+import 'session_strings.dart';
 import 'slide_rating.dart';
 
 /// Drives a journaling session on the feature's own page, composed the way
@@ -19,6 +19,7 @@ class SessionRobot(
   final AnalyticsSpy? spy,
   final SupabaseStub? supabase,
   final String? resume,
+  final Locale? locale,
 }) {
   /// Set up by [launch]; the spy every test can inspect.
   late final AnalyticsSpy analytics = spy ?? AnalyticsSpy();
@@ -52,10 +53,22 @@ class SessionRobot(
     );
     registerSession(GetIt.I);
     GetIt.I.registerSingleton<UserContextSource>(userContext);
-    return featureUnderTest(
-      routes: [$sessionRoute],
-      initialLocation: SessionRoute(resume: resume).location,
-    );
+    final routes = [$sessionRoute];
+    final location = SessionRoute(resume: resume).location;
+    // The helpers' own default locale, unless a test asks for one.
+    return switch (locale) {
+      null => featureUnderTest(
+        routes: routes,
+        initialLocation: location,
+        localizations: sessionLocalizations,
+      ),
+      final locale => featureUnderTest(
+        routes: routes,
+        initialLocation: location,
+        localizations: sessionLocalizations,
+        locale: locale,
+      ),
+    };
   }
 
   /// Opens the session signed in; the first round is in flight until
@@ -143,27 +156,6 @@ class SessionRobot(
   String get lastAnsweredToolCall =>
       (agent.lastRequest['answer'] as Map<String, dynamic>)['tool_call_id']
           as String;
-
-  /// The copy the screen shows for each failure; the agent's own words never
-  /// reach it.
-  static final unreachableMessage = SessionView.describe(
-    SessionFailureReason.unreachable,
-  );
-  static final unavailableMessage = SessionView.describe(
-    SessionFailureReason.modelUnavailable,
-  );
-  static final refusedMessage = SessionView.describe(
-    SessionFailureReason.refused,
-  );
-  static final cannotContinueMessage = SessionView.describe(
-    SessionFailureReason.cannotContinue,
-  );
-  static final entrySaveFailedMessage = SessionView.describe(
-    SessionFailureReason.entrySaveFailed,
-  );
-  static final sessionReadFailedMessage = SessionView.describe(
-    SessionFailureReason.sessionReadFailed,
-  );
 
   // The canned questions, shared with every package through `testing`.
   static const rate = rateQuestion;

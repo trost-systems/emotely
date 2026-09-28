@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:contract/contract.dart';
+import 'package:feature_session/src/l10n/session_localizations.dart';
 import 'package:feature_session/src/widgets/submit_button.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
@@ -23,9 +24,6 @@ class const RatingInput({
   static const min = ratingMin;
   static const max = ratingMax;
 
-  /// What the value line reads while the slider rests on no answer.
-  static const noAnswerLabel = 'No answer';
-
   @override
   State<RatingInput> createState() => _RatingInputState();
 }
@@ -44,13 +42,16 @@ class _RatingInputState() extends State<RatingInput> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // What the value line, the slider's label and a screen reader say while
+    // the slider rests on no answer. A value is a bare digit, no words.
+    final noAnswer = SessionLocalizations.of(context).ratingNoAnswer;
     final value = _value;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 12,
       children: [
         Text(
-          value?.toString() ?? RatingInput.noAnswerLabel,
+          value?.toString() ?? noAnswer,
           key: RatingInput.valueKey,
           textAlign: TextAlign.center,
           style: theme.textTheme.titleLarge,
@@ -61,10 +62,9 @@ class _RatingInputState() extends State<RatingInput> {
           max: RatingInput.max.toDouble(),
           // One stop per value, plus the "no answer" stop at 0.
           divisions: RatingInput.max,
-          label: value?.toString() ?? RatingInput.noAnswerLabel,
-          semanticFormatterCallback: (position) => position.round() == 0
-              ? RatingInput.noAnswerLabel
-              : position.round().toString(),
+          label: value?.toString() ?? noAnswer,
+          semanticFormatterCallback: (position) =>
+              position.round() == 0 ? noAnswer : position.round().toString(),
           onChanged: _slid,
         ),
         SubmitButton(
