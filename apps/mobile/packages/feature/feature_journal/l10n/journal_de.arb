@@ -1,0 +1,15 @@
+{
+  "@@locale": "de",
+  "greeting": "{partOfDay, select, morning{Guten Morgen} afternoon{Guten Tag} other{Guten Abend}}",
+  "greetingByName": "{partOfDay, select, morning{Guten Morgen, {name}} afternoon{Guten Tag, {name}} other{Guten Abend, {name}}}",
+  "startSessionButton": "Session starten",
+  "unfinishedSessionMessage": "Du hast noch eine offene Session.",
+  "continueSessionButton": "Fortsetzen",
+  "discardSessionButton": "Verwerfen",
+  "emptyJournalMessage": "Noch keine Einträge. Deine erste Session schreibt den ersten.",
+  "journalFailureMessage": "Dein Tagebuch konnte nicht geladen werden.",
+  "journalRetryButton": "Erneut versuchen",
+  "entryScreenTitle": "Eintrag",
+  "entryFailureMessage": "Dieser Eintrag konnte nicht geladen werden.",
+  "entryRetryButton": "Erneut versuchen"
+}

@@ -1,3 +1,4 @@
+import 'package:feature_journal/feature_journal.dart';
 import 'package:feature_journal/src/view/greeting.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -24,19 +25,49 @@ void main() {
       expect(at(23, 59), PartOfDay.evening);
     });
 
-    test('greets by name, or without one', () {
-      expect(greeting(PartOfDay.evening, 'Peter'), 'Good evening, Peter');
-      expect(greeting(PartOfDay.morning, null), 'Good morning');
+    // The wording of each part of the day, pinned in both languages.
+    test('greets by the time of day, by name or without one, in English', () {
+      final strings = lookupJournalLocalizations(const Locale('en'));
+
+      expect(greeting(strings, PartOfDay.morning, 'Pip'), 'Good morning, Pip');
+      expect(
+        greeting(strings, PartOfDay.afternoon, 'Pip'),
+        'Good afternoon, Pip',
+      );
+      expect(greeting(strings, PartOfDay.evening, 'Pip'), 'Good evening, Pip');
+      expect(greeting(strings, PartOfDay.morning, null), 'Good morning');
+      expect(greeting(strings, PartOfDay.afternoon, null), 'Good afternoon');
+      expect(greeting(strings, PartOfDay.evening, null), 'Good evening');
+    });
+
+    test('greets by the time of day, by name or without one, in German', () {
+      final strings = lookupJournalLocalizations(const Locale('de'));
+
+      expect(greeting(strings, PartOfDay.morning, 'Pip'), 'Guten Morgen, Pip');
+      expect(greeting(strings, PartOfDay.afternoon, 'Pip'), 'Guten Tag, Pip');
+      expect(greeting(strings, PartOfDay.evening, 'Pip'), 'Guten Abend, Pip');
+      expect(greeting(strings, PartOfDay.morning, null), 'Guten Morgen');
+      expect(greeting(strings, PartOfDay.afternoon, null), 'Guten Tag');
+      expect(greeting(strings, PartOfDay.evening, null), 'Guten Abend');
     });
   });
 
   group(JournalGreeting, () {
-    JournalRobot robotWith(WidgetTester tester, {String? name}) {
+    JournalRobot robotWith(
+      WidgetTester tester, {
+      String? name,
+      Locale? locale,
+    }) {
       final supabase = SupabaseStub();
       if (name != null) {
         supabase.always(profileRead, rows([profileRow(displayName: name)]));
       }
-      return JournalRobot(tester, supabase: supabase, agent: AgentStub());
+      return JournalRobot(
+        tester,
+        supabase: supabase,
+        agent: AgentStub(),
+        locale: locale,
+      );
     }
 
     String title(WidgetTester tester) =>
@@ -47,8 +78,14 @@ void main() {
       final robot = robotWith(tester, name: 'Peter');
       await robot.launch();
 
-      expect(title(tester), 'Good evening, Peter');
-      expect(find.text('Saturday, September 26, 2026'), findsOneWidget);
+      expect(
+        title(tester),
+        greeting(robot.strings, PartOfDay.evening, 'Peter'),
+      );
+      expect(
+        find.text(robot.material.formatFullDate(robot.now)),
+        findsOneWidget,
+      );
       expect(
         tester
             .widget<Text>(find.byKey(JournalGreeting.titleKey))
@@ -58,12 +95,26 @@ void main() {
       );
     });
 
+    testWidgets('greets in German, under a German date, on a German phone', (
+      tester,
+    ) async {
+      final robot = robotWith(
+        tester,
+        name: 'Peter',
+        locale: const Locale('de'),
+      );
+      await robot.launch();
+
+      expect(title(tester), 'Guten Abend, Peter');
+      expect(find.text('Samstag, 26. September 2026'), findsOneWidget);
+    });
+
     testWidgets('says the time of day the clock says', (tester) async {
       final robot = robotWith(tester, name: 'Pip')
         ..now = DateTime(2026, 9, 27, 7, 30);
       await robot.launch();
 
-      expect(title(tester), 'Good morning, Pip');
+      expect(title(tester), greeting(robot.strings, PartOfDay.morning, 'Pip'));
     });
 
     testWidgets('greets without a name when the profile has none', (
@@ -72,7 +123,7 @@ void main() {
       final robot = robotWith(tester);
       await robot.launch();
 
-      expect(title(tester), 'Good evening');
+      expect(title(tester), greeting(robot.strings, PartOfDay.evening, null));
     });
 
     testWidgets('shows the journal when the profile cannot be read, and '
@@ -85,7 +136,7 @@ void main() {
       );
       await robot.launch();
 
-      expect(title(tester), 'Good evening');
+      expect(title(tester), greeting(robot.strings, PartOfDay.evening, null));
       expect(robot.start, findsOneWidget);
       expect(robot.analytics.exceptions, [
         captured(

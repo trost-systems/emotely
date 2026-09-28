@@ -1,3 +1,4 @@
+import 'package:feature_journal/src/l10n/journal_localizations.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The part of the day a greeting names, by the phone's local hour: morning
@@ -15,9 +16,14 @@ enum PartOfDay() {
   };
 }
 
-/// "Good evening, Peter", or "Good evening" without a name.
-String greeting(PartOfDay part, String? name) =>
-    name == null ? 'Good ${part.name}' : 'Good ${part.name}, $name';
+/// "Good evening, Peter", or "Good evening" without a name, in the
+/// language of [strings]. The part of the day is the messages' select key,
+/// so the enum's names are the ARB files' cases; the name is the user's,
+/// never translated.
+String greeting(JournalLocalizations strings, PartOfDay part, String? name) =>
+    name == null
+    ? strings.greeting(part.name)
+    : strings.greetingByName(part.name, name);
 
 /// The top of the journal: today's date, and the user greeted by name
 /// (#204).
@@ -44,7 +50,7 @@ class const JournalGreeting({
         Semantics(
           header: true,
           child: Text(
-            greeting(PartOfDay.at(now), name),
+            greeting(JournalLocalizations.of(context), PartOfDay.at(now), name),
             key: titleKey,
             // Never italic: it names the user.
             style: theme.textTheme.headlineMedium?.copyWith(

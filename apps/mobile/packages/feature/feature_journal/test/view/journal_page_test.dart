@@ -20,6 +20,7 @@ void main() {
       Map<String, Object?>? openSession,
       bool consentGranted = true,
       List<AuthRound> consentReads = const [],
+      Locale? locale,
     }) {
       final supabase = SupabaseStub()
         ..rest(entriesEndpoint, [rows(entries)])
@@ -28,7 +29,12 @@ void main() {
         ])
         ..rest(consentRead, consentReads)
         ..always(consentRead, consentStands(granted: consentGranted));
-      return JournalRobot(tester, supabase: supabase, agent: AgentStub());
+      return JournalRobot(
+        tester,
+        supabase: supabase,
+        agent: AgentStub(),
+        locale: locale,
+      );
     }
 
     testWidgets('lists filed entries newest first with date and summary', (
@@ -51,7 +57,7 @@ void main() {
         lessThan(tester.getTopLeft(robot.entry('e-old')).dy),
       );
       expect(find.text('A calm day.'), findsOneWidget);
-      expect(find.text('Sep 7, 2026'), findsOneWidget);
+      expect(find.text(robot.material.formatShortDate(newer)), findsOneWidget);
       expect(robot.empty, findsNothing);
       expect(robot.analytics.events, [
         event('journal_viewed', {'entries': 2, 'open_session': false}),
@@ -64,7 +70,9 @@ void main() {
       final robot = robotWith(tester);
       await robot.launch();
 
+      expect(find.text(robot.strings.emptyJournalMessage), findsOneWidget);
       expect(robot.empty, findsOneWidget);
+      expect(find.text(robot.strings.startSessionButton), findsOneWidget);
       expect(robot.start, findsOneWidget);
       expect(robot.continueSession, findsNothing);
 
@@ -94,6 +102,9 @@ void main() {
       );
       await robot.launch();
 
+      expect(find.text(robot.strings.unfinishedSessionMessage), findsOneWidget);
+      expect(find.text(robot.strings.continueSessionButton), findsOneWidget);
+      expect(find.text(robot.strings.discardSessionButton), findsOneWidget);
       expect(robot.continueSession, findsOneWidget);
       expect(robot.start, findsNothing);
       expect(
@@ -255,12 +266,32 @@ void main() {
       );
       await robot.launch();
 
-      expect(find.text(JournalView.failureMessage), findsOneWidget);
+      expect(find.text(robot.strings.journalFailureMessage), findsOneWidget);
+      expect(find.text(robot.strings.journalRetryButton), findsOneWidget);
       expect(robot.retry, findsOneWidget);
 
       await robot.tap(robot.retry);
 
       expect(robot.start, findsOneWidget);
+    });
+
+    testWidgets('explains in German on a German phone', (tester) async {
+      final supabase = SupabaseStub()
+        ..rest(entriesEndpoint, [restRefused()])
+        ..rest(sessionsEndpoint, [rows(const [])]);
+      final robot = JournalRobot(
+        tester,
+        supabase: supabase,
+        agent: AgentStub(),
+        locale: const Locale('de'),
+      );
+      await robot.launch();
+
+      expect(
+        find.text('Dein Tagebuch konnte nicht geladen werden.'),
+        findsOneWidget,
+      );
+      expect(find.text('Erneut versuchen'), findsOneWidget);
     });
 
     testWidgets('a discard that fails is a failure with a retry', (
@@ -274,7 +305,7 @@ void main() {
 
       await robot.tap(robot.discard);
 
-      expect(find.text(JournalView.failureMessage), findsOneWidget);
+      expect(find.text(robot.strings.journalFailureMessage), findsOneWidget);
 
       await robot.tap(robot.retry);
 
@@ -309,6 +340,39 @@ void main() {
 
       expect(robot.home, findsOneWidget);
       expect(robot.entryPage, findsNothing);
+    });
+
+    group('on a German phone', () {
+      testWidgets('an empty journal explains itself in German', (tester) async {
+        final robot = robotWith(tester, locale: const Locale('de'));
+        await robot.launch();
+
+        expect(
+          find.text(
+            'Noch keine Einträge. Deine erste Session schreibt den ersten.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('Session starten'), findsOneWidget);
+      });
+
+      testWidgets('lists entries under German dates and offers the '
+          'unfinished session in German', (tester) async {
+        final robot = robotWith(
+          tester,
+          entries: [
+            entryRow(id: 'e-1', summary: 'A calm day.', createdAt: newer),
+          ],
+          openSession: sessionRow(),
+          locale: const Locale('de'),
+        );
+        await robot.launch();
+
+        expect(find.text('7. Sept. 2026'), findsOneWidget);
+        expect(find.text('Du hast noch eine offene Session.'), findsOneWidget);
+        expect(find.text('Fortsetzen'), findsOneWidget);
+        expect(find.text('Verwerfen'), findsOneWidget);
+      });
     });
 
     testWidgets('meets accessibility guidelines', (tester) async {

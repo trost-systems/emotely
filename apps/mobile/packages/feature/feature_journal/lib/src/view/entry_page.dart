@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:feature_journal/src/bloc/entry_bloc.dart';
+import 'package:feature_journal/src/l10n/journal_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:journal_repository/journal_repository.dart';
@@ -10,7 +11,6 @@ import 'package:material_ui/material_ui.dart';
 class const EntryPage({required final String entryId, super.key})
     extends StatelessWidget {
   static const retryKey = Key('entry_page.retry');
-  static const failureMessage = 'Could not load this entry.';
 
   @override
   Widget build(BuildContext context) => BlocProvider(
@@ -31,7 +31,8 @@ class const EntryPageView({required final String entryId, super.key})
           EntryReady(:final record) =>
             // Month, day and year: a journal spans years.
             MaterialLocalizations.of(context).formatShortDate(record.createdAt),
-          EntryLoading() || EntryFailure() => 'Entry',
+          EntryLoading() ||
+          EntryFailure() => JournalLocalizations.of(context).entryScreenTitle,
         }),
       ),
       body: SafeArea(
@@ -53,19 +54,22 @@ class const EntryPageView({required final String entryId, super.key})
 
 class const _Failure({required final String entryId}) extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      spacing: 16,
-      children: [
-        const Text(EntryPage.failureMessage, textAlign: TextAlign.center),
-        FilledButton(
-          key: EntryPage.retryKey,
-          onPressed: () =>
-              context.read<EntryBloc>().add(EntryEvent.loaded(entryId)),
-          child: const Text('Try again'),
-        ),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) {
+    final strings = JournalLocalizations.of(context);
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 16,
+        children: [
+          Text(strings.entryFailureMessage, textAlign: TextAlign.center),
+          FilledButton(
+            key: EntryPage.retryKey,
+            onPressed: () =>
+                context.read<EntryBloc>().add(EntryEvent.loaded(entryId)),
+            child: Text(strings.entryRetryButton),
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -3,6 +3,7 @@ import 'package:design_system/design_system.dart'
 import 'package:emotely/l10n/l10n.dart';
 import 'package:feature_account/feature_account.dart' show AccountLocalizations;
 import 'package:feature_auth/feature_auth.dart' show AuthLocalizations;
+import 'package:feature_journal/feature_journal.dart' show JournalLocalizations;
 import 'package:material_ui/material_ui.dart';
 
 /// Every package's strings, then Flutter's own (ADR 0020). A package that
@@ -18,6 +19,7 @@ const localizationsDelegates = <LocalizationsDelegate<Object?>>[
   AppLocalizations.delegate,
   AccountLocalizations.delegate,
   AuthLocalizations.delegate,
+  JournalLocalizations.delegate,
   DesignSystemLocalizations.delegate,
   ...GlobalMaterialLocalizations.delegates,
 ];

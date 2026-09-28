@@ -9,12 +9,14 @@ import 'fake_journal_navigator.dart';
 
 /// Drives the journal on its own page, composed the way the app composes
 /// it, against a scripted Supabase; what it asks of the app is recorded by
-/// the fake navigator.
+/// the fake navigator. It shows the journal in [locale], or in the pump
+/// helpers' own locale when a test names none.
 class JournalRobot(
   final WidgetTester tester, {
   required final SupabaseStub supabase,
   required final AgentStub agent,
   final bool startSession = false,
+  final Locale? locale,
 }) {
   /// What the journal's clock says: an evening, unless a test says
   /// otherwise.
@@ -35,6 +37,14 @@ class JournalRobot(
 
   Finder entry(String id) => find.byKey(JournalView.entryKey(id));
 
+  /// The journal's strings in the locale on screen.
+  JournalLocalizations get strings =>
+      JournalLocalizations.of(tester.element(home));
+
+  /// Flutter's own strings and date formats in the locale on screen.
+  MaterialLocalizations get material =>
+      MaterialLocalizations.of(tester.element(home));
+
   /// The journal's routes as the app mounts them, opened on the journal.
   /// Reading this composes the container, so read it once per test.
   Widget get app {
@@ -46,10 +56,22 @@ class JournalRobot(
     );
     registerJournal(GetIt.I, now: () => now);
     GetIt.I.registerSingleton<JournalNavigator>(navigator);
-    return featureUnderTest(
-      routes: [$journalRoute],
-      initialLocation: JournalRoute(startSession: startSession).location,
-    );
+    final routes = [$journalRoute];
+    final initialLocation = JournalRoute(startSession: startSession).location;
+    const localizations = [JournalLocalizations.delegate];
+    return switch (locale) {
+      null => featureUnderTest(
+        routes: routes,
+        initialLocation: initialLocation,
+        localizations: localizations,
+      ),
+      final asked => featureUnderTest(
+        routes: routes,
+        initialLocation: initialLocation,
+        localizations: localizations,
+        locale: asked,
+      ),
+    };
   }
 
   /// Signed in, with the journal loaded.
@@ -66,8 +88,5 @@ class JournalRobot(
     await settle();
   }
 
-  Future<void> back() async {
-    await tester.pageBack();
-    await settle();
-  }
+  Future<void> back() => tester.tapBack();
 }
