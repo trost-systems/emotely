@@ -7,11 +7,17 @@ import 'package:legal_links/legal_links.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:testing/testing.dart';
 
+import '../strings.dart';
+
 /// Drives the first-launch sheet the way the app mounts it: above the
 /// navigator, over whatever screen is underneath, with the utilities and
 /// this feature registered over a spied PostHog and the device's stored
 /// choice.
-class _PromptRobot(final WidgetTester tester, {final AnalyticsChoice? stored}) {
+class _PromptRobot(
+  final WidgetTester tester, {
+  final AnalyticsChoice? stored,
+  final Locale? locale,
+}) {
   late final analytics = AnalyticsSpy(stored: stored);
 
   static const underneathKey = Key('underneath');
@@ -31,24 +37,38 @@ class _PromptRobot(final WidgetTester tester, {final AnalyticsChoice? stored}) {
       analytics: analytics,
     );
     registerAccount(GetIt.I);
-    return featureUnderTest(
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (context, state) => Scaffold(
-            body: Center(
-              child: FilledButton(
-                key: underneathKey,
-                onPressed: () {},
-                child: const Text('Sign in'),
-              ),
+    final routes = [
+      GoRoute(
+        path: '/',
+        builder: (context, state) => Scaffold(
+          body: Center(
+            child: FilledButton(
+              key: underneathKey,
+              onPressed: () {},
+              child: const Text('Sign in'),
             ),
           ),
         ),
-      ],
-      initialLocation: '/',
-      above: (context, child) => UsageAnalyticsPrompt(child: child),
-    );
+      ),
+    ];
+    Widget above(BuildContext context, Widget child) =>
+        UsageAnalyticsPrompt(child: child);
+    // The helpers' own locale unless a test asks for another.
+    return switch (locale) {
+      final locale? => featureUnderTest(
+        routes: routes,
+        initialLocation: '/',
+        above: above,
+        localizations: accountLocalizations,
+        locale: locale,
+      ),
+      null => featureUnderTest(
+        routes: routes,
+        initialLocation: '/',
+        above: above,
+        localizations: accountLocalizations,
+      ),
+    };
   }
 
   Future<void> launch() async {
@@ -71,12 +91,13 @@ void main() {
       await robot.launch();
 
       expect(robot.sheet, findsOneWidget);
+      final strings = tester.strings;
       for (final text in [
-        usageAnalyticsTitle,
-        usageAnalyticsBody,
-        usageAnalyticsCounted,
-        usageAnalyticsNever,
-        usageAnalyticsChangeHint,
+        strings.usageAnalyticsTitle,
+        strings.usageAnalyticsBody,
+        strings.usageAnalyticsCounted,
+        strings.usageAnalyticsNever,
+        strings.usageAnalyticsChangeHint,
       ]) {
         expect(find.text(text), findsOneWidget);
       }
@@ -181,6 +202,19 @@ void main() {
 
       expect(launcher.launched, [privacyNoticeUrl]);
       expect(robot.sheet, findsOneWidget);
+    });
+
+    testWidgets('asks in German on a German phone', (tester) async {
+      final german = lookupAccountLocalizations(const Locale('de'));
+      final robot = _PromptRobot(tester, locale: const Locale('de'));
+      await robot.launch();
+
+      // Every string the answer is given on, in German: the wording the
+      // version names in that language.
+      for (final text in usageAnalyticsWording(german)) {
+        expect(find.text(text), findsOneWidget, reason: text);
+      }
+      expect(find.text(german.usageAnalyticsNoticeLink), findsOneWidget);
     });
 
     testWidgets('meets accessibility guidelines, in light and dark', (

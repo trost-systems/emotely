@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:feature_account/src/consent/bloc/consent_bloc.dart';
-import 'package:feature_account/src/consent/consent_text.dart';
+import 'package:feature_account/src/l10n/account_localizations.dart';
 import 'package:feature_account/src/navigator.dart';
 import 'package:feature_account/src/usage_analytics/bloc/usage_analytics_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,47 +28,11 @@ class const PrivacySettingsPage({super.key}) extends StatelessWidget {
   static const cancelKey = Key('privacy_settings.cancel');
   static const noticeKey = Key('privacy_settings.notice');
 
-  static const title = 'Privacy settings';
-
-  static const journalLabel = 'Journal sessions';
-  static const journalExplanation =
-      'Your answers go to a language model to guide each session. Never '
-      'used for training, never kept by the provider.';
-  static const journalOnNote =
-      'Turning this off stops new sessions; your entries stay.';
-  static const journalOffNote =
-      'Off: no new session can start. Turning it on shows you what you '
-      'agree to first.';
-  static const journalRetryLabel = 'Check again';
-
-  /// When journal consent was given, on the device's calendar: "Given 20
-  /// Sep 2026." English month names, like every other string here, until
-  /// the app is localised.
-  static String given(DateTime at) {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', //
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    final local = at.toLocal();
-    return 'Given ${local.day} ${months[local.month - 1]} ${local.year}.';
-  }
-
-  static const confirmTitle = 'Turn off journal sessions?';
-  static const confirmMessage = 'New sessions stop; your entries stay.';
-  static const confirmLabel = 'Turn off';
-  static const cancelLabel = 'Cancel';
-
-  static const usageAnalyticsLabel = 'Usage analytics';
-  static const usageAnalyticsExplanation =
-      'Taps, screens and crash reports, so I can see what helps and where '
-      'people get stuck. Never what you write.';
-  static const usageAnalyticsNote = 'Stored with PostHog in the EU.';
-
-  static const noticeLabel = 'Read the privacy notice';
-
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text(title)),
+    appBar: AppBar(
+      title: Text(AccountLocalizations.of(context).privacySettingsTitle),
+    ),
     body: SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -83,7 +47,7 @@ class const PrivacySettingsPage({super.key}) extends StatelessWidget {
               child: TextButton(
                 key: noticeKey,
                 onPressed: () => unawaited(openPrivacyNotice()),
-                child: const Text(noticeLabel),
+                child: Text(AccountLocalizations.of(context).privacyNoticeLink),
               ),
             ),
           ],
@@ -162,7 +126,7 @@ class const _JournalCard() extends StatelessWidget {
   Widget build(BuildContext context) => BlocBuilder<ConsentBloc, ConsentState>(
     builder: (context, state) => _PrivacyCard(
       switchKey: PrivacySettingsPage.journalKey,
-      label: PrivacySettingsPage.journalLabel,
+      label: AccountLocalizations.of(context).privacyJournalLabel,
       // Consent stands until the server says it no longer does: while a
       // withdrawal is written, and after one that failed.
       value: switch (state) {
@@ -177,7 +141,7 @@ class const _JournalCard() extends StatelessWidget {
         // Nothing to switch while the answer is not in hand.
         ConsentUnknown() || ConsentBusy() || ConsentFailure() => null,
       },
-      explanation: PrivacySettingsPage.journalExplanation,
+      explanation: AccountLocalizations.of(context).privacyJournalExplanation,
       note: _JournalNote(state),
     ),
   );
@@ -208,58 +172,65 @@ class const _JournalCard() extends StatelessWidget {
 /// What the journal card says under its switch, by where consent stands.
 class const _JournalNote(final ConsentState state) extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => switch (state) {
-    ConsentKnown(granted: true, :final since?) => _Note(
-      '${PrivacySettingsPage.given(since)} '
-      '${PrivacySettingsPage.journalOnNote}',
-    ),
-    ConsentKnown(granted: true) ||
-    ConsentBusy() => const _Note(PrivacySettingsPage.journalOnNote),
-    ConsentKnown(granted: false) ||
-    ConsentWriteFailure() => const _Note(PrivacySettingsPage.journalOffNote),
-    ConsentWithdrawFailure() => const _Note(
-      withdrawFailureMessage,
-      failed: true,
-    ),
-    ConsentUnknown() => const LinearProgressIndicator(),
-    // A failed read says nothing about whether consent stands, so the
-    // switch is off-limits; say so and offer to look again.
-    ConsentFailure() => Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _Note(consentUnknownMessage, failed: true),
-        TextButton(
-          key: PrivacySettingsPage.journalRetryKey,
-          onPressed: () => context.read<ConsentBloc>().add(
-            const ConsentEvent.loaded(withDate: true),
+  Widget build(BuildContext context) {
+    final strings = AccountLocalizations.of(context);
+    return switch (state) {
+      // When it was given, on the device's calendar, in the user's language.
+      ConsentKnown(granted: true, :final since?) => _Note(
+        '${strings.privacyJournalGiven(since.toLocal())} '
+        '${strings.privacyJournalOnNote}',
+      ),
+      ConsentKnown(granted: true) ||
+      ConsentBusy() => _Note(strings.privacyJournalOnNote),
+      ConsentKnown(granted: false) ||
+      ConsentWriteFailure() => _Note(strings.privacyJournalOffNote),
+      ConsentWithdrawFailure() => _Note(
+        strings.consentWithdrawFailureMessage,
+        failed: true,
+      ),
+      ConsentUnknown() => const LinearProgressIndicator(),
+      // A failed read says nothing about whether consent stands, so the
+      // switch is off-limits; say so and offer to look again.
+      ConsentFailure() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _Note(strings.consentUnknownMessage, failed: true),
+          TextButton(
+            key: PrivacySettingsPage.journalRetryKey,
+            onPressed: () => context.read<ConsentBloc>().add(
+              const ConsentEvent.loaded(withDate: true),
+            ),
+            child: Text(strings.privacyJournalRetryButton),
           ),
-          child: const Text(PrivacySettingsPage.journalRetryLabel),
-        ),
-      ],
-    ),
-  };
+        ],
+      ),
+    };
+  }
 }
 
 /// "New sessions stop; your entries stay." Turning off is one confirmation
 /// away, never more: withdrawal must be as easy as giving (Art. 7 (3)).
 class const _ConfirmWithdrawal() extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: const Text(PrivacySettingsPage.confirmTitle),
-    content: const Text(PrivacySettingsPage.confirmMessage),
-    actions: [
-      TextButton(
-        key: PrivacySettingsPage.cancelKey,
-        onPressed: () => Navigator.of(context).pop(false),
-        child: const Text(PrivacySettingsPage.cancelLabel),
-      ),
-      TextButton(
-        key: PrivacySettingsPage.confirmKey,
-        onPressed: () => Navigator.of(context).pop(true),
-        child: const Text(PrivacySettingsPage.confirmLabel),
-      ),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final strings = AccountLocalizations.of(context);
+    return AlertDialog(
+      title: Text(strings.privacyConfirmTitle),
+      content: Text(strings.privacyConfirmMessage),
+      actions: [
+        TextButton(
+          key: PrivacySettingsPage.cancelKey,
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(strings.privacyCancelButton),
+        ),
+        TextButton(
+          key: PrivacySettingsPage.confirmKey,
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(strings.privacyConfirmButton),
+        ),
+      ],
+    );
+  }
 }
 
 class const _UsageAnalyticsCard() extends StatelessWidget {
@@ -268,7 +239,7 @@ class const _UsageAnalyticsCard() extends StatelessWidget {
       BlocBuilder<UsageAnalyticsBloc, UsageAnalyticsState>(
         builder: (context, state) => _PrivacyCard(
           switchKey: PrivacySettingsPage.usageAnalyticsKey,
-          label: PrivacySettingsPage.usageAnalyticsLabel,
+          label: AccountLocalizations.of(context).privacyUsageAnalyticsLabel,
           value: state == UsageAnalyticsState.allowed,
           onChanged: state == UsageAnalyticsState.unknown
               ? null
@@ -277,8 +248,11 @@ class const _UsageAnalyticsCard() extends StatelessWidget {
                       ? const UsageAnalyticsEvent.allowed()
                       : const UsageAnalyticsEvent.denied(),
                 ),
-          explanation: PrivacySettingsPage.usageAnalyticsExplanation,
-          note: const _Note(PrivacySettingsPage.usageAnalyticsNote),
+          explanation: AccountLocalizations.of(context)
+              .privacyUsageAnalyticsExplanation,
+          note: _Note(
+            AccountLocalizations.of(context).privacyUsageAnalyticsNote,
+          ),
         ),
       );
 }

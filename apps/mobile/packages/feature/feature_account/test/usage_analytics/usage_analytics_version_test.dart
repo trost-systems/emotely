@@ -1,16 +1,24 @@
-import 'package:feature_account/src/usage_analytics/usage_analytics_text.dart';
+import 'package:feature_account/feature_account.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// The tripwire that keeps [usageAnalyticsVersion] honest, the way
 /// `consent_version_test.dart` keeps the journal consent's: a record names
-/// a version, not a text, which only works if a version names one wording.
+/// a version, not a text, which only works if a version names one wording
+/// — in every language the app ships (ADR 0020 decision 8).
 void main() {
   group('usage analytics wording', () {
     // Bump BOTH of these together, never one alone, unless the edit changes
-    // nothing about what is being agreed to (a typo): then the digest alone.
+    // nothing about what is being agreed to (a typo, a new faithful
+    // translation): then the digest alone.
     //
     // 2026-09-26: the first wording, published with the first-launch sheet.
-    const wordingDigest = '37cf5733';
+    //
+    // 2026-09-28: digest alone. The German wording joined the English
+    // (ADR 0020), a faithful translation of the same question: what is
+    // answered did not change, so the version stayed 2026-09-26 and no
+    // answer is recorded again. The English strings are byte for byte those
+    // of 2026-09-26: alone, they still digest to 37cf5733.
+    const wordingDigest = '80394087';
 
     /// The same 32-bit FNV-1a over the wording as the journal consent's
     /// tripwire: it only has to change when the text does.
@@ -24,16 +32,22 @@ void main() {
     }
 
     test('has not changed without the version changing', () {
-      final digest = digestOf(usageAnalyticsWording);
+      // Every supported locale, in the order the app lists them.
+      final digest = digestOf([
+        for (final locale in AccountLocalizations.supportedLocales)
+          ...usageAnalyticsWording(lookupAccountLocalizations(locale)),
+      ]);
 
       expect(
         digest,
         wordingDigest,
         reason:
-            'The usage-analytics wording changed. If the meaning moved, bump '
-            "usageAnalyticsVersion to today's date AND set wordingDigest to "
-            '$digest — every device records its answer against the new '
-            'wording on its next sign-in. If it was only a typo, update '
+            'The usage-analytics wording changed in at least one of '
+            '${AccountLocalizations.supportedLocales}. If the meaning moved '
+            "(in any language), bump usageAnalyticsVersion to today's date "
+            'AND set wordingDigest to $digest — every device records its '
+            'answer against the new wording on its next sign-in. If it was '
+            'only a typo, or a new faithful translation, update '
             'wordingDigest alone.',
       );
     });
@@ -48,18 +62,22 @@ void main() {
     });
 
     test('covers every string the user reads before deciding', () {
-      expect(
-        usageAnalyticsWording,
-        containsAll(<String>[
-          usageAnalyticsTitle,
-          usageAnalyticsBody,
-          usageAnalyticsCounted,
-          usageAnalyticsNever,
-          usageAnalyticsDenyLabel,
-          usageAnalyticsAllowLabel,
-          usageAnalyticsChangeHint,
-        ]),
-      );
+      for (final locale in AccountLocalizations.supportedLocales) {
+        final strings = lookupAccountLocalizations(locale);
+        expect(
+          usageAnalyticsWording(strings),
+          containsAll(<String>[
+            strings.usageAnalyticsTitle,
+            strings.usageAnalyticsBody,
+            strings.usageAnalyticsCounted,
+            strings.usageAnalyticsNever,
+            strings.usageAnalyticsDenyButton,
+            strings.usageAnalyticsAllowButton,
+            strings.usageAnalyticsChangeHint,
+          ]),
+          reason: '$locale',
+        );
+      }
     });
   });
 }

@@ -6,12 +6,15 @@ import 'package:legal_links/legal_links.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:testing/testing.dart';
 
+import '../strings.dart';
+
 /// Drives the consent screen on its own route, mounted the way the app
 /// mounts it and pushed from a launcher the way the journal pushes it —
 /// and records what the route popped with.
 class _ConsentRobot(
   final WidgetTester tester, {
   required final SupabaseStub supabase,
+  final Locale? locale,
 }) {
   final analytics = AnalyticsSpy();
 
@@ -39,28 +42,39 @@ class _ConsentRobot(
     registerAccount(GetIt.I);
     // The consent route as the app mounts it, pushed from a launcher the
     // way the journal pushes it; the route brings its own bloc.
-    return featureUnderTest(
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (context, state) => Scaffold(
-            body: Center(
-              child: FilledButton(
-                key: openKey,
-                onPressed: () async {
-                  result = await const ConsentRoute().push<ConsentOutcome>(
-                    context,
-                  );
-                },
-                child: const Text('Start'),
-              ),
+    final routes = [
+      GoRoute(
+        path: '/',
+        builder: (context, state) => Scaffold(
+          body: Center(
+            child: FilledButton(
+              key: openKey,
+              onPressed: () async {
+                result = await const ConsentRoute().push<ConsentOutcome>(
+                  context,
+                );
+              },
+              child: const Text('Start'),
             ),
           ),
         ),
-        $consentRoute,
-      ],
-      initialLocation: '/',
-    );
+      ),
+      $consentRoute,
+    ];
+    // The helpers' own locale unless a test asks for another.
+    return switch (locale) {
+      final locale? => featureUnderTest(
+        routes: routes,
+        initialLocation: '/',
+        localizations: accountLocalizations,
+        locale: locale,
+      ),
+      null => featureUnderTest(
+        routes: routes,
+        initialLocation: '/',
+        localizations: accountLocalizations,
+      ),
+    };
   }
 
   /// Signed in, with the consent screen open.
@@ -88,8 +102,7 @@ class _ConsentRobot(
   }
 
   Future<void> back() async {
-    await tester.pageBack();
-    await settle();
+    await tester.tapBack();
   }
 }
 
@@ -102,12 +115,13 @@ void main() {
       bool granted = false,
       List<AuthRound> grants = const [],
       List<AuthRound> reads = const [],
+      Locale? locale,
     }) {
       final supabase = SupabaseStub()
         ..rest(consentRead, reads)
         ..always(consentRead, consentStands(granted: granted))
         ..rest(consentGrant, grants);
-      return _ConsentRobot(tester, supabase: supabase);
+      return _ConsentRobot(tester, supabase: supabase, locale: locale);
     }
 
     testWidgets('asks, and records the consent once box and button agree', (
@@ -116,10 +130,11 @@ void main() {
       final robot = robotWith(tester, grants: [rpcReturned(null)]);
       await robot.launch();
 
-      expect(find.text(consentTitle), findsOneWidget);
+      final strings = tester.strings;
+      expect(find.text(strings.consentTitle), findsOneWidget);
       // Three points, each read as one sentence by a screen reader: the
       // lead and its body are one text, not a heading and a paragraph.
-      for (final point in consentPoints) {
+      for (final point in consentPoints(strings)) {
         expect(find.text('${point.lead} ${point.body}'), findsOneWidget);
       }
       // The box starts unticked, and until it is ticked the button cannot
@@ -213,7 +228,7 @@ void main() {
 
       expect(robot.busy, findsOneWidget);
       // The write is in flight; leaving now would strand it.
-      await tester.pageBack();
+      await tester.tap(find.byType(BackButton));
       await tester.pump();
 
       expect(robot.consent, findsOneWidget);
@@ -235,7 +250,7 @@ void main() {
       await robot.consentAndContinue();
 
       expect(robot.result, isNull);
-      expect(find.text(consentFailureMessage), findsOneWidget);
+      expect(find.text(tester.strings.consentFailureMessage), findsOneWidget);
       expect(robot.analytics.events, isEmpty);
       expect(robot.analytics.exceptions, hasLength(1));
 
@@ -267,7 +282,7 @@ void main() {
       final robot = robotWith(tester, reads: [restRefused()]);
       await robot.launch();
 
-      expect(find.text(consentUnknownMessage), findsOneWidget);
+      expect(find.text(tester.strings.consentUnknownMessage), findsOneWidget);
       expect(robot.checkbox, findsNothing);
       expect(robot.analytics.exceptions, hasLength(1));
 
@@ -285,6 +300,36 @@ void main() {
       // Not an answer: nothing was asked.
       expect(robot.result, isNull);
       expect(robot.analytics.events, isEmpty);
+    });
+
+    testWidgets('asks in German on a German phone', (tester) async {
+      final german = lookupAccountLocalizations(const Locale('de'));
+      final robot = robotWith(
+        tester,
+        grants: [rpcReturned(null)],
+        locale: const Locale('de'),
+      );
+      await robot.launch();
+
+      // The German wording the version names, as the screen shows it.
+      expect(find.text(german.consentTitle), findsOneWidget);
+      for (final point in consentPoints(german)) {
+        expect(find.text('${point.lead} ${point.body}'), findsOneWidget);
+      }
+      for (final text in [
+        german.consentCheckboxLabel,
+        german.consentAgreeButton,
+        german.consentDeclineButton,
+        german.consentReadNoticeLink,
+      ]) {
+        expect(find.text(text), findsOneWidget, reason: text);
+      }
+
+      await robot.consentAndContinue();
+
+      // The record names the one version, whatever the language.
+      expect(robot.supabase.bodies('/rest/v1/rpc/record_consent'), [version]);
+      expect(robot.result, ConsentOutcome.granted);
     });
 
     testWidgets('meets accessibility guidelines asking and failing', (

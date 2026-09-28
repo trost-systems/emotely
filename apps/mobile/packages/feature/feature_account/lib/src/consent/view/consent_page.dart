@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:feature_account/src/consent/bloc/consent_bloc.dart';
 import 'package:feature_account/src/consent/consent_outcome.dart';
 import 'package:feature_account/src/consent/consent_text.dart';
+import 'package:feature_account/src/l10n/account_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:legal_links/legal_links.dart';
 import 'package:material_ui/material_ui.dart';
@@ -45,7 +46,9 @@ class const ConsentView({super.key}) extends StatelessWidget {
       // start a session on a consent that had not landed.
       canPop: state is! ConsentBusy,
       child: Scaffold(
-        appBar: AppBar(title: const Text(consentTitle)),
+        appBar: AppBar(
+          title: Text(AccountLocalizations.of(context).consentTitle),
+        ),
         body: SafeArea(
           child: switch (state) {
             // Still reading. Showing the question here would flash it for
@@ -95,7 +98,7 @@ class _AskState() extends State<_Ask> {
         TextButton(
           key: ConsentView.noticeKey,
           onPressed: () => unawaited(openPrivacyNotice()),
-          child: const Text(consentReadNoticeLabel),
+          child: Text(AccountLocalizations.of(context).consentReadNoticeLink),
         ),
         // Full-bleed, like every list row: the whole width is the tap
         // target, so its highlight runs edge to edge and the box and label
@@ -105,7 +108,7 @@ class _AskState() extends State<_Ask> {
           value: _ticked,
           // The label is the checkbox's own semantics, so a screen reader
           // reads the thing being agreed to, not "checkbox, unchecked".
-          title: const Text(consentCheckboxLabel),
+          title: Text(AccountLocalizations.of(context).consentCheckboxLabel),
           controlAffinity: ListTileControlAffinity.leading,
           onChanged: (ticked) => setState(() => _ticked = ticked ?? false),
         ),
@@ -121,7 +124,10 @@ class const _Points() extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     spacing: 16,
-    children: [for (final point in consentPoints) _Point(point: point)],
+    children: [
+      for (final point in consentPoints(AccountLocalizations.of(context)))
+        _Point(point: point),
+    ],
   );
 }
 
@@ -137,7 +143,9 @@ class const _Answers({required final bool ticked}) extends StatelessWidget {
       // the button does nothing. The hint says what to do.
       Semantics(
         enabled: ticked,
-        hint: ticked ? null : consentAgreeBlockedHint,
+        hint: ticked
+            ? null
+            : AccountLocalizations.of(context).consentAgreeBlockedHint,
         child: FilledButton(
           key: ConsentView.agreeKey,
           // Disabled until the box is ticked: the button alone is not the
@@ -147,7 +155,7 @@ class const _Answers({required final bool ticked}) extends StatelessWidget {
                   const ConsentEvent.granted(),
                 )
               : null,
-          child: const Text(consentAgreeLabel),
+          child: Text(AccountLocalizations.of(context).consentAgreeButton),
         ),
       ),
       TextButton(
@@ -158,7 +166,7 @@ class const _Answers({required final bool ticked}) extends StatelessWidget {
           // which stays entirely usable.
           Navigator.of(context).pop(ConsentOutcome.declined);
         },
-        child: const Text(consentDeclineLabel),
+        child: Text(AccountLocalizations.of(context).consentDeclineButton),
       ),
     ],
   );
@@ -207,7 +215,7 @@ class const _ReadFailed() extends StatelessWidget {
     spacing: 16,
     children: [
       Text(
-        consentUnknownMessage,
+        AccountLocalizations.of(context).consentUnknownMessage,
         style: TextStyle(color: Theme.of(context).colorScheme.error),
         textAlign: TextAlign.center,
       ),
@@ -215,13 +223,13 @@ class const _ReadFailed() extends StatelessWidget {
         key: ConsentView.retryKey,
         onPressed: () =>
             context.read<ConsentBloc>().add(const ConsentEvent.loaded()),
-        child: const Text('Try again'),
+        child: Text(AccountLocalizations.of(context).consentRetryButton),
       ),
       // Nothing was asked, so there is no answer to give.
       TextButton(
         key: ConsentView.declineKey,
         onPressed: () => Navigator.of(context).pop(),
-        child: const Text('Back'),
+        child: Text(AccountLocalizations.of(context).consentBackButton),
       ),
     ],
   );
@@ -237,7 +245,7 @@ class const _WriteFailed() extends StatelessWidget {
     spacing: 16,
     children: [
       Text(
-        consentFailureMessage,
+        AccountLocalizations.of(context).consentFailureMessage,
         style: TextStyle(color: Theme.of(context).colorScheme.error),
         textAlign: TextAlign.center,
       ),
@@ -245,14 +253,14 @@ class const _WriteFailed() extends StatelessWidget {
         key: ConsentView.retryKey,
         onPressed: () =>
             context.read<ConsentBloc>().add(const ConsentEvent.granted()),
-        child: const Text('Try again'),
+        child: Text(AccountLocalizations.of(context).consentRetryButton),
       ),
       // Leaving here is not a refusal: the box was ticked and the record
       // did not land, and what the caller says about it must say so.
       TextButton(
         key: ConsentView.declineKey,
         onPressed: () => Navigator.of(context).pop(ConsentOutcome.writeFailed),
-        child: const Text(consentDeclineLabel),
+        child: Text(AccountLocalizations.of(context).consentDeclineButton),
       ),
     ],
   );

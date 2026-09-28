@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:testing/testing.dart';
 
 import '../fake_account_navigator.dart';
+import '../strings.dart';
 
 /// Drives Privacy settings on its own route under More, composed the way
 /// the app composes it: the utilities and this feature over a scripted
@@ -16,6 +17,7 @@ class _PrivacyRobot(
   final WidgetTester tester, {
   required final SupabaseStub supabase,
   final AnalyticsChoice? stored = AnalyticsChoice.allowed,
+  final Locale? locale,
 }) {
   late final analytics = AnalyticsSpy(stored: stored);
   final navigator = FakeAccountNavigator();
@@ -41,10 +43,22 @@ class _PrivacyRobot(
     );
     registerAccount(GetIt.I);
     GetIt.I.registerSingleton<AccountNavigator>(navigator);
-    return featureUnderTest(
-      routes: [$moreRoute],
-      initialLocation: const PrivacySettingsRoute().location,
-    );
+    final routes = [$moreRoute];
+    final initialLocation = const PrivacySettingsRoute().location;
+    // The helpers' own locale unless a test asks for another.
+    return switch (locale) {
+      final locale? => featureUnderTest(
+        routes: routes,
+        initialLocation: initialLocation,
+        localizations: accountLocalizations,
+        locale: locale,
+      ),
+      null => featureUnderTest(
+        routes: routes,
+        initialLocation: initialLocation,
+        localizations: accountLocalizations,
+      ),
+    };
   }
 
   Future<void> launch() async {
@@ -71,6 +85,7 @@ void main() {
       List<AuthRound> reads = const [],
       List<AuthRound> withdrawals = const [],
       AnalyticsChoice? stored = AnalyticsChoice.allowed,
+      Locale? locale,
     }) {
       // More sits under Privacy settings on the route stack and reads
       // first; [reads] are the ones Privacy settings makes.
@@ -78,18 +93,26 @@ void main() {
         ..rest(consentRead, [consentStands(granted: granted), ...reads])
         ..always(consentRead, consentStands(granted: granted))
         ..rest(consentWithdraw, withdrawals);
-      return _PrivacyRobot(tester, supabase: supabase, stored: stored);
+      return _PrivacyRobot(
+        tester,
+        supabase: supabase,
+        stored: stored,
+        locale: locale,
+      );
     }
 
     testWidgets('shows where both consents stand', (tester) async {
       final robot = robotWith(tester);
       await robot.launch();
 
-      expect(find.text(PrivacySettingsPage.title), findsOneWidget);
+      expect(find.text(tester.strings.privacySettingsTitle), findsOneWidget);
       expect(robot.isOn(robot.journal), isTrue);
-      expect(find.text(PrivacySettingsPage.journalOnNote), findsOneWidget);
+      expect(find.text(tester.strings.privacyJournalOnNote), findsOneWidget);
       expect(robot.isOn(robot.usage), isTrue);
-      expect(find.text(PrivacySettingsPage.usageAnalyticsNote), findsOneWidget);
+      expect(
+        find.text(tester.strings.privacyUsageAnalyticsNote),
+        findsOneWidget,
+      );
     });
 
     group('journal sessions', () {
@@ -104,7 +127,10 @@ void main() {
         await robot.launch();
 
         expect(
-          find.text('Given 20 Sep 2026. ${PrivacySettingsPage.journalOnNote}'),
+          find.text(
+            '${tester.strings.privacyJournalGiven(given)} '
+            '${tester.strings.privacyJournalOnNote}',
+          ),
           findsOneWidget,
         );
       });
@@ -115,7 +141,7 @@ void main() {
         await robot.launch();
 
         expect(robot.isOn(robot.journal), isTrue);
-        expect(find.text(PrivacySettingsPage.journalOnNote), findsOneWidget);
+        expect(find.text(tester.strings.privacyJournalOnNote), findsOneWidget);
         // Not worth a report: nothing but a line of text depends on it.
         expect(robot.analytics.exceptions, isEmpty);
       });
@@ -126,14 +152,14 @@ void main() {
 
         await robot.tap(robot.journal);
 
-        expect(find.text(PrivacySettingsPage.confirmMessage), findsOneWidget);
+        expect(find.text(tester.strings.privacyConfirmMessage), findsOneWidget);
         expect(robot.supabase.to(consentWithdraw), isEmpty);
 
         await robot.tap(robot.confirm);
 
         expect(robot.supabase.to(consentWithdraw), hasLength(1));
         expect(robot.isOn(robot.journal), isFalse);
-        expect(find.text(PrivacySettingsPage.journalOffNote), findsOneWidget);
+        expect(find.text(tester.strings.privacyJournalOffNote), findsOneWidget);
         expect(robot.analytics.events, [
           event('consent_withdrawn', {'version': testConsentVersion}),
         ]);
@@ -178,7 +204,10 @@ void main() {
 
         expect(robot.isOn(robot.journal), isTrue);
         expect(robot.isEnabled(robot.journal), isTrue);
-        expect(find.text(withdrawFailureMessage), findsOneWidget);
+        expect(
+          find.text(tester.strings.consentWithdrawFailureMessage),
+          findsOneWidget,
+        );
       });
 
       testWidgets('cannot be switched while the answer is not in hand', (
@@ -188,7 +217,7 @@ void main() {
         await robot.launch();
 
         expect(robot.isEnabled(robot.journal), isFalse);
-        expect(find.text(consentUnknownMessage), findsOneWidget);
+        expect(find.text(tester.strings.consentUnknownMessage), findsOneWidget);
 
         await robot.tap(robot.retry);
 
@@ -245,6 +274,34 @@ void main() {
       await robot.tap(robot.notice);
 
       expect(launcher.launched, [privacyNoticeUrl]);
+    });
+
+    testWidgets('speaks German on a German phone, dates included', (
+      tester,
+    ) async {
+      final given = DateTime(2026, 9, 20, 18, 30);
+      final german = lookupAccountLocalizations(const Locale('de'));
+      final robot = robotWith(tester, locale: const Locale('de'));
+      robot.supabase.rest('GET /rest/v1/consent_events', [
+        rows([
+          {'recorded_at': given.toUtc().toIso8601String()},
+        ]),
+      ]);
+      await robot.launch();
+
+      expect(find.text(german.privacySettingsTitle), findsOneWidget);
+      expect(find.text(german.privacyJournalLabel), findsOneWidget);
+      expect(find.text(german.privacyUsageAnalyticsLabel), findsOneWidget);
+      // The date in German order and month names, not English ones.
+      expect(
+        find.text('Erteilt am 20. Sept. 2026. ${german.privacyJournalOnNote}'),
+        findsOneWidget,
+      );
+
+      await robot.tap(robot.journal);
+
+      expect(find.text(german.privacyConfirmTitle), findsOneWidget);
+      expect(find.text(german.privacyCancelButton), findsOneWidget);
     });
 
     testWidgets('meets accessibility guidelines with both on and both off', (

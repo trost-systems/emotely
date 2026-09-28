@@ -57,7 +57,7 @@ void main() {
       // The account is untouched: withdrawing is not deleting.
       expect(robot.supabase.to(deletion), isEmpty);
       expect(robot.journalOn, isFalse);
-      expect(find.text(PrivacySettingsPage.journalOffNote), findsOneWidget);
+      expect(find.text(robot.strings.privacyJournalOffNote), findsOneWidget);
       expect(robot.analytics.events, [
         event('journal_viewed', journalViewed),
         event('consent_withdrawn', version),
@@ -166,13 +166,13 @@ void main() {
         tester.widget<SwitchListTile>(robot.journalSwitch).onChanged,
         isNull,
       );
-      expect(find.text(consentUnknownMessage), findsOneWidget);
+      expect(find.text(robot.strings.consentUnknownMessage), findsOneWidget);
 
       await robot.tap(robot.journalRetry);
 
       // Looking again brings the control back.
       expect(robot.journalOn, isTrue);
-      expect(find.text(consentUnknownMessage), findsNothing);
+      expect(find.text(robot.strings.consentUnknownMessage), findsNothing);
     });
 
     testWidgets('the notice is reachable before an account exists', (

@@ -7,6 +7,7 @@ import 'package:testing/testing.dart';
 
 import '../fake_account_device_data.dart';
 import '../fake_account_navigator.dart';
+import '../strings.dart';
 
 /// Drives the account screen on its own route, composed the way the app
 /// composes it: the utilities and this feature registered over a scripted
@@ -15,6 +16,7 @@ class _AccountRobot(
   final WidgetTester tester, {
   required final SupabaseStub supabase,
   final bool forgetFails = false,
+  final Locale? locale,
 }) {
   final analytics = AnalyticsSpy();
   final navigator = FakeAccountNavigator();
@@ -30,7 +32,7 @@ class _AccountRobot(
   Finder get cancel => find.byKey(AccountView.cancelKey);
   Finder get retry => find.byKey(AccountView.retryKey);
   Finder get signOut => find.byKey(AccountView.signOutKey);
-  Finder get failure => find.text(AccountView.failureMessage);
+  Finder get failure => find.text(tester.strings.accountFailureMessage);
   Finder get busy => find.byType(CircularProgressIndicator);
 
   /// A launcher route that pushes the account screen, as the More tab
@@ -45,21 +47,28 @@ class _AccountRobot(
     registerAccount(GetIt.I);
     GetIt.I.registerSingleton<AccountNavigator>(navigator);
     GetIt.I.registerSingleton<AccountDeviceData>(deviceData);
-    return pageUnderTest(
-      Builder(
-        builder: (context) => Scaffold(
-          body: Center(
-            child: FilledButton(
-              key: openKey,
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const AccountPage()),
-              ),
-              child: const Text('Account'),
+    final home = Builder(
+      builder: (context) => Scaffold(
+        body: Center(
+          child: FilledButton(
+            key: openKey,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const AccountPage()),
             ),
+            child: const Text('Account'),
           ),
         ),
       ),
     );
+    // The helpers' own locale unless a test asks for another.
+    return switch (locale) {
+      final locale? => pageUnderTest(
+        home,
+        localizations: accountLocalizations,
+        locale: locale,
+      ),
+      null => pageUnderTest(home, localizations: accountLocalizations),
+    };
   }
 
   /// Signed in, on the account screen.
@@ -81,8 +90,7 @@ class _AccountRobot(
   }
 
   Future<void> back() async {
-    await tester.pageBack();
-    await settle();
+    await tester.tapBack();
   }
 }
 
@@ -104,6 +112,7 @@ void main() {
       List<AuthRound> deletions = const [],
       AuthRound? logoutAnswer,
       bool forgetFails = false,
+      Locale? locale,
     }) {
       final supabase = SupabaseStub()
         ..rest(deletion, deletions)
@@ -112,6 +121,7 @@ void main() {
         tester,
         supabase: supabase,
         forgetFails: forgetFails,
+        locale: locale,
       );
     }
 
@@ -122,13 +132,19 @@ void main() {
       await robot.launch();
 
       expect(robot.account, findsOneWidget);
-      expect(find.text(AccountView.consequenceMessage), findsOneWidget);
+      expect(
+        find.text(tester.strings.accountConsequenceMessage),
+        findsOneWidget,
+      );
       expect(robot.confirmation, findsNothing);
 
       await robot.askToDelete();
 
       expect(robot.confirmation, findsOneWidget);
-      expect(find.text(AccountView.confirmationMessage), findsOneWidget);
+      expect(
+        find.text(tester.strings.accountConfirmationMessage),
+        findsOneWidget,
+      );
       expect(robot.supabase.to(deletion), isEmpty);
 
       await robot.tap(robot.confirm);
@@ -322,6 +338,31 @@ void main() {
       expect(robot.account, findsNothing);
       expect(robot.analytics.events.last, event('account_deleted'));
       expect(robot.analytics.resets, 1);
+    });
+
+    testWidgets('speaks German on a German phone, failure included', (
+      tester,
+    ) async {
+      final german = lookupAccountLocalizations(const Locale('de'));
+      final robot = robotWith(
+        tester,
+        deletions: [restRefused()],
+        locale: const Locale('de'),
+      );
+      await robot.launch();
+
+      expect(find.text(german.accountTitle), findsOneWidget);
+      expect(find.text(german.accountConsequenceMessage), findsOneWidget);
+
+      await robot.askToDelete();
+
+      expect(find.text(german.accountConfirmationMessage), findsOneWidget);
+      expect(find.text(german.accountConfirmDeleteButton), findsOneWidget);
+
+      await robot.tap(robot.confirm);
+
+      expect(find.text(german.accountFailureMessage), findsOneWidget);
+      expect(find.text(german.accountSignOutButton), findsOneWidget);
     });
 
     testWidgets('meets accessibility guidelines in every state', (

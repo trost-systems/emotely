@@ -101,9 +101,10 @@ class const AppJournalNavigator() implements JournalNavigator {
   /// Dismissing the screen says nothing at all — the user left, and knows
   /// it — and so does a failed read, whose screen already said its piece.
   static void _saySoFar(BuildContext context, ConsentOutcome? outcome) {
+    final strings = AccountLocalizations.of(context);
     final message = switch (outcome) {
-      ConsentOutcome.writeFailed => consentFailureMessage,
-      ConsentOutcome.declined => consentDeclinedMessage,
+      ConsentOutcome.writeFailed => strings.consentFailureMessage,
+      ConsentOutcome.declined => strings.consentDeclinedMessage,
       ConsentOutcome.granted || null => null,
     };
     if (message == null) {

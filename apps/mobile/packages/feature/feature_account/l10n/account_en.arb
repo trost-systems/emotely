@@ -1,0 +1,360 @@
+{
+  "@@locale": "en",
+  "consentTitle": "Before emotely sends your writing",
+  "@consentTitle": {
+    "description": "Consent screen heading, shown before the first journaling session. Part of the versioned wording of the explicit consent under Art. 9 (2) (a) GDPR: changing it (in any language) means bumping consentVersion. Names the moment rather than asking a question, and stays true when the screen is shown again after a wording change or a withdrawal, neither of which is a 'first' session."
+  },
+  "consentSendingLead": "Your answers are sent to an AI model.",
+  "@consentSendingLead": {
+    "description": "Consent screen, first of three points: its bold lead, followed in the same sentence by consentSendingBody. Part of the versioned wording of the explicit consent under Art. 9 (2) (a) GDPR: changing it means bumping consentVersion."
+  },
+  "consentSendingBody": "Each answer goes to our server and on to a language model provider through the Vercel AI Gateway, together with the name you chose, or the nickname emotely picked for you, so emotely can ask the next question, address you by name and write your entry. The provider may be outside the EU; where it is, the transfer rests on the EU’s standard contractual clauses.",
+  "@consentSendingBody": {
+    "description": "Consent screen, first point, after its lead: what is sent, to whom, and the third-country transfer with its safeguard (EDPB 05/2020 para 64 (vi)). Part of the versioned wording of the explicit consent under Art. 9 (2) (a) GDPR: changing it means bumping consentVersion. The recipients must match the privacy notice at getemotely.com/app-privacy: same recipients, same order, same names. 'Vercel AI Gateway' is a product name and stays as is."
+  },
+  "consentRetentionLead": "Never used for training, never kept.",
+  "@consentRetentionLead": {
+    "description": "Consent screen, second of three points: its bold lead, followed by consentRetentionBody. Part of the versioned wording of the explicit consent under Art. 9 (2) (a) GDPR: changing it means bumping consentVersion."
+  },
+  "consentRetentionBody": "Every request routes only to providers contractually barred from training on what you write and from keeping it after they answer. Your entries themselves are stored in Frankfurt and nowhere else.",
+  "@consentRetentionBody": {
+    "description": "Consent screen, second point, after its lead: what the model provider may not do with the text, and where entries are stored. Part of the versioned wording of the explicit consent under Art. 9 (2) (a) GDPR: changing it means bumping consentVersion. Must agree with the privacy notice at getemotely.com/app-privacy."
+  },
+  "consentWithdrawalLead": "Sensitive, and yours to take back.",
+  "@consentWithdrawalLead": {
+    "description": "Consent screen, third of three points: its bold lead, followed by consentWithdrawalBody. Part of the versioned wording of the explicit consent under Art. 9 (2) (a) GDPR: changing it means bumping consentVersion."
+  },
+  "consentWithdrawalBody": "A journal can say how you feel, how you sleep or how your health is, so we ask first. You can withdraw on the More tab at any time; what a provider has already answered cannot be recalled.",
+  "@consentWithdrawalBody": {
+    "description": "Consent screen, third point, after its lead: why the data is special-category, and that consent can be withdrawn (Art. 7 (3) GDPR). 'More' is the name of the app's second bottom tab and must match it. Part of the versioned wording of the explicit consent under Art. 9 (2) (a) GDPR: changing it means bumping consentVersion."
+  },
+  "consentCheckboxLabel": "I consent to my journal entries being sent to a model provider as described above.",
+  "@consentCheckboxLabel": {
+    "description": "Consent screen: the label of the checkbox, which is the affirmative act itself and always starts unticked. Part of the versioned wording of the explicit consent under Art. 9 (2) (a) GDPR: changing it means bumping consentVersion."
+  },
+  "consentAgreeButton": "Start journaling",
+  "@consentAgreeButton": {
+    "description": "Consent screen button that records the consent; enabled only once the checkbox is ticked. Part of the versioned wording of the explicit consent under Art. 9 (2) (a) GDPR: changing it means bumping consentVersion."
+  },
+  "consentDeclineButton": "Not now",
+  "@consentDeclineButton": {
+    "description": "Consent screen button that declines and goes back to the journal, which stays usable. Named plainly, because the choice has to be real. Also leaves the screen after a consent could not be recorded. Part of the versioned wording of the explicit consent under Art. 9 (2) (a) GDPR: changing it means bumping consentVersion."
+  },
+  "consentAgreeBlockedHint": "Tick the box above to continue",
+  "@consentAgreeBlockedHint": {
+    "description": "Consent screen: read out by a screen reader on the disabled agree button, so someone who cannot see the checkbox knows why the button does nothing. An instruction for operating the screen, not a term agreed to: not part of the versioned wording."
+  },
+  "consentDeclinedMessage": "No problem. Nothing has been sent. You can still read the entries you already have, and you can start a session whenever you decide to.",
+  "@consentDeclinedMessage": {
+    "description": "Snack bar on the journal after the user declined consent: there is no session without the model, but everything else stays usable."
+  },
+  "consentReadNoticeLink": "Read the full privacy notice",
+  "@consentReadNoticeLink": {
+    "description": "Consent screen link that opens the full privacy notice in the browser (the notice itself is in English)."
+  },
+  "consentFailureMessage": "Could not record your consent. Check your connection and try again.",
+  "@consentFailureMessage": {
+    "description": "Consent screen, and a snack bar on the journal: the consent could not be recorded on the server, so no session starts."
+  },
+  "consentWithdrawFailureMessage": "Could not withdraw your consent. Check your connection and try again.",
+  "@consentWithdrawFailureMessage": {
+    "description": "Privacy settings, under the journal sessions switch: withdrawing consent could not be recorded, so consent still stands."
+  },
+  "consentUnknownMessage": "Could not check whether you have already agreed to this. Nothing has been sent. Check your connection and try again.",
+  "@consentUnknownMessage": {
+    "description": "Consent screen and Privacy settings: the app could not find out whether consent already stands. Not the same as 'you have not consented'."
+  },
+  "consentRetryButton": "Try again",
+  "@consentRetryButton": {
+    "description": "Consent screen button, after reading or recording the consent failed: tries the same thing again."
+  },
+  "consentBackButton": "Back",
+  "@consentBackButton": {
+    "description": "Consent screen button after whether consent stands could not be read: leaves the screen without answering, since nothing was asked."
+  },
+  "usageAnalyticsTitle": "May I count how you use the app?",
+  "@usageAnalyticsTitle": {
+    "description": "First-launch sheet heading: the usage-analytics question (PostHog, consent under § 25 TDDDG and Art. 6 (1) (a) GDPR). The companion speaks as 'I'. Part of the versioned usage-analytics wording: changing it means bumping usageAnalyticsVersion."
+  },
+  "usageAnalyticsBody": "It shows which screens help and where people get stuck, so I can get better. What you write never goes into it.",
+  "@usageAnalyticsBody": {
+    "description": "First-launch sheet, under the question: why, in one breath. Part of the versioned usage-analytics wording: changing it means bumping usageAnalyticsVersion."
+  },
+  "usageAnalyticsCounted": "Taps, screens and crash reports, stored with PostHog in the EU",
+  "@usageAnalyticsCounted": {
+    "description": "First-launch sheet, next to a check mark: what is counted and where it is kept. Must agree with the privacy notice at getemotely.com/app-privacy. Part of the versioned usage-analytics wording: changing it means bumping usageAnalyticsVersion."
+  },
+  "usageAnalyticsNever": "Never your answers, entries or name",
+  "@usageAnalyticsNever": {
+    "description": "First-launch sheet, next to a cross: what is never counted. Part of the versioned usage-analytics wording: changing it means bumping usageAnalyticsVersion."
+  },
+  "usageAnalyticsDenyButton": "Don’t allow",
+  "@usageAnalyticsDenyButton": {
+    "description": "First-launch sheet button that refuses usage analytics. Exactly as prominent as the allow button: a refusal has to be as easy as the yes. Part of the versioned usage-analytics wording: changing it means bumping usageAnalyticsVersion."
+  },
+  "usageAnalyticsAllowButton": "Allow",
+  "@usageAnalyticsAllowButton": {
+    "description": "First-launch sheet button that allows usage analytics. Part of the versioned usage-analytics wording: changing it means bumping usageAnalyticsVersion."
+  },
+  "usageAnalyticsChangeHint": "Change it any time under More › Privacy settings.",
+  "@usageAnalyticsChangeHint": {
+    "description": "First-launch sheet, under the buttons: where the choice can be changed later. 'More' is the app's second bottom tab and 'Privacy settings' a row on it; both must match those screens. Part of the versioned usage-analytics wording: changing it means bumping usageAnalyticsVersion."
+  },
+  "usageAnalyticsNoticeLink": "Privacy notice",
+  "@usageAnalyticsNoticeLink": {
+    "description": "First-launch sheet link that opens the privacy notice in the browser (the notice itself is in English). Not part of the versioned wording."
+  },
+  "moreTitle": "More",
+  "@moreTitle": {
+    "description": "App bar title of the More tab, which holds the profile, privacy, feedback and account settings. Same word as the app's bottom tab."
+  },
+  "morePrivacySection": "Privacy",
+  "@morePrivacySection": {
+    "description": "More tab: heading of the section with Privacy settings and the privacy notice."
+  },
+  "moreAboutSection": "About",
+  "@moreAboutSection": {
+    "description": "More tab: heading of the section with feedback and the imprint."
+  },
+  "moreAccountSection": "Account",
+  "@moreAccountSection": {
+    "description": "More tab: heading of the last section, which holds only the row that deletes the account."
+  },
+  "morePrivacySettingsRow": "Privacy settings",
+  "@morePrivacySettingsRow": {
+    "description": "More tab row that opens the Privacy settings screen."
+  },
+  "moreJournalAllowedStatus": "Journal: allowed",
+  "@moreJournalAllowedStatus": {
+    "description": "More tab, under the Privacy settings row: the journal-sessions consent stands. Shown next to the usage-analytics status, separated by a middle dot."
+  },
+  "moreJournalOffStatus": "Journal: off",
+  "@moreJournalOffStatus": {
+    "description": "More tab, under the Privacy settings row: the journal-sessions consent does not stand, so no session can start."
+  },
+  "moreUsageAnalyticsOnStatus": "Usage analytics: on",
+  "@moreUsageAnalyticsOnStatus": {
+    "description": "More tab, under the Privacy settings row: usage analytics are allowed."
+  },
+  "moreUsageAnalyticsOffStatus": "Usage analytics: off",
+  "@moreUsageAnalyticsOffStatus": {
+    "description": "More tab, under the Privacy settings row: usage analytics are refused or not answered."
+  },
+  "morePrivacyNoticeRow": "Privacy notice",
+  "@morePrivacyNoticeRow": {
+    "description": "More tab row that opens the privacy notice in the browser (the notice itself is in English)."
+  },
+  "moreFeedbackRow": "Send feedback",
+  "@moreFeedbackRow": {
+    "description": "More tab row that opens the mail app on a feedback mail to the team."
+  },
+  "moreFeedbackExplanation": "Opens your mail app. Carries your app version and device, nothing from your journal.",
+  "@moreFeedbackExplanation": {
+    "description": "More tab, under the feedback row: what the prefilled mail already contains, so nobody wonders whether it sends anything they wrote."
+  },
+  "moreImprintRow": "Imprint",
+  "@moreImprintRow": {
+    "description": "More tab row that opens the legal imprint (§ 5 DDG) in the browser."
+  },
+  "moreDeleteAccountRow": "Delete account",
+  "@moreDeleteAccountRow": {
+    "description": "More tab row, in the error colour, that opens the account deletion screen."
+  },
+  "moreDeleteAccountExplanation": "Removes your account and every entry.",
+  "@moreDeleteAccountExplanation": {
+    "description": "More tab, under the delete account row: what deleting means."
+  },
+  "profileCardTitle": "Your profile",
+  "@profileCardTitle": {
+    "description": "More tab, the profile card at the top: shown instead of the name while it is being read or could not be read."
+  },
+  "profileCardAddName": "Add your name",
+  "@profileCardAddName": {
+    "description": "More tab, the profile card at the top: an invitation shown instead of the name while the user has none."
+  },
+  "privacySettingsTitle": "Privacy settings",
+  "@privacySettingsTitle": {
+    "description": "App bar title of the Privacy settings screen, which holds a switch for each of the two consents."
+  },
+  "privacyJournalLabel": "Journal sessions",
+  "@privacyJournalLabel": {
+    "description": "Privacy settings: title of the switch for the explicit consent a journaling session needs."
+  },
+  "privacyJournalExplanation": "Your answers go to a language model to guide each session. Never used for training, never kept by the provider.",
+  "@privacyJournalExplanation": {
+    "description": "Privacy settings, under the journal sessions switch: what the consent covers. Not the consent wording itself, which is on the consent screen."
+  },
+  "privacyJournalOnNote": "Turning this off stops new sessions; your entries stay.",
+  "@privacyJournalOnNote": {
+    "description": "Privacy settings, small print under the journal sessions switch while it is on."
+  },
+  "privacyJournalOffNote": "Off: no new session can start. Turning it on shows you what you agree to first.",
+  "@privacyJournalOffNote": {
+    "description": "Privacy settings, small print under the journal sessions switch while it is off."
+  },
+  "privacyJournalGiven": "Given {date}.",
+  "@privacyJournalGiven": {
+    "description": "Privacy settings, small print under the journal sessions switch, before privacyJournalOnNote: the day the standing consent was given.",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMd",
+        "example": "Sep 20, 2026"
+      }
+    }
+  },
+  "privacyJournalRetryButton": "Check again",
+  "@privacyJournalRetryButton": {
+    "description": "Privacy settings button under the journal sessions switch after whether consent stands could not be read: reads it again."
+  },
+  "privacyConfirmTitle": "Turn off journal sessions?",
+  "@privacyConfirmTitle": {
+    "description": "Privacy settings: title of the dialog that asks once before withdrawing the journal-sessions consent."
+  },
+  "privacyConfirmMessage": "New sessions stop; your entries stay.",
+  "@privacyConfirmMessage": {
+    "description": "Privacy settings: body of the dialog that asks once before withdrawing the journal-sessions consent."
+  },
+  "privacyConfirmButton": "Turn off",
+  "@privacyConfirmButton": {
+    "description": "Privacy settings dialog button that withdraws the journal-sessions consent."
+  },
+  "privacyCancelButton": "Cancel",
+  "@privacyCancelButton": {
+    "description": "Privacy settings dialog button that keeps the journal-sessions consent as it is."
+  },
+  "privacyUsageAnalyticsLabel": "Usage analytics",
+  "@privacyUsageAnalyticsLabel": {
+    "description": "Privacy settings: title of the switch for usage analytics (PostHog)."
+  },
+  "privacyUsageAnalyticsExplanation": "Taps, screens and crash reports, so I can see what helps and where people get stuck. Never what you write.",
+  "@privacyUsageAnalyticsExplanation": {
+    "description": "Privacy settings, under the usage analytics switch: what is counted and why. The companion speaks as 'I'."
+  },
+  "privacyUsageAnalyticsNote": "Stored with PostHog in the EU.",
+  "@privacyUsageAnalyticsNote": {
+    "description": "Privacy settings, small print under the usage analytics switch: where the data is kept."
+  },
+  "privacyNoticeLink": "Read the privacy notice",
+  "@privacyNoticeLink": {
+    "description": "Privacy settings link that opens the privacy notice in the browser (the notice itself is in English)."
+  },
+  "profileTitle": "Profile",
+  "@profileTitle": {
+    "description": "App bar title of the Profile screen: the user's name, the account they sign in with, and signing out."
+  },
+  "profileNameLabel": "Name",
+  "@profileNameLabel": {
+    "description": "Profile screen: label of the text field holding the name emotely greets the user by."
+  },
+  "profileNameHint": "What should I call you?",
+  "@profileNameHint": {
+    "description": "Profile screen: hint in the empty name field, in the companion's voice."
+  },
+  "profileNameHelper": "How emotely greets you.",
+  "@profileNameHelper": {
+    "description": "Profile screen, under the name field while the name is one the user gave: what the name is for."
+  },
+  "profilePlaceholderLine": "{name} · a nickname I picked – tell me yours",
+  "@profilePlaceholderLine": {
+    "description": "Profile screen, under the name field while the name is a nickname emotely picked when the user skipped giving one: an invitation in the companion's voice, never a demand.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Pebble"
+      }
+    }
+  },
+  "profileSavedMessage": "Saved",
+  "@profileSavedMessage": {
+    "description": "Profile screen snack bar: the new name is saved."
+  },
+  "profileNameEmptyMessage": "A name needs at least one character.",
+  "@profileNameEmptyMessage": {
+    "description": "Profile screen snack bar: the name field was emptied, so the saved name is shown again."
+  },
+  "profileNameRefusedMessage": "That name has a character I can’t use.",
+  "@profileNameRefusedMessage": {
+    "description": "Profile screen snack bar: the name holds a character that cannot be stored (a tab, a line break), so the saved name is shown again."
+  },
+  "profileSaveFailedMessage": "I couldn’t save that name. Try again in a moment.",
+  "@profileSaveFailedMessage": {
+    "description": "Profile screen snack bar: the server did not take the name, so the saved one is shown again."
+  },
+  "profileLoadFailedMessage": "I couldn’t load your name.",
+  "@profileLoadFailedMessage": {
+    "description": "Profile screen, in place of the name field: the name could not be read."
+  },
+  "profileRetryButton": "Try again",
+  "@profileRetryButton": {
+    "description": "Profile screen button after the name could not be read: reads it again."
+  },
+  "profileSignedInAsLabel": "Signed in as",
+  "@profileSignedInAsLabel": {
+    "description": "Profile screen: heading above the read-only address the account signs in with."
+  },
+  "profileSignOutButton": "Sign out",
+  "@profileSignOutButton": {
+    "description": "Profile screen row at the foot that signs the user out."
+  },
+  "signInHiddenByApple": "Hidden by Apple",
+  "@signInHiddenByApple": {
+    "description": "Profile screen and the More tab's profile card: shown instead of the address when the user chose Apple's Hide My Email, since the address is one Apple made up."
+  },
+  "signInViaEmailCode": "Via email code. This is where sign-in codes and account mail go.",
+  "@signInViaEmailCode": {
+    "description": "Profile screen, under the address: the account signs in with a code sent by email."
+  },
+  "signInViaGoogle": "Via Google. This is where account mail goes.",
+  "@signInViaGoogle": {
+    "description": "Profile screen, under the address: the account signs in with Google."
+  },
+  "signInViaApple": "Via Apple. This is where account mail goes.",
+  "@signInViaApple": {
+    "description": "Profile screen, under the address: the account signs in with Apple and shares its real address."
+  },
+  "signInViaAppleRelay": "Hidden by Apple (private relay). Apple forwards account mail to you.",
+  "@signInViaAppleRelay": {
+    "description": "Profile screen, under the address: the account signs in with Apple and hides its address behind Apple's private email relay."
+  },
+  "signInViaUnknown": "This is where account mail goes.",
+  "@signInViaUnknown": {
+    "description": "Profile screen, under the address: the account signs in some way the app does not offer (set up by hand)."
+  },
+  "accountTitle": "Account",
+  "@accountTitle": {
+    "description": "App bar title of the account screen, whose one purpose is deleting the account."
+  },
+  "accountConsequenceMessage": "Deleting your account also deletes every journal entry you wrote. There is no way back.",
+  "@accountConsequenceMessage": {
+    "description": "Account screen: what deleting the account means, said once before the button."
+  },
+  "accountDeleteButton": "Delete account",
+  "@accountDeleteButton": {
+    "description": "Account screen button, in the error colour, that asks for confirmation before deleting the account."
+  },
+  "accountConfirmationMessage": "Delete your account and every entry?",
+  "@accountConfirmationMessage": {
+    "description": "Account screen: the confirmation dialog's question, naming the loss."
+  },
+  "accountCancelButton": "Cancel",
+  "@accountCancelButton": {
+    "description": "Account screen confirmation dialog button that keeps the account."
+  },
+  "accountConfirmDeleteButton": "Delete",
+  "@accountConfirmDeleteButton": {
+    "description": "Account screen confirmation dialog button, in the error colour, that deletes the account and every entry for good."
+  },
+  "accountFailureMessage": "Could not delete your account. Check your connection and try again.",
+  "@accountFailureMessage": {
+    "description": "Account screen: deleting the account failed or the answer never arrived."
+  },
+  "accountRetryButton": "Try again",
+  "@accountRetryButton": {
+    "description": "Account screen button after deleting failed: tries to delete the account again."
+  },
+  "accountSignOutButton": "Sign out",
+  "@accountSignOutButton": {
+    "description": "Account screen button after deleting failed: signs out, since the account may already be gone on the server."
+  }
+}

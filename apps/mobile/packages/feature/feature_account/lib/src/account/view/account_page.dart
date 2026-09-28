@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:feature_account/src/account/bloc/account_bloc.dart';
+import 'package:feature_account/src/l10n/account_localizations.dart';
 import 'package:feature_account/src/navigator.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -25,13 +26,6 @@ class const AccountView({super.key}) extends StatelessWidget {
   static const retryKey = Key('account_view.retry');
   static const signOutKey = Key('account_view.sign_out');
 
-  /// What deleting means; the screen says it once, the dialog only asks.
-  static const consequenceMessage =
-      'Deleting your account also deletes every journal entry you wrote. '
-      'There is no way back.';
-  static const confirmationMessage = 'Delete your account and every entry?';
-  static const failureMessage = AccountBloc.failureMessage;
-
   @override
   Widget build(BuildContext context) => BlocConsumer<AccountBloc, AccountState>(
     listenWhen: (_, state) => state is AccountDeleted,
@@ -49,7 +43,9 @@ class const AccountView({super.key}) extends StatelessWidget {
     builder: (context, state) => PopScope(
       canPop: state is! AccountDeleting,
       child: Scaffold(
-        appBar: AppBar(title: const Text('Account')),
+        appBar: AppBar(
+          title: Text(AccountLocalizations.of(context).accountTitle),
+        ),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -67,6 +63,7 @@ class const AccountView({super.key}) extends StatelessWidget {
   );
 }
 
+/// What deleting means, said once here; the dialog only asks.
 class const _DeleteAccount() extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(
@@ -74,7 +71,7 @@ class const _DeleteAccount() extends StatelessWidget {
     spacing: 16,
     children: [
       Text(
-        AccountView.consequenceMessage,
+        AccountLocalizations.of(context).accountConsequenceMessage,
         style: Theme.of(context).textTheme.bodyLarge,
       ),
       OutlinedButton(
@@ -83,7 +80,7 @@ class const _DeleteAccount() extends StatelessWidget {
           foregroundColor: Theme.of(context).colorScheme.error,
         ),
         onPressed: () => unawaited(_confirm(context)),
-        child: const Text('Delete account'),
+        child: Text(AccountLocalizations.of(context).accountDeleteButton),
       ),
     ],
   );
@@ -106,12 +103,12 @@ class const _Confirmation({required final VoidCallback onConfirm})
     extends StatelessWidget {
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text(AccountView.confirmationMessage),
+    title: Text(AccountLocalizations.of(context).accountConfirmationMessage),
     actions: [
       TextButton(
         key: AccountView.cancelKey,
         onPressed: () => Navigator.of(context).pop(),
-        child: const Text('Cancel'),
+        child: Text(AccountLocalizations.of(context).accountCancelButton),
       ),
       FilledButton(
         key: AccountView.confirmKey,
@@ -123,7 +120,9 @@ class const _Confirmation({required final VoidCallback onConfirm})
           Navigator.of(context).pop();
           onConfirm();
         },
-        child: const Text('Delete'),
+        child: Text(
+          AccountLocalizations.of(context).accountConfirmDeleteButton,
+        ),
       ),
     ],
   );
@@ -140,7 +139,7 @@ class const _Failure() extends StatelessWidget {
     spacing: 16,
     children: [
       Text(
-        AccountView.failureMessage,
+        AccountLocalizations.of(context).accountFailureMessage,
         style: TextStyle(color: Theme.of(context).colorScheme.error),
       ),
       FilledButton(
@@ -148,7 +147,7 @@ class const _Failure() extends StatelessWidget {
         onPressed: () => context.read<AccountBloc>().add(
           const AccountEvent.deletionRequested(),
         ),
-        child: const Text('Try again'),
+        child: Text(AccountLocalizations.of(context).accountRetryButton),
       ),
       TextButton(
         key: AccountView.signOutKey,
@@ -159,7 +158,7 @@ class const _Failure() extends StatelessWidget {
           GetIt.I<AccountNavigator>().signOut(context);
           Navigator.of(context).pop();
         },
-        child: const Text('Sign out'),
+        child: Text(AccountLocalizations.of(context).accountSignOutButton),
       ),
     ],
   );

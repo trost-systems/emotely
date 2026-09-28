@@ -1,3 +1,4 @@
+import 'package:feature_account/src/l10n/account_localizations.dart';
 import 'package:feature_account/src/navigator.dart';
 import 'package:feature_account/src/profile/bloc/profile_bloc.dart';
 import 'package:feature_account/src/profile/sign_in_copy.dart';
@@ -31,43 +32,22 @@ class const ProfileView({super.key}) extends StatelessWidget {
   static const methodKey = Key('profile_view.method');
   static const signOutKey = Key('profile_view.sign_out');
 
-  static const title = 'Profile';
-
-  /// Under the field, while the name is one the user gave.
-  static const nameHelper = 'How emotely greets you.';
-
-  /// In the empty field, while there is no name yet.
-  static const nameHint = 'What should I call you?';
-
-  static const savedMessage = 'Saved';
-  static const emptyMessage = 'A name needs at least one character.';
-  static const refusedMessage = 'That name has a character I can’t use.';
-  static const saveFailedMessage =
-      'I couldn’t save that name. Try again in a moment.';
-  static const loadFailedMessage = 'I couldn’t load your name.';
-  static const signedInAsLabel = 'Signed in as';
-  static const signOutLabel = 'Sign out';
-
-  static const hiddenByApple = hiddenByAppleLabel;
-  static const viaEmailCode = viaEmailCodeLine;
-  static const viaGoogle = viaGoogleLine;
-  static const viaApple = viaAppleLine;
-  static const viaAppleRelay = viaAppleRelayLine;
-  static const viaUnknown = viaUnknownLine;
-
-  /// Under the field while the name is one emotely picked on Skip: an
-  /// invitation, in the companion's voice, never a demand.
-  static String placeholderLine(String name) =>
-      '$name · a nickname I picked – tell me yours';
-
   @override
   Widget build(BuildContext context) => BlocListener<ProfileBloc, ProfileState>(
     listenWhen: (previous, next) => previous.noticeCount != next.noticeCount,
     listener: (context, state) => ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(_message(state.notice)))),
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            _message(state.notice, AccountLocalizations.of(context)),
+          ),
+        ),
+      ),
     child: Scaffold(
-      appBar: AppBar(title: const Text(title)),
+      appBar: AppBar(
+        title: Text(AccountLocalizations.of(context).profileTitle),
+      ),
       body: const SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -90,12 +70,13 @@ class const ProfileView({super.key}) extends StatelessWidget {
     ),
   );
 
-  static String _message(ProfileNotice? notice) => switch (notice) {
-    ProfileNotice.saved || null => savedMessage,
-    ProfileNotice.nameEmpty => emptyMessage,
-    ProfileNotice.nameRefused => refusedMessage,
-    ProfileNotice.saveFailed => saveFailedMessage,
-  };
+  static String _message(ProfileNotice? notice, AccountLocalizations strings) =>
+      switch (notice) {
+        ProfileNotice.saved || null => strings.profileSavedMessage,
+        ProfileNotice.nameEmpty => strings.profileNameEmptyMessage,
+        ProfileNotice.nameRefused => strings.profileNameRefusedMessage,
+        ProfileNotice.saveFailed => strings.profileSaveFailedMessage,
+      };
 }
 
 /// The initial of the name as saved, not as typed: it changes once the
@@ -125,7 +106,7 @@ class const _Name() extends StatelessWidget {
       ProfileStatus.ready => NameField(
         fieldKey: ProfileView.nameKey,
         saved: state.profile?.displayName,
-        hint: ProfileView.nameHint,
+        hint: AccountLocalizations.of(context).profileNameHint,
         helper: const _Helper(),
       ),
     },
@@ -139,10 +120,10 @@ class const _Helper() extends StatelessWidget {
   Widget build(BuildContext context) => switch (context
       .select<ProfileBloc, Profile?>((bloc) => bloc.state.profile)) {
     Profile(nameIsPlaceholder: true, :final displayName) => Text(
-      ProfileView.placeholderLine(displayName),
+      AccountLocalizations.of(context).profilePlaceholderLine(displayName),
       key: ProfileView.placeholderKey,
     ),
-    _ => const Text(ProfileView.nameHelper),
+    _ => Text(AccountLocalizations.of(context).profileNameHelper),
   };
 }
 
@@ -152,14 +133,14 @@ class const _LoadFailed() extends StatelessWidget {
     spacing: 8,
     children: [
       Text(
-        ProfileView.loadFailedMessage,
+        AccountLocalizations.of(context).profileLoadFailedMessage,
         style: TextStyle(color: Theme.of(context).colorScheme.error),
       ),
       TextButton(
         key: ProfileView.retryKey,
         onPressed: () =>
             context.read<ProfileBloc>().add(const ProfileEvent.loaded()),
-        child: const Text('Try again'),
+        child: Text(AccountLocalizations.of(context).profileRetryButton),
       ),
     ],
   );
@@ -173,7 +154,8 @@ class const _SignedInAs() extends StatelessWidget {
     final identity = context.select<ProfileBloc, SignInIdentity?>(
       (bloc) => bloc.state.identity,
     );
-    final email = identity?.shownEmail;
+    final strings = AccountLocalizations.of(context);
+    final email = identity?.shownEmail(strings);
     if (identity == null || email == null) {
       return const SizedBox.shrink();
     }
@@ -183,7 +165,7 @@ class const _SignedInAs() extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 8,
       children: [
-        Text(ProfileView.signedInAsLabel, style: text.labelLarge),
+        Text(strings.profileSignedInAsLabel, style: text.labelLarge),
         Card.filled(
           key: ProfileView.emailKey,
           margin: EdgeInsets.zero,
@@ -193,7 +175,7 @@ class const _SignedInAs() extends StatelessWidget {
           ),
         ),
         Text(
-          identity.methodLine,
+          identity.methodLine(strings),
           key: ProfileView.methodKey,
           style: text.bodyMedium?.copyWith(color: muted),
         ),
@@ -208,7 +190,7 @@ class const _SignOut() extends StatelessWidget {
   Widget build(BuildContext context) => ListTile(
     key: ProfileView.signOutKey,
     leading: const Icon(Icons.logout),
-    title: const Text(ProfileView.signOutLabel),
+    title: Text(AccountLocalizations.of(context).profileSignOutButton),
     onTap: () => GetIt.I<AccountNavigator>().signOut(context),
   );
 }
