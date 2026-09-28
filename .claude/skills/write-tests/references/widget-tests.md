@@ -10,6 +10,9 @@
   `find.text(tester.element(find.byType(EntryPage)).l10n.entryScreenTitle)`,
   never the words. A rewording changes no test; the one test that looks at
   the words themselves is the app's `test/app/localizations_test.dart`.
+- The helpers default to German, so a string that skipped the ARB files
+  renders English and fails the test that reads it by its key. Pass
+  `locale: const Locale('en')` only where a test is about English itself.
 - Go back with `tester.tapBack()` from `package:testing`, not
   `tester.pageBack()`: the latter finds the button by its English tooltip.
 - A feature package's page tests compose the way the app does, in a robot:

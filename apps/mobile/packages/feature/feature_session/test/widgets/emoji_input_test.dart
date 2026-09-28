@@ -136,7 +136,6 @@ void main() {
       await tester.pumpApp(
         const EmojiInput(onSubmit: ignoreAnswer),
         localizations: sessionLocalizations,
-        locale: german,
       );
       await pick(tester, 0, '😊');
       await openSlot(tester, 0);
