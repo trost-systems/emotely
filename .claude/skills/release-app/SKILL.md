@@ -1,6 +1,6 @@
 ---
 name: release-app
-description: How to ship the Flutter app (apps/mobile/app) to the TestFlight Team and Beta groups and the Play internal and closed alpha tracks with fastlane and the app-release workflow, how signing works (match, the ASC API key, the Android upload keystore), and how to rotate any of it. Use whenever asked to release, ship a beta, upload a build, fix signing, or touch apps/mobile/app/fastlane or .github/workflows/app-release.yml.
+description: How to ship the Flutter app (apps/mobile/app) to the TestFlight Team and Beta groups and the Play internal and closed alpha tracks with fastlane and the app-release workflow, how signing works (match, the ASC API key, the Android upload keystore), and how to rotate any of it. Use whenever asked to release, ship a beta, invite a beta tester, upload a build, fix signing, or touch apps/mobile/app/fastlane or .github/workflows/app-release.yml.
 ---
 
 # Releasing the app (apps/mobile/app)
@@ -41,6 +41,9 @@ only if both internal jobs of that merge succeeded, so pin the number when
 in doubt. iOS does nothing if `Beta` already has that build, so a rerun is
 safe and does not re-notify. The only reason to open a console is to change
 who is in a group.
+
+Inviting or removing a beta tester — read
+[references/invite-beta-tester.md](references/invite-beta-tester.md) first.
 
 Two waits follow a beta run, and neither is inside it:
 
