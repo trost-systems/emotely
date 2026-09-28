@@ -38,7 +38,17 @@ shows it, never a literal in Dart.
   (an enum, a sealed class) and the view words it; an exception's message
   is for error tracking, in English, and never shown.
 - German says "du", informal and warm like the English, and keeps "emotely"
-  lower case.
+  lower case. One thing has one name in every package:
+
+  | English | German |
+  | --- | --- |
+  | session | die Session (never "Sitzung": a meeting, or therapy) |
+  | entry, journal | der Eintrag, das Tagebuch |
+  | reflection | die Reflexion |
+  | account, profile | das Konto, das Profil |
+  | the More tab | „Mehr“ |
+  | privacy notice, privacy settings | die Datenschutzerklärung, die Datenschutzeinstellungen |
+  | consent, withdraw | die Einwilligung, widerrufen |
 - Look a string up with `XLocalizations.of(context)`; outside a widget
   (a test, a digest), `lookupXLocalizations(locale)`.
 - `melos run l10n:check` regenerates every package in scope and fails on
