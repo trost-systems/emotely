@@ -110,7 +110,10 @@ void main() {
       await robot.requestCode('nobody@example.invalid');
 
       expect(robot.emailField, findsOneWidget);
-      expect(robot.errorText, SignInPage.couldNotSendMessage);
+      robot.expectError(
+        SignInProblem.couldNotSend,
+        robot.strings.couldNotSendMessage,
+      );
       // GoTrue's error code and status travel; its message, which quotes
       // the address it validated, does not.
       expect(robot.analytics.exceptions, [
@@ -142,7 +145,10 @@ void main() {
       await robot.settle();
 
       expect(robot.codeField, findsOneWidget);
-      expect(robot.errorText, SignInPage.wrongCodeMessage);
+      robot.expectError(
+        SignInProblem.wrongCode,
+        robot.strings.wrongCodeMessage,
+      );
       expect(robot.analytics.events, [
         event('sign_in_code_requested'),
         event('sign_in_code_rejected'),
@@ -166,7 +172,10 @@ void main() {
       await robot.requestCode();
 
       expect(robot.emailField, findsOneWidget);
-      expect(robot.errorText, SignInPage.tooManyCodesMessage);
+      robot.expectError(
+        SignInProblem.tooManyCodes,
+        robot.strings.tooManyCodesMessage,
+      );
     });
 
     testWidgets('tells the user when Supabase is unreachable', (tester) async {
@@ -176,7 +185,10 @@ void main() {
 
       await robot.requestCode();
 
-      expect(robot.errorText, SignInPage.unreachableMessage);
+      robot.expectError(
+        SignInProblem.unreachable,
+        robot.strings.unreachableMessage,
+      );
       // No status: the request never got an answer.
       expect(robot.analytics.exceptions, [
         captured(withheld(AuthRetryableFetchException), {
@@ -217,7 +229,10 @@ void main() {
         ),
       ]);
       expect(robot.codeField, findsOneWidget);
-      expect(robot.errorText, SignInPage.wrongCodeMessage);
+      robot.expectError(
+        SignInProblem.wrongCode,
+        robot.strings.wrongCodeMessage,
+      );
 
       await robot.enterCode(code);
       await robot.tapSignIn();
@@ -251,7 +266,10 @@ void main() {
       await robot.settle();
 
       expect(robot.codeField, findsOneWidget);
-      expect(robot.errorText, SignInPage.tooManyAttemptsMessage);
+      robot.expectError(
+        SignInProblem.tooManyAttempts,
+        robot.strings.tooManyAttemptsMessage,
+      );
     });
 
     testWidgets('lets the user go back and change the email', (tester) async {
@@ -530,7 +548,10 @@ void main() {
       await tester.pumpWidget(
         BlocProvider(
           create: (_) => GetIt.I<AuthBloc>(),
-          child: const MaterialApp(home: SignInPage()),
+          child: pageUnderTest(
+            const SignInPage(),
+            localizations: SignInRobot.localizations,
+          ),
         ),
       );
 
@@ -631,7 +652,10 @@ void main() {
         await robot.settle();
 
         expect(robot.passwordField, findsOneWidget);
-        expect(robot.errorText, SignInPage.wrongPasswordMessage);
+        robot.expectError(
+          SignInProblem.wrongPassword,
+          robot.strings.wrongPasswordMessage,
+        );
         // GoTrue's code and status travel; its message does not, and the
         // password never does.
         expect(robot.analytics.exceptions, [
@@ -682,7 +706,10 @@ void main() {
         await robot.settle();
 
         expect(robot.passwordField, findsOneWidget);
-        expect(robot.errorText, SignInPage.tooManyAttemptsMessage);
+        robot.expectError(
+          SignInProblem.tooManyAttempts,
+          robot.strings.tooManyAttemptsMessage,
+        );
         expect(robot.analytics.exceptions, [
           captured(
             withheld(
@@ -784,7 +811,10 @@ void main() {
         await robot.settle();
 
         expect(robot.passwordField, findsOneWidget);
-        expect(robot.errorText, SignInPage.wrongPasswordMessage);
+        robot.expectError(
+          SignInProblem.wrongPassword,
+          robot.strings.wrongPasswordMessage,
+        );
         expect(robot.analytics.events, [event('sign_in_password_failed')]);
         // supabase_auth 3 throws rather than answer without a session; a
         // 200 that signs no one in is the server misbehaving, so it is
@@ -809,7 +839,10 @@ void main() {
         await robot.settle();
 
         expect(robot.passwordField, findsOneWidget);
-        expect(robot.errorText, SignInPage.unreachableMessage);
+        robot.expectError(
+          SignInProblem.unreachable,
+          robot.strings.unreachableMessage,
+        );
         expect(robot.analytics.exceptions, [
           captured(withheld(AuthRetryableFetchException), {
             'step': 'sign_in_password',

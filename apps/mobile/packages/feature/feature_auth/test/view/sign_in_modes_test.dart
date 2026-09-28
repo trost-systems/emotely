@@ -19,8 +19,8 @@ void main() {
       );
       await robot.launch();
 
-      expect(robot.headingText, 'Almost there, Peter');
-      expect(find.text(SignInPage.signUpBody), findsOneWidget);
+      expect(robot.headingText, robot.strings.signUpTitleWithName('Peter'));
+      expect(find.text(robot.strings.signUpBody), findsOneWidget);
       expect(
         tester.widget<Text>(robot.heading).style?.fontStyle,
         FontStyle.normal,
@@ -36,7 +36,7 @@ void main() {
       );
       await robot.launch();
 
-      expect(robot.headingText, 'Almost there');
+      expect(robot.headingText, robot.strings.signUpTitle);
     });
 
     testWidgets('asks for a code that creates the account when there is '
@@ -86,8 +86,8 @@ void main() {
       );
       await robot.launch();
 
-      expect(robot.headingText, 'Welcome back');
-      expect(find.text(SignInPage.signUpBody), findsNothing);
+      expect(robot.headingText, robot.strings.signInTitle);
+      expect(find.text(robot.strings.signUpBody), findsNothing);
     });
 
     testWidgets('asks for a code that never creates an account', (
@@ -120,7 +120,10 @@ void main() {
       await robot.launch();
       await robot.requestCode();
 
-      expect(robot.errorText, SignInPage.noAccountMessage);
+      robot.expectError(
+        SignInProblem.noAccount,
+        robot.strings.noAccountMessage,
+      );
       expect(robot.emailField, findsOneWidget);
     });
 
@@ -153,9 +156,131 @@ void main() {
     final email = tester.getTopLeft(robot.emailField).dy;
     expect(apple, lessThan(google));
     expect(google, lessThan(email));
-    expect(find.text('Continue with Apple'), findsOneWidget);
-    expect(find.text('or with your email'), findsOneWidget);
+    expect(find.text(robot.strings.appleButton), findsOneWidget);
+    expect(find.text(robot.strings.orWithEmail), findsOneWidget);
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+  group('in German', () {
+    const german = Locale('de');
+    final strings = lookupAuthLocalizations(german);
+
+    testWidgets('greets, offers every way in and words each field', (
+      tester,
+    ) async {
+      final robot = SignInRobot(
+        tester,
+        supabase: SupabaseStub(),
+        agent: AgentStub(),
+        mode: SignInMode.signUp,
+        name: 'Peter',
+        locale: german,
+      );
+      await robot.launch();
+
+      expect(robot.headingText, 'Fast geschafft, Peter');
+      expect(robot.headingText, strings.signUpTitleWithName('Peter'));
+      for (final shown in [
+        strings.signUpBody,
+        strings.appleButton,
+        strings.orWithEmail,
+        strings.emailLabel,
+        strings.emailHint,
+        strings.sendCodeButton,
+        strings.privacyNoticeButton,
+      ]) {
+        expect(find.text(shown), findsOneWidget, reason: shown);
+      }
+      expect(find.bySemanticsLabel(strings.googleButton), findsOneWidget);
+      expect(find.bySemanticsLabel(strings.appleButton), findsOneWidget);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+    testWidgets('asks for the code, and says why it was refused', (
+      tester,
+    ) async {
+      final supabase = SupabaseStub()
+        ..script(
+          otp: [codeSent()],
+          verify: [
+            authRefused(
+              statusCode: 403,
+              errorCode: 'otp_expired',
+              message: 'Token has expired or is invalid',
+            ),
+          ],
+        );
+      final robot = SignInRobot(
+        tester,
+        supabase: supabase,
+        agent: AgentStub(),
+        locale: german,
+      );
+      await robot.launch();
+      expect(robot.headingText, strings.signInTitle);
+
+      await robot.requestCode();
+      expect(
+        find.text(strings.codeSentMessage(SupabaseStub.email)),
+        findsOneWidget,
+      );
+      expect(find.text(strings.codeLabel), findsOneWidget);
+      expect(find.text(strings.signInButton), findsOneWidget);
+      expect(find.text(strings.changeEmailButton), findsOneWidget);
+
+      await robot.enterCode('000000');
+      await robot.tapSignIn();
+      await robot.settle();
+
+      robot.expectError(SignInProblem.wrongCode, strings.wrongCodeMessage);
+    });
+
+    testWidgets('asks a review account for its password', (tester) async {
+      const address = 'app-store-review@getemotely.com';
+      final robot = SignInRobot(
+        tester,
+        supabase: SupabaseStub(),
+        agent: AgentStub(),
+        locale: german,
+      );
+      await robot.launch();
+
+      await robot.submitEmail(address);
+
+      expect(find.text(strings.passwordPrompt(address)), findsOneWidget);
+      expect(find.text(strings.passwordLabel), findsOneWidget);
+    });
+
+    testWidgets('tags the way in used last', (tester) async {
+      final semantics = tester.ensureSemantics();
+      final robot = SignInRobot(
+        tester,
+        supabase: SupabaseStub(),
+        agent: AgentStub(),
+        locale: german,
+      );
+      await robot.keep(SignInOption.google);
+      await robot.launch();
+
+      expect(find.text('Zuletzt genutzt'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(strings.lastUsedButton(strings.googleButton)),
+        findsOneWidget,
+      );
+      semantics.dispose();
+    });
+
+    testWidgets('meets accessibility guidelines', (tester) async {
+      final robot = SignInRobot(
+        tester,
+        supabase: SupabaseStub(),
+        agent: AgentStub(),
+        mode: SignInMode.signUp,
+        name: 'Peter',
+        locale: german,
+      );
+
+      await tester.expectMeetsAccessibilityGuidelines(robot.app);
+    });
+  });
 
   testWidgets('meets accessibility guidelines in both modes', (tester) async {
     for (final mode in SignInMode.values) {

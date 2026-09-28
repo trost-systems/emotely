@@ -1,3 +1,4 @@
+import 'package:feature_auth/src/l10n/auth_localizations.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// A small pill on the top edge of the button last used to sign in on
@@ -8,19 +9,15 @@ import 'package:material_ui/material_ui.dart';
 /// edge overlaps the button: at any text size it pushes the button down
 /// rather than growing into it or into the button above. Screen readers
 /// skip it; each button says "last used" in its own label instead
-/// ([lastUsedLabel]), so the words arrive with the button they describe.
+/// (`AuthLocalizations.lastUsedButton`), so the words arrive with the button
+/// they describe.
 class const LastUsedTag({required final Widget child, super.key})
     extends StatelessWidget {
-  static const label = 'Last used';
-
   /// How far the pill reaches down over the button's edge.
   static const _overlap = 10.0;
 
   /// From the button's end edge to the pill's, as in the design.
   static const _inset = 18.0;
-
-  /// [buttonLabel] as a screen reader announces the button the tag marks.
-  static String lastUsedLabel(String buttonLabel) => '$buttonLabel, last used';
 
   @override
   Widget build(BuildContext context) => Column(
@@ -54,7 +51,7 @@ class const _Pill() extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
         child: Text(
-          LastUsedTag.label,
+          AuthLocalizations.of(context).lastUsedTag,
           style: theme.textTheme.labelMedium?.copyWith(
             color: theme.colorScheme.onPrimary,
           ),

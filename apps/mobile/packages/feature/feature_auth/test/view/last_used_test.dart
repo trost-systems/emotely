@@ -54,8 +54,12 @@ void main() {
       expect(robot.tagged(robot.googleButton), isTrue);
       expect(robot.tagged(robot.appleButton), isFalse);
       expect(robot.tagged(robot.sendCode), isFalse);
-      expect(announced(tester, 'Sign in with Google, last used'), isTrue);
-      expect(announced(tester, 'Continue with Apple'), isTrue);
+      final strings = robot.strings;
+      expect(
+        announced(tester, strings.lastUsedButton(strings.googleButton)),
+        isTrue,
+      );
+      expect(announced(tester, strings.appleButton), isTrue);
       semantics.dispose();
     }, variant: iOS);
 
@@ -69,8 +73,12 @@ void main() {
 
       expect(robot.tagged(robot.appleButton), isTrue);
       expect(robot.tagged(robot.googleButton), isFalse);
-      expect(announced(tester, 'Continue with Apple, last used'), isTrue);
-      expect(announced(tester, 'Sign in with Google'), isTrue);
+      final strings = robot.strings;
+      expect(
+        announced(tester, strings.lastUsedButton(strings.appleButton)),
+        isTrue,
+      );
+      expect(announced(tester, strings.googleButton), isTrue);
       semantics.dispose();
     }, variant: iOS);
 
@@ -84,7 +92,11 @@ void main() {
 
       expect(robot.tagged(robot.sendCode), isTrue);
       expect(robot.tagged(robot.googleButton), isFalse);
-      expect(announced(tester, 'Send me a code, last used'), isTrue);
+      final strings = robot.strings;
+      expect(
+        announced(tester, strings.lastUsedButton(strings.sendCodeButton)),
+        isTrue,
+      );
       semantics.dispose();
     });
 

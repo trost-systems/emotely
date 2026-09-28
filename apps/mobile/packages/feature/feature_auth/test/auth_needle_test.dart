@@ -200,9 +200,15 @@ void main() {
         isNot(contains('@')),
       );
       for (final state in [
-        const AuthState.passwordRequired(email: address, error: 'needle'),
+        const AuthState.passwordRequired(
+          email: address,
+          problem: SignInProblem.wrongPassword,
+        ),
         const AuthState.checkingPassword(email: address),
-        const AuthState.codeSent(email: address, error: 'needle'),
+        const AuthState.codeSent(
+          email: address,
+          problem: SignInProblem.wrongCode,
+        ),
         const AuthState.signedIn(
           userId: 'needle',
           identity: SignInIdentity(email: address, method: SignInVia.emailCode),

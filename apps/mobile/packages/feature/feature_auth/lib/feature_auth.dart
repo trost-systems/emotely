@@ -8,6 +8,8 @@
 library;
 
 export 'src/bloc/auth_bloc.dart';
+export 'src/l10n/auth_localizations.dart'
+    show AuthLocalizations, lookupAuthLocalizations;
 export 'src/last_sign_in/last_sign_in_store.dart';
 export 'src/navigator.dart';
 export 'src/providers/provider_sign_in.dart' show GoogleClientIds;

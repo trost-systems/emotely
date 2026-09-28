@@ -30,6 +30,7 @@ class SignInRobot(
   final Set<String> passwordAccounts = const {},
   final SignInMode mode = SignInMode.signIn,
   final String? name,
+  final Locale? locale,
 }) {
   final analytics = AnalyticsSpy();
   late final navigator = FakeSignInNavigator(name: name);
@@ -62,7 +63,7 @@ class SignInRobot(
   Finder get lastUsed => find.byType(LastUsedTag);
 
   /// The tag's pill itself, as a sighted user reads it.
-  Finder get lastUsedPill => find.text(LastUsedTag.label);
+  Finder get lastUsedPill => find.text(strings.lastUsedTag);
 
   /// Whether [button] is the one the "Last used" tag marks.
   bool tagged(Finder button) =>
@@ -77,6 +78,10 @@ class SignInRobot(
   Future<SignInOption?> kept() =>
       LastSignInStore(preferences: analytics.preferences).read();
 
+  /// The screen's strings in the locale it is shown in: what every
+  /// expectation about its words reads, so a test holds in any locale.
+  AuthLocalizations get strings => AuthLocalizations.of(tester.element(signIn));
+
   String get headingText => tester.widget<Text>(heading).data!;
 
   String get errorText => tester.widget<Text>(error).data!;
@@ -84,9 +89,25 @@ class SignInRobot(
   /// What the auth bloc above every screen holds now: what the app's other
   /// screens are handed.
   AuthState get state => tester
-      .element(find.byType(BlocBuilder<AuthBloc, AuthState>))
+      // The root's, the first: the screen's own steps build on it too.
+      .element(find.byType(BlocBuilder<AuthBloc, AuthState>).first)
       .read<AuthBloc>()
       .state;
+
+  /// Why the step on screen failed last, as the bloc words it for the
+  /// screen: a reason, never text.
+  SignInProblem? get problem => switch (state) {
+    AuthSignedOut(:final problem) ||
+    AuthCodeSent(:final problem) ||
+    AuthPasswordRequired(:final problem) => problem,
+    _ => null,
+  };
+
+  /// The step failed for [reason], and the screen says so in [words].
+  void expectError(SignInProblem reason, String words) {
+    expect(problem, reason);
+    expect(errorText, words);
+  }
 
   bool get canTapGoogle =>
       tester.widget<GoogleSignInButton>(googleButton).onPressed != null;
@@ -114,19 +135,30 @@ class SignInRobot(
       passwordAccounts: passwordAccounts,
     );
     GetIt.I.registerSingleton<SignInNavigator>(navigator);
-    return pageUnderTest(
-      BlocProvider(
-        create: (_) => GetIt.I<AuthBloc>(),
-        child: BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) => state is AuthSignedIn
-              ? const Scaffold(
-                  body: Center(child: Text('home', key: homeKey)),
-                )
-              : SignInPage(mode: mode),
-        ),
+    final root = BlocProvider(
+      create: (_) => GetIt.I<AuthBloc>(),
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) => state is AuthSignedIn
+            ? const Scaffold(
+                body: Center(child: Text('home', key: homeKey)),
+              )
+            : SignInPage(mode: mode),
       ),
     );
+    // Without a locale of its own, the helper's default: the one every
+    // other test of the workspace runs in.
+    return switch (locale) {
+      null => pageUnderTest(root, localizations: localizations),
+      final locale => pageUnderTest(
+        root,
+        localizations: localizations,
+        locale: locale,
+      ),
+    };
   }
+
+  /// The feature's own strings, as the app composes them.
+  static const localizations = [AuthLocalizations.delegate];
 
   Future<void> launch() async {
     await tester.pumpWidget(app);

@@ -1,3 +1,4 @@
+import 'package:feature_auth/src/l10n/auth_localizations.dart';
 import 'package:feature_auth/src/navigator.dart';
 import 'package:feature_auth/src/view/sign_in_page.dart';
 import 'package:material_ui/material_ui.dart';
@@ -11,12 +12,16 @@ class const SignInHeading({
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = AuthLocalizations.of(context);
     final (title, body) = switch (mode) {
       SignInMode.signUp => (
-        SignInPage.signUpTitle(name),
-        SignInPage.signUpBody,
+        switch (name) {
+          null => strings.signUpTitle,
+          final name => strings.signUpTitleWithName(name),
+        },
+        strings.signUpBody,
       ),
-      SignInMode.signIn => (SignInPage.signInTitle, null),
+      SignInMode.signIn => (strings.signInTitle, null),
     };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

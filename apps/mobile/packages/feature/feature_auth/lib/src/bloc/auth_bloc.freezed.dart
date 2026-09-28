@@ -712,15 +712,15 @@ return signedIn(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String? error)?  signedOut,TResult Function( String email)?  requestingCode,TResult Function( String email,  String? error)?  codeSent,TResult Function( String email)?  verifying,TResult Function( IdentityProvider provider)?  signingInWith,TResult Function( String email,  String? error)?  passwordRequired,TResult Function( String email)?  checkingPassword,TResult Function( String userId,  SignInIdentity identity)?  signedIn,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( SignInProblem? problem)?  signedOut,TResult Function( String email)?  requestingCode,TResult Function( String email,  SignInProblem? problem)?  codeSent,TResult Function( String email)?  verifying,TResult Function( IdentityProvider provider)?  signingInWith,TResult Function( String email,  SignInProblem? problem)?  passwordRequired,TResult Function( String email)?  checkingPassword,TResult Function( String userId,  SignInIdentity identity)?  signedIn,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AuthSignedOut() when signedOut != null:
-return signedOut(_that.error);case AuthRequestingCode() when requestingCode != null:
+return signedOut(_that.problem);case AuthRequestingCode() when requestingCode != null:
 return requestingCode(_that.email);case AuthCodeSent() when codeSent != null:
-return codeSent(_that.email,_that.error);case AuthVerifying() when verifying != null:
+return codeSent(_that.email,_that.problem);case AuthVerifying() when verifying != null:
 return verifying(_that.email);case AuthSigningInWith() when signingInWith != null:
 return signingInWith(_that.provider);case AuthPasswordRequired() when passwordRequired != null:
-return passwordRequired(_that.email,_that.error);case AuthCheckingPassword() when checkingPassword != null:
+return passwordRequired(_that.email,_that.problem);case AuthCheckingPassword() when checkingPassword != null:
 return checkingPassword(_that.email);case AuthSignedIn() when signedIn != null:
 return signedIn(_that.userId,_that.identity);case _:
   return orElse();
@@ -740,15 +740,15 @@ return signedIn(_that.userId,_that.identity);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String? error)  signedOut,required TResult Function( String email)  requestingCode,required TResult Function( String email,  String? error)  codeSent,required TResult Function( String email)  verifying,required TResult Function( IdentityProvider provider)  signingInWith,required TResult Function( String email,  String? error)  passwordRequired,required TResult Function( String email)  checkingPassword,required TResult Function( String userId,  SignInIdentity identity)  signedIn,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( SignInProblem? problem)  signedOut,required TResult Function( String email)  requestingCode,required TResult Function( String email,  SignInProblem? problem)  codeSent,required TResult Function( String email)  verifying,required TResult Function( IdentityProvider provider)  signingInWith,required TResult Function( String email,  SignInProblem? problem)  passwordRequired,required TResult Function( String email)  checkingPassword,required TResult Function( String userId,  SignInIdentity identity)  signedIn,}) {final _that = this;
 switch (_that) {
 case AuthSignedOut():
-return signedOut(_that.error);case AuthRequestingCode():
+return signedOut(_that.problem);case AuthRequestingCode():
 return requestingCode(_that.email);case AuthCodeSent():
-return codeSent(_that.email,_that.error);case AuthVerifying():
+return codeSent(_that.email,_that.problem);case AuthVerifying():
 return verifying(_that.email);case AuthSigningInWith():
 return signingInWith(_that.provider);case AuthPasswordRequired():
-return passwordRequired(_that.email,_that.error);case AuthCheckingPassword():
+return passwordRequired(_that.email,_that.problem);case AuthCheckingPassword():
 return checkingPassword(_that.email);case AuthSignedIn():
 return signedIn(_that.userId,_that.identity);}
 }
@@ -764,15 +764,15 @@ return signedIn(_that.userId,_that.identity);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String? error)?  signedOut,TResult? Function( String email)?  requestingCode,TResult? Function( String email,  String? error)?  codeSent,TResult? Function( String email)?  verifying,TResult? Function( IdentityProvider provider)?  signingInWith,TResult? Function( String email,  String? error)?  passwordRequired,TResult? Function( String email)?  checkingPassword,TResult? Function( String userId,  SignInIdentity identity)?  signedIn,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( SignInProblem? problem)?  signedOut,TResult? Function( String email)?  requestingCode,TResult? Function( String email,  SignInProblem? problem)?  codeSent,TResult? Function( String email)?  verifying,TResult? Function( IdentityProvider provider)?  signingInWith,TResult? Function( String email,  SignInProblem? problem)?  passwordRequired,TResult? Function( String email)?  checkingPassword,TResult? Function( String userId,  SignInIdentity identity)?  signedIn,}) {final _that = this;
 switch (_that) {
 case AuthSignedOut() when signedOut != null:
-return signedOut(_that.error);case AuthRequestingCode() when requestingCode != null:
+return signedOut(_that.problem);case AuthRequestingCode() when requestingCode != null:
 return requestingCode(_that.email);case AuthCodeSent() when codeSent != null:
-return codeSent(_that.email,_that.error);case AuthVerifying() when verifying != null:
+return codeSent(_that.email,_that.problem);case AuthVerifying() when verifying != null:
 return verifying(_that.email);case AuthSigningInWith() when signingInWith != null:
 return signingInWith(_that.provider);case AuthPasswordRequired() when passwordRequired != null:
-return passwordRequired(_that.email,_that.error);case AuthCheckingPassword() when checkingPassword != null:
+return passwordRequired(_that.email,_that.problem);case AuthCheckingPassword() when checkingPassword != null:
 return checkingPassword(_that.email);case AuthSignedIn() when signedIn != null:
 return signedIn(_that.userId,_that.identity);case _:
   return null;
@@ -786,10 +786,10 @@ return signedIn(_that.userId,_that.identity);case _:
 
 
 class AuthSignedOut implements AuthState {
-  const AuthSignedOut({this.error});
+  const AuthSignedOut({this.problem});
   
 
- final  String? error;
+ final  SignInProblem? problem;
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
@@ -801,13 +801,13 @@ $AuthSignedOutCopyWith<AuthSignedOut> get copyWith => _$AuthSignedOutCopyWithImp
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthSignedOut&&(identical(other.error, error) || other.error == error));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthSignedOut&&(identical(other.problem, problem) || other.problem == problem));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,error);
+    return Object.hash(runtimeType,problem);
 }
 
 
@@ -819,7 +819,7 @@ abstract mixin class $AuthSignedOutCopyWith<$Res> implements $AuthStateCopyWith<
   factory $AuthSignedOutCopyWith(AuthSignedOut value, $Res Function(AuthSignedOut) _then) = _$AuthSignedOutCopyWithImpl;
 @useResult
 $Res call({
- String? error
+ SignInProblem? problem
 });
 
 
@@ -836,10 +836,10 @@ class _$AuthSignedOutCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? error = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? problem = freezed,}) {
   return _then(AuthSignedOut(
-error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
-as String?,
+problem: freezed == problem ? _self.problem : problem // ignore: cast_nullable_to_non_nullable
+as SignInProblem?,
   ));
 }
 
@@ -914,11 +914,11 @@ as String,
 
 
 class AuthCodeSent implements AuthState {
-  const AuthCodeSent({required this.email, this.error});
+  const AuthCodeSent({required this.email, this.problem});
   
 
  final  String email;
- final  String? error;
+ final  SignInProblem? problem;
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
@@ -930,13 +930,13 @@ $AuthCodeSentCopyWith<AuthCodeSent> get copyWith => _$AuthCodeSentCopyWithImpl<A
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthCodeSent&&(identical(other.email, email) || other.email == email)&&(identical(other.error, error) || other.error == error));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthCodeSent&&(identical(other.email, email) || other.email == email)&&(identical(other.problem, problem) || other.problem == problem));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,email,error);
+    return Object.hash(runtimeType,email,problem);
 }
 
 
@@ -948,7 +948,7 @@ abstract mixin class $AuthCodeSentCopyWith<$Res> implements $AuthStateCopyWith<$
   factory $AuthCodeSentCopyWith(AuthCodeSent value, $Res Function(AuthCodeSent) _then) = _$AuthCodeSentCopyWithImpl;
 @useResult
 $Res call({
- String email, String? error
+ String email, SignInProblem? problem
 });
 
 
@@ -965,11 +965,11 @@ class _$AuthCodeSentCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? email = null,Object? error = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? email = null,Object? problem = freezed,}) {
   return _then(AuthCodeSent(
 email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
-as String,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
-as String?,
+as String,problem: freezed == problem ? _self.problem : problem // ignore: cast_nullable_to_non_nullable
+as SignInProblem?,
   ));
 }
 
@@ -1108,11 +1108,11 @@ as IdentityProvider,
 
 
 class AuthPasswordRequired implements AuthState {
-  const AuthPasswordRequired({required this.email, this.error});
+  const AuthPasswordRequired({required this.email, this.problem});
   
 
  final  String email;
- final  String? error;
+ final  SignInProblem? problem;
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
@@ -1124,13 +1124,13 @@ $AuthPasswordRequiredCopyWith<AuthPasswordRequired> get copyWith => _$AuthPasswo
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthPasswordRequired&&(identical(other.email, email) || other.email == email)&&(identical(other.error, error) || other.error == error));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthPasswordRequired&&(identical(other.email, email) || other.email == email)&&(identical(other.problem, problem) || other.problem == problem));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,email,error);
+    return Object.hash(runtimeType,email,problem);
 }
 
 
@@ -1142,7 +1142,7 @@ abstract mixin class $AuthPasswordRequiredCopyWith<$Res> implements $AuthStateCo
   factory $AuthPasswordRequiredCopyWith(AuthPasswordRequired value, $Res Function(AuthPasswordRequired) _then) = _$AuthPasswordRequiredCopyWithImpl;
 @useResult
 $Res call({
- String email, String? error
+ String email, SignInProblem? problem
 });
 
 
@@ -1159,11 +1159,11 @@ class _$AuthPasswordRequiredCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? email = null,Object? error = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? email = null,Object? problem = freezed,}) {
   return _then(AuthPasswordRequired(
 email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
-as String,error: freezed == error ? _self.error : error // ignore: cast_nullable_to_non_nullable
-as String?,
+as String,problem: freezed == problem ? _self.problem : problem // ignore: cast_nullable_to_non_nullable
+as SignInProblem?,
   ));
 }
 
