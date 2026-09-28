@@ -16,10 +16,9 @@ workspace:
   - packages/utility/*
   - packages/feature/*
 
+# Sorted, like every pubspec: since apps/mobile/analysis_options.yaml exists
+# (the analyzer plugin needs it), this file is linted too.
 dev_dependencies:
-  # melos reads the workspace list above; it only recognises the workspace
-  # when it is declared here, and its configuration lives in the `melos` key.
-  melos: 8.7.0
   # The complexity gate and the clone finder (kevmoo/analytica.dart). Pinned
   # to a commit of main rather than pub.dev: the published releases lag it
   # and lack the line limits the gate uses and the skipping of generated
@@ -35,6 +34,9 @@ dev_dependencies:
       url: https://github.com/kevmoo/analytica.dart
       path: packages/dedupe
       ref: 103ba839d3d8e4e53853fad600cbde341b153192
+  # melos reads the workspace list above; it only recognises the workspace
+  # when it is declared here, and its configuration lives in the `melos` key.
+  melos: 8.7.0
 
 # Both tools want their shared library at a version only main has; pub treats
 # a git and a hosted source as different packages, so it has to be overridden
@@ -64,8 +66,13 @@ melos:
       description: dart format, failing on any change.
       run: melos exec --fail-fast $EMOTELY_SCOPE -- dart format --set-exit-if-changed .
     analyze:
-      description: flutter analyze with infos fatal, against the workspace rule set.
-      run: melos exec --fail-fast $EMOTELY_SCOPE -- flutter analyze --fatal-infos
+      description: dart analyze with infos fatal, against the workspace rule set and emotely's own analyzer plugin.
+      # `dart`, not `flutter analyze`: the latter reports none of an analyzer
+      # plugin's diagnostics (flutter/flutter#187999), so tools/emotely_lints
+      # would pass unseen. One run over every package in scope, not one per
+      # package: each run starts the plugin, and parallel starts would race
+      # on its build folder.
+      run: dart analyze --fatal-infos $(melos list --parsable $EMOTELY_SCOPE)
     test:
       description: The suite with the hard 100% coverage gate on hand-written code; packages without a test/ directory (analysis, testing) are not measured.
       run: melos exec --fail-fast --concurrency=1 --dir-exists=test $EMOTELY_SCOPE -- dart pub global run very_good_cli:very_good test --coverage --min-coverage 100 --exclude-coverage "'**/*.{freezed,g,mocks}.dart'"

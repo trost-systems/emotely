@@ -22,6 +22,9 @@ apps/mobile/app/.flutter-plugins
 apps/mobile/app/.flutter-plugins-dependencies
 apps/mobile/app/ios/Pods/
 apps/mobile/app/**/GeneratedPluginRegistrant.*
+# Dart tools outside the workspace (tools/emotely_lints) resolve on their own.
+tools/*/.dart_tool/
+tools/*/build/
 
 # Release signing material — CI materialises these from secrets (ADR 0013)
 apps/mobile/app/android/key.properties

@@ -40,10 +40,10 @@ handful, and the same tooling holds.
 ## Consequences
 
 - Adding a package is a checklist, not a design decision: pubspec with
-  `resolution: workspace`, a one-line `analysis_options.yaml`, tests, and
-  the gates run without further wiring. The root `workspace:` list is globs
-  over the two tiers, so a new directory is a member on the next
-  `pub get`.
+  `resolution: workspace`, tests, and the gates run without further
+  wiring; no `analysis_options.yaml`, since ADR 0020 the workspace root's
+  covers every package. The root `workspace:` list is globs over the two
+  tiers, so a new directory is a member on the next `pub get`.
 - A change to the shared rule set, the workspace pubspec or lock, or the
   contract schema runs every package's gates, because it affects every
   package.

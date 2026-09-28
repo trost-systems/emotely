@@ -26,6 +26,7 @@ jobs:
     outputs:
       agent: ${{ steps.filter.outputs.agent }}
       app: ${{ steps.filter.outputs.app }}
+      lints: ${{ steps.filter.outputs.lints }}
       scripts: ${{ steps.filter.outputs.scripts }}
       supabase: ${{ steps.filter.outputs.supabase }}
       web: ${{ steps.filter.outputs.web }}
@@ -47,10 +48,15 @@ jobs:
               - '.github/workflows/ci.yml'
             app:
               - 'apps/mobile/**'
+              # The analyzer plugin every package's analysis runs.
+              - 'tools/emotely_lints/**'
               # The Dart contract is pinned against the emitted JSON Schema.
               - 'packages/contract/contract.schema.json'
               # What `melos run l10n:check` runs in every package.
               - 'scripts/l10n-check.sh'
+              - '.github/workflows/ci.yml'
+            lints:
+              - 'tools/emotely_lints/**'
               - '.github/workflows/ci.yml'
             scripts:
               - 'scripts/**'
@@ -130,6 +136,16 @@ jobs:
           channel: stable
           flutter-version-file: apps/mobile/app/.fvmrc
           cache: true
+      # apps/mobile/analysis_options.yaml is the workspace's only options
+      # file: one in a package makes the analyzer plugin resolve the
+      # workspace again for it, and the analyze step ten times slower.
+      - name: One analysis_options.yaml for the workspace
+        run: |
+          extra=$(git ls-files -- '*/analysis_options.yaml' | grep -v '^packages/utility/analysis/lib/' || true)
+          if [ -n "$extra" ]; then
+            echo "::error::Packages take their options from apps/mobile/analysis_options.yaml; remove: $extra"
+            exit 1
+          fi
       - run: flutter pub get
       - run: dart pub global activate melos 8.7.0
       # 1.5.0 is the first release whose coverage works inside a workspace
@@ -139,10 +155,12 @@ jobs:
       # On a pull request, run only the packages that changed plus their
       # dependents — unless something outside a package changed (the workspace
       # pubspec or lock, the shared rule set in packages/utility/analysis, the
-      # l10n check script, the contract schema the app is pinned against, this
-      # workflow), which
-      # affects every package and runs everything. Merge-queue runs and pushes
-      # to main always run everything.
+      # l10n check script, the analyzer plugin in tools/emotely_lints, the
+      # contract schema the app is pinned against, this workflow), which
+      # affects every package and runs everything. The plugin is wired through
+      # analysis_options.yaml, which melos's dependency graph cannot see: a
+      # rule changed alone would otherwise be analyzed against no package at
+      # all. Merge-queue runs and pushes to main always run everything.
       - name: Scope the gates to what changed
         if: github.event_name == 'pull_request'
         env:
@@ -150,7 +168,7 @@ jobs:
         run: |
           # `:/` pathspecs resolve from the repo root, not this working directory.
           changed=$(git diff --name-only "$BASE...HEAD" -- \
-            :/apps/mobile :/scripts/l10n-check.sh \
+            :/apps/mobile :/scripts/l10n-check.sh :/tools/emotely_lints \
             :/packages/contract/contract.schema.json :/.github/workflows/ci.yml)
           outside=$(printf '%s\n' "$changed" \
             | grep -vE '^apps/mobile/(app|packages/[^/]+/[^/]+)/' \
@@ -191,6 +209,33 @@ jobs:
       # and must not reach sitemap.xml.
       - run: jaspr build --sitemap-domain https://getemotely.com --sitemap-exclude '^/beta$'
       - run: git diff --exit-code -- lib
+
+  # emotely's analyzer plugin (tools/emotely_lints, ADR 0020): its own gates.
+  # It is outside the apps/mobile workspace (analyzer_testing and
+  # flutter_test pin test_api apart), so it is formatted, analyzed and tested
+  # here on its own, with the rule set every package uses, at 100% coverage.
+  # The app job above runs the plugin itself over every package.
+  lints:
+    needs: changes
+    if: needs.changes.outputs.lints == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tools/emotely_lints
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # The same SDK as the app, so the plugin is tested against the analyzer
+      # it will run beside.
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version-file: apps/mobile/app/.fvmrc
+          cache: true
+      - run: dart pub get
+      - run: dart format --set-exit-if-changed .
+      - run: dart analyze --fatal-infos
+      - run: dart pub global activate very_good_cli 1.5.0
+      - run: very_good dart test --coverage --min-coverage 100
 
   # The machine-setup script bootstraps every other job, so it is the one file
   # that has to work where nothing else does yet; the skills' scripts are what
@@ -311,7 +356,7 @@ jobs:
 
   # The single required check. Green only if every job succeeded or was skipped.
   ci-ok:
-    needs: [changes, agent, app, scripts, supabase, tripwire, web]
+    needs: [changes, agent, app, lints, scripts, supabase, tripwire, web]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:

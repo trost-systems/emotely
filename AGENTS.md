@@ -53,7 +53,9 @@ twice was held too low: move it up a layer. A one-off needs only its fix.
   (`biome.jsonc`), all TS strictness flags,
   [`flutter_agent_lints`](https://github.com/peter-trost/flutter_agent_lints)
   (experimental variant; every SDK rule is an error or a reasoned `false`)
-  with `flutter analyze --fatal-infos`. Disabling any rule requires an
+  and emotely's own analyzer plugin (`tools/emotely_lints`) with
+  `dart analyze --fatal-infos` — never `flutter analyze`, which does not
+  report plugin diagnostics. Disabling any rule requires an
   in-config justification comment next to the override. Never fix a
   diagnostic by weakening a rule without that justification.
 - Words a user reads — the app, the site, sign-in mails, store listings,

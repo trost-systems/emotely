@@ -1,0 +1,4 @@
+# The rule set of every package under apps/mobile (flutter_agent_lints,
+# experimental variant). This package is outside that workspace, so it
+# includes the rule set directly rather than through package:analysis.
+include: package:flutter_agent_lints/experimental.yaml

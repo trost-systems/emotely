@@ -34,7 +34,7 @@ are `melos run <script>` from `apps/mobile` (scripts in its `pubspec.yaml`).
 | `codegen:check` | committed generated code is stale in that package | `dart run build_runner build` in the package, commit |
 | `l10n:check` | generated localizations stale or uncommitted, or a locale lacks a message | `flutter gen-l10n` in the package and commit; add the message to that locale's ARB file |
 | `format` | formatting | `dart format .` in the package |
-| `analyze` | `flutter_agent_lints` via `packages/utility/analysis`; infos fail too | `flutter analyze --fatal-infos` in the package |
+| `analyze` | `flutter_agent_lints` and the `emotely_lints` plugin via `packages/utility/analysis`; infos fail too | `dart analyze --fatal-infos` in the package (not `flutter analyze`: it hides plugin diagnostics) |
 | `complexity` | a function in `lib/` is over complexity 15 or 60 lines, or a file over 400 lines (`[VIOLATION]` marks it) | `melos run complexity`; split it as `apps/mobile/AGENTS.md` describes |
 | `test` | a test failed, or hand-written code is uncovered | see below |
 

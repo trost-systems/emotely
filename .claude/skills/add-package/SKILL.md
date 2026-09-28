@@ -27,7 +27,6 @@ repository for data) or a navigator call (§ 5). Never an import.
 <package>/
 ├─ pubspec.yaml            resolution: workspace; every dep `any` for workspace
 │                          packages, pinned for pub.dev ones (research the pin)
-├─ analysis_options.yaml   the one line: include: package:analysis/analysis_options.yaml
 ├─ build.yaml              only if it generates code — copy the block from
 │                          another package (see the freezed skill)
 ├─ l10n.yaml               features and design_system (ADR 0020) — copy one
@@ -41,6 +40,11 @@ repository for data) or a navigator call (§ 5). Never an import.
 │                          registration function
 └─ test/…                  100% coverage of lib/, no exceptions
 ```
+
+No `analysis_options.yaml`: `apps/mobile/analysis_options.yaml` governs
+every package. One in a package makes the analyzer plugin resolve the
+workspace again for it, and a cold analyze ten times slower; an exclusion a
+package needs goes in the root file, by path.
 
 A package that shows text (every feature so far) is wired for it as the
 localization skill's "Adding a package that shows text" says. Of the
