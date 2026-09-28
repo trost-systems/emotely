@@ -203,6 +203,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - run: shellcheck --external-sources --severity=style scripts/*.sh .claude/skills/*/scripts/*.sh
       - run: bash scripts/release-status.test.sh
+      - run: bash scripts/l10n-check.test.sh
       - run: bash .claude/skills/run-app/scripts/run-app.test.sh
 
   # The comment tripwire (ast-grep rules, ADR 0018): hand-written Dart,

@@ -17,7 +17,8 @@ sealed class ConfigState with _$ConfigState {
     required String storeUrl,
   }) = ConfigUpdateRequired;
 
-  /// The config could not be read ([message]); the screen offers a retry.
-  /// Deliberately not "allowed": an unreachable server is not permission.
-  const factory failure({required String message}) = ConfigFailure;
+  /// The config could not be read, for the reason in [problem]; the screen
+  /// offers a retry. Deliberately not "allowed": an unreachable server is
+  /// not permission.
+  const factory failure({required ConfigProblem problem}) = ConfigFailure;
 }

@@ -1,9 +1,18 @@
 # Widget tests
 
 - Use the `pumpApp` extension from `package:testing` — real themes, real
-  localization once l10n exists, with a NON-English default locale so
-  hardcoded strings fail. `pageUnderTest(page)` is the same for a whole
-  page that brings its own `Scaffold`.
+  localization. `pageUnderTest(page)` is the same for a whole page that
+  brings its own `Scaffold`, `featureUnderTest(routes:)` for a feature's
+  routes. Each takes `localizations:` (the package's own delegate,
+  `const [JournalLocalizations.delegate]`; Flutter's are always added) and
+  `locale:`.
+- Read expected text through the package's class,
+  `lookupJournalLocalizations(locale).entryTitle`, never as a literal: the
+  test then holds in every locale, and a string that skipped the ARB files
+  stays English under German and fails. Run the screens that matter once
+  under `Locale('de')` too.
+- Go back with `tester.tapBack()` from `package:testing`, not
+  `tester.pageBack()`: the latter finds the button by its English tooltip.
 - A feature package's page tests compose the way the app does, in a robot:
   `registerUtilitiesUnderTest(GetIt.I, agent:, supabase:, analytics:)`
   (every utility over the scripted leaves), then the feature's own

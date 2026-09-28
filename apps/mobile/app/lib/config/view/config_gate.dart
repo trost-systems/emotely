@@ -1,4 +1,5 @@
 import 'package:emotely/config/bloc/config_bloc.dart';
+import 'package:emotely/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -25,7 +26,7 @@ class const ConfigGate({required final Widget child, super.key})
       ConfigUpdateRequired(:final minAppVersion) => _UpdateRequired(
         minAppVersion: minAppVersion,
       ),
-      ConfigFailure(:final message) => _Failure(message: message),
+      ConfigFailure(:final problem) => _Failure(problem: problem),
     },
   );
 }
@@ -71,15 +72,14 @@ class const _UpdateRequired({required final String minAppVersion})
     contentKey: ConfigGate.updateRequiredKey,
     children: [
       Text(
-        'This version of emotely is no longer supported. '
-        'Please update to $minAppVersion or newer to continue.',
+        AppLocalizations.of(context).updateRequiredMessage(minAppVersion),
         textAlign: TextAlign.center,
       ),
       FilledButton(
         key: ConfigGate.updateKey,
         onPressed: () =>
             context.read<ConfigBloc>().add(const ConfigEvent.updateRequested()),
-        child: const Text('Update'),
+        child: Text(AppLocalizations.of(context).updateButton),
       ),
     ],
   );
@@ -89,13 +89,14 @@ class const _UpdateRequired({required final String minAppVersion})
 /// and blocks with a retry. Not "allowed by default": the version gate is the
 /// one thing that must fail shut, or a build the server has stopped serving
 /// walks straight past it whenever the network is down.
-class const _Failure({required final String message}) extends StatelessWidget {
+class const _Failure({required final ConfigProblem problem})
+    extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _GateScaffold(
     contentKey: ConfigGate.failureKey,
     children: [
       Text(
-        message,
+        _messageFor(AppLocalizations.of(context)),
         style: TextStyle(color: Theme.of(context).colorScheme.error),
         textAlign: TextAlign.center,
       ),
@@ -103,8 +104,13 @@ class const _Failure({required final String message}) extends StatelessWidget {
         key: ConfigGate.retryKey,
         onPressed: () =>
             context.read<ConfigBloc>().add(const ConfigEvent.loaded()),
-        child: const Text('Try again'),
+        child: Text(AppLocalizations.of(context).tryAgainButton),
       ),
     ],
   );
+
+  String _messageFor(AppLocalizations strings) => switch (problem) {
+    ConfigProblem.unreachable => strings.configUnreachableMessage,
+    ConfigProblem.unreadable => strings.configUnreadableMessage,
+  };
 }

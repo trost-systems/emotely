@@ -38,7 +38,13 @@ class ConfigBloc({
       config = await _client.fetch();
     } on ConfigException catch (error, stackTrace) {
       unawaited(_errors.configLoadFailed(error, stackTrace));
-      emit(ConfigState.failure(message: error.message));
+      emit(
+        ConfigState.failure(
+          problem: error.unreachable
+              ? ConfigProblem.unreachable
+              : ConfigProblem.unreadable,
+        ),
+      );
       return;
     }
     final bool blocked;
@@ -50,7 +56,7 @@ class ConfigBloc({
       // that cannot fix it. Fail shut, but as a failure with a retry, and
       // report it — nobody else will notice a bad constant on this path.
       unawaited(_errors.configLoadFailed(error, stackTrace));
-      emit(const ConfigState.failure(message: unreadableVersionMessage));
+      emit(const ConfigState.failure(problem: ConfigProblem.unreadable));
       return;
     }
     if (blocked) {
@@ -99,8 +105,17 @@ class ConfigBloc({
       Version.parse(minAppVersion) > Version.parse(_appVersion);
 }
 
-/// Shown when the server named a version the app cannot read. Deliberately
-/// not the force-update wording: the user can do nothing about it, and a
-/// retry is the only honest action on offer.
-const unreadableVersionMessage =
-    'emotely is not answering correctly right now. Please try again.';
+/// Why the config could not be had, as far as the user can act on it. The
+/// screen words each in the user's language (ADR 0020); what exactly went
+/// wrong goes to error tracking, not onto the screen.
+enum ConfigProblem() {
+  /// No answer at all: offline, a timeout, a name that did not resolve. The
+  /// user can check their connection.
+  unreachable,
+
+  /// An answer the app cannot use: an error status, a body it cannot read,
+  /// a minimum version neither side can parse. Nothing the user did, and
+  /// not the force-update wording either: a retry is the only honest
+  /// action on offer.
+  unreadable,
+}

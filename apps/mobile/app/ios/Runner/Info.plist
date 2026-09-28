@@ -14,6 +14,14 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<!-- The languages the app ships (ADR 0020): iOS reports only these to
+	     Flutter, so a locale added to the ARB files is added here too. Must
+	     match `supportedLocales` in lib/app/localizations.dart. -->
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>de</string>
+	</array>
 	<key>CFBundleName</key>
 	<string>emotely</string>
 	<key>CFBundlePackageType</key>

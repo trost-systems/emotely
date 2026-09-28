@@ -350,13 +350,13 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  unknown,TResult Function()?  ready,TResult Function( String minAppVersion,  String storeUrl)?  updateRequired,TResult Function( String message)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  unknown,TResult Function()?  ready,TResult Function( String minAppVersion,  String storeUrl)?  updateRequired,TResult Function( ConfigProblem problem)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case ConfigUnknown() when unknown != null:
 return unknown();case ConfigReady() when ready != null:
 return ready();case ConfigUpdateRequired() when updateRequired != null:
 return updateRequired(_that.minAppVersion,_that.storeUrl);case ConfigFailure() when failure != null:
-return failure(_that.message);case _:
+return failure(_that.problem);case _:
   return orElse();
 
 }
@@ -374,13 +374,13 @@ return failure(_that.message);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  unknown,required TResult Function()  ready,required TResult Function( String minAppVersion,  String storeUrl)  updateRequired,required TResult Function( String message)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  unknown,required TResult Function()  ready,required TResult Function( String minAppVersion,  String storeUrl)  updateRequired,required TResult Function( ConfigProblem problem)  failure,}) {final _that = this;
 switch (_that) {
 case ConfigUnknown():
 return unknown();case ConfigReady():
 return ready();case ConfigUpdateRequired():
 return updateRequired(_that.minAppVersion,_that.storeUrl);case ConfigFailure():
-return failure(_that.message);}
+return failure(_that.problem);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -394,13 +394,13 @@ return failure(_that.message);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  unknown,TResult? Function()?  ready,TResult? Function( String minAppVersion,  String storeUrl)?  updateRequired,TResult? Function( String message)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  unknown,TResult? Function()?  ready,TResult? Function( String minAppVersion,  String storeUrl)?  updateRequired,TResult? Function( ConfigProblem problem)?  failure,}) {final _that = this;
 switch (_that) {
 case ConfigUnknown() when unknown != null:
 return unknown();case ConfigReady() when ready != null:
 return ready();case ConfigUpdateRequired() when updateRequired != null:
 return updateRequired(_that.minAppVersion,_that.storeUrl);case ConfigFailure() when failure != null:
-return failure(_that.message);case _:
+return failure(_that.problem);case _:
   return null;
 
 }
@@ -546,10 +546,10 @@ as String,
 
 
 class ConfigFailure implements ConfigState {
-  const ConfigFailure({required this.message});
+  const ConfigFailure({required this.problem});
   
 
- final  String message;
+ final  ConfigProblem problem;
 
 /// Create a copy of ConfigState
 /// with the given fields replaced by the non-null parameter values.
@@ -561,18 +561,18 @@ $ConfigFailureCopyWith<ConfigFailure> get copyWith => _$ConfigFailureCopyWithImp
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is ConfigFailure&&(identical(other.message, message) || other.message == message));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ConfigFailure&&(identical(other.problem, problem) || other.problem == problem));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,message);
+    return Object.hash(runtimeType,problem);
 }
 
 @override
 String toString() {
-    return 'ConfigState.failure(message: $message)';
+    return 'ConfigState.failure(problem: $problem)';
 }
 
 
@@ -583,7 +583,7 @@ abstract mixin class $ConfigFailureCopyWith<$Res> implements $ConfigStateCopyWit
   factory $ConfigFailureCopyWith(ConfigFailure value, $Res Function(ConfigFailure) _then) = _$ConfigFailureCopyWithImpl;
 @useResult
 $Res call({
- String message
+ ConfigProblem problem
 });
 
 
@@ -600,10 +600,10 @@ class _$ConfigFailureCopyWithImpl<$Res>
 
 /// Create a copy of ConfigState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? problem = null,}) {
   return _then(ConfigFailure(
-message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
-as String,
+problem: null == problem ? _self.problem : problem // ignore: cast_nullable_to_non_nullable
+as ConfigProblem,
   ));
 }
 

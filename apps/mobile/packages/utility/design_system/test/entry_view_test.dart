@@ -45,11 +45,25 @@ void main() {
     },
   );
 
+  // The feature that shows the entry words the heading, in the user's
+  // language: design_system holds no strings of its own (ADR 0020).
+  const title = 'Dein Eintrag';
+
   group(EntryView, () {
+    testWidgets('heads the entry with the title it is given', (tester) async {
+      await tester.pumpApp(
+        const EntryView(title: title, entry: entry, questions: questions),
+      );
+
+      expect(find.text(title), findsOneWidget);
+    });
+
     testWidgets('shows the summary, then every question with its answer', (
       tester,
     ) async {
-      await tester.pumpApp(const EntryView(entry: entry, questions: questions));
+      await tester.pumpApp(
+        const EntryView(title: title, entry: entry, questions: questions),
+      );
 
       expect(
         tester.widget<Text>(find.byKey(EntryView.summaryKey)).data,
@@ -62,7 +76,9 @@ void main() {
     });
 
     testWidgets('renders every answer type in its own shape', (tester) async {
-      await tester.pumpApp(const EntryView(entry: entry, questions: questions));
+      await tester.pumpApp(
+        const EntryView(title: title, entry: entry, questions: questions),
+      );
 
       expect(find.text('8 / $ratingMax'), findsOneWidget);
       expect(find.text('😊 🌤️'), findsOneWidget);
@@ -77,14 +93,18 @@ void main() {
     testWidgets('falls back to the question id when the question is gone', (
       tester,
     ) async {
-      await tester.pumpApp(const EntryView(entry: entry, questions: questions));
+      await tester.pumpApp(
+        const EntryView(title: title, entry: entry, questions: questions),
+      );
 
       expect(find.text('q-unknown'), findsOneWidget);
     });
 
     testWidgets('meets accessibility guidelines', (tester) async {
       await tester.expectMeetsAccessibilityGuidelines(
-        appWrapper(const EntryView(entry: entry, questions: questions)),
+        appWrapper(
+          const EntryView(title: title, entry: entry, questions: questions),
+        ),
       );
     });
   });

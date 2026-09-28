@@ -1,3 +1,4 @@
+import 'package:emotely/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -25,17 +26,17 @@ class const AppShell({
         index,
         initialLocation: index == navigationShell.currentIndex,
       ),
-      destinations: const [
+      destinations: [
         NavigationDestination(
           key: journalTabKey,
-          icon: Icon(Icons.menu_book_outlined),
-          selectedIcon: Icon(Icons.menu_book),
-          label: 'Journal',
+          icon: const Icon(Icons.menu_book_outlined),
+          selectedIcon: const Icon(Icons.menu_book),
+          label: AppLocalizations.of(context).journalTab,
         ),
         NavigationDestination(
           key: moreTabKey,
-          icon: Icon(Icons.more_horiz),
-          label: 'More',
+          icon: const Icon(Icons.more_horiz),
+          label: AppLocalizations.of(context).moreTab,
         ),
       ],
     ),

@@ -1,0 +1,11 @@
+{
+  "@@locale": "de",
+  "appTitle": "emotely",
+  "journalTab": "Tagebuch",
+  "moreTab": "Mehr",
+  "updateRequiredMessage": "Diese Version von emotely wird nicht mehr unterstützt. Bitte aktualisiere auf {minAppVersion} oder neuer, um weiterzumachen.",
+  "updateButton": "Aktualisieren",
+  "tryAgainButton": "Erneut versuchen",
+  "configUnreachableMessage": "emotely ist gerade nicht erreichbar. Prüfe deine Verbindung und versuche es erneut.",
+  "configUnreadableMessage": "emotely antwortet gerade nicht richtig. Bitte versuche es erneut."
+}

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../helpers/helpers.dart';
 import '../config_robot.dart';
@@ -64,6 +65,27 @@ void main() {
       // never reaches a screen that may depend on a wire shape that is gone.
       expect(robot.welcome, findsNothing);
       expect(robot.journal, findsNothing);
+    });
+
+    testWidgets('names the version to update to, in German too', (
+      tester,
+    ) async {
+      tester.platformDispatcher.localesTestValue = const [Locale('de')];
+      addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+      final config = ConfigStub()..serves(minAppVersion: '9.0.0');
+      final robot = ConfigRobot(tester, config);
+
+      await robot.launch();
+      await robot.settle();
+
+      expect(
+        find.text(
+          'Diese Version von emotely wird nicht mehr unterstützt. Bitte '
+          'aktualisiere auf 9.0.0 oder neuer, um weiterzumachen.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Aktualisieren'), findsOneWidget);
     });
 
     testWidgets('blocks a signed-in user just the same', (tester) async {
@@ -151,6 +173,56 @@ void main() {
   });
 
   group('startup gate failures', () {
+    testWidgets('says the server could not be reached', (tester) async {
+      final config = ConfigStub()..script([configUnreachable()]);
+      final robot = ConfigRobot(tester, config);
+
+      await robot.launch();
+      await robot.settle();
+
+      // What the user can act on, and nothing of the socket error behind
+      // it: that goes to error tracking, not onto the screen.
+      expect(
+        find.text(
+          'Could not reach emotely. Check your connection and try again.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('says the server is not answering correctly', (tester) async {
+      final config = ConfigStub()..script([configRefused(500)]);
+      final robot = ConfigRobot(tester, config);
+
+      await robot.launch();
+      await robot.settle();
+
+      expect(
+        find.text(
+          'emotely is not answering correctly right now. Please try again.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('speaks German on a German device', (tester) async {
+      tester.platformDispatcher.localesTestValue = const [Locale('de')];
+      addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+      final config = ConfigStub()..script([configMalformed()]);
+      final robot = ConfigRobot(tester, config);
+
+      await robot.launch();
+      await robot.settle();
+
+      expect(
+        find.text(
+          'emotely antwortet gerade nicht richtig. Bitte versuche es erneut.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Erneut versuchen'), findsOneWidget);
+    });
+
     testWidgets('blocks with a retry when the server cannot be reached', (
       tester,
     ) async {
