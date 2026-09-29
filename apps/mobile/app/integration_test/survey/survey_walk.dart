@@ -1,8 +1,5 @@
 import 'package:design_system/design_system.dart';
 import 'package:emotely/app/app.dart';
-import 'package:emotely/app/shell.dart';
-import 'package:feature_account/feature_account.dart';
-import 'package:feature_auth/feature_auth.dart';
 import 'package:feature_journal/feature_journal.dart';
 import 'package:feature_session/feature_session.dart';
 import 'package:flutter/scheduler.dart';
@@ -16,22 +13,29 @@ import 'frame_watch.dart';
 /// The screens of the feature map (`.claude/skills/run-app/references/
 /// feature-map.yaml`), each walked by a gesture a user makes there, in the
 /// order the walk visits them. Every walk starts and ends on the signed-in
-/// journal, except the sign-in screen's, which signs out and so comes last.
-/// The names are the survey's (`integration_test/survey.yaml`), which maps
-/// each to its route.
+/// journal, except the last two: onboarding is where signing out lands, and
+/// sign-in is reached from it. The names are the survey's
+/// (`integration_test/survey.yaml`), which maps each to its route.
 const surveyScreens = [
   'journal',
   'entry',
   'session',
   'more',
+  'profile',
   'account',
+  'privacy_settings',
   'consent',
+  'onboarding',
   'sign_in',
 ];
 
-/// The survey's walk over the app, composed over [backend]: the launch,
-/// then each screen in [surveyScreens] that [run] is asked for, each under
-/// a frame watch and with the requests it made.
+/// A widget key as the feature map names it (`more_view.profile`): the
+/// walk reaches every screen the way the map says an agent does.
+Finder _key(String name) => find.byKey(Key(name));
+
+/// The survey's walk over [app], composed over [backend]: the launch, then
+/// each screen in [surveyScreens] that [run] is asked for, each under a
+/// frame watch and with the requests it made.
 class SurveyWalk(
   final WidgetTester tester,
   final FakeBackend backend,
@@ -44,11 +48,17 @@ class SurveyWalk(
   /// Walks the app and reports what it measured, as `survey.json` holds it:
   /// the launch, the display's refresh rate and each screen's frames and
   /// requests. [only] names the screens to walk; empty, it walks them all.
+  /// Onboarding and sign-in need the sign-out before them, so asking for
+  /// sign-in alone walks onboarding's way there unmeasured.
   Future<Map<String, Object?>> run(Set<String> only) async {
     final startup = await _launch();
     final screens = <String, Object?>{};
     for (final name in surveyScreens) {
-      if (only.isNotEmpty && !only.contains(name)) {
+      final wanted = only.isEmpty || only.contains(name);
+      if (!wanted) {
+        if (name == 'onboarding' && only.contains('sign_in')) {
+          await _signOut();
+        }
         continue;
       }
       final before = backend.requests.length;
@@ -68,8 +78,11 @@ class SurveyWalk(
     'entry': _entry,
     'session': _session,
     'more': _more,
+    'profile': _profile,
     'account': _account,
+    'privacy_settings': _privacySettings,
     'consent': _consent,
+    'onboarding': _onboarding,
     'sign_in': _signIn,
   };
 
@@ -107,8 +120,7 @@ class SurveyWalk(
     for (var opening = 0; opening < repeats; opening++) {
       await _tap(find.byKey(JournalView.entryKey(backend.firstId)));
       expect(find.byKey(EntryView.summaryKey), findsOneWidget);
-      await tester.pageBack();
-      await tester.pumpAndSettle();
+      await _back();
     }
   }
 
@@ -122,43 +134,59 @@ class SurveyWalk(
       await tester.pumpAndSettle();
       await _tap(find.byKey(RatingInput.submitKey));
     }
-    await tester.pageBack();
-    await tester.pumpAndSettle();
+    await _back();
   }
 
   /// More: its rows scrolled through, and the tab left and entered again.
   Future<void> _more() async {
     for (var visit = 0; visit < repeats; visit++) {
-      await _tap(find.byKey(AppShell.moreTabKey));
+      await _tap(_key('app_shell.more'));
       final rows = find.byType(Scrollable).last;
       await tester.fling(rows, const Offset(0, -400), 2000);
       await tester.pumpAndSettle();
       await tester.fling(rows, const Offset(0, 400), 2000);
       await tester.pumpAndSettle();
-      await _tap(find.byKey(AppShell.journalTabKey));
+      await _tap(_key('app_shell.journal'));
     }
   }
+
+  /// The profile: opened from More and closed again.
+  Future<void> _profile() => _onMore(() async {
+    for (var visit = 0; visit < repeats; visit++) {
+      await _tap(_key('more_view.profile'));
+      _expectShown(_key('profile_view.name'), 'the profile');
+      await _back();
+    }
+  });
 
   /// The account screen: opened, its deletion asked for and cancelled.
-  Future<void> _account() async {
-    await _tap(find.byKey(AppShell.moreTabKey));
+  Future<void> _account() => _onMore(() async {
     for (var visit = 0; visit < repeats; visit++) {
-      await _tap(find.byKey(MoreView.accountKey));
-      await _tap(find.byKey(AccountView.deleteKey));
-      await _tap(find.byKey(AccountView.cancelKey));
-      await tester.pageBack();
-      await tester.pumpAndSettle();
+      await _tapVisible(_key('more_view.account'));
+      await _tap(_key('account_view.delete'));
+      await _tap(_key('account_view.cancel'));
+      await _back();
     }
-    await _tap(find.byKey(AppShell.journalTabKey));
-  }
+  });
 
-  /// The consent screen: consent withdrawn on More, then given again there.
-  Future<void> _consent() async {
-    await _tap(find.byKey(AppShell.moreTabKey));
+  /// Privacy settings: opened from More and closed again.
+  Future<void> _privacySettings() => _onMore(() async {
     for (var visit = 0; visit < repeats; visit++) {
-      await _tap(find.byKey(MoreView.withdrawConsentKey));
-      await _tap(find.byKey(MoreView.restoreConsentKey));
-      final checkbox = find.byKey(ConsentView.checkboxKey);
+      await _tapVisible(_key('more_view.privacy_settings'));
+      _expectShown(_key('privacy_settings.journal'), 'privacy settings');
+      await _back();
+    }
+  });
+
+  /// The consent screen: the journal's consent turned off in privacy
+  /// settings, then given again on the screen it opens.
+  Future<void> _consent() => _onMore(() async {
+    await _tapVisible(_key('more_view.privacy_settings'));
+    for (var visit = 0; visit < repeats; visit++) {
+      await _tap(_key('privacy_settings.journal'));
+      await _tap(_key('privacy_settings.confirm'));
+      await _tap(_key('privacy_settings.journal'));
+      final checkbox = _key('consent_view.checkbox');
       await tester.dragUntilVisible(
         checkbox,
         find.byType(Scrollable).last,
@@ -166,19 +194,28 @@ class SurveyWalk(
       );
       await tester.pumpAndSettle();
       await _tap(checkbox);
-      await _tap(find.byKey(ConsentView.agreeKey));
-      expect(find.byKey(MoreView.withdrawConsentKey), findsOneWidget);
+      await _tap(_key('consent_view.agree'));
+      _expectShown(_key('privacy_settings.journal'), 'privacy settings again');
     }
-    await _tap(find.byKey(AppShell.journalTabKey));
+    await _back();
+  });
+
+  /// Onboarding: signed out onto Welcome, then its first steps taken and
+  /// taken back.
+  Future<void> _onboarding() async {
+    await _signOut();
+    for (var visit = 0; visit < repeats; visit++) {
+      await _tap(_key('onboarding.welcome.get_started'));
+      await _tap(_key('onboarding.value.continue'));
+      await _tap(_key('onboarding.back'));
+      await _tap(_key('onboarding.back'));
+    }
   }
 
-  /// Sign-in: signed out from More, then an address typed and a code
-  /// asked for, and the address changed again.
+  /// Sign-in, from Welcome: an address typed and a code asked for, and the
+  /// address changed again.
   Future<void> _signIn() async {
-    await _tap(find.byKey(AppShell.moreTabKey));
-    await tester.ensureVisible(find.byKey(MoreView.signOutKey));
-    await tester.pumpAndSettle();
-    await _tap(find.byKey(MoreView.signOutKey));
+    await _tap(_key('onboarding.welcome.have_account'));
     // Typing goes through the test's own text input, not the phone's
     // keyboard: a live binding leaves the platform's in place, and there
     // `enterText` types nothing.
@@ -186,17 +223,34 @@ class SurveyWalk(
     try {
       for (var attempt = 0; attempt < repeats; attempt++) {
         await tester.enterText(
-          find.byKey(SignInPage.emailKey),
+          _key('sign_in_page.email'),
           'made-up-$attempt@example.com',
         );
         await tester.pumpAndSettle();
-        await _tap(find.byKey(SignInPage.sendCodeKey));
-        _expectShown(find.byKey(SignInPage.codeKey), 'the code step');
-        await _tap(find.byKey(SignInPage.changeEmailKey));
+        await _tapVisible(_key('sign_in_page.send_code'));
+        _expectShown(_key('sign_in_page.code'), 'the code step');
+        await _tapVisible(_key('sign_in_page.change_email'));
       }
     } finally {
       tester.testTextInput.unregister();
     }
+  }
+
+  /// Signs out from the profile and answers the usage-analytics sheet that
+  /// comes up over Welcome, as a tester would.
+  Future<void> _signOut() async {
+    await _tap(_key('app_shell.more'));
+    await _tap(_key('more_view.profile'));
+    await _tapVisible(_key('profile_view.sign_out'));
+    await _tap(_key('usage_analytics_sheet.allow'));
+    _expectShown(_key('onboarding.welcome.get_started'), 'Welcome');
+  }
+
+  /// Runs [walk] on the More tab and returns to the journal.
+  Future<void> _onMore(Future<void> Function() walk) async {
+    await _tap(_key('app_shell.more'));
+    await walk();
+    await _tap(_key('app_shell.journal'));
   }
 
   /// Fails unless [target] is on screen, saying what is instead: the texts
@@ -219,7 +273,21 @@ class SurveyWalk(
   }
 
   Future<void> _tap(Finder target) async {
+    _expectShown(target, target.describeMatch(Plurality.one));
     await tester.tap(target);
+    await tester.pumpAndSettle();
+  }
+
+  /// Scrolls [target] into view first: rows below the fold on a small phone.
+  Future<void> _tapVisible(Finder target) async {
+    _expectShown(target, target.describeMatch(Plurality.one));
+    await tester.ensureVisible(target);
+    await tester.pumpAndSettle();
+    await _tap(target);
+  }
+
+  Future<void> _back() async {
+    await tester.pageBack();
     await tester.pumpAndSettle();
   }
 }

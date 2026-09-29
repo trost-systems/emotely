@@ -202,6 +202,44 @@ test_refuses_a_full_walk_that_missed_a_screen() {
   ((status == 0)) || fail "records an ad-hoc run of one screen: exit $status, $(cat "$work/err")"
 }
 
+# --- survey.json from the device's log --------------------------------------------
+
+test_reassembles_survey_json_from_the_device_log() {
+  # The walk also logs survey.json in numbered chunks between bars; a log
+  # interleaves other lines, repeats a line now and then, and a chunk may
+  # end in a space.
+  cat >"$work/syslog.txt" <<'EOF'
+Sep 29 15:29:12 iPhone Runner(Flutter)[716] <Notice>: flutter: survey.json 2/3 |"b": "x |
+Sep 29 15:29:12 iPhone SpringBoard[33] <Notice>: something else
+Sep 29 15:29:12 iPhone Runner(Flutter)[716] <Notice>: flutter: survey.json 1/3 |{"a": 1, |
+Sep 29 15:29:12 iPhone Runner(Flutter)[716] <Notice>: flutter: survey.json 3/3 |y"}|
+Sep 29 15:29:12 iPhone Runner(Flutter)[716] <Notice>: flutter: survey.json 1/3 |{"a": 1, |
+EOF
+  local got status=0
+  got="$(bash "$SURVEY" from-log "$work/syslog.txt")" || status=$?
+  ((status == 0)) || fail "reassembles survey.json from the log: exit $status"
+  [[ "$(jq -c . <<<"$got" 2>/dev/null)" == '{"a":1,"b":"x y"}' ]] ||
+    fail "reassembles survey.json from the log: got $got"
+}
+
+test_reassembles_survey_json_from_logcat() {
+  cat >"$work/logcat.txt" <<'EOF'
+09-30 01:38:13.703  5836  5836 I flutter : survey.json 1/2 |{"a": |
+09-30 01:38:13.723  5836  5836 I flutter : survey.json 2/2 |2}|
+EOF
+  local got
+  got="$(bash "$SURVEY" from-log "$work/logcat.txt" 2>/dev/null)" || true
+  [[ "$(jq -c . <<<"$got" 2>/dev/null)" == '{"a":2}' ]] ||
+    fail "reassembles survey.json from logcat: got $got"
+}
+
+test_refuses_a_log_that_lost_a_chunk() {
+  printf '%s\n' 'x flutter: survey.json 1/2 |{"a": |' >"$work/partial.txt"
+  local status=0
+  bash "$SURVEY" from-log "$work/partial.txt" >/dev/null 2>&1 || status=$?
+  ((status != 0)) || fail "refuses a log that lost a chunk: exit 0"
+}
+
 # --- severity ---------------------------------------------------------------------
 
 test_files_nothing_for_fast_screens() {

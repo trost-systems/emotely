@@ -59,10 +59,32 @@ void main() {
 }
 
 Future<void> _writeOnDevice(Map<String, Object?> survey) async {
+  final json = jsonEncode(survey);
   final directory = await Directory(surveyDirectory()).create(recursive: true);
   final file = File('${directory.path}/survey.json');
-  await file.writeAsString(jsonEncode(survey));
-  // In the device's log, which Test Lab keeps: where to look when the pull
-  // comes back empty.
-  debugPrint('survey: wrote ${file.path}');
+  await file.writeAsString(json);
+  debugPrintSynchronously('survey: wrote ${file.path}');
+  await _logInChunks(json);
+}
+
+/// The characters of survey.json per log line: under the 1024 bytes an
+/// iPhone's log keeps of a message.
+const _chunk = 800;
+
+/// survey.json in the device's log too, which Test Lab always keeps (an
+/// iPhone's syslog, an Android phone's logcat): on an iPhone it has not
+/// yet pulled the file back (`survey.sh from-log` puts it together).
+/// Numbered, and between bars so that a space at a chunk's end survives.
+/// Paced: logcat dropped a third of the lines written all at once.
+Future<void> _logInChunks(String json) async {
+  final count = (json.length / _chunk).ceil();
+  for (var index = 0; index < count; index++) {
+    final end = (index + 1) * _chunk;
+    final chunk = json.substring(
+      index * _chunk,
+      end < json.length ? end : json.length,
+    );
+    debugPrintSynchronously('survey.json ${index + 1}/$count |$chunk|');
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+  }
 }

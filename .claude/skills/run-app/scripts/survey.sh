@@ -46,14 +46,19 @@ Measure:
   local --device <adb id> [--screens a,b] [--out <dir>]
                    The same walk on a phone or emulator attached here,
                    through flutter drive.
-  build android|ios [--screens a,b] [--out <dir>]
-                   Only build: app.apk and test.apk, or survey-ios.zip
-                   (iOS needs signing; CI builds it, see the reference).
+  build android|ios [--screens a,b] [--out <dir>] [--profile <.mobileprovision>]
+                   Only build: app.apk and test.apk, or survey-ios.zip,
+                   signed with the certificate the App Store profile names
+                   (match's; SURVEY_PROFILE, see the reference).
 
 Judge and keep:
   record <survey.json> --device <device> [--screens a,b] [--run id] [--at time]
          [--commit sha] [--source name] [--form physical|virtual] [--platform p]
                    One run's history records, one JSON object per line.
+  from-log <device log>
+                   survey.json put back together from the chunks the walk
+                   logs, for a run whose file Test Lab did not pull (ftl
+                   falls back to it by itself).
   classify <records.jsonl> [--history <file>]
                    The run's findings by severity, as JSON. Without
                    --history, against the history branch.
@@ -237,12 +242,23 @@ ftl_run() {
   printf '%s\n' "gs://$bucket/$results_dir" >"$out/results.txt"
   ((status == 0)) || die "the Test Lab run failed (exit $status): see $out/ftl.log and the results in gs://$bucket/$results_dir"
   [[ -n "$bucket" ]] || die "no results bucket in $out/ftl.log"
-  local found
-  found="$(gcloud_emotely storage ls --recursive "gs://$bucket/$results_dir/**" 2>/dev/null |
-    grep '/survey\.json$' | head -1)" || true
-  [[ -n "$found" ]] || die "the run left no survey.json in gs://$bucket/$results_dir"
-  gcloud_emotely storage cp "$found" "$out/survey.json" >/dev/null 2>&1 ||
-    die "could not download $found"
+  local listing found device_log
+  listing="$(gcloud_emotely storage ls --recursive "gs://$bucket/$results_dir/**" 2>/dev/null)" || true
+  found="$(grep '/survey\.json$' <<<"$listing" | head -1)" || true
+  if [[ -n "$found" ]]; then
+    gcloud_emotely storage cp "$found" "$out/survey.json" >/dev/null 2>&1 ||
+      die "could not download $found"
+    return
+  fi
+  # Test Lab left the file on the device (an iPhone's Documents were never
+  # pulled back in the runs so far): the walk logged it too.
+  device_log="$(grep -E '/(syslog\.txt|logcat)$' <<<"$listing" | head -1)" || true
+  [[ -n "$device_log" ]] ||
+    die "the run left neither survey.json nor a device log in gs://$bucket/$results_dir"
+  gcloud_emotely storage cp "$device_log" "$out/device.log" >/dev/null 2>&1 ||
+    die "could not download $device_log"
+  log "no survey.json pulled; reading it from the device log"
+  cmd_from_log "$out/device.log" >"$out/survey.json"
 }
 
 cmd_ftl() {
@@ -251,7 +267,7 @@ cmd_ftl() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --device) device="${2:?}"; shift 2 ;;
-      --screens) screens="${2:?}"; shift 2 ;;
+      --screens) screens="${2-}"; shift 2 ;;
       --out) out="${2:?}"; shift 2 ;;
       --app) app="${2:?}"; shift 2 ;;
       --test) test="${2:?}"; shift 2 ;;
@@ -312,7 +328,7 @@ cmd_local() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --device) device="${2:?}"; shift 2 ;;
-      --screens) screens="${2:?}"; shift 2 ;;
+      --screens) screens="${2-}"; shift 2 ;;
       --out) out="${2:?}"; shift 2 ;;
       --config) config="${2:?}"; shift 2 ;;
       *) die "unknown option $1" ;;
@@ -358,6 +374,27 @@ judge_run() {
     log "could not judge against the history: $(cat "$out/judge.log")"
   fi
   printf 'survey: run in %s\n' "$out" >&2
+}
+
+# from-log <device log>: survey.json put back together from the chunks the
+# walk logs (`survey.json <i>/<n> |<chunk>|`, survey_test.dart), for a run
+# whose file Test Lab did not pull. Fails unless every chunk is there and
+# the whole is JSON.
+cmd_from_log() {
+  STEP="from-log"
+  local log="${1:?from-log needs a device log}" chunks total count
+  # `flutter: ` in an iPhone's syslog, `flutter : ` in logcat.
+  chunks="$(sed -n 's/.*flutter *: survey\.json \([0-9][0-9]*\)\/\([0-9][0-9]*\) |\(.*\)|$/\1 \2 \3/p' "$log" |
+    sort -n -k1,1 -u)"
+  [[ -n "$chunks" ]] || die "no survey.json in $log"
+  total="$(head -1 <<<"$chunks" | cut -d' ' -f2)"
+  count="$(wc -l <<<"$chunks" | tr -d ' ')"
+  [[ "$count" == "$total" && "$(tail -1 <<<"$chunks" | cut -d' ' -f1)" == "$total" ]] ||
+    die "$log holds $count of survey.json's $total chunks"
+  local json
+  json="$(cut -d' ' -f3- <<<"$chunks" | tr -d '\n')"
+  jq -e . <<<"$json" >/dev/null 2>&1 || die "survey.json from $log is not JSON"
+  printf '%s\n' "$json"
 }
 
 # --- record, classify, issues -----------------------------------------------------
@@ -579,7 +616,7 @@ main() {
       shift || true
       while [[ $# -gt 0 ]]; do
         case "$1" in
-          --screens) screens="${2:?}"; shift 2 ;;
+          --screens) screens="${2-}"; shift 2 ;;
           --out) out="${2:?}"; shift 2 ;;
           --profile) profile="${2:?}"; shift 2 ;;
           *) die "unknown option $1" ;;
@@ -594,6 +631,7 @@ main() {
       printf 'survey: built into %s\n' "$out" >&2
       ;;
     record) shift; cmd_record "$@" ;;
+    from-log) shift; cmd_from_log "$@" ;;
     classify) shift; cmd_classify "$@" ;;
     issues) shift; cmd_issues "$@" ;;
     append) shift; cmd_append "$@" ;;

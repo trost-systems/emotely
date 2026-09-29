@@ -96,6 +96,7 @@ class FakeBackend(
         // Withdrawing and giving consent again, and signing out and asking
         // for a code: the survey's walk (survey_test.dart) reaches every
         // screen, and these are how it gets to the last two.
+        ('GET', '/rest/v1/consent_events') => (200, const <Object?>[]),
         ('POST', '/rest/v1/rpc/withdraw_consent') => _consentNow(false),
         ('POST', '/rest/v1/rpc/record_consent') => _consentNow(true),
         ('POST', '/auth/v1/logout') => (204, null),

@@ -15,14 +15,16 @@
 # main paths the performance budget gates: missing the 120 fps target on a
 # 120 Hz phone is major there and minor elsewhere.
 screens:
-  journal: { route: JournalRoute, gated: true }
-  entry: { route: EntryRoute, gated: true }
-  session: { route: SessionRoute, gated: true }
-  more: { route: MoreRoute }
-  account: { route: AccountRoute }
-  consent: { route: ConsentRoute }
-  sign_in: { route: SignInRoute }
-
+  journal: {route: JournalRoute, gated: true}
+  entry: {route: EntryRoute, gated: true}
+  session: {route: SessionRoute, gated: true}
+  more: {route: MoreRoute}
+  profile: {route: ProfileRoute}
+  account: {route: AccountRoute}
+  privacy_settings: {route: PrivacySettingsRoute}
+  consent: {route: ConsentRoute}
+  onboarding: {route: OnboardingRoute}
+  sign_in: {route: SignInRoute}
 # The phones, by Test Lab model id and OS version
 # (`gcloud firebase test android models list --filter=form=PHYSICAL`,
 # `gcloud firebase test ios models list`). The Spark plan allows 5 physical
@@ -30,11 +32,13 @@ screens:
 # scheduled or ad hoc; each device of a run is one test run.
 #
 # `nightly` is when the scheduled workflow runs the device: `daily`, or the
-# ISO weekdays (1 = Monday) of a rotation. The schedule below spends 2
-# physical runs a day, 3 on Mondays and Thursdays, which leaves at least 2
-# for an agent chasing a regression (`survey.sh ftl`, or the workflow's
-# `workflow_dispatch`). Until iOS runs (#242: the gap is in
-# references/performance-survey.md), it spends one run less.
+# ISO weekdays (1 = Monday) of a rotation, or `never`. The schedule below
+# spends 1 physical run a day, 2 on Mondays and Thursdays, which leaves at
+# least 3 for an agent chasing a regression (`survey.sh ftl`, or the
+# workflow's `workflow_dispatch`). The iPhone joins daily (3 on Mondays and
+# Thursdays, still 2 to spare) once Test Lab pulls its survey.json back:
+# the walk runs and passes there, the pull does not yet
+# (references/performance-survey.md, "iOS").
 #
 # `judges` lists the metrics a device's findings may be filed on; the
 # rest are recorded only. A virtual device draws through its host's
@@ -53,7 +57,7 @@ devices:
     version: "18.3"
     name: iPhone 16 Pro
     form: physical
-    nightly: daily
+    nightly: never
   galaxy-a14:
     platform: android
     model: a14m
@@ -69,7 +73,6 @@ devices:
     form: virtual
     nightly: never
     judges: [build_p90]
-
 # How a screen's numbers on one device become a finding. One issue per
 # screen and metric (build p90, raster p90, missed frames), whatever the
 # device; its title starts with the worst severity any device showed, and
