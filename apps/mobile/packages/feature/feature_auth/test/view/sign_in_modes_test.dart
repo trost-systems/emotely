@@ -19,8 +19,8 @@ void main() {
       );
       await robot.launch();
 
-      expect(robot.headingText, 'Almost there, Peter');
-      expect(find.text(SignInPage.signUpBody), findsOneWidget);
+      expect(robot.headingText, robot.strings.signUpTitleWithName('Peter'));
+      expect(find.text(robot.strings.signUpBody), findsOneWidget);
       expect(
         tester.widget<Text>(robot.heading).style?.fontStyle,
         FontStyle.normal,
@@ -36,7 +36,7 @@ void main() {
       );
       await robot.launch();
 
-      expect(robot.headingText, 'Almost there');
+      expect(robot.headingText, robot.strings.signUpTitle);
     });
 
     testWidgets('asks for a code that creates the account when there is '
@@ -86,8 +86,8 @@ void main() {
       );
       await robot.launch();
 
-      expect(robot.headingText, 'Welcome back');
-      expect(find.text(SignInPage.signUpBody), findsNothing);
+      expect(robot.headingText, robot.strings.signInTitle);
+      expect(find.text(robot.strings.signUpBody), findsNothing);
     });
 
     testWidgets('asks for a code that never creates an account', (
@@ -120,7 +120,10 @@ void main() {
       await robot.launch();
       await robot.requestCode();
 
-      expect(robot.errorText, SignInPage.noAccountMessage);
+      robot.expectError(
+        SignInProblem.noAccount,
+        robot.strings.noAccountMessage,
+      );
       expect(robot.emailField, findsOneWidget);
     });
 
@@ -153,8 +156,8 @@ void main() {
     final email = tester.getTopLeft(robot.emailField).dy;
     expect(apple, lessThan(google));
     expect(google, lessThan(email));
-    expect(find.text('Continue with Apple'), findsOneWidget);
-    expect(find.text('or with your email'), findsOneWidget);
+    expect(find.text(robot.strings.appleButton), findsOneWidget);
+    expect(find.text(robot.strings.orWithEmail), findsOneWidget);
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
   testWidgets('meets accessibility guidelines in both modes', (tester) async {

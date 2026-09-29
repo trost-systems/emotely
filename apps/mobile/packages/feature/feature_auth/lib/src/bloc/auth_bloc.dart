@@ -96,7 +96,7 @@ class AuthBloc({
       unawaited(_errors.codeRequestFailed(error, stackTrace));
       emit(
         AuthState.signedOut(
-          error: _describe(error, fallback: couldNotSendMessage),
+          problem: _problem(error, fallback: SignInProblem.couldNotSend),
         ),
       );
     }
@@ -122,11 +122,15 @@ class AuthBloc({
           unawaited(_lastSignIn.remember(SignInOption.emailCode));
           _signedIn(session.user, emit);
         } else {
-          _rejected(email, wrongCodeMessage, emit);
+          _rejected(email, SignInProblem.wrongCode, emit);
         }
       } on Exception catch (error, stackTrace) {
         unawaited(_errors.codeVerifyFailed(error, stackTrace));
-        _rejected(email, _describe(error, fallback: wrongCodeMessage), emit);
+        _rejected(
+          email,
+          _problem(error, fallback: SignInProblem.wrongCode),
+          emit,
+        );
       }
     }
   }
@@ -154,7 +158,7 @@ class AuthBloc({
         unawaited(_errors.passwordSignInFailed(error, stackTrace));
         _passwordRefused(
           email,
-          _describe(error, fallback: wrongPasswordMessage),
+          _problem(error, fallback: SignInProblem.wrongPassword),
           emit,
         );
       }
@@ -199,7 +203,7 @@ class AuthBloc({
       );
       emit(
         AuthState.signedOut(
-          error: _describe(error, fallback: providerFailedMessage),
+          problem: _problem(error, fallback: SignInProblem.providerFailed),
         ),
       );
     }
@@ -268,14 +272,18 @@ class AuthBloc({
     }
   }
 
-  void _rejected(String email, String error, Emitter<AuthState> emit) {
+  void _rejected(String email, SignInProblem problem, Emitter<AuthState> emit) {
     unawaited(_analytics.codeRejected());
-    emit(AuthState.codeSent(email: email, error: error));
+    emit(AuthState.codeSent(email: email, problem: problem));
   }
 
-  void _passwordRefused(String email, String error, Emitter<AuthState> emit) {
+  void _passwordRefused(
+    String email,
+    SignInProblem problem,
+    Emitter<AuthState> emit,
+  ) {
     unawaited(_analytics.passwordFailed());
-    emit(AuthState.passwordRequired(email: email, error: error));
+    emit(AuthState.passwordRequired(email: email, problem: problem));
   }
 
   void _signedIn(User user, Emitter<AuthState> emit) =>
@@ -310,39 +318,26 @@ class AuthBloc({
     ),
   );
 
-  /// User-facing copy for the failures a sign-in can hit; the raw message
-  /// never reaches the screen. Anything Supabase refused that is not a rate
-  /// limit is the step's own [fallback]. The two limits are GoTrue's, per
-  /// IP: the email one for sending codes, the request one on every sign-in
-  /// bucket (`sign_in_sign_ups`, `token_verifications`) — where a
-  /// credential may well be right, so it must not be called wrong.
-  static String _describe(Exception error, {required String fallback}) =>
-      switch (error) {
-        AuthApiException(errorCode: 'over_email_send_rate_limit') =>
-          tooManyCodesMessage,
-        AuthApiException(errorCode: 'over_request_rate_limit') =>
-          tooManyAttemptsMessage,
-        // A code asked for with `shouldCreateUser: false` for an address
-        // with no account: GoTrue refuses the sign-up it would take.
-        AuthApiException(errorCode: 'otp_disabled') => noAccountMessage,
-        AuthRetryableFetchException() => unreachableMessage,
-        _ => fallback,
-      };
-
-  static const tooManyCodesMessage =
-      'Too many codes were requested. Please try again later.';
-  static const tooManyAttemptsMessage =
-      'Too many attempts. Wait a few minutes and try again.';
-  static const couldNotSendMessage =
-      'Could not send a code to that email. Check the address and try again.';
-  static const wrongCodeMessage =
-      'That code is wrong or has expired. Request a new one if needed.';
-  static const wrongPasswordMessage = 'That password was not accepted.';
-  static const unreachableMessage = 'Could not reach the sign-in service.';
-  static const noAccountMessage =
-      'I don’t know this email yet – tap Get started to begin.';
-  static const providerFailedMessage =
-      'That sign-in did not go through. Try again, or use your email.';
+  /// What the user can make of a failed sign-in step; the screen words it,
+  /// and the raw message never reaches it. Anything Supabase refused that is
+  /// not a rate limit is the step's own [fallback]. The two limits are
+  /// GoTrue's, per IP: the email one for sending codes, the request one on
+  /// every sign-in bucket (`sign_in_sign_ups`, `token_verifications`) —
+  /// where a credential may well be right, so it must not be called wrong.
+  static SignInProblem _problem(
+    Exception error, {
+    required SignInProblem fallback,
+  }) => switch (error) {
+    AuthApiException(errorCode: 'over_email_send_rate_limit') =>
+      SignInProblem.tooManyCodes,
+    AuthApiException(errorCode: 'over_request_rate_limit') =>
+      SignInProblem.tooManyAttempts,
+    // A code asked for with `shouldCreateUser: false` for an address with
+    // no account: GoTrue refuses the sign-up it would take.
+    AuthApiException(errorCode: 'otp_disabled') => SignInProblem.noAccount,
+    AuthRetryableFetchException() => SignInProblem.unreachable,
+    _ => fallback,
+  };
 
   @override
   Future<void> close() async {

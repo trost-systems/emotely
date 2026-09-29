@@ -1,11 +1,13 @@
 import 'dart:async';
 
 import 'package:feature_auth/src/bloc/auth_bloc.dart';
+import 'package:feature_auth/src/l10n/l10n.dart';
 import 'package:feature_auth/src/last_sign_in/last_sign_in_bloc.dart';
 import 'package:feature_auth/src/last_sign_in/last_sign_in_store.dart';
 import 'package:feature_auth/src/navigator.dart';
 import 'package:feature_auth/src/view/last_used_tag.dart';
 import 'package:feature_auth/src/view/provider_buttons.dart';
+import 'package:feature_auth/src/view/sign_in_error.dart';
 import 'package:feature_auth/src/view/sign_in_heading.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -37,22 +39,6 @@ class const SignInPage({final SignInMode mode = SignInMode.signIn, super.key})
   static const headingKey = Key('sign_in_page.heading');
   static const googleKey = ProviderButtons.googleKey;
   static const appleKey = ProviderButtons.appleKey;
-
-  static const tooManyCodesMessage = AuthBloc.tooManyCodesMessage;
-  static const tooManyAttemptsMessage = AuthBloc.tooManyAttemptsMessage;
-  static const couldNotSendMessage = AuthBloc.couldNotSendMessage;
-  static const wrongCodeMessage = AuthBloc.wrongCodeMessage;
-  static const wrongPasswordMessage = AuthBloc.wrongPasswordMessage;
-  static const unreachableMessage = AuthBloc.unreachableMessage;
-  static const providerFailedMessage = AuthBloc.providerFailedMessage;
-  static const noAccountMessage = AuthBloc.noAccountMessage;
-
-  static String signUpTitle(String? name) =>
-      name == null ? 'Almost there' : 'Almost there, $name';
-  static const signUpBody =
-      'Create your account so your reflections stay safe – and with you on '
-      'any phone.';
-  static const signInTitle = 'Welcome back';
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +84,7 @@ class const SignInPage({final SignInMode mode = SignInMode.signIn, super.key})
                   TextButton(
                     key: privacyNoticeKey,
                     onPressed: () => unawaited(openPrivacyNotice()),
-                    child: const Text(privacyNoticeLabel),
+                    child: Text(context.l10n.privacyNoticeButton),
                   ),
                 ],
               ),
@@ -115,17 +101,17 @@ class const _Step({required final SignInMode mode}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocBuilder<AuthBloc, AuthState>(
     builder: (context, state) => switch (state) {
-      AuthSignedOut(:final error) => _EmailStep(mode: mode, error: error),
+      AuthSignedOut(:final problem) => _EmailStep(mode: mode, problem: problem),
       AuthRequestingCode() => _EmailStep(mode: mode, busy: true),
       AuthSigningInWith() => _EmailStep(mode: mode, busy: true),
-      AuthCodeSent(:final email, :final error) => _CodeStep(
+      AuthCodeSent(:final email, :final problem) => _CodeStep(
         email: email,
-        error: error,
+        problem: problem,
       ),
       AuthVerifying(:final email) => _CodeStep(email: email, busy: true),
-      AuthPasswordRequired(:final email, :final error) => _PasswordStep(
+      AuthPasswordRequired(:final email, :final problem) => _PasswordStep(
         email: email,
-        error: error,
+        problem: problem,
       ),
       AuthCheckingPassword(:final email) => _PasswordStep(
         email: email,
@@ -138,7 +124,7 @@ class const _Step({required final SignInMode mode}) extends StatelessWidget {
 
 class const _EmailStep({
   required final SignInMode mode,
-  final String? error,
+  final SignInProblem? problem,
   final bool busy = false,
 }) extends StatefulWidget {
   @override
@@ -177,14 +163,14 @@ class _EmailStepState() extends State<_EmailStep> {
         autofillHints: const [AutofillHints.email],
         keyboardType: TextInputType.emailAddress,
         autocorrect: false,
-        decoration: const InputDecoration(
-          labelText: 'Email address',
-          hintText: 'you@example.com',
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          labelText: context.l10n.emailLabel,
+          hintText: context.l10n.emailHint,
+          border: const OutlineInputBorder(),
         ),
         onChanged: (_) => setState(() {}),
       ),
-      _ErrorText(widget.error),
+      SignInError(widget.problem),
       if (widget.busy)
         const _Busy()
       else
@@ -205,10 +191,10 @@ class _EmailStepState() extends State<_EmailStep> {
 /// The email's way on, tagged when the email was the way in last time.
 class const _SendCode({required final VoidCallback? onPressed})
     extends StatelessWidget {
-  static const label = 'Send me a code';
-
   @override
   Widget build(BuildContext context) {
+    final strings = context.l10n;
+    final label = strings.sendCodeButton;
     final lastUsed =
         context.watch<LastSignInBloc>().state == SignInOption.emailCode;
     final button = FilledButton.tonal(
@@ -217,7 +203,7 @@ class const _SendCode({required final VoidCallback? onPressed})
       onPressed: onPressed,
       child: Text(
         label,
-        semanticsLabel: lastUsed ? LastUsedTag.lastUsedLabel(label) : null,
+        semanticsLabel: lastUsed ? strings.lastUsedButton(label) : null,
       ),
     );
     return lastUsed ? LastUsedTag(child: button) : button;
@@ -226,7 +212,7 @@ class const _SendCode({required final VoidCallback? onPressed})
 
 class const _CodeStep({
   required final String email,
-  final String? error,
+  final SignInProblem? problem,
   final bool busy = false,
 }) extends StatefulWidget {
   static const codeLength = 6;
@@ -256,7 +242,7 @@ class _CodeStepState() extends State<_CodeStep> {
     spacing: 16,
     children: [
       Text(
-        'We sent a code to ${widget.email}.',
+        context.l10n.codeSentMessage(widget.email),
         style: Theme.of(context).textTheme.bodyLarge,
       ),
       TextField(
@@ -266,10 +252,10 @@ class _CodeStepState() extends State<_CodeStep> {
         autofillHints: const [AutofillHints.oneTimeCode],
         keyboardType: TextInputType.number,
         maxLength: _CodeStep.codeLength,
-        decoration: const InputDecoration(labelText: 'Code'),
+        decoration: InputDecoration(labelText: context.l10n.codeLabel),
         onChanged: (_) => setState(() {}),
       ),
-      _ErrorText(widget.error),
+      SignInError(widget.problem),
       if (widget.busy)
         const _Busy()
       else
@@ -288,7 +274,7 @@ class _CodeStepState() extends State<_CodeStep> {
 /// suggested or corrected, and submitted from the keyboard's "done" too.
 class const _PasswordStep({
   required final String email,
-  final String? error,
+  final SignInProblem? problem,
   final bool busy = false,
 }) extends StatefulWidget {
   @override
@@ -315,7 +301,7 @@ class _PasswordStepState() extends State<_PasswordStep> {
     spacing: 16,
     children: [
       Text(
-        'Enter the password for ${widget.email}.',
+        context.l10n.passwordPrompt(widget.email),
         style: Theme.of(context).textTheme.bodyLarge,
       ),
       TextField(
@@ -328,13 +314,13 @@ class _PasswordStepState() extends State<_PasswordStep> {
         autofillHints: const [AutofillHints.password],
         keyboardType: TextInputType.visiblePassword,
         textInputAction: TextInputAction.done,
-        decoration: const InputDecoration(labelText: 'Password'),
+        decoration: InputDecoration(labelText: context.l10n.passwordLabel),
         onChanged: (_) => setState(() {}),
         // The field is disabled while a check is in flight, so "done"
         // cannot submit twice.
         onSubmitted: (_) => _password.isEmpty ? null : _submit(),
       ),
-      _ErrorText(widget.error),
+      SignInError(widget.problem),
       if (widget.busy)
         const _Busy()
       else
@@ -359,29 +345,17 @@ class const _StepActions({
       FilledButton(
         key: signInKey,
         onPressed: onSignIn,
-        child: const Text('Sign in'),
+        child: Text(context.l10n.signInButton),
       ),
       TextButton(
         key: SignInPage.changeEmailKey,
         onPressed: () => context.read<AuthBloc>().add(
           const AuthEvent.emailChangeRequested(),
         ),
-        child: const Text('Use a different email'),
+        child: Text(context.l10n.changeEmailButton),
       ),
     ],
   );
-}
-
-class const _ErrorText(final String? message) extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => switch (message) {
-    null => const SizedBox.shrink(),
-    final message => Text(
-      message,
-      key: SignInPage.errorKey,
-      style: TextStyle(color: Theme.of(context).colorScheme.error),
-    ),
-  };
 }
 
 class const _Busy() extends StatelessWidget {

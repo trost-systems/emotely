@@ -1,0 +1,135 @@
+{
+  "@@locale": "en",
+  "signUpTitle": "Almost there",
+  "@signUpTitle": {
+    "description": "Sign-in screen heading when it is the last step of onboarding and the user skipped telling us their name. The account is about to be created."
+  },
+  "signUpTitleWithName": "Almost there, {name}",
+  "@signUpTitleWithName": {
+    "description": "Sign-in screen heading when it is the last step of onboarding, greeting the user by the name they typed a step earlier. The account is about to be created.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Peter"
+      }
+    }
+  },
+  "signUpBody": "Create your account so your reflections stay safe – and with you on any phone.",
+  "@signUpBody": {
+    "description": "Sign-in screen, last step of onboarding: under the heading, why the user should create an account now. \"Reflections\" are the user's journal entries."
+  },
+  "signInTitle": "Welcome back",
+  "@signInTitle": {
+    "description": "Sign-in screen heading when a returning user tapped \"I have an account\" on the welcome screen."
+  },
+  "privacyNoticeButton": "Privacy notice",
+  "@privacyNoticeButton": {
+    "description": "Sign-in screen, link at the bottom that opens emotely's privacy notice in the browser, reachable before an account exists."
+  },
+  "appleButton": "Continue with Apple",
+  "@appleButton": {
+    "description": "Sign-in screen, iOS only: the label of Apple's own sign-in button. Use Apple's official wording for \"Continue with Apple\" in the target language."
+  },
+  "googleButton": "Sign in with Google",
+  "@googleButton": {
+    "description": "Sign-in screen: what a screen reader announces for Google's sign-in button. The button itself is Google's image with its label baked in, in English; use Google's official wording for \"Sign in with Google\" in the target language."
+  },
+  "lastUsedTag": "Last used",
+  "@lastUsedTag": {
+    "description": "Sign-in screen: a small pill on the edge of the sign-in button the user used last on this phone (Apple, Google or the email code), to remind them which one they picked. Keep it very short."
+  },
+  "lastUsedButton": "{button}, last used",
+  "@lastUsedButton": {
+    "description": "Sign-in screen: what a screen reader announces for the sign-in button the user used last on this phone, the button's own label followed by the \"Last used\" pill's words.",
+    "placeholders": {
+      "button": {
+        "type": "String",
+        "example": "Sign in with Google"
+      }
+    }
+  },
+  "orWithEmail": "or with your email",
+  "@orWithEmail": {
+    "description": "Sign-in screen: a small label in a horizontal rule between the Apple and Google buttons above and the email field below. Lower case: it continues the buttons above it."
+  },
+  "emailLabel": "Email address",
+  "@emailLabel": {
+    "description": "Sign-in screen, first step: the label of the field for the email address a sign-in code is sent to."
+  },
+  "emailHint": "you@example.com",
+  "@emailHint": {
+    "description": "Sign-in screen, first step: the example shown in the empty email field. Keep the reserved domain example.com; only the part before the @ may change, to the target language's \"you\"."
+  },
+  "sendCodeButton": "Send me a code",
+  "@sendCodeButton": {
+    "description": "Sign-in screen, first step: button that emails a six-digit sign-in code to the address typed above it."
+  },
+  "codeSentMessage": "We sent a code to {email}.",
+  "@codeSentMessage": {
+    "description": "Sign-in screen, second step: tells the user a six-digit code is on its way to their address, above the field to type it into.",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "you@example.com"
+      }
+    }
+  },
+  "codeLabel": "Code",
+  "@codeLabel": {
+    "description": "Sign-in screen, second step: the label of the field for the six-digit code from the email."
+  },
+  "passwordPrompt": "Enter the password for {email}.",
+  "@passwordPrompt": {
+    "description": "Sign-in screen, second step for the app stores' review accounts only: asks for the account's password instead of a code.",
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "app-store-review@getemotely.com"
+      }
+    }
+  },
+  "passwordLabel": "Password",
+  "@passwordLabel": {
+    "description": "Sign-in screen, second step for the app stores' review accounts: the label of the password field."
+  },
+  "signInButton": "Sign in",
+  "@signInButton": {
+    "description": "Sign-in screen, second step: button that signs in with the code (or the review account's password) just typed."
+  },
+  "changeEmailButton": "Use a different email",
+  "@changeEmailButton": {
+    "description": "Sign-in screen, second step: button that goes back to the first step to type another email address."
+  },
+  "tooManyCodesMessage": "Too many codes were requested. Please try again later.",
+  "@tooManyCodesMessage": {
+    "description": "Sign-in screen error, first step: the sign-in service refused to send another code because too many were sent recently."
+  },
+  "tooManyAttemptsMessage": "Too many attempts. Wait a few minutes and try again.",
+  "@tooManyAttemptsMessage": {
+    "description": "Sign-in screen error, any step: the sign-in service is rate-limiting this device. What the user typed may well be right, so it must not sound like a wrong code or password."
+  },
+  "couldNotSendMessage": "Could not send a code to that email. Check the address and try again.",
+  "@couldNotSendMessage": {
+    "description": "Sign-in screen error, first step: the sign-in service refused to send a code to the address typed, most likely because it is not a real address."
+  },
+  "wrongCodeMessage": "That code is wrong or has expired. Request a new one if needed.",
+  "@wrongCodeMessage": {
+    "description": "Sign-in screen error, second step: the six-digit code the user typed did not sign them in."
+  },
+  "wrongPasswordMessage": "That password was not accepted.",
+  "@wrongPasswordMessage": {
+    "description": "Sign-in screen error, second step for the app stores' review accounts: the password did not sign them in."
+  },
+  "unreachableMessage": "Could not reach the sign-in service.",
+  "@unreachableMessage": {
+    "description": "Sign-in screen error, any step: no answer from the sign-in service at all (offline, timeout)."
+  },
+  "noAccountMessage": "I don’t know this email yet – tap Get started to begin.",
+  "@noAccountMessage": {
+    "description": "Sign-in screen error, first step, for a returning user: there is no account for this address. emotely speaks as \"I\". \"Get started\" is the welcome screen's first button, which begins onboarding; quote it exactly as that button is translated."
+  },
+  "providerFailedMessage": "That sign-in did not go through. Try again, or use your email.",
+  "@providerFailedMessage": {
+    "description": "Sign-in screen error, first step: signing in with Apple or Google failed (not a dismissal). The email code below is the other way in."
+  }
+}

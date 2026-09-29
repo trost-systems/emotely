@@ -25,6 +25,7 @@ void main() {
           // The auth bloc sits above every screen in the app.
           above: (_, child) =>
               BlocProvider(create: (_) => GetIt.I<AuthBloc>(), child: child),
+          localizations: SignInRobot.localizations,
         ),
       );
       await tester.pumpAndSettle();

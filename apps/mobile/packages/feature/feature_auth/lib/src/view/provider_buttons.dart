@@ -1,4 +1,5 @@
 import 'package:feature_auth/src/bloc/auth_bloc.dart';
+import 'package:feature_auth/src/l10n/l10n.dart';
 import 'package:feature_auth/src/last_sign_in/last_sign_in_store.dart';
 import 'package:feature_auth/src/providers/provider_sign_in.dart';
 import 'package:feature_auth/src/view/last_used_tag.dart';
@@ -53,13 +54,14 @@ class const ProviderButtons({
 /// Google's own rendering of its button — the standard "G" may not be
 /// redrawn or recoloured — from Google's sign-in assets (Android + Web,
 /// pill, light or dark with the theme).
+///
+/// The image says "Sign in with Google" in English whatever the locale;
+/// only what a screen reader announces follows the user's language (#217).
 class const GoogleSignInButton({
   required final VoidCallback? onPressed,
   super.key,
   final bool lastUsed = false,
 }) extends StatelessWidget {
-  static const label = 'Sign in with Google';
-
   /// The assets' own size at 1x: fixed, so the button takes its place
   /// before the image has decoded, and never scales the "G".
   static const size = Size(180, 40);
@@ -73,6 +75,7 @@ class const GoogleSignInButton({
       Brightness.dark => 'dark',
       Brightness.light => 'light',
     };
+    final strings = context.l10n;
     // One node for assistive technology: the ink well's tap and the
     // image's label, announced as a button.
     return MergeSemantics(
@@ -94,8 +97,8 @@ class const GoogleSignInButton({
                   width: size.width,
                   height: size.height,
                   semanticLabel: lastUsed
-                      ? LastUsedTag.lastUsedLabel(label)
-                      : label,
+                      ? strings.lastUsedButton(strings.googleButton)
+                      : strings.googleButton,
                 ),
               ),
             ),
@@ -117,27 +120,30 @@ class const _AppleButton({
   final bool lastUsed = false,
 }) extends StatelessWidget {
   static const height = 48.0;
-  static const label = 'Continue with Apple';
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    button: true,
-    enabled: onPressed != null,
-    onTap: onPressed,
-    label: lastUsed ? LastUsedTag.lastUsedLabel(label) : label,
-    excludeSemantics: true,
-    child: SignInWithAppleButton(
-      key: ProviderButtons.appleKey,
-      text: label,
-      onPressed: onPressed,
-      height: height,
-      borderRadius: const BorderRadius.all(Radius.circular(height / 2)),
-      style: switch (Theme.of(context).brightness) {
-        Brightness.dark => SignInWithAppleButtonStyle.white,
-        Brightness.light => SignInWithAppleButtonStyle.black,
-      },
-    ),
-  );
+  Widget build(BuildContext context) {
+    final strings = context.l10n;
+    final label = strings.appleButton;
+    return Semantics(
+      button: true,
+      enabled: onPressed != null,
+      onTap: onPressed,
+      label: lastUsed ? strings.lastUsedButton(label) : label,
+      excludeSemantics: true,
+      child: SignInWithAppleButton(
+        key: ProviderButtons.appleKey,
+        text: label,
+        onPressed: onPressed,
+        height: height,
+        borderRadius: const BorderRadius.all(Radius.circular(height / 2)),
+        style: switch (Theme.of(context).brightness) {
+          Brightness.dark => SignInWithAppleButtonStyle.white,
+          Brightness.light => SignInWithAppleButtonStyle.black,
+        },
+      ),
+    );
+  }
 }
 
 /// A rule with "or with your email" in it, between the providers and the
@@ -151,7 +157,7 @@ class const OrWithEmail({super.key}) extends StatelessWidget {
       children: [
         const Expanded(child: Divider()),
         Text(
-          'or with your email',
+          context.l10n.orWithEmail,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

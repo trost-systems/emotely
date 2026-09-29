@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:feature_auth/src/bloc/auth_bloc.dart';
 import 'package:feature_auth/src/providers/provider_sign_in.dart';
-import 'package:feature_auth/src/view/sign_in_page.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/semantics.dart' show SemanticsAction;
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -164,7 +163,10 @@ void main() {
       await robot.settle();
 
       expect(robot.emailField, findsOneWidget);
-      expect(robot.errorText, SignInPage.providerFailedMessage);
+      robot.expectError(
+        SignInProblem.providerFailed,
+        robot.strings.providerFailedMessage,
+      );
       expect(robot.analytics.exceptions, [
         captured(withheld(GoogleSignInException), {
           'step': 'sign_in_provider',
@@ -197,7 +199,10 @@ void main() {
       await robot.settle();
 
       expect(robot.signIn, findsOneWidget);
-      expect(robot.errorText, SignInPage.providerFailedMessage);
+      robot.expectError(
+        SignInProblem.providerFailed,
+        robot.strings.providerFailedMessage,
+      );
       expect(robot.analytics.exceptions, [
         captured(
           withheld(
@@ -221,7 +226,10 @@ void main() {
       await robot.tapGoogle();
       await robot.settle();
 
-      expect(robot.errorText, SignInPage.unreachableMessage);
+      robot.expectError(
+        SignInProblem.unreachable,
+        robot.strings.unreachableMessage,
+      );
     });
 
     testWidgets('signing out signs out of Google too', (tester) async {
@@ -349,7 +357,10 @@ void main() {
       await robot.tapApple();
       await robot.settle();
 
-      expect(robot.errorText, SignInPage.providerFailedMessage);
+      robot.expectError(
+        SignInProblem.providerFailed,
+        robot.strings.providerFailedMessage,
+      );
       expect(supabase.to('POST /auth/v1/token'), isEmpty);
       expect(robot.analytics.events, [
         event('sign_in_provider_failed', {'provider': 'apple'}),
@@ -370,7 +381,10 @@ void main() {
       await robot.tapApple();
       await robot.settle();
 
-      expect(robot.errorText, SignInPage.providerFailedMessage);
+      robot.expectError(
+        SignInProblem.providerFailed,
+        robot.strings.providerFailedMessage,
+      );
       expect(
         robot.analytics.outgoingStrings,
         everyElement(isNot(contains('needle'))),
@@ -423,8 +437,8 @@ void main() {
     );
     await robot.launch();
 
-    expect(find.bySemanticsLabel('Sign in with Google'), findsOneWidget);
-    expect(find.bySemanticsLabel('Continue with Apple'), findsOneWidget);
+    expect(find.bySemanticsLabel(robot.strings.googleButton), findsOneWidget);
+    expect(find.bySemanticsLabel(robot.strings.appleButton), findsOneWidget);
   }, variant: iOS);
 
   testWidgets('a screen reader can press the Google button', (tester) async {
@@ -443,7 +457,7 @@ void main() {
     tester.semantics.tap(
       find.semantics.byPredicate((node) {
         final data = node.getSemanticsData();
-        return data.label == 'Sign in with Google' &&
+        return data.label == robot.strings.googleButton &&
             data.hasAction(SemanticsAction.tap);
       }),
     );

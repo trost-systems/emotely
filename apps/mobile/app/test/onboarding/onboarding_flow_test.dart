@@ -73,6 +73,10 @@ void main() {
   String heading(WidgetTester tester) =>
       tester.widget<Text>(key(SignInPage.headingKey)).data!;
 
+  /// The sign-in screen's strings, in the locale the app shows it in.
+  AuthLocalizations signInStrings(WidgetTester tester) =>
+      AuthLocalizations.of(tester.element(find.byType(SignInPage)));
+
   group('a first launch', () {
     testWidgets('walks onboarding, signs up as "Almost there, {name}", '
         'saves the name and goes straight to the first session', (
@@ -93,7 +97,10 @@ void main() {
 
       await tap(tester, key(HelloStepView.startKey));
 
-      expect(heading(tester), 'Almost there, Peter');
+      expect(
+        heading(tester),
+        signInStrings(tester).signUpTitleWithName('Peter'),
+      );
 
       await signUpWithCode(tester);
 
@@ -133,7 +140,10 @@ void main() {
       final placeholder = GetIt.I<OnboardingStore>().progress.placeholder!;
       await tap(tester, key(SkippedStepView.startKey));
 
-      expect(heading(tester), 'Almost there, $placeholder');
+      expect(
+        heading(tester),
+        signInStrings(tester).signUpTitleWithName(placeholder),
+      );
 
       await signUpWithCode(tester);
 
@@ -183,7 +193,10 @@ void main() {
         },
       );
 
-      expect(heading(tester), 'Almost there, Peter');
+      expect(
+        heading(tester),
+        signInStrings(tester).signUpTitleWithName('Peter'),
+      );
     });
   });
 
@@ -204,14 +217,14 @@ void main() {
 
       await tap(tester, key(WelcomeStepView.haveAccountKey));
 
-      expect(heading(tester), 'Welcome back');
+      expect(heading(tester), signInStrings(tester).signInTitle);
 
       await tester.enterText(key(SignInPage.emailKey), 'new@example.com');
       await tester.pump();
       await tap(tester, key(SignInPage.sendCodeKey));
 
       expect(supabase.bodies('/auth/v1/otp').single['create_user'], isFalse);
-      expect(find.text(SignInPage.noAccountMessage), findsOneWidget);
+      expect(find.text(signInStrings(tester).noAccountMessage), findsOneWidget);
 
       await tap(tester, key(SignInPage.backKey));
 
@@ -314,8 +327,12 @@ void main() {
     await tap(tester, key(UsageAnalyticsSheet.denyKey));
     await tap(tester, key(WelcomeStepView.haveAccountKey));
 
-    expect(find.text('Last used'), findsOneWidget);
-    expect(find.bySemanticsLabel('Send me a code, last used'), findsOneWidget);
+    final strings = signInStrings(tester);
+    expect(find.text(strings.lastUsedTag), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(strings.lastUsedButton(strings.sendCodeButton)),
+      findsOneWidget,
+    );
     semantics.dispose();
   });
 }
