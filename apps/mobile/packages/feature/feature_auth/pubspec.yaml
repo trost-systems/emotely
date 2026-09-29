@@ -44,7 +44,7 @@ flutter:
   # gen-l10n: the feature's own strings, from l10n/ (l10n.yaml, ADR 0020).
   generate: true
 
-  # Google's own sign-in button (the "G" may not be redrawn), from its
-  # branding assets; 2.0x-4.0x variants sit in subdirectories.
+  # Google's standard "G" (it may not be redrawn or recoloured), cropped
+  # from its branding assets; 2.0x-4.0x variants sit in subdirectories.
   assets:
     - assets/google/

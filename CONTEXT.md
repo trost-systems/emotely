@@ -166,3 +166,8 @@ one word each on every screen and in every language.
 | privacy notice | die Datenschutzerklärung | "Datenschutzhinweise" |
 | privacy settings | die Datenschutzeinstellungen | |
 | reflection (onboarding's word for a session) | die Reflexion | |
+| "Continue with Apple" (the sign-in button; Apple's own title) | „Mit Apple fortfahren“ | "Weiter mit Apple", any title Apple does not publish |
+| "Continue with Google" (the sign-in button; Google's own label) | „Weiter mit Google“ | "Mit Google fortfahren", any label Google does not publish |
+
+The two sign-in buttons read differently in German because each is the
+provider's own translation; neither may be reworded to match the other.

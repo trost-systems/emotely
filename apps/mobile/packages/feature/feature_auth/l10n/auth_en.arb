@@ -28,11 +28,11 @@
   },
   "appleButton": "Continue with Apple",
   "@appleButton": {
-    "description": "Sign-in screen, iOS only: the label of Apple's own sign-in button. Use Apple's official wording for \"Continue with Apple\" in the target language."
+    "description": "Sign-in screen, iOS only: the title of the Sign in with Apple button, after Apple's logo. Apple allows only its own titles: use Apple's official translation of \"Continue with Apple\" in the target language, never a free one."
   },
-  "googleButton": "Sign in with Google",
+  "googleButton": "Continue with Google",
   "@googleButton": {
-    "description": "Sign-in screen: what a screen reader announces for Google's sign-in button. The button itself is Google's image with its label baked in, in English; use Google's official wording for \"Sign in with Google\" in the target language."
+    "description": "Sign-in screen: the title of the Sign in with Google button, after Google's \"G\". Google allows only its own labels: use Google's official translation of \"Continue with Google\" in the target language, never a free one."
   },
   "lastUsedTag": "Last used",
   "@lastUsedTag": {
@@ -44,7 +44,7 @@
     "placeholders": {
       "button": {
         "type": "String",
-        "example": "Sign in with Google"
+        "example": "Continue with Google"
       }
     }
   },
