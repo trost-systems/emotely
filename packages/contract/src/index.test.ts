@@ -170,10 +170,10 @@ describe("advance_session request", () => {
       user_context: { display_name: "Maya", name_is_placeholder: false },
     };
     assert.deepEqual(advanceSessionRequest.parse(named), named);
-    const nicknamed = {
+    const placeholder = {
       user_context: { display_name: "Pebble", name_is_placeholder: true },
     };
-    assert.deepEqual(advanceSessionRequest.parse(nicknamed), nicknamed);
+    assert.deepEqual(advanceSessionRequest.parse(placeholder), placeholder);
     // Every member is optional, so the object can grow (#204).
     assert.deepEqual(advanceSessionRequest.parse({ user_context: {} }), {
       user_context: {},

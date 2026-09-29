@@ -4,7 +4,7 @@ import type { QuestionSet, UserContext } from "./session.ts";
 // PostHog events pin against this id. Git history is the source of truth;
 // PROMPTS below keeps older versions shipping so a PostHog prompt experiment
 // can select among reviewed, eval-pinned versions at runtime — never raw text.
-export const PROMPT_ID = "session/v2";
+export const PROMPT_ID = "session/v3";
 
 /** The first prompt: the protocol alone, knowing nothing about the user. */
 const sessionPromptV1 = (
@@ -24,28 +24,55 @@ ${set.questions.map((q) => `${q.id}: ${q.text} (answer_type: ${q.answer_type}${q
  * user typed, and it must read as a name, never as part of the instructions.
  * The contract already keeps it to one short line.
  */
-function addressing(context: UserContext | undefined): string | undefined {
+function addressing(
+  context: UserContext | undefined,
+  placeholder: (quoted: string) => string,
+): string | undefined {
   const name = context?.displayName;
   if (name === undefined) {
     return undefined;
   }
   const quoted = JSON.stringify(name);
   if (context?.nameIsPlaceholder === true) {
-    return `The user preferred not to share their name, so emotely picked a playful nickname for them: ${quoted}. It is not their real name — use it lightly and warmly, at most when greeting them and perhaps once more, as a friendly in-joke rather than a label. Never ask for their real name. If they bring up their name, it is fine to say they can tell you their real name in their profile.`;
+    return placeholder(quoted);
   }
   return `The user's name is ${quoted}. Use it naturally and sparingly — when greeting them and now and then after, never in every message. Never ask for their name; you already have it.`;
 }
+
+/** v2's words for a placeholder, which call it a nickname. */
+const placeholderV2 = (quoted: string): string =>
+  `The user preferred not to share their name, so emotely picked a playful nickname for them: ${quoted}. It is not their real name — use it lightly and warmly, at most when greeting them and perhaps once more, as a friendly in-joke rather than a label. Never ask for their real name. If they bring up their name, it is fine to say they can tell you their real name in their profile.`;
+
+/**
+ * v3's words for a placeholder: the name emotely picked (CONTEXT.md,
+ * "Placeholder name"). The name step asks for "a first name or a nickname",
+ * so a nickname is a name the user gives themselves, never emotely's pick.
+ */
+const placeholderV3 = (quoted: string): string =>
+  `The user preferred not to share their name, so emotely picked a playful stand-in name for them: ${quoted}. It is not their real name — use it lightly and warmly, at most when greeting them and perhaps once more, as a friendly in-joke rather than a label. If it comes up, call it the name emotely picked for them. Never ask for their real name. If they bring up their name, it is fine to say they can tell you their real name in their profile.`;
+
+/** The protocol, then how to address the user when the app says who they are. */
+const withAddressing = (
+  set: QuestionSet,
+  context: UserContext | undefined,
+  placeholder: (quoted: string) => string,
+): string => {
+  const base = sessionPromptV1(set);
+  const address = addressing(context, placeholder);
+  return address === undefined ? base : `${base}\n\n${address}`;
+};
 
 /**
  * v1's protocol, plus who the user is when the app says so. Without a name
  * it is v1 word for word, so an app that sends no context behaves exactly as
  * before.
  */
-const sessionPromptV2 = (set: QuestionSet, context?: UserContext): string => {
-  const base = sessionPromptV1(set);
-  const address = addressing(context);
-  return address === undefined ? base : `${base}\n\n${address}`;
-};
+const sessionPromptV2 = (set: QuestionSet, context?: UserContext): string =>
+  withAddressing(set, context, placeholderV2);
+
+/** v2, except that a placeholder is the name emotely picked, not a nickname. */
+const sessionPromptV3 = (set: QuestionSet, context?: UserContext): string =>
+  withAddressing(set, context, placeholderV3);
 
 /**
  * Builds the system prompt for one round. It takes the whole user context
@@ -57,7 +84,8 @@ export type PromptBuilder = (set: QuestionSet, context?: UserContext) => string;
 /** Every prompt version this build can serve; add a line when one changes. */
 export const PROMPTS: Record<string, PromptBuilder> = {
   "session/v1": sessionPromptV1,
-  [PROMPT_ID]: sessionPromptV2,
+  "session/v2": sessionPromptV2,
+  [PROMPT_ID]: sessionPromptV3,
 };
 
 /**
@@ -75,5 +103,5 @@ export function resolvePrompt(
       return { id: requested, build };
     }
   }
-  return { id: PROMPT_ID, build: sessionPromptV2 };
+  return { id: PROMPT_ID, build: sessionPromptV3 };
 }

@@ -84,7 +84,7 @@ export function describeUserContext(context: UserContext | undefined): string {
     return "The assistant was told nothing about the user, not even a name.";
   }
   return context?.nameIsPlaceholder === true
-    ? `The user preferred not to share a name, so the app picked the playful nickname "${name}" for them; the assistant was told so.`
+    ? `The user preferred not to share a name, so emotely picked the playful stand-in name "${name}" for them; the assistant was told so.`
     : `The assistant was told the user's name: "${name}".`;
 }
 

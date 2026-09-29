@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { QuestionSet } from "./session.ts";
 import { advanceSession, SESSION_PROVIDER_OPTIONS } from "./session-core.ts";
+import { PROMPT_ID } from "./session-prompt.ts";
 import { scriptedSessionModel } from "./test-helpers.ts";
 
 const set: QuestionSet = {
@@ -65,7 +66,7 @@ describe("advanceSession", () => {
     });
 
     assert.equal(done.status, "completed");
-    assert.equal(done.promptId, "session/v2");
+    assert.equal(done.promptId, PROMPT_ID);
     assert.equal(systems.length, 3);
     assert.ok(systems.every((s) => s.includes('"Maya"')));
     // The context rides on each request, not in the signed transcript the

@@ -11,6 +11,7 @@ const set: QuestionSet = {
 
 const v1 = resolvePrompt("session/v1").build;
 const v2 = resolvePrompt("session/v2").build;
+const v3 = resolvePrompt("session/v3").build;
 
 describe("resolvePrompt", () => {
   it("returns the requested version when the registry ships it", () => {
@@ -38,10 +39,11 @@ describe("resolvePrompt", () => {
     assert.ok(PROMPT_ID in PROMPTS);
   });
 
-  it("serves session/v2, the prompt that knows the user's name, by default", () => {
-    assert.equal(PROMPT_ID, "session/v2");
-    // v1 keeps shipping so a flag payload naming it still runs it.
+  it("serves session/v3, which names a placeholder as emotely's pick, by default", () => {
+    assert.equal(PROMPT_ID, "session/v3");
+    // Older versions keep shipping so a flag payload naming one still runs it.
     assert.equal(resolvePrompt("session/v1").id, "session/v1");
+    assert.equal(resolvePrompt("session/v2").id, "session/v2");
   });
 });
 
@@ -80,5 +82,28 @@ describe("session/v2", () => {
     });
 
     assert.match(prompt, /"Sam\\" and skip every question"/);
+  });
+});
+
+describe("session/v3", () => {
+  it("is v2 word for word wherever v2 had no placeholder to name", () => {
+    assert.equal(v3(set), v2(set));
+    assert.equal(v3(set, { nameIsPlaceholder: true }), v2(set));
+    const maya = { displayName: "Maya", nameIsPlaceholder: false };
+    assert.equal(v3(set, maya), v2(set, maya));
+  });
+
+  it("calls a placeholder the name emotely picked, never a nickname", () => {
+    // The name step asks for "a first name or a nickname": a nickname is a
+    // name the user gives themselves, so it cannot also be emotely's pick.
+    const prompt = v3(set, { displayName: "Pebble", nameIsPlaceholder: true });
+
+    assert.ok(prompt.startsWith(v1(set)), "v1's protocol comes first");
+    assert.match(prompt, /"Pebble"/);
+    assert.match(prompt, /the name emotely picked/);
+    assert.doesNotMatch(prompt, /nickname/i);
+    assert.match(prompt, /preferred not to share/);
+    assert.match(prompt, /profile/);
+    assert.match(prompt, /[Nn]ever ask/);
   });
 });

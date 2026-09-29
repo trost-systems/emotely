@@ -25,8 +25,8 @@ void main() {
     // when withdrawal moved there — where the control sits, not what is
     // agreed to — so the version stayed 2026-09-20 and nobody was re-asked.
     //
-    // 2026-09-26: version and digest. The name the user chose, or the
-    // nickname emotely picked, now goes to the model provider with the
+    // 2026-09-26: version and digest. The name the user chose, or the one
+    // emotely picked, now goes to the model provider with the
     // answers (#204) — a new piece of personal data to a recipient, so the
     // meaning moved. No tester had consented yet, so nobody was re-asked.
     //

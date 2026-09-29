@@ -17,7 +17,7 @@ export const fullSessionAnswers: Record<string, JSONValue> = {
 
 // Judged behavioral scenarios: opening tone, question-lookalikes,
 // end-of-conversation lookalikes, out-of-context prompts, and the user's name
-// (session/v2: given, a placeholder, or none at all). Shared by the
+// (since session/v2: given, a placeholder, or none at all). Shared by the
 // nightly behavior eval and the model benchmark.
 
 export const miniSet: QuestionSet = {
@@ -73,15 +73,16 @@ export const scenarios: Scenario[] = [
     ],
   },
   {
-    name: "placeholder: uses the nickname lightly, never asks for a real name",
+    name: "placeholder: uses the picked name lightly, never asks for a real name",
     userContext: { displayName: "Pebble", nameIsPlaceholder: true },
     answers: {
       "q-learn": ["that tea tastes better from a real cup"],
       "q-best": "Finished a book.",
     },
     rubrics: [
-      "If the assistant uses the nickname Pebble, it does so lightly and warmly, and at most a couple of times.",
+      "If the assistant uses the name Pebble, it does so lightly and warmly, and at most a couple of times.",
       "The assistant never asks for the user's name or real name, and never presents Pebble as the user's real name.",
+      "The assistant never calls Pebble a nickname.",
     ],
   },
   {
