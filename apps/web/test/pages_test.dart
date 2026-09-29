@@ -6,6 +6,8 @@ import 'package:emotely_web/components/waitlist_form.dart';
 import 'package:emotely_web/pages/app_privacy.dart';
 import 'package:emotely_web/pages/beta.dart';
 import 'package:emotely_web/pages/confirm.dart';
+import 'package:emotely_web/pages/de/app_privacy.dart';
+import 'package:emotely_web/pages/de/imprint.dart';
 import 'package:emotely_web/pages/delete_account.dart';
 import 'package:emotely_web/pages/home.dart';
 import 'package:emotely_web/pages/imprint.dart';
@@ -661,6 +663,454 @@ void main() {
 
         expect(find.textContaining('pseudonymous'), findsComponents);
         expect(find.textContaining('anonymous counting'), findsNothing);
+      });
+    });
+  });
+
+  // The German notice is held to the English one's claims, one for one: each
+  // test below mirrors the English test of the same name with the German
+  // phrase, so a claim dropped or softened in translation fails here the
+  // way it would in English.
+  group('ImprintDe', () {
+    testComponents('names the operator and a contact address', (tester) {
+      tester.pumpComponent(const ImprintDe());
+
+      expect(find.text('Impressum'), findsOneComponent);
+      expect(find.textContaining('Peter Trost'), findsComponents);
+      expect(find.textContaining('hello@getemotely.com'), findsComponents);
+      expect(find.textContaining('§ 5 DDG'), findsOneComponent);
+    });
+
+    testComponents('carries the VAT ID (§ 27a UStG)', (tester) {
+      tester.pumpComponent(const ImprintDe());
+
+      expect(find.textContaining('DE369514299'), findsOneComponent);
+      expect(
+        find.textContaining('Umsatzsteuer-Identifikationsnummer'),
+        findsOneComponent,
+      );
+    });
+  });
+
+  group('AppPrivacyDe', () {
+    testComponents('names the controller and how to reach them', (tester) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.textContaining('Peter Trost'), findsComponents);
+      expect(find.textContaining('Rottenburg am Neckar'), findsComponents);
+      expect(find.textContaining('hello@getemotely.com'), findsComponents);
+    });
+
+    testComponents('links the German imprint', (tester) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(
+        find.byComponentPredicate(
+          (component) =>
+              component is DomComponent &&
+              component.attributes?['href'] == '/de/imprint',
+        ),
+        findsOneComponent,
+      );
+    });
+
+    testComponents('names the app as the Play listing still has it', (tester) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(
+        find.textContaining('Reflect Therapy AI: emotely'),
+        findsOneComponent,
+      );
+    });
+
+    testComponents('covers every category the stores ask about', (tester) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.text('Datenschutzerklärung der App'), findsOneComponent);
+      expect(find.text('Deine E-Mail-Adresse'), findsOneComponent);
+      expect(find.text('Dein Name'), findsOneComponent);
+      expect(
+        find.text('Deine Tagebucheinträge und Sessions'),
+        findsOneComponent,
+      );
+      expect(find.text('Das Gespräch mit emotely'), findsOneComponent);
+      expect(
+        find.text('Nutzungsanalyse und Absturzberichte'),
+        findsOneComponent,
+      );
+      expect(find.text('Was auf deinem Handy bleibt'), findsOneComponent);
+      expect(find.text('Wer sonst etwas davon sieht'), findsNComponents(2));
+      expect(find.text('Dein Konto löschen'), findsNComponents(2));
+      expect(find.text('Deine Rechte'), findsNComponents(2));
+      expect(find.text('Kinder'), findsNComponents(2));
+      expect(
+        find.text('Änderungen dieser Datenschutzerklärung'),
+        findsNComponents(2),
+      );
+    });
+
+    testComponents('gives a legal basis, including Art. 9 for entries', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.textContaining('Art. 6 Abs. 1 lit. b'), findsComponents);
+      expect(find.textContaining('Art. 6 Abs. 1 lit. f'), findsComponents);
+      expect(find.textContaining('Art. 9 Abs. 2 lit. a'), findsComponents);
+      expect(find.textContaining('Gesundheit'), findsComponents);
+    });
+
+    testComponents('names every processor and where the data sits', (tester) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.textContaining('Supabase'), findsComponents);
+      expect(find.textContaining('Vercel AI Gateway'), findsComponents);
+      expect(find.textContaining('PostHog'), findsComponents);
+      expect(find.textContaining('Frankfurt'), findsComponents);
+    });
+
+    testComponents('states the training and retention opt-out as settled', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(
+        find.textContaining('untersagt ist, mit Prompts zu trainieren'),
+        findsComponents,
+      );
+      expect(find.textContaining('Zero Data Retention'), findsComponents);
+      expect(find.textContaining('fail closed'), findsComponents);
+      expect(find.textContaining('derzeit nicht eingeschaltet'), findsNothing);
+    });
+
+    testComponents('names surveys as the one free text PostHog receives', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.textContaining('Umfrage'), findsComponents);
+      expect(
+        find.textContaining('Die Antwort ist freiwillig'),
+        findsComponents,
+      );
+      expect(find.textContaining('an PostHog gesendet'), findsComponents);
+      expect(
+        find.textContaining('Session Replay) und keine Bildschirmaufnahme'),
+        findsComponents,
+      );
+    });
+
+    testComponents('says what Google and Apple hand over at sign-in', (tester) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.textContaining('Mit Google anmelden'), findsComponents);
+      expect(find.textContaining('Mit Apple anmelden'), findsComponents);
+      expect(
+        find.textContaining('Namen und den Link zum Profilbild'),
+        findsComponents,
+      );
+      expect(find.textContaining('E-Mail-Adresse verbergen'), findsComponents);
+      expect(
+        find.textContaining('erfährt, dass du dich bei emotely angemeldet'),
+        findsComponents,
+      );
+      expect(
+        find.textContaining('übernimmt sie weder von Google noch von Apple'),
+        findsComponents,
+      );
+    });
+
+    testComponents('says the app asks what to call you, and where it goes', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.textContaining('fragt nie nach einem Namen'), findsNothing);
+      expect(find.textContaining('wie sie dich nennen soll'), findsComponents);
+      expect(find.textContaining('Platzhalter'), findsComponents);
+      expect(find.textContaining('dein Profil'), findsComponents);
+      expect(find.textContaining('unter Profil'), findsComponents);
+    });
+
+    testComponents(
+      'says the name goes to the model, and the address does not',
+      (tester) {
+        tester.pumpComponent(const AppPrivacyDe());
+
+        expect(
+          find.textContaining('kein Name, keine E-Mail-Adresse'),
+          findsNothing,
+        );
+        expect(
+          find.textContaining('keine E-Mail-Adresse und kein Anmelde-Token'),
+          findsComponents,
+        );
+        expect(
+          find.textContaining('den Namen, mit dem die App dich anspricht'),
+          findsComponents,
+        );
+      },
+    );
+
+    testComponents('describes analytics by kind, never by event name', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.textContaining('session_started'), findsNothing);
+      expect(find.textContaining('sign_in_code_requested'), findsNothing);
+      expect(find.textContaining('journal_viewed'), findsNothing);
+      expect(find.textContaining('consent_granted'), findsNothing);
+      expect(
+        find.textContaining('Bildschirme, Antippen, Zeiten'),
+        findsComponents,
+      );
+    });
+
+    testComponents('asks before counting, and sets nothing up before Allow', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.textContaining('§ 25 Abs. 1 TDDDG'), findsComponents);
+      expect(find.textContaining('Art. 6 Abs. 1 lit. a'), findsComponents);
+      expect(find.textContaining('gleich gewichtet'), findsComponents);
+      expect(
+        find.textContaining('Bevor du „Erlauben“ antippst'),
+        findsComponents,
+      );
+      expect(find.textContaining('erneut gefragt'), findsComponents);
+      expect(
+        find.textContaining('Mehr → Datenschutzeinstellungen'),
+        findsComponents,
+      );
+      expect(
+        find.textContaining('berechtigtes Interesse daran, zu wissen, ob'),
+        findsNothing,
+      );
+    });
+
+    testComponents('keeps the last sign-in method on the phone', (tester) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.textContaining('zuletzt verwendet'), findsComponents);
+      expect(find.textContaining('§ 25 Abs. 2'), findsComponents);
+    });
+
+    testComponents('is dated to the rewrite', (tester) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(
+        find.textContaining('Zuletzt aktualisiert am 27. September 2026'),
+        findsOneComponent,
+      );
+    });
+
+    testComponents('discloses where the agent runs', (tester) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(
+        find.textContaining('Agent läuft auf Vercels Servern in Frankfurt'),
+        findsOneComponent,
+      );
+      expect(
+        find.textContaining('betreibt den emotely-Agenten in Frankfurt'),
+        findsOneComponent,
+      );
+      expect(find.textContaining('Washington'), findsNothing);
+      expect(find.textContaining('USA'), findsNothing);
+      expect(
+        find.textContaining('Modellanbieter können außerhalb der EU sitzen'),
+        findsOneComponent,
+      );
+      expect(find.textContaining('Standardvertragsklauseln'), findsComponents);
+    });
+
+    testComponents('gives both deletion paths and links the web one', (tester) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.textContaining('Mehr → Konto löschen'), findsComponents);
+      expect(find.textContaining('Löschseite'), findsComponents);
+    });
+
+    testComponents('is honest about backups rather than claiming none', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.textContaining('Aufbewahrungsfenster'), findsComponents);
+      expect(find.textContaining('kein Backup'), findsNothing);
+      expect(find.textContaining('pseudonym'), findsComponents);
+    });
+
+    testComponents('points at the site notice for the site', (tester) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(
+        find.textContaining('Datenschutzerklärung der Website'),
+        findsOneComponent,
+      );
+    });
+
+    testComponents('describes the consent gate and the way to take it back', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(
+        find.textContaining('Mehr → Datenschutzeinstellungen'),
+        findsComponents,
+      );
+      expect(find.textContaining('nichts löschen musst'), findsComponents);
+      expect(find.textContaining('Art. 7 Abs. 3'), findsComponents);
+    });
+
+    testComponents('carries the Art. 13 disclosures that are easy to forget', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.text('Automatisierte Entscheidungen'), findsNComponents(2));
+      expect(find.textContaining('Art. 22 Abs. 1'), findsComponents);
+      expect(find.textContaining('innerhalb eines Monats'), findsComponents);
+      expect(find.textContaining('keine gesetzliche Pflicht'), findsComponents);
+      expect(find.textContaining('verschlüsselte HTTPS'), findsComponents);
+      expect(find.textContaining('dreißig pro Minute'), findsComponents);
+    });
+
+    testComponents('says an AI is doing this, rather than leaving it obvious', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(
+        find.textContaining('von einem KI-System erzeugt'),
+        findsComponents,
+      );
+      expect(find.textContaining('nicht von einem Menschen'), findsComponents);
+    });
+
+    testComponents('says what happens when the measures fail', (tester) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.text('Wenn etwas schiefgeht'), findsNComponents(2));
+      expect(find.textContaining('innerhalb von 72 '), findsComponents);
+      expect(find.textContaining('Art. 34 DSGVO'), findsComponents);
+    });
+
+    testComponents('confirms the recipients protect the data equally', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.textContaining('demselben Standard'), findsComponents);
+      expect(
+        find.textContaining('nicht unsere Auftragsverarbeiter'),
+        findsComponents,
+      );
+    });
+
+    testComponents('names the identifiers analytics are tied to', (tester) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.textContaining('zufällige Gerätekennung'), findsComponents);
+      expect(find.textContaining('Kontokennung'), findsComponents);
+      expect(find.textContaining('vor deiner Anmeldung'), findsComponents);
+    });
+
+    testComponents('gives analytics a retention criterion like every other '
+        'category', (tester) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(
+        find.textContaining('Aufbewahrungsfenster von PostHog für das Projekt'),
+        findsComponents,
+      );
+    });
+
+    // CONTEXT.md's words to avoid, which the copy spell check enforces in
+    // the app's ARB files but cannot see in Dart: "Assistent" for the
+    // companion, "Sitzung" for a session, "Datenschutzhinweise" for the
+    // privacy notice.
+    testComponents('uses the glossary’s German terms', (tester) {
+      for (final page in const [AppPrivacyDe(), ImprintDe()]) {
+        tester.pumpComponent(page);
+
+        expect(find.textContaining('Assistent'), findsNothing);
+        expect(find.textContaining('Sitzung'), findsNothing);
+        expect(find.textContaining('Datenschutzhinweis'), findsNothing);
+      }
+    });
+
+    group('claims nothing the code does not do', () {
+      testComponents('does not deny sending the address to our own server', (
+        tester,
+      ) {
+        tester.pumpComponent(const AppPrivacyDe());
+
+        expect(
+          find.textContaining('Transkript enthält keinen Namen und keine'),
+          findsNothing,
+        );
+        expect(find.textContaining('Anmelde-Token'), findsComponents);
+      });
+
+      testComponents('does not claim the server sends PostHog nothing', (
+        tester,
+      ) {
+        tester.pumpComponent(const AppPrivacyDe());
+
+        expect(
+          find.textContaining('technischen Datensatz zu jeder Runde'),
+          findsComponents,
+        );
+        expect(
+          find.textContaining('schon an der Quelle unterdrückt'),
+          findsComponents,
+        );
+      });
+
+      testComponents('does not enumerate session columns without the '
+          'transcript', (tester) {
+        tester.pumpComponent(const AppPrivacyDe());
+
+        expect(
+          find.textContaining('vollständige Transkript des Gesprächs'),
+          findsComponents,
+        );
+      });
+
+      testComponents('does not promise deletion leaves only two survivors', (
+        tester,
+      ) {
+        tester.pumpComponent(const AppPrivacyDe());
+
+        expect(find.textContaining('Warteliste'), findsComponents);
+        expect(find.textContaining('Zwei Dinge überdauern'), findsNothing);
+      });
+
+      testComponents('does not count the forwarded exception types', (tester) {
+        tester.pumpComponent(const AppPrivacyDe());
+
+        expect(find.textContaining('Nur drei Arten'), findsNothing);
+      });
+
+      testComponents('does not overstate where the model is recorded', (
+        tester,
+      ) {
+        tester.pumpComponent(const AppPrivacyDe());
+
+        expect(
+          find.textContaining('verwendete Modell steht im öffentlichen'),
+          findsNothing,
+        );
+      });
+
+      testComponents('does not call the counting anonymous', (tester) {
+        tester.pumpComponent(const AppPrivacyDe());
+
+        expect(find.textContaining('pseudonym'), findsComponents);
+        expect(find.textContaining('anonyme Zählung'), findsNothing);
       });
     });
   });
