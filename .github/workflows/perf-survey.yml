@@ -30,7 +30,7 @@ on:
           (Test Lab ids). Empty: today's nightly devices.
         default: ""
       screens:
-        description: The screens to walk, comma-separated. Empty: all.
+        description: "The screens to walk, comma-separated; empty walks them all."
         default: ""
       issue_tag:
         description: >-
@@ -76,23 +76,23 @@ jobs:
           set -euo pipefail
           if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
             devices='[]'
-            source=pr
+            kind="pr"
           elif [[ -n "${DEVICE:-}" ]]; then
             # One device, listed or not: survey.sh looks up the rest.
             devices="$(yq -o json apps/mobile/app/integration_test/survey.yaml | jq -c --arg d "$DEVICE" '
               [.devices | to_entries[] | select(.key == $d or "\(.value.model):\(.value.version)" == $d)
                | {key} + .value] | if length > 0 then . else [{key: $d, platform: "android"}] end')"
-            source=adhoc
+            kind="adhoc"
           else
             devices="$(bash "$SURVEY" plan)"
-            source=nightly
+            kind="nightly"
           fi
           {
             echo "android=$(jq -c 'map(select(.platform == "android"))' <<<"$devices")"
             echo "ios=$(jq -c 'map(select(.platform == "ios"))' <<<"$devices")"
-            echo "source=$source"
+            echo "source=$kind"
           } >>"$GITHUB_OUTPUT"
-          echo "Devices: $devices ($source)" >>"$GITHUB_STEP_SUMMARY"
+          echo "Devices: $devices ($kind)" >>"$GITHUB_STEP_SUMMARY"
 
   # The data side, test-first (survey.test.sh), and the Android build: on
   # every run, pull requests included.
