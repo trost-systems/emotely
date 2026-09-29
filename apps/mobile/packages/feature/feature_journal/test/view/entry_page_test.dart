@@ -1,6 +1,8 @@
 import 'package:contract/contract.dart';
-import 'package:design_system/design_system.dart' show EntryView;
+import 'package:design_system/design_system.dart'
+    show DesignSystemLocalizations, EntryView;
 import 'package:feature_journal/feature_journal.dart';
+import 'package:feature_journal/src/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:material_ui/material_ui.dart';
@@ -32,7 +34,10 @@ void main() {
         analytics: analytics,
       );
       registerJournal(GetIt.I);
-      return pageUnderTest(const EntryPage(entryId: 'e-1'));
+      return pageUnderTest(
+        const EntryPage(entryId: 'e-1'),
+        localizations: const [JournalLocalizations.delegate],
+      );
     }
 
     Future<void> launch(WidgetTester tester, SupabaseStub supabase) async {
@@ -40,6 +45,10 @@ void main() {
       await tester.pumpWidget(pageWith(supabase));
       await tester.pumpAndSettle();
     }
+
+    /// The journal's strings as the page on screen reads them.
+    JournalLocalizations strings(WidgetTester tester) =>
+        tester.element(find.byType(EntryPageView)).l10n;
 
     testWidgets('reads the entry back the way the session showed it', (
       tester,
@@ -50,8 +59,18 @@ void main() {
         ]);
       await launch(tester, supabase);
 
+      final material = MaterialLocalizations.of(
+        tester.element(find.byType(EntryPageView)),
+      );
       expect(supabase.to(entries).single.query['id'], 'eq.e-1');
-      expect(find.text('Sep 7, 2026'), findsOneWidget);
+      expect(find.text(material.formatShortDate(written)), findsOneWidget);
+      expect(
+        find.text(
+          DesignSystemLocalizations.of(tester.element(find.byType(EntryView)))
+              .entryViewTitle,
+        ),
+        findsOneWidget,
+      );
       expect(find.byKey(EntryView.summaryKey), findsOneWidget);
       expect(find.text('A seven kind of day.'), findsOneWidget);
       expect(find.text(rateQuestion.question), findsOneWidget);
@@ -68,7 +87,9 @@ void main() {
         ]);
       await launch(tester, supabase);
 
-      expect(find.text(EntryPage.failureMessage), findsOneWidget);
+      expect(find.text(strings(tester).entryScreenTitle), findsOneWidget);
+      expect(find.text(strings(tester).entryFailureMessage), findsOneWidget);
+      expect(find.text(strings(tester).entryRetryButton), findsOneWidget);
       expect(find.byKey(EntryView.summaryKey), findsNothing);
 
       await tester.tap(find.byKey(EntryPage.retryKey));
@@ -83,7 +104,7 @@ void main() {
       final supabase = SupabaseStub()..rest(entries, [rows(const [])]);
       await launch(tester, supabase);
 
-      expect(find.text(EntryPage.failureMessage), findsOneWidget);
+      expect(find.text(strings(tester).entryFailureMessage), findsOneWidget);
     });
 
     testWidgets('meets accessibility guidelines', (tester) async {

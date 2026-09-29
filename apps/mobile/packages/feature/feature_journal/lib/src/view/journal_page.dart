@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:feature_journal/src/bloc/journal_bloc.dart';
+import 'package:feature_journal/src/l10n/l10n.dart';
 import 'package:feature_journal/src/navigator.dart';
 import 'package:feature_journal/src/routes.dart';
 import 'package:feature_journal/src/view/greeting.dart';
@@ -37,8 +38,6 @@ class const JournalView({final bool startSession = false, super.key})
   static const retryKey = Key('journal_view.retry');
   static const emptyKey = Key('journal_view.empty');
   static Key entryKey(String id) => Key('journal_view.entry.$id');
-
-  static const failureMessage = 'Could not load your journal.';
 
   @override
   State<JournalView> createState() => _JournalViewState();
@@ -98,10 +97,10 @@ class const _Journal({
         child: _SessionCard(openSession: openSession),
       ),
       if (entries.isEmpty)
-        const Padding(
-          padding: EdgeInsets.all(32),
+        Padding(
+          padding: const EdgeInsets.all(32),
           child: Text(
-            'No entries yet. Your first session writes the first one.',
+            context.l10n.emptyJournalMessage,
             key: JournalView.emptyKey,
             textAlign: TextAlign.center,
           ),
@@ -116,32 +115,35 @@ class const _Journal({
 class const _SessionCard({required final OpenSession? openSession})
     extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => switch (openSession) {
-    null => FilledButton(
-      key: JournalView.startKey,
-      onPressed: () => unawaited(open(context, resume: null)),
-      child: const Text('Start a session'),
-    ),
-    final session => Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 8,
-      children: [
-        const Text('You have an unfinished session.'),
-        FilledButton(
-          key: JournalView.continueKey,
-          onPressed: () => unawaited(open(context, resume: session.id)),
-          child: const Text('Continue'),
-        ),
-        TextButton(
-          key: JournalView.discardKey,
-          onPressed: () => context.read<JournalBloc>().add(
-            const JournalEvent.sessionDiscarded(),
+  Widget build(BuildContext context) {
+    final strings = context.l10n;
+    return switch (openSession) {
+      null => FilledButton(
+        key: JournalView.startKey,
+        onPressed: () => unawaited(open(context, resume: null)),
+        child: Text(strings.startSessionButton),
+      ),
+      final session => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 8,
+        children: [
+          Text(strings.unfinishedSessionMessage),
+          FilledButton(
+            key: JournalView.continueKey,
+            onPressed: () => unawaited(open(context, resume: session.id)),
+            child: Text(strings.continueSessionButton),
           ),
-          child: const Text('Discard it'),
-        ),
-      ],
-    ),
-  };
+          TextButton(
+            key: JournalView.discardKey,
+            onPressed: () => context.read<JournalBloc>().add(
+              const JournalEvent.sessionDiscarded(),
+            ),
+            child: Text(strings.discardSessionButton),
+          ),
+        ],
+      ),
+    };
+  }
 
   /// Runs the session on its own route; the journal reloads when it is
   /// popped, whether the session finished or not.
@@ -196,19 +198,22 @@ class const _EntryTile({required final EntryRecord record})
 
 class const _Failure() extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      spacing: 16,
-      children: [
-        const Text(JournalView.failureMessage, textAlign: TextAlign.center),
-        FilledButton(
-          key: JournalView.retryKey,
-          onPressed: () =>
-              context.read<JournalBloc>().add(const JournalEvent.loaded()),
-          child: const Text('Try again'),
-        ),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) {
+    final strings = context.l10n;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 16,
+        children: [
+          Text(strings.journalFailureMessage, textAlign: TextAlign.center),
+          FilledButton(
+            key: JournalView.retryKey,
+            onPressed: () =>
+                context.read<JournalBloc>().add(const JournalEvent.loaded()),
+            child: Text(strings.journalRetryButton),
+          ),
+        ],
+      ),
+    );
+  }
 }

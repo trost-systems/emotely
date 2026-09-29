@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:feature_journal/feature_journal.dart';
+import 'package:feature_journal/src/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:material_ui/material_ui.dart';
@@ -35,6 +36,15 @@ class JournalRobot(
 
   Finder entry(String id) => find.byKey(JournalView.entryKey(id));
 
+  /// The journal's strings as the page on screen reads them, in whatever
+  /// language it speaks: tests assert a message by its key, so a rewording
+  /// never breaks them.
+  JournalLocalizations get strings => tester.element(home).l10n;
+
+  /// Flutter's own strings and date formats in the locale on screen.
+  MaterialLocalizations get material =>
+      MaterialLocalizations.of(tester.element(home));
+
   /// The journal's routes as the app mounts them, opened on the journal.
   /// Reading this composes the container, so read it once per test.
   Widget get app {
@@ -49,6 +59,7 @@ class JournalRobot(
     return featureUnderTest(
       routes: [$journalRoute],
       initialLocation: JournalRoute(startSession: startSession).location,
+      localizations: const [JournalLocalizations.delegate],
     );
   }
 
@@ -66,8 +77,5 @@ class JournalRobot(
     await settle();
   }
 
-  Future<void> back() async {
-    await tester.pageBack();
-    await settle();
-  }
+  Future<void> back() => tester.tapBack();
 }

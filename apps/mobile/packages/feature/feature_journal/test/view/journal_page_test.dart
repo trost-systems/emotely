@@ -51,7 +51,7 @@ void main() {
         lessThan(tester.getTopLeft(robot.entry('e-old')).dy),
       );
       expect(find.text('A calm day.'), findsOneWidget);
-      expect(find.text('Sep 7, 2026'), findsOneWidget);
+      expect(find.text(robot.material.formatShortDate(newer)), findsOneWidget);
       expect(robot.empty, findsNothing);
       expect(robot.analytics.events, [
         event('journal_viewed', {'entries': 2, 'open_session': false}),
@@ -64,7 +64,9 @@ void main() {
       final robot = robotWith(tester);
       await robot.launch();
 
+      expect(find.text(robot.strings.emptyJournalMessage), findsOneWidget);
       expect(robot.empty, findsOneWidget);
+      expect(find.text(robot.strings.startSessionButton), findsOneWidget);
       expect(robot.start, findsOneWidget);
       expect(robot.continueSession, findsNothing);
 
@@ -94,6 +96,9 @@ void main() {
       );
       await robot.launch();
 
+      expect(find.text(robot.strings.unfinishedSessionMessage), findsOneWidget);
+      expect(find.text(robot.strings.continueSessionButton), findsOneWidget);
+      expect(find.text(robot.strings.discardSessionButton), findsOneWidget);
       expect(robot.continueSession, findsOneWidget);
       expect(robot.start, findsNothing);
       expect(
@@ -255,7 +260,8 @@ void main() {
       );
       await robot.launch();
 
-      expect(find.text(JournalView.failureMessage), findsOneWidget);
+      expect(find.text(robot.strings.journalFailureMessage), findsOneWidget);
+      expect(find.text(robot.strings.journalRetryButton), findsOneWidget);
       expect(robot.retry, findsOneWidget);
 
       await robot.tap(robot.retry);
@@ -274,7 +280,7 @@ void main() {
 
       await robot.tap(robot.discard);
 
-      expect(find.text(JournalView.failureMessage), findsOneWidget);
+      expect(find.text(robot.strings.journalFailureMessage), findsOneWidget);
 
       await robot.tap(robot.retry);
 

@@ -1,0 +1,67 @@
+{
+  "@@locale": "en",
+  "greeting": "{partOfDay, select, morning{Good morning} afternoon{Good afternoon} other{Good evening}}",
+  "@greeting": {
+    "description": "Journal home, the large heading at the top: greets the user by the time of day on their phone, when their profile holds no name. partOfDay is morning (5:00 to 11:59), afternoon (12:00 to 17:59) or, in every other case, evening, which includes late at night.",
+    "placeholders": {
+      "partOfDay": {
+        "type": "String",
+        "example": "evening"
+      }
+    }
+  },
+  "greetingByName": "{partOfDay, select, morning{Good morning, {name}} afternoon{Good afternoon, {name}} other{Good evening, {name}}}",
+  "@greetingByName": {
+    "description": "Journal home, the large heading at the top: greets the user by the time of day on their phone and by the name in their profile. partOfDay is morning (5:00 to 11:59), afternoon (12:00 to 17:59) or, in every other case, evening, which includes late at night.",
+    "placeholders": {
+      "partOfDay": {
+        "type": "String",
+        "example": "evening"
+      },
+      "name": {
+        "type": "String",
+        "example": "Peter"
+      }
+    }
+  },
+  "startSessionButton": "Start a session",
+  "@startSessionButton": {
+    "description": "Journal home, the main button: starts a new reflection session, in which emotely asks a few questions and writes a journal entry from the answers."
+  },
+  "unfinishedSessionMessage": "You have an unfinished session.",
+  "@unfinishedSessionMessage": {
+    "description": "Journal home, above the buttons that continue or discard it: the user left a reflection session before it wrote its entry."
+  },
+  "continueSessionButton": "Continue",
+  "@continueSessionButton": {
+    "description": "Journal home, the main button under the unfinished-session notice: picks the unfinished session up where the user left it."
+  },
+  "discardSessionButton": "Discard it",
+  "@discardSessionButton": {
+    "description": "Journal home, the secondary button under the unfinished-session notice: throws the unfinished session away so the next one starts fresh."
+  },
+  "emptyJournalMessage": "No entries yet. Your first session writes the first one.",
+  "@emptyJournalMessage": {
+    "description": "Journal home, in place of the list of entries while there are none: explains that entries come from sessions."
+  },
+  "journalFailureMessage": "Could not load your journal.",
+  "@journalFailureMessage": {
+    "description": "Journal home, shown instead of the journal when its entries or the unfinished session could not be read or changed. Nothing the user did wrong."
+  },
+  "journalRetryButton": "Try again",
+  "@journalRetryButton": {
+    "description": "Journal home, under the failure message: reads the journal again."
+  },
+  "entryScreenTitle": "Entry",
+  "@entryScreenTitle": {
+    "description": "Entry screen, the app bar title while the entry is being read or could not be read. Once it is read, the entry's date stands there instead."
+  },
+  "entryFailureMessage": "Could not load this entry.",
+  "@entryFailureMessage": {
+    "description": "Entry screen, shown instead of the entry when it could not be read, or the journal no longer holds it."
+  },
+  "entryRetryButton": "Try again",
+  "@entryRetryButton": {
+    "description": "Entry screen, under the failure message: reads the entry again."
+  }
+}

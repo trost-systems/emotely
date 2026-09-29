@@ -5,6 +5,7 @@
 /// belong to other features, so the journal only asks for them.
 library;
 
+export 'src/l10n/journal_localizations.dart' show JournalLocalizations;
 export 'src/navigator.dart';
 export 'src/register.dart';
 // Every feature's part file generates a `$appRoutes`; the app composes
