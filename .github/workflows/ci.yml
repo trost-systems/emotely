@@ -266,7 +266,10 @@ jobs:
   # fails a rule test whose rule is gone, and the scan fails an ast-grep
   # suppression comment that names no rule (`no-suppress-all`). It installs only the
   # root package, whose ast-grep is a prebuilt binary, and reads every tracked
-  # source in well under a second, so it has no paths filter.
+  # source in well under a second, so it has no paths filter. The copy spell
+  # check shares its Node setup and runs last. Rules that need types are not
+  # here: they are the analyzer plugin's (tools/emotely_lints), which the app
+  # job runs and the lints job tests.
   ast-grep:
     runs-on: ubuntu-latest
     steps:

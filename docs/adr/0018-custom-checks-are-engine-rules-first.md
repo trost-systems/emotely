@@ -28,7 +28,8 @@ today's languages gets rewritten later. We would rather not write it twice.
      (`@ast-grep/cli`, pinned in the root `package.json`) as a prebuilt
      binary, so no Rust toolchain is needed.
    - **The Dart analyzer** (a lint rule or an analyzer plugin) only when a
-     rule needs type information.
+     rule needs type information. Since #233 that is emotely's own plugin,
+     `tools/emotely_lints`.
 2. **Only a check that cannot be expressed as rules becomes a program.** It
    is written in Rust and shipped as a prebuilt binary, so CI and agents
    never compile it.
@@ -45,7 +46,8 @@ today's languages gets rewritten later. We would rather not write it twice.
 `sgconfig.yml` at the repository root points ast-grep at `ast-grep/rules`
 and `ast-grep/tests`. `scripts/ast-grep.sh` runs every rule over the files
 git tracks; CI's `ast-grep` job runs the rule tests, the script's own tests
-and the scan, and feeds `ci-ok`. A new syntactic rule is one YAML file under
+and the scan, and feeds `ci-ok`. The same job also runs the copy spell check
+(ADR 0020), which needs the same Node setup. A new syntactic rule is one YAML file under
 `ast-grep/rules` plus its test under `ast-grep/tests`; the scan picks it up
 with no other change (see [Adding a rule](#adding-a-rule)). The script and
 the job were called `tripwire` until #165 added the first rule that is not
@@ -141,17 +143,25 @@ keeping the rule. That trade-off is decided then, not now.
 
 ## General and emotely-specific rules (amended 2026-09-26, #165)
 
-The deciding test for where a rule lives: **would it make sense in a project
-that isn't emotely?**
+A rule has three homes. The engine comes first (Decision, point 1): syntax
+alone decides it, or it needs types. Among the ast-grep rules, the deciding
+test is: **would it make sense in a project that isn't emotely?**
 
-| Directory | Scope | Today |
+| Home | Engine and scope | Today |
 |---|---|---|
-| `ast-grep/rules/tripwire` | General: holds unchanged in any project with agents writing code. A later general concern gets its own directory beside it. | The comment tripwire: workaround tags and phrases, suppressions without a reason, in Dart, TypeScript and shell. |
-| `ast-grep/rules/architecture` | Emotely-specific: the rule names emotely's paths, packages or ADRs, and means nothing elsewhere. | `no-from-environment` (ADR 0015): a define is read only in its app's environment file. |
+| `ast-grep/rules/tripwire` | ast-grep, syntax only. General: holds unchanged in any project with agents writing code. A later general concern gets its own directory beside it. | The comment tripwire: workaround tags and phrases, suppressions without a reason, in Dart, TypeScript and shell. |
+| `ast-grep/rules/architecture` | ast-grep, syntax only. Emotely-specific: the rule names emotely's paths, packages or ADRs, and means nothing elsewhere. | `no-from-environment` (ADR 0015): a define is read only in its app's environment file. |
+| `tools/emotely_lints` (added 2026-09-29, #233) | The Dart analyzer plugin, for a rule that needs types. It loads from the `apps/mobile` workspace's options only, so it reaches the Flutter packages and nothing else. | `avoid_hardcoded_ui_text` (ADR 0020). |
 
 Tests mirror the layout under `ast-grep/tests`. The engine does not care:
 `ruleDirs` reads every directory under `ast-grep/rules`, and one scan runs
-them all.
+them all. A typed rule is added the way the `emotely-lints` skill's "Adding
+a rule" says, not the way below.
+
+`no-from-environment` was checked against the plugin once #233 landed, and
+stays in ast-grep. It is syntactic, and the plugin could not cover
+`apps/web/lib/environment.dart`, which is outside the `apps/mobile`
+workspace.
 
 **Recommendation: keep both sets here until a second project wants the
 general one.** Sharing has a cost we don't need to pay yet: a versioned
@@ -170,7 +180,9 @@ two environment files.
 
 ## Adding a rule
 
-A rule is one file plus its test, and nothing else changes:
+This is the ast-grep path; a rule that needs types goes to
+`tools/emotely_lints` as the `emotely-lints` skill says. An ast-grep rule
+is one file plus its test, and nothing else changes:
 
 1. List the existing rules you checked (Decision, point 3) in the pull
    request, and cover only the gap.
