@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:testing/testing.dart';
 
+import '../session_strings.dart';
+
 void main() {
   group(AnswerInput, () {
     const widgetFor = <AnswerType, Type>{
@@ -34,6 +36,7 @@ void main() {
             ),
             onSubmit: ignoreAnswer,
           ),
+          localizations: sessionLocalizations,
         );
 
         expect(find.byType(widget), findsOneWidget);

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:contract/contract.dart';
+import 'package:feature_session/src/l10n/l10n.dart';
 import 'package:feature_session/src/widgets/submit_button.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:material_ui/material_ui.dart';
@@ -23,9 +24,6 @@ class const ColorInput({
 
   /// Key of the [index]th slot; the last one is always empty.
   static Key slotKey(int index) => Key('color_input.slot.$index');
-
-  /// What the empty slot, and the picker, are called.
-  static const pickLabel = 'Pick a color';
 
   @override
   State<ColorInput> createState() => _ColorInputState();
@@ -74,7 +72,8 @@ class _ColorInputState() extends State<ColorInput> {
           _Slot(
             key: ColorInput.slotKey(_colors.length),
             color: null,
-            label: ColorInput.pickLabel,
+            // The empty slot is called what the picker it opens is called.
+            label: context.l10n.colorPickLabel,
             onTap: () => unawaited(_open(_colors.length)),
           ),
         ],
@@ -151,40 +150,48 @@ class _ColorPickerDialogState() extends State<_ColorPickerDialog> {
   late Color _picked = widget.current ?? Colors.orange;
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: const Text(ColorInput.pickLabel),
-    content: SingleChildScrollView(
-      child: ColorPicker(
-        color: _picked,
-        onColorChanged: (color) => setState(() => _picked = color),
-        pickersEnabled: const {
-          ColorPickerType.accent: false,
-          ColorPickerType.wheel: true,
-        },
-        padding: EdgeInsets.zero,
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        wheelDiameter: 180,
-      ),
-    ),
-    actions: [
-      TextButton(
-        key: ColorInput.cancelKey,
-        onPressed: () => Navigator.of(context).pop(),
-        child: const Text('Cancel'),
-      ),
-      if (widget.current != null)
-        TextButton(
-          key: ColorInput.clearKey,
-          onPressed: () => Navigator.of(context).pop(const _Cleared()),
-          child: const Text('Clear'),
+  Widget build(BuildContext context) {
+    final strings = context.l10n;
+    return AlertDialog(
+      title: Text(strings.colorPickLabel),
+      content: SingleChildScrollView(
+        child: ColorPicker(
+          color: _picked,
+          onColorChanged: (color) => setState(() => _picked = color),
+          pickersEnabled: const {
+            ColorPickerType.accent: false,
+            ColorPickerType.wheel: true,
+          },
+          // The picker's own segment labels are English; these are ours.
+          pickerTypeLabels: {
+            ColorPickerType.primary: strings.colorSwatchesTab,
+            ColorPickerType.wheel: strings.colorWheelTab,
+          },
+          padding: EdgeInsets.zero,
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          wheelDiameter: 180,
         ),
-      FilledButton(
-        key: ColorInput.selectKey,
-        onPressed: () => Navigator.of(context).pop(_Selected(_picked)),
-        child: const Text('Select'),
       ),
-    ],
-  );
+      actions: [
+        TextButton(
+          key: ColorInput.cancelKey,
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(strings.colorCancelButton),
+        ),
+        if (widget.current != null)
+          TextButton(
+            key: ColorInput.clearKey,
+            onPressed: () => Navigator.of(context).pop(const _Cleared()),
+            child: Text(strings.colorClearButton),
+          ),
+        FilledButton(
+          key: ColorInput.selectKey,
+          onPressed: () => Navigator.of(context).pop(_Selected(_picked)),
+          child: Text(strings.colorSelectButton),
+        ),
+      ],
+    );
+  }
 }

@@ -5,13 +5,17 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:testing/testing.dart';
 
+import '../session_strings.dart';
 import '../slide_rating.dart';
 
 void main() {
   group(RatingInput, () {
     Future<Submitted> pumpTestWidget(WidgetTester tester) async {
       final submitted = Submitted();
-      await tester.pumpApp(RatingInput(onSubmit: submitted.call));
+      await tester.pumpApp(
+        RatingInput(onSubmit: submitted.call),
+        localizations: sessionLocalizations,
+      );
       return submitted;
     }
 
@@ -27,7 +31,9 @@ void main() {
       expect(slider.max, RatingInput.max);
       // Whole numbers only: one stop per value, plus the "no answer" stop.
       expect(slider.divisions, RatingInput.max);
-      expect(shownValue(tester), RatingInput.noAnswerLabel);
+      expect(shownValue(tester), tester.strings.ratingNoAnswer);
+      // To a screen reader too, as the slider's value.
+      expect(find.semantics.byValue(tester.strings.ratingNoAnswer), findsOne);
       expect(isSubmitEnabled(tester, RatingInput.submitKey), isFalse);
     });
 
@@ -48,7 +54,7 @@ void main() {
 
       await slideRatingTo(tester, 0);
 
-      expect(shownValue(tester), RatingInput.noAnswerLabel);
+      expect(shownValue(tester), tester.strings.ratingNoAnswer);
       expect(isSubmitEnabled(tester, RatingInput.submitKey), isFalse);
     });
 
@@ -64,7 +70,10 @@ void main() {
 
     testWidgets('meets accessibility guidelines', (tester) async {
       await tester.expectMeetsAccessibilityGuidelines(
-        appWrapper(const RatingInput(onSubmit: ignoreAnswer)),
+        appWrapper(
+          const RatingInput(onSubmit: ignoreAnswer),
+          localizations: sessionLocalizations,
+        ),
         prepare: (tester) => slideRatingTo(tester, 8),
       );
     });

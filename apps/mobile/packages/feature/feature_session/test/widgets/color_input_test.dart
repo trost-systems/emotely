@@ -6,11 +6,16 @@ import 'package:material_ui/material_ui.dart';
 
 import 'package:testing/testing.dart';
 
+import '../session_strings.dart';
+
 void main() {
   group(ColorInput, () {
     Future<Submitted> pumpTestWidget(WidgetTester tester) async {
       final submitted = Submitted();
-      await tester.pumpApp(ColorInput(onSubmit: submitted.call));
+      await tester.pumpApp(
+        ColorInput(onSubmit: submitted.call),
+        localizations: sessionLocalizations,
+      );
       return submitted;
     }
 
@@ -53,7 +58,10 @@ void main() {
 
       expect(find.byKey(ColorInput.slotKey(0)), findsOneWidget);
       expect(find.byKey(ColorInput.slotKey(1)), findsNothing);
-      expect(find.bySemanticsLabel(ColorInput.pickLabel), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(tester.strings.colorPickLabel),
+        findsOneWidget,
+      );
       expect(isSubmitEnabled(tester, ColorInput.submitKey), isFalse);
     });
 
@@ -127,9 +135,36 @@ void main() {
       );
     });
 
+    testWidgets('the picker words its own title, pages and buttons', (
+      tester,
+    ) async {
+      await pumpTestWidget(tester);
+      await pick(tester, 0, Colors.red);
+      await openSlot(tester, 0);
+
+      final strings = tester.strings;
+      for (final text in [
+        strings.colorPickLabel,
+        strings.colorSwatchesTab,
+        strings.colorWheelTab,
+        strings.colorCancelButton,
+        strings.colorClearButton,
+        strings.colorSelectButton,
+      ]) {
+        expect(
+          find.descendant(of: dialog, matching: find.text(text)),
+          findsOneWidget,
+          reason: text,
+        );
+      }
+    });
+
     testWidgets('meets accessibility guidelines', (tester) async {
       await tester.expectMeetsAccessibilityGuidelines(
-        appWrapper(const ColorInput(onSubmit: ignoreAnswer)),
+        appWrapper(
+          const ColorInput(onSubmit: ignoreAnswer),
+          localizations: sessionLocalizations,
+        ),
         prepare: (tester) => pick(tester, 0, Colors.red),
       );
     });

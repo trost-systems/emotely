@@ -5,11 +5,16 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:testing/testing.dart';
 
+import '../session_strings.dart';
+
 void main() {
   group(LongtextInput, () {
     Future<Submitted> pumpTestWidget(WidgetTester tester) async {
       final submitted = Submitted();
-      await tester.pumpApp(LongtextInput(onSubmit: submitted.call));
+      await tester.pumpApp(
+        LongtextInput(onSubmit: submitted.call),
+        localizations: sessionLocalizations,
+      );
       return submitted;
     }
 
@@ -53,12 +58,18 @@ void main() {
       await type(tester, 'a' * 4095);
 
       expect(isSubmitEnabled(tester, LongtextInput.submitKey), isFalse);
-      expect(find.text(AnswerLength.over(1)), findsOneWidget);
+      expect(find.text(tester.strings.answerLengthOver(1)), findsOneWidget);
 
       await type(tester, 'a' * 4094);
 
       expect(isSubmitEnabled(tester, LongtextInput.submitKey), isTrue);
-      expect(find.text(AnswerLength.left(0)), findsOneWidget);
+      expect(find.text(tester.strings.answerLengthLeft(0)), findsOneWidget);
+    });
+
+    testWidgets('invites free writing while empty', (tester) async {
+      await pumpTestWidget(tester);
+
+      expect(find.text(tester.strings.longtextHint), findsOneWidget);
     });
 
     testWidgets('counts down only once the answer nears the limit', (
@@ -73,12 +84,15 @@ void main() {
       // 3900 letters and their two quotes: 194 short of the limit.
       await type(tester, 'a' * 3900);
 
-      expect(find.text(AnswerLength.left(194)), findsOneWidget);
+      expect(find.text(tester.strings.answerLengthLeft(194)), findsOneWidget);
     });
 
     testWidgets('meets accessibility guidelines', (tester) async {
       await tester.expectMeetsAccessibilityGuidelines(
-        appWrapper(const LongtextInput(onSubmit: ignoreAnswer)),
+        appWrapper(
+          const LongtextInput(onSubmit: ignoreAnswer),
+          localizations: sessionLocalizations,
+        ),
       );
     });
 
@@ -86,7 +100,10 @@ void main() {
       tester,
     ) async {
       await tester.expectMeetsAccessibilityGuidelines(
-        appWrapper(const LongtextInput(onSubmit: ignoreAnswer)),
+        appWrapper(
+          const LongtextInput(onSubmit: ignoreAnswer),
+          localizations: sessionLocalizations,
+        ),
         prepare: (tester) => type(tester, 'a' * 4095),
       );
     });

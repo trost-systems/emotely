@@ -6,6 +6,7 @@ import 'package:feature_auth/feature_auth.dart' show AuthLocalizations;
 import 'package:feature_journal/feature_journal.dart' show JournalLocalizations;
 import 'package:feature_onboarding/feature_onboarding.dart'
     show OnboardingLocalizations;
+import 'package:feature_session/feature_session.dart' show SessionLocalizations;
 import 'package:material_ui/material_ui.dart';
 
 /// Every package's strings, then Flutter's own (ADR 0020). A package that
@@ -23,6 +24,7 @@ const localizationsDelegates = <LocalizationsDelegate<Object?>>[
   AuthLocalizations.delegate,
   JournalLocalizations.delegate,
   OnboardingLocalizations.delegate,
+  SessionLocalizations.delegate,
   DesignSystemLocalizations.delegate,
   ...GlobalMaterialLocalizations.delegates,
 ];

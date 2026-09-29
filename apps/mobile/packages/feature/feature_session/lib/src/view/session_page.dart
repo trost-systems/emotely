@@ -1,6 +1,7 @@
 import 'package:agent_client/agent_client.dart';
 import 'package:design_system/design_system.dart';
 import 'package:feature_session/src/bloc/session_bloc.dart';
+import 'package:feature_session/src/l10n/l10n.dart';
 import 'package:feature_session/src/widgets/answer_input.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -25,30 +26,9 @@ class const SessionView({super.key}) extends StatelessWidget {
   static const questionKey = Key('session_view.question');
   static const startOverKey = Key('session_view.start_over');
 
-  /// The words for each [SessionFailureReason], the one place the session's
-  /// failure copy lives, so each becomes one localized string.
-  static String describe(SessionFailureReason reason) => switch (reason) {
-    SessionFailureReason.unreachable =>
-      'Could not reach the journaling assistant.',
-    // It is us and not their connection, what they wrote is safe, and
-    // waiting is what helps (#107).
-    SessionFailureReason.modelUnavailable =>
-      'The journaling assistant is unavailable right now. This is not your '
-          'connection, and your entry is safe. Please try again later.',
-    SessionFailureReason.refused =>
-      'Something went wrong on our side. Please try again.',
-    SessionFailureReason.cannotContinue =>
-      'This session can no longer be continued. Start a new one; your '
-          'saved entries are not affected.',
-    SessionFailureReason.entrySaveFailed =>
-      'Your entry could not be saved. Please try again.',
-    SessionFailureReason.sessionReadFailed =>
-      'Could not load your unfinished session. Please try again.',
-  };
-
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Journaling session')),
+    appBar: AppBar(title: Text(context.l10n.sessionTitle)),
     body: SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -73,11 +53,14 @@ class const SessionView({super.key}) extends StatelessWidget {
 
 class const _Thinking() extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => const Center(
+  Widget build(BuildContext context) => Center(
     child: Column(
       mainAxisSize: MainAxisSize.min,
       spacing: 16,
-      children: [CircularProgressIndicator(), Text('Thinking…')],
+      children: [
+        const CircularProgressIndicator(),
+        Text(context.l10n.thinkingLabel),
+      ],
     ),
   );
 }
@@ -94,7 +77,10 @@ class const _Question({
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 16,
         children: [
-          Text('Question ${answered + 1}', style: theme.textTheme.labelLarge),
+          Text(
+            context.l10n.questionNumber(answered + 1),
+            style: theme.textTheme.labelLarge,
+          ),
           Text(
             pending.question.question,
             key: SessionView.questionKey,
@@ -116,28 +102,45 @@ class const _Question({
 class const _Failure({required final SessionFailureReason reason})
     extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      spacing: 16,
-      children: [
-        Text(SessionView.describe(reason), textAlign: TextAlign.center),
-        // Resending cannot help a session the agent will not continue.
-        if (reason == SessionFailureReason.cannotContinue)
-          FilledButton(
-            key: SessionView.startOverKey,
-            onPressed: () =>
-                context.read<SessionBloc>().add(const SessionEvent.restarted()),
-            child: const Text('Start over'),
-          )
-        else
-          FilledButton(
-            key: SessionView.retryKey,
-            onPressed: () =>
-                context.read<SessionBloc>().add(const SessionEvent.retried()),
-            child: const Text('Try again'),
-          ),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) {
+    final strings = context.l10n;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 16,
+        children: [
+          Text(_messageFor(strings), textAlign: TextAlign.center),
+          // Resending cannot help a session the agent will not continue.
+          if (reason == SessionFailureReason.cannotContinue)
+            FilledButton(
+              key: SessionView.startOverKey,
+              onPressed: () => context.read<SessionBloc>().add(
+                const SessionEvent.restarted(),
+              ),
+              child: Text(strings.startOverButton),
+            )
+          else
+            FilledButton(
+              key: SessionView.retryKey,
+              onPressed: () =>
+                  context.read<SessionBloc>().add(const SessionEvent.retried()),
+              child: Text(strings.tryAgainButton),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// The words for each [SessionFailureReason]: the bloc names the reason,
+  /// this is the one place the session's failure copy is chosen.
+  String _messageFor(SessionLocalizations strings) => switch (reason) {
+    SessionFailureReason.unreachable => strings.unreachableMessage,
+    // It is us and not their connection, what they wrote is safe, and
+    // waiting is what helps (#107).
+    SessionFailureReason.modelUnavailable => strings.modelUnavailableMessage,
+    SessionFailureReason.refused => strings.refusedMessage,
+    SessionFailureReason.cannotContinue => strings.cannotContinueMessage,
+    SessionFailureReason.entrySaveFailed => strings.entrySaveFailedMessage,
+    SessionFailureReason.sessionReadFailed => strings.sessionReadFailedMessage,
+  };
 }

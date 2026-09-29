@@ -2,9 +2,12 @@ import 'package:contract/contract.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:feature_session/src/widgets/emoji_input.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:testing/testing.dart';
+
+import '../session_strings.dart';
 
 void main() {
   group(EmojiInput, () {
@@ -16,7 +19,10 @@ void main() {
 
     Future<Submitted> pumpTestWidget(WidgetTester tester) async {
       final submitted = Submitted();
-      await tester.pumpApp(EmojiInput(onSubmit: submitted.call));
+      await tester.pumpApp(
+        EmojiInput(onSubmit: submitted.call),
+        localizations: sessionLocalizations,
+      );
       return submitted;
     }
 
@@ -47,7 +53,10 @@ void main() {
 
       expect(find.byKey(EmojiInput.slotKey(0)), findsOneWidget);
       expect(find.byKey(EmojiInput.slotKey(1)), findsNothing);
-      expect(find.bySemanticsLabel(EmojiInput.pickLabel), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(tester.strings.emojiPickLabel),
+        findsOneWidget,
+      );
       expect(isSubmitEnabled(tester, EmojiInput.submitKey), isFalse);
     });
 
@@ -118,9 +127,40 @@ void main() {
       expect(submitted.single, const Answer.emoji(['😂', '😊']));
     });
 
+    testWidgets('the picker searches in the language the app speaks', (
+      tester,
+    ) async {
+      // Any locale but the picker's own default English: the subject is
+      // that the app's locale reaches the picker, not the words.
+      const german = Locale('de');
+      await tester.pumpApp(
+        const EmojiInput(onSubmit: ignoreAnswer),
+        localizations: sessionLocalizations,
+        locale: german,
+      );
+      await pick(tester, 0, '😊');
+      await openSlot(tester, 0);
+
+      final strings = tester.strings;
+      expect(find.bySemanticsLabel(strings.emojiClearLabel), findsOneWidget);
+      // Its search matches the emoji names in that language, so the hint's
+      // example words find something; the pages it only shows on demand
+      // are worded by the session too.
+      final config = tester.widget<EmojiPicker>(picker).config;
+      expect(config.locale, german);
+      expect(config.searchViewConfig.hintText, strings.emojiSearchHint);
+      expect(
+        (config.emojiViewConfig.noRecents as Text).data,
+        strings.emojiNoRecents,
+      );
+    });
+
     testWidgets('meets accessibility guidelines', (tester) async {
       await tester.expectMeetsAccessibilityGuidelines(
-        appWrapper(const EmojiInput(onSubmit: ignoreAnswer)),
+        appWrapper(
+          const EmojiInput(onSubmit: ignoreAnswer),
+          localizations: sessionLocalizations,
+        ),
         prepare: (tester) => pick(tester, 0, '😀'),
       );
     });

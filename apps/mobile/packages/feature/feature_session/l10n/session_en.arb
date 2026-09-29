@@ -1,0 +1,129 @@
+{
+  "@@locale": "en",
+  "sessionTitle": "Journaling session",
+  "@sessionTitle": {
+    "description": "Session screen: app bar title while the companion asks its questions one by one and the user answers."
+  },
+  "thinkingLabel": "Thinking…",
+  "@thinkingLabel": {
+    "description": "Session screen: shown under a spinner while the companion prepares its next question or writes the entry."
+  },
+  "questionNumber": "Question {number}",
+  "@questionNumber": {
+    "description": "Session screen: small label above the companion's current question, counting the questions of this session from 1.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "unreachableMessage": "Could not reach emotely.",
+  "@unreachableMessage": {
+    "description": "Session screen failure: the app got no answer from the companion at all (offline, timed out). Names the companion \"emotely\", always lower case. Shown above a Try again button."
+  },
+  "modelUnavailableMessage": "emotely is unavailable right now. This is not your connection, and your entry is safe. Please try again later.",
+  "@modelUnavailableMessage": {
+    "description": "Session screen failure: the AI model behind the companion is down on our side. Names the companion \"emotely\", lower case even at the start of the sentence. It must say it is not the user's connection, that what they wrote is safe, and that waiting helps. Shown above a Try again button."
+  },
+  "refusedMessage": "Something went wrong on our side. Please try again.",
+  "@refusedMessage": {
+    "description": "Session screen failure: the companion rejected this step for a reason a retry may fix. Nothing the user did wrong. Shown above a Try again button."
+  },
+  "cannotContinueMessage": "This session can no longer be continued. Start a new one; your saved entries are not affected.",
+  "@cannotContinueMessage": {
+    "description": "Session screen failure: this session can never be continued (for example it got too long), so only a fresh one helps. Reassures that earlier journal entries are untouched. Shown above the Start over button."
+  },
+  "entrySaveFailedMessage": "Your entry could not be saved. Please try again.",
+  "@entrySaveFailedMessage": {
+    "description": "Session screen failure: the finished journal entry could not be stored. Shown above a Try again button."
+  },
+  "sessionReadFailedMessage": "Could not load your unfinished session. Please try again.",
+  "@sessionReadFailedMessage": {
+    "description": "Session screen failure: the user reopened a session they had left half-way, and it could not be loaded. Shown above a Try again button."
+  },
+  "startOverButton": "Start over",
+  "@startOverButton": {
+    "description": "Session screen button under the 'can no longer be continued' failure: discards this session and starts a new one."
+  },
+  "tryAgainButton": "Try again",
+  "@tryAgainButton": {
+    "description": "Session screen button under a failure message: repeats the step that failed."
+  },
+  "submitButton": "Submit",
+  "@submitButton": {
+    "description": "Session screen: button under every answer field (text, list, rating, colors, emoji) that sends the answer to the companion. Disabled until there is an answer."
+  },
+  "longtextHint": "Write freely…",
+  "@longtextHint": {
+    "description": "Session screen: placeholder in the empty multi-line field where the user answers a question in their own words."
+  },
+  "textListHint": "Write one thing…",
+  "@textListHint": {
+    "description": "Session screen: placeholder in each field of a list answer, one short item per field (for example one thing they are grateful for). Writing in the last field opens the next."
+  },
+  "answerLengthLeft": "{count, plural, one{{count} character left} other{{count} characters left}}",
+  "@answerLengthLeft": {
+    "description": "Session screen: small note under an answer that is close to the length limit, counting down the characters still allowed.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "42"
+      }
+    }
+  },
+  "answerLengthOver": "{count, plural, one{{count} character too many. Shorten your answer to submit it.} other{{count} characters too many. Shorten your answer to submit it.}}",
+  "@answerLengthOver": {
+    "description": "Session screen: note in error colour under an answer that is over the length limit; the Submit button stays disabled until it is shortened.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "12"
+      }
+    }
+  },
+  "ratingNoAnswer": "No answer",
+  "@ratingNoAnswer": {
+    "description": "Session screen, rating answer (a 1 to 10 slider): shown in place of the number while the slider rests on its leftmost stop, where nothing is chosen yet. Also read out by screen readers for that stop."
+  },
+  "colorPickLabel": "Pick a color",
+  "@colorPickLabel": {
+    "description": "Session screen, color answer: the screen-reader label of the empty circle that adds a color, and the title of the color picker dialog it opens."
+  },
+  "colorSwatchesTab": "Primary",
+  "@colorSwatchesTab": {
+    "description": "Color picker dialog: segment that shows a grid of ready-made color swatches (the Material primary colors)."
+  },
+  "colorWheelTab": "Wheel",
+  "@colorWheelTab": {
+    "description": "Color picker dialog: segment that shows a color wheel for picking any color freely."
+  },
+  "colorCancelButton": "Cancel",
+  "@colorCancelButton": {
+    "description": "Color picker dialog button: closes the dialog and changes nothing."
+  },
+  "colorClearButton": "Clear",
+  "@colorClearButton": {
+    "description": "Color picker dialog button, only for a color already chosen: removes that color from the answer."
+  },
+  "colorSelectButton": "Select",
+  "@colorSelectButton": {
+    "description": "Color picker dialog button: puts the color shown in the picker into the answer."
+  },
+  "emojiPickLabel": "Pick an emoji",
+  "@emojiPickLabel": {
+    "description": "Session screen, emoji answer: the screen-reader label of the empty tile that opens the emoji picker to add one."
+  },
+  "emojiClearLabel": "Clear emoji",
+  "@emojiClearLabel": {
+    "description": "Emoji picker sheet: screen-reader label of the button that removes the emoji the user tapped to change."
+  },
+  "emojiSearchHint": "Smile, heart, …",
+  "@emojiSearchHint": {
+    "description": "Emoji picker sheet: placeholder in the search field, two example search words. Use words that find emoji in this language."
+  },
+  "emojiNoRecents": "No recent emoji",
+  "@emojiNoRecents": {
+    "description": "Emoji picker sheet: shown in the 'recently used' tab before the user has picked any emoji."
+  }
+}
