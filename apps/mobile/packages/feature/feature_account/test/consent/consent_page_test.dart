@@ -149,6 +149,24 @@ void main() {
       expect(robot.analytics.events, [event('consent_granted', version)]);
     });
 
+    testWidgets('shows the whole title as its heading, never cut short', (
+      tester,
+    ) async {
+      // A phone-wide app bar holds one short line, and the title is part
+      // of the wording agreed to: in German it lost its last words there.
+      await robotWith(tester).launch();
+
+      final title = find.text(tester.strings.consentTitle);
+      expect(
+        find.descendant(of: find.byType(AppBar), matching: title),
+        findsNothing,
+      );
+      // In the body it wraps: a heading, and read as one.
+      expect(title, findsOneWidget);
+      expect(tester.widget<Text>(title).maxLines, isNull);
+      expect(tester.getSemantics(title), isSemantics(isHeader: true));
+    });
+
     testWidgets('declining records nothing and answers no', (tester) async {
       final robot = robotWith(tester);
       await robot.launch();

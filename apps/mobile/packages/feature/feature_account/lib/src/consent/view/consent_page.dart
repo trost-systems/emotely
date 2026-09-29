@@ -46,7 +46,9 @@ class const ConsentView({super.key}) extends StatelessWidget {
       // start a session on a consent that had not landed.
       canPop: state is! ConsentBusy,
       child: Scaffold(
-        appBar: AppBar(title: Text(context.l10n.consentTitle)),
+        // No title here: the app bar holds one short line, and the title
+        // is part of the wording agreed to. _Ask shows it as its heading.
+        appBar: AppBar(),
         body: SafeArea(
           child: switch (state) {
             // Still reading. Showing the question here would flash it for
@@ -92,7 +94,13 @@ class _AskState() extends State<_Ask> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 16,
       children: [
-        const _Margin(child: _Points()),
+        const _Margin(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 24,
+            children: [_Title(), _Points()],
+          ),
+        ),
         TextButton(
           key: ConsentView.noticeKey,
           onPressed: () => unawaited(openPrivacyNotice()),
@@ -112,6 +120,19 @@ class _AskState() extends State<_Ask> {
         ),
         _Margin(child: _Answers(ticked: _ticked)),
       ],
+    ),
+  );
+}
+
+/// The screen's title, as the heading of what is agreed to. It wraps: in
+/// German it runs past what an app bar shows.
+class const _Title() extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Semantics(
+    header: true,
+    child: Text(
+      context.l10n.consentTitle,
+      style: Theme.of(context).textTheme.headlineSmall,
     ),
   );
 }
