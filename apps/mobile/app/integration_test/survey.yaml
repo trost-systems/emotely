@@ -1,0 +1,103 @@
+# The performance survey (#242): which screens it walks, on which phones,
+# how often, and how a finding is classified. `.claude/skills/run-app/
+# scripts/survey.sh` reads it; the scheduled workflow
+# (.github/workflows/perf-survey.yml) runs it on Firebase Test Lab; the
+# walk itself is integration_test/survey_test.dart. The performance budget
+# (perf_budget.yaml, #169) is a separate gate on an emulator; this is a
+# history of real phones, to pull up when making a screen faster.
+#
+# Changing a number here is a reviewed decision: say why in the pull
+# request.
+
+# Every screen of the feature map (.claude/skills/run-app/references/
+# feature-map.yaml), by the survey's name for it. survey.test.sh fails when
+# the feature map gains a route this list lacks. `gated` marks the three
+# main paths the performance budget gates: missing the 120 fps target on a
+# 120 Hz phone is major there and minor elsewhere.
+screens:
+  journal: { route: JournalRoute, gated: true }
+  entry: { route: EntryRoute, gated: true }
+  session: { route: SessionRoute, gated: true }
+  more: { route: MoreRoute }
+  account: { route: AccountRoute }
+  consent: { route: ConsentRoute }
+  sign_in: { route: SignInRoute }
+
+# The phones, by Test Lab model id and OS version
+# (`gcloud firebase test android models list --filter=form=PHYSICAL`,
+# `gcloud firebase test ios models list`). The Spark plan allows 5 physical
+# and 10 virtual test runs a day, shared by every run in the project,
+# scheduled or ad hoc; each device of a run is one test run.
+#
+# `nightly` is when the scheduled workflow runs the device: `daily`, or the
+# ISO weekdays (1 = Monday) of a rotation. The schedule below spends 2
+# physical runs a day, 3 on Mondays and Thursdays, which leaves at least 2
+# for an agent chasing a regression (`survey.sh ftl`, or the workflow's
+# `workflow_dispatch`). Until iOS runs (#242: the gap is in
+# references/performance-survey.md), it spends one run less.
+#
+# `judges` lists the metrics a device's findings may be filed on; the
+# rest are recorded only. A virtual device draws through its host's
+# software renderer, so only its build times say anything about the app.
+devices:
+  galaxy-s24:
+    platform: android
+    model: SC-51E
+    version: "36"
+    name: Galaxy S24
+    form: physical
+    nightly: daily
+  iphone-16-pro:
+    platform: ios
+    model: iphone16pro
+    version: "18.3"
+    name: iPhone 16 Pro
+    form: physical
+    nightly: daily
+  galaxy-a14:
+    platform: android
+    model: a14m
+    version: "34"
+    name: Galaxy A14
+    form: physical
+    nightly: [1, 4]
+  medium-phone:
+    platform: android
+    model: MediumPhone.arm
+    version: "34"
+    name: Medium Phone (virtual)
+    form: virtual
+    nightly: never
+    judges: [build_p90]
+
+# How a screen's numbers on one device become a finding. One issue per
+# screen and metric (build p90, raster p90, missed frames), whatever the
+# device; its title starts with the worst severity any device showed, and
+# a later run updates it (a comment, and the title when the severity
+# changes) instead of filing another.
+severity:
+  # critical: below the 60 fps floor on any device: a p90 over floor_ms,
+  # or max_missed_percent of the frames or more over it.
+  floor_ms: 16.7
+  max_missed_percent: 1
+  # major: more than major_drift_percent slower than the screen's trailing
+  # baseline on that device, or over target_ms on a 120 Hz device on a
+  # gated screen. minor: minor_drift_percent to major_drift_percent
+  # slower, or over target_ms on a 120 Hz device on any other screen.
+  target_ms: 8.3
+  major_drift_percent: 20
+  minor_drift_percent: 10
+  # A drift must also be at least this many milliseconds: 20% of a 1 ms
+  # build is a phone's noise, not a regression.
+  min_drift_ms: 0.5
+  # The trailing baseline: the median of the device's last baseline_runs
+  # runs of the screen within baseline_days, and no drift is judged before
+  # it has min_baseline_runs of them.
+  baseline_runs: 7
+  baseline_days: 30
+  min_baseline_runs: 3
+  # A device reporting at least this refresh rate is a 120 Hz device.
+  high_refresh_hz: 110
+  # Fewer frames than this and a screen's percentiles are recorded, not
+  # judged.
+  min_frames: 60

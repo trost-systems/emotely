@@ -26,7 +26,17 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // The performance survey runs as an instrumentation test on
+        // Firebase Test Lab (src/androidTest, #242). The runner and its
+        // rules come with the integration_test plugin (as `api`); declaring
+        // them here again fails the build on consistent resolution.
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    // The survey measures a profile build, so its test APK must target the
+    // profile variant: `./gradlew app:assembleAndroidTest
+    // -PtestBuildType=profile`. Everything else keeps the default.
+    testBuildType = (project.findProperty("testBuildType") as String?) ?: "debug"
 
     // Release signing uses the upload key from android/key.properties
     // (written by CI from secrets, never committed — see ADR 0013). Without

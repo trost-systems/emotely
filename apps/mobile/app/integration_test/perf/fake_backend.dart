@@ -52,6 +52,9 @@ class FakeBackend(
 
   var _round = 0;
 
+  /// Whether the user's consent stands, as `consent_stands` answers.
+  var _consent = true;
+
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     final service = switch (request.url.path) {
@@ -86,14 +89,27 @@ class FakeBackend(
         ('POST', '/rest/v1/sessions') => (201, {'id': SupabaseStub.sessionId}),
         ('DELETE' || 'PATCH', '/rest/v1/sessions') => (204, null),
         // Both consents stand, the journal's and usage analytics' (#204),
-        // so nothing is recorded or withdrawn.
-        ('POST', '/rest/v1/rpc/consent_stands') => (200, true),
+        // until the survey's walk withdraws and gives them again.
+        ('POST', '/rest/v1/rpc/consent_stands') => (200, _consent),
         // The name the journal greets by and a session hands the agent.
         ('GET', '/rest/v1/profiles') => (200, [profileRow(displayName: 'Sam')]),
+        // Withdrawing and giving consent again, and signing out and asking
+        // for a code: the survey's walk (survey_test.dart) reaches every
+        // screen, and these are how it gets to the last two.
+        ('POST', '/rest/v1/rpc/withdraw_consent') => _consentNow(false),
+        ('POST', '/rest/v1/rpc/record_consent') => _consentNow(true),
+        ('POST', '/auth/v1/logout') => (204, null),
+        ('POST', '/auth/v1/otp') => (200, const <String, Object?>{}),
         (final method, final path) => throw StateError(
           'fake backend: nothing answers $method $path',
         ),
       };
+
+  /// Records whether consent stands, and answers as the functions do.
+  (int, Object?) _consentNow(bool stands) {
+    _consent = stands;
+    return (204, null);
+  }
 
   /// The whole journal, or the one entry a `id=eq.<id>` filter names.
   List<Map<String, Object?>> _entries(Uri url) {
