@@ -46,6 +46,7 @@ function userContextOf(wire: UserContextWire): UserContext {
     ...(wire.name_is_placeholder === undefined
       ? {}
       : { nameIsPlaceholder: wire.name_is_placeholder }),
+    ...(wire.locale === undefined ? {} : { locale: wire.locale }),
   };
 }
 

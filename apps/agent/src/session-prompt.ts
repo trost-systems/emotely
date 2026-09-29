@@ -1,10 +1,11 @@
+import { type Language, languageNames, languageOf } from "./language.ts";
 import type { QuestionSet, UserContext } from "./session.ts";
 
 // Bump by hand on any change that alters assistant behavior; evals and
 // PostHog events pin against this id. Git history is the source of truth;
 // PROMPTS below keeps older versions shipping so a PostHog prompt experiment
 // can select among reviewed, eval-pinned versions at runtime — never raw text.
-export const PROMPT_ID = "session/v3";
+export const PROMPT_ID = "session/v4";
 
 /** The first prompt: the protocol alone, knowing nothing about the user. */
 const sessionPromptV1 = (
@@ -75,17 +76,63 @@ const sessionPromptV3 = (set: QuestionSet, context?: UserContext): string =>
   withAddressing(set, context, placeholderV3);
 
 /**
+ * How v4 speaks each language but English, beyond its name: the words
+ * CONTEXT.md gives that language, which the model would otherwise pick for
+ * itself ("Sitzung", "Sie", "Assistent").
+ */
+const conventions: Record<Exclude<Language, "en">, string> = {
+  de: `Address the user informally with "du", never "Sie", as a friend would. In German, a session is "die Session" (never "Sitzung"), the journal entry is "der Eintrag" and the journal is "das Tagebuch". Should you ever name yourself, you are emotely, in lower case — never an "Assistent".`,
+};
+
+/**
+ * v3, spoken in the user's language (#228). The questions are already in
+ * it — the session hands the prompt the set's reviewed translation — so the
+ * model only has to pass them along and write the entry in that language.
+ * Answers stay the user's own words, in whatever language they wrote them.
+ * In English it is v3 word for word.
+ */
+const sessionPromptV4 = (set: QuestionSet, context?: UserContext): string => {
+  const base = sessionPromptV3(set, context);
+  const language = languageOf(context?.locale);
+  if (language === "en") {
+    return base;
+  }
+  const name = languageNames[language];
+  return `${base}
+
+Speak ${name} with the user. The questions above are already in ${name}: pass each to ask_question exactly as written. Write the summary for complete_session in ${name}. Record every answer exactly as the user gave it, in whatever language they wrote it — never translate what the user wrote. ${conventions[language]}`;
+};
+
+/**
  * Builds the system prompt for one round. It takes the whole user context
  * so a version that learns to use a new member (a local date, a time zone)
  * needs no new signature; a version that predates a member ignores it.
  */
 export type PromptBuilder = (set: QuestionSet, context?: UserContext) => string;
 
+/**
+ * One shipped prompt version: its words, and the language its sessions run
+ * in, which picks the wording of the questions the client is shown too.
+ */
+export type PromptVersion = {
+  build: PromptBuilder;
+  language: (context?: UserContext) => Language;
+};
+
+/** Every version before v4 speaks English, whatever the app's locale. */
+const english = (): Language => "en";
+
+const current: PromptVersion = {
+  build: sessionPromptV4,
+  language: (context) => languageOf(context?.locale),
+};
+
 /** Every prompt version this build can serve; add a line when one changes. */
-export const PROMPTS: Record<string, PromptBuilder> = {
-  "session/v1": sessionPromptV1,
-  "session/v2": sessionPromptV2,
-  [PROMPT_ID]: sessionPromptV3,
+export const PROMPTS: Record<string, PromptVersion> = {
+  "session/v1": { build: sessionPromptV1, language: english },
+  "session/v2": { build: sessionPromptV2, language: english },
+  "session/v3": { build: sessionPromptV3, language: english },
+  [PROMPT_ID]: current,
 };
 
 /**
@@ -95,13 +142,13 @@ export const PROMPTS: Record<string, PromptBuilder> = {
  */
 export function resolvePrompt(
   requested: string | undefined,
-  registry: Record<string, PromptBuilder> = PROMPTS,
-): { id: string; build: PromptBuilder } {
+  registry: Record<string, PromptVersion> = PROMPTS,
+): { id: string } & PromptVersion {
   if (requested !== undefined) {
-    const build = registry[requested];
-    if (build) {
-      return { id: requested, build };
+    const version = registry[requested];
+    if (version) {
+      return { id: requested, ...version };
     }
   }
-  return { id: PROMPT_ID, build: sessionPromptV3 };
+  return { id: PROMPT_ID, ...current };
 }

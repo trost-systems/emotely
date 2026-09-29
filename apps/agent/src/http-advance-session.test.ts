@@ -130,6 +130,31 @@ describe("advance-session handler", () => {
       );
     });
 
+    it("hands the app's locale to the session beside the name", async () => {
+      assert.deepEqual(
+        await seenBy({
+          user_context: {
+            display_name: "Maya",
+            name_is_placeholder: false,
+            locale: "de",
+          },
+        }),
+        {
+          status: 200,
+          seen: { displayName: "Maya", nameIsPlaceholder: false, locale: "de" },
+        },
+      );
+    });
+
+    it("runs in English, still knowing the name, when the locale does not read", async () => {
+      assert.deepEqual(
+        await seenBy({
+          user_context: { display_name: "Maya", locale: "de_DE" },
+        }),
+        { status: 200, seen: { displayName: "Maya" } },
+      );
+    });
+
     it("runs without one, as every app before it does", async () => {
       assert.deepEqual(await seenBy({ app_version: "1.2.3" }), {
         status: 200,

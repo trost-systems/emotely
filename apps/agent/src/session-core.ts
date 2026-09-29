@@ -16,6 +16,7 @@ import {
   tool,
 } from "ai";
 import type { TokenUsage } from "./cost.ts";
+import { inLanguage, type Translations } from "./language.ts";
 import { resolvePrompt } from "./session-prompt.ts";
 import { PRIVACY_TELEMETRY } from "./telemetry.ts";
 import {
@@ -28,7 +29,14 @@ type ListAnswerType = Extract<AnswerType, "color" | "emoji" | "text_list">;
 type ScalarAnswerType = Exclude<AnswerType, ListAnswerType>;
 
 // Union on answer_type so min_answers only exists where the value is a list.
-export type Question = { id: string; text: string } & (
+// `text` is the reviewed English wording, `translations` the same question in
+// the other languages the companion speaks (#228); a version that speaks
+// the user's language shows the one it speaks, English where there is none.
+export type Question = {
+  id: string;
+  text: string;
+  translations?: Translations;
+} & (
   | { answer_type: ScalarAnswerType; min_answers?: never }
   | { answer_type: ListAnswerType; min_answers?: number }
 );
@@ -42,14 +50,19 @@ export type QuestionSet = {
 /**
  * What the companion may know about the person it talks to (#204), camelCase
  * here and `user_context` on the wire. Every member is optional: an app that
- * knows nothing sends nothing, and later members (a local date, a time zone,
- * a locale) arrive as more optional keys.
+ * knows nothing sends nothing, and later members (a local date, a time zone)
+ * arrive as more optional keys.
  */
 export type UserContext = {
   /** The name the user chose, or the placeholder emotely picked for them. */
   displayName?: string;
   /** True when [displayName] is that placeholder, not a real name. */
   nameIsPlaceholder?: boolean;
+  /**
+   * The BCP 47 locale the app shows (#228), which a prompt version that
+   * speaks the user's language answers in (`languageOf`); absent = English.
+   */
+  locale?: string;
 };
 
 export type SessionClient = {
@@ -237,6 +250,7 @@ export type AdvanceOptions = {
 function roundSettings(
   opts: AdvanceOptions,
   prompt: ReturnType<typeof resolvePrompt>,
+  questionSet: QuestionSet,
 ) {
   return {
     model: opts.model,
@@ -244,7 +258,7 @@ function roundSettings(
     // the request, never in the transcript: the transcript is signed and
     // stored by the app, and a name typed into it would outlive a rename.
     // `recordInputs: false` keeps the instructions out of telemetry too.
-    instructions: prompt.build(opts.questionSet, opts.userContext),
+    instructions: prompt.build(questionSet, opts.userContext),
     stopWhen: isStepCount(1),
     maxOutputTokens: MAX_OUTPUT_TOKENS_PER_ROUND,
     providerOptions: SESSION_PROVIDER_OPTIONS,
@@ -300,8 +314,14 @@ function withAnswer(
 export async function advanceSession(
   opts: AdvanceOptions,
 ): Promise<AdvanceResult> {
-  const { questionSet } = opts;
   const prompt = resolvePrompt(opts.promptId);
+  // The version decides the language, so one pinned before v4 stays English
+  // for a German app: the model is handed, and the client shown, the set's
+  // reviewed wording in the language the session runs in.
+  const questionSet = inLanguage(
+    opts.questionSet,
+    prompt.language(opts.userContext),
+  );
   const { answers, asked, pending } = replayTranscript(opts.messages);
   const roundLatenciesMs: number[] = [];
   const usage = emptyUsage();
@@ -324,7 +344,7 @@ export async function advanceSession(
     guard.next();
     const startedAt = performance.now();
     const result = await generateText({
-      ...roundSettings(opts, prompt),
+      ...roundSettings(opts, prompt, questionSet),
       tools,
       messages,
     });

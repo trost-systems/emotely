@@ -103,6 +103,74 @@ describe("advanceSession", () => {
     });
   });
 
+  describe("in the app's language (#228)", () => {
+    const bilingual: QuestionSet = {
+      ...set,
+      questions: [
+        {
+          id: "q-rate",
+          text: "Rate your day?",
+          translations: { de: "Wie war dein Tag?" },
+          answer_type: "rating",
+        },
+      ],
+    };
+    const firstAsk = (promptId?: string) => {
+      const systems: string[] = [];
+      const model = scriptedSessionModel([
+        {
+          ask: {
+            questionId: "q-rate",
+            question: "Rate your day?",
+            answerType: "rating",
+          },
+        },
+      ]);
+      const inner = model.doGenerate.bind(model);
+      model.doGenerate = async (options) => {
+        for (const message of options.prompt) {
+          if (message.role === "system") {
+            systems.push(message.content);
+          }
+        }
+        return await inner(options);
+      };
+      return advanceSession({
+        questionSet: bilingual,
+        model,
+        messages: [],
+        userContext: { locale: "de" },
+        ...(promptId === undefined ? {} : { promptId }),
+      }).then((result) => ({ result, system: systems.join("\n") }));
+    };
+
+    it("shows a German app the set's German wording, whatever the model wrote", async () => {
+      const { result, system } = await firstAsk();
+
+      assert.equal(result.promptId, "session/v4");
+      assert.equal(result.status, "awaiting_answer");
+      if (result.status !== "awaiting_answer") {
+        return;
+      }
+      assert.equal(result.pending.input.question, "Wie war dein Tag?");
+      // The model is handed the German question to pass along, too.
+      assert.match(system, /q-rate: Wie war dein Tag\?/);
+      assert.match(system, /Speak German/);
+    });
+
+    it("keeps a version before v4 in English for a German app", async () => {
+      const { result, system } = await firstAsk("session/v3");
+
+      assert.equal(result.promptId, "session/v3");
+      assert.equal(result.status, "awaiting_answer");
+      if (result.status !== "awaiting_answer") {
+        return;
+      }
+      assert.equal(result.pending.input.question, "Rate your day?");
+      assert.doesNotMatch(system, /Wie war dein Tag|German/);
+    });
+  });
+
   it("consumes the answer, records, and pauses at the next question", async () => {
     const start = await advanceSession({
       questionSet: set,
