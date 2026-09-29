@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:agent_client/agent_client.dart';
 import 'package:analytics/analytics.dart';
@@ -38,6 +39,9 @@ class SessionBloc({
   String? _sessionId;
   final _asked = <String, AskQuestion>{};
 
+  /// The language the screen showed when the session started (#228).
+  Locale? _locale;
+
   /// What to repeat on retry: the model round that failed, or the filing of
   /// an entry the model already produced. Neither changes state on failure,
   /// so repeating is always safe.
@@ -47,6 +51,7 @@ class SessionBloc({
     SessionStarted event,
     Emitter<SessionState> emit,
   ) async {
+    _locale = event.locale;
     if (event.resume case final id?) {
       _retry = (emit) => _onStarted(event, emit);
       emit(const SessionState.loading(answered: 0));
@@ -115,14 +120,15 @@ class SessionBloc({
 
   /// One round with the agent: the transcript and signature held so far
   /// (none starts a session), the [answer] if there is one, and who the
-  /// user is as the app knows it now. Every round goes through here, so no
-  /// path can forget the context.
+  /// user is as the app knows it now, in the language the screen shows.
+  /// Every round goes through here, so no path can forget the context.
   Future<AdvanceResponse> _advance({SessionAnswer? answer}) async =>
       await _agentClient.advance(
         transcript: _transcript,
         signature: _signature,
         answer: answer,
-        userContext: await _userContext.current(),
+        userContext: (await _userContext.current() ?? const UserContext())
+            .copyWith(locale: _locale),
       );
 
   Future<void> _onRetried(SessionRetried event, Emitter<SessionState> emit) {

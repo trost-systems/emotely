@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:agent_client/agent_client.dart';
 import 'package:contract/contract.dart';
@@ -73,12 +74,17 @@ void main() {
         userContext: const UserContext(
           displayName: 'Pebble',
           nameIsPlaceholder: true,
+          locale: Locale('de'),
         ),
       );
 
       expect(stub.lastRequest, {
         'app_version': AgentStub.appVersion,
-        'user_context': {'display_name': 'Pebble', 'name_is_placeholder': true},
+        'user_context': {
+          'display_name': 'Pebble',
+          'name_is_placeholder': true,
+          'locale': 'de',
+        },
       });
     });
 

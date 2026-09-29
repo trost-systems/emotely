@@ -7,7 +7,13 @@ sealed class SessionEvent with _$SessionEvent {
   /// that id up where it was left. Only the id travels: the bloc reads the
   /// stored round back itself, so a session discarded or finished elsewhere
   /// in the meantime starts fresh rather than resuming a copy.
-  const factory started({String? resume}) = SessionStarted;
+  ///
+  /// [locale] is the one the screen shows (`Localizations.localeOf`), which
+  /// only a widget knows: the agent asks and writes the entry in it (#228).
+  /// It holds for the whole session, so a question never switches language
+  /// half-way.
+  const factory started({required Locale locale, String? resume}) =
+      SessionStarted;
 
   /// Submit the widget's answer to the pending question.
   const factory answered(Answer answer) = SessionAnswered;

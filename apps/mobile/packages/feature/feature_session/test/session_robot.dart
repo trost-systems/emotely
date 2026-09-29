@@ -19,6 +19,7 @@ class SessionRobot(
   final AnalyticsSpy? spy,
   final SupabaseStub? supabase,
   final String? resume,
+  final Locale locale = const Locale('de'),
 }) {
   /// Set up by [launch]; the spy every test can inspect.
   late final AnalyticsSpy analytics = spy ?? AnalyticsSpy();
@@ -56,6 +57,7 @@ class SessionRobot(
       routes: [$sessionRoute],
       initialLocation: SessionRoute(resume: resume).location,
       localizations: sessionLocalizations,
+      locale: locale,
     );
   }
 

@@ -9,15 +9,21 @@ import 'package:material_ui/material_ui.dart';
 
 /// Wires a [SessionBloc] to the [AgentClient] in scope and starts a session
 /// — or, with [resume], the id of a stored session, picks that one up where
-/// the journal left it.
+/// the journal left it — in the language the screen shows: the locale the
+/// app resolved against the ones it ships, not the device's own list.
 class const SessionPage({final String? resume, super.key})
     extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => BlocProvider(
-    create: (_) =>
-        GetIt.I<SessionBloc>()..add(SessionEvent.started(resume: resume)),
-    child: const SessionView(),
-  );
+  Widget build(BuildContext context) {
+    // Read here, not in `create`, which runs once and must not listen.
+    final locale = Localizations.localeOf(context);
+    return BlocProvider(
+      create: (_) =>
+          GetIt.I<SessionBloc>()
+            ..add(SessionEvent.started(locale: locale, resume: resume)),
+      child: const SessionView(),
+    );
+  }
 }
 
 /// One journaling session, one widget per [SessionState].
