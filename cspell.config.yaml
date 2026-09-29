@@ -1,9 +1,10 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
 # The copy spell check (ADR 0020, `pnpm spell`, CI's tripwire job): every
-# message a user reads in the app's ARB files, in its own language, the
-# question wordings the agent's question set shows them, and the words
-# CONTEXT.md says to avoid. Keys, descriptions and placeholder examples
-# are not copy and are not checked here. British spellings, in the copy and
+# message a user reads in the app's ARB files and in the store listings
+# (fastlane's metadata folder), in its own language, the question wordings
+# the agent's question set shows them, and the words CONTEXT.md says to
+# avoid. In ARB files, keys, descriptions and placeholder examples are not
+# copy and are not checked here. British spellings, in the copy and
 # everywhere else we write, are cspell.us-english.yaml's.
 version: "0.2"
 # Short copy words matter too ("teh"); the default is 4.
@@ -13,6 +14,7 @@ files:
   # The questions a user reads word for word (#228): the agent's question
   # set, each wording under its language key (overrides below).
   - "apps/agent/src/default-question-set.ts"
+  - "apps/mobile/app/fastlane/metadata/**/*.txt"
 import:
   - "@cspell/dict-de-de/cspell-ext.json"
 dictionaryDefinitions:
@@ -50,17 +52,28 @@ patterns:
     pattern: '/(?<=\b(?:en|de): ")[^"]*/g'
   - name: json-escape
     pattern: /\\[nrtbf"\\\/]|\\u[0-9a-fA-F]{4}/g
-includeRegExpList: [arb-message-value]
 ignoreRegExpList: [icu-argument, icu-selector, json-escape]
-# The words CONTEXT.md says to avoid, per language. A new one goes here in
-# the same change that adds it there; `from->to` names the word to use.
+# Per format first: in an ARB file only the message values are copy, while a
+# store listing file is copy as a whole. Then the words CONTEXT.md says to
+# avoid, per language. A new one goes here in the same change that adds it
+# there; `from->to` names the word to use.
 overrides:
-  - filename: "**/l10n/*_en.arb"
+  - filename: "**/*.arb"
+    includeRegExpList: [arb-message-value]
+  - filename:
+      - "**/l10n/*_en.arb"
+      - "**/fastlane/metadata/en-US/*.txt"
+      - "**/fastlane/metadata/android/en-US/**/*.txt"
     language: en-US
+    # The App Store keywords' abbreviation for cognitive behavioral therapy.
+    words: [cbt]
     flagWords:
       - "assistant->emotely"
       - "assistants->emotely"
-  - filename: "**/l10n/*_de.arb"
+  - filename:
+      - "**/l10n/*_de.arb"
+      - "**/fastlane/metadata/de-DE/*.txt"
+      - "**/fastlane/metadata/android/de-DE/**/*.txt"
     language: de
     dictionaries: [de-words]
     flagWords:
