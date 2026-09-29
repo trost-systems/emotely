@@ -1,0 +1,11 @@
+# emotely's own analyzer plugin (tools/emotely_lints; ADR 0018, ADR 0020),
+# included from analysis_options.yaml beside it. The path is relative to
+# this file. Every rule is a lint: off until listed under `diagnostics:`.
+# The `emotely-lints` skill says how to add one.
+plugins:
+  emotely_lints:
+    path: ../../../../../../tools/emotely_lints
+    diagnostics:
+      # Off while the features' strings move into their ARB files; the last
+      # pull request of the localization stack turns it on (ADR 0020).
+      avoid_hardcoded_ui_text: false

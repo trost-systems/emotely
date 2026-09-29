@@ -679,6 +679,16 @@ if [ "$VERIFY" -eq 1 ]; then
   info "app: codegen check, format, analyze, tests — every package in apps/mobile"
   (cd "$REPO_ROOT/apps/mobile" && flutter-dart pub global run melos:melos run ci)
 
+  # Outside the workspace, so melos does not reach it; Flutter's Dart, the
+  # SDK whose analyzer the plugin runs beside.
+  info "lints: the analyzer plugin's format, analyze, tests (tools/emotely_lints)"
+  (cd "$REPO_ROOT/tools/emotely_lints" \
+    && flutter-dart pub get \
+    && flutter-dart format --set-exit-if-changed . \
+    && flutter-dart analyze --fatal-infos \
+    && flutter-dart pub global run very_good_cli:very_good dart test \
+      --coverage --min-coverage 100)
+
   info "web: format, analyze, tests (VM + Chrome), build"
   (cd "$REPO_ROOT/apps/web" \
     && dart format --set-exit-if-changed . \

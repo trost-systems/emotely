@@ -1,14 +1,23 @@
-# The one analyzer configuration for every package under apps/mobile. Each
-# package's own analysis_options.yaml is a single line:
-#
-#     include: package:analysis/analysis_options.yaml
+# The one analyzer configuration for every package under apps/mobile,
+# included by the workspace root's apps/mobile/analysis_options.yaml.
+# Packages have no options file of their own (that file says why).
 #
 # Policy: deny-by-default lints (see AGENTS.md). flutter_agent_lints decides
 # every SDK rule as an error or an explicitly reasoned `false`; the
 # experimental variant adds the rules the SDK still marks experimental
 # (primary constructors among them). Every override below must carry a
-# justification. CI runs `flutter analyze --fatal-infos` per package.
-include: package:flutter_agent_lints/experimental.yaml
+# justification. CI runs `dart analyze --fatal-infos` over the packages in
+# scope, once: `flutter analyze` does not report analyzer plugins'
+# diagnostics (flutter/flutter#187999).
+#
+# plugins.yaml adds emotely's own rules (tools/emotely_lints). It is a file
+# of its own because the analyzer only honours `plugins:` from the
+# workspace root's options (apps/mobile/analysis_options.yaml), and warns
+# about it in any other file named analysis_options.yaml; reached through an
+# include it is honoured and silent.
+include:
+  - package:flutter_agent_lints/experimental.yaml
+  - plugins.yaml
 
 analyzer:
   exclude:

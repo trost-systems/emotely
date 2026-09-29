@@ -1,9 +1,0 @@
-# The rule set is the workspace's (packages/utility/analysis); only the
-# app's native directories are excluded on top of it.
-include: package:analysis/analysis_options.yaml
-
-analyzer:
-  exclude:
-    - build/**
-    - android/**
-    - ios/**

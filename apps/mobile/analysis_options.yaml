@@ -1,0 +1,20 @@
+# The one options file of the apps/mobile workspace: every package's files
+# take their rules from here, through the shared rule set in
+# packages/utility/analysis (and its plugins.yaml). Packages carry no
+# analysis_options.yaml of their own:
+#
+# - the analyzer starts plugins only from the workspace root's options, the
+#   whole workspace being one analysis context;
+# - the plugin resolves the workspace once per options file it meets. With
+#   one per package, a cold `dart analyze` took 325 s on a laptop and outran
+#   GitHub's runner; with this one alone, 31 s (2026-09-29).
+#
+# Exclusions for a single package go here, by path.
+include: package:analysis/analysis_options.yaml
+
+analyzer:
+  exclude:
+    - "**/build/**"
+    # The app's native projects.
+    - app/android/**
+    - app/ios/**

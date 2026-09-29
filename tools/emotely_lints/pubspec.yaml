@@ -1,0 +1,25 @@
+name: emotely_lints
+description: >-
+  The analyzer plugin with emotely's own lint rules, the ones neither the SDK
+  nor flutter_agent_lints has (ADR 0018, ADR 0020).
+publish_to: none
+
+environment:
+  sdk: ^3.13.0
+
+# Not a member of the apps/mobile workspace, and cannot be: analyzer_testing
+# needs a `test` whose test_api is newer than the one flutter_test pins, so
+# the two never resolve together. Living outside apps/mobile also keeps the
+# workspace to one analysis context, and so to one plugin isolate.
+dependencies:
+  # Each analysis_server_plugin release pins one exact analyzer; bump them
+  # together, and analyzer_testing with them.
+  analysis_server_plugin: 0.3.23
+  analyzer: 14.4.0
+
+dev_dependencies:
+  analyzer_testing: 0.4.2
+  # The same rule set as every package under apps/mobile.
+  flutter_agent_lints: 1.0.1
+  test: 1.32.0
+  test_reflective_loader: 0.4.0
