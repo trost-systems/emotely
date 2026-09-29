@@ -1,4 +1,4 @@
-import 'package:feature_onboarding/src/view/onboarding_text.dart';
+import 'package:feature_onboarding/src/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The frame every step sits in: a bar with the way back and the dots,
@@ -68,7 +68,7 @@ class const _TopBar({
               ? null
               : IconButton(
                   key: StepFrame.backKey,
-                  tooltip: backLabel,
+                  tooltip: context.l10n.backTooltip,
                   onPressed: onBack,
                   icon: const Icon(Icons.chevron_left),
                 ),
@@ -89,14 +89,14 @@ class const _TopBar({
 }
 
 /// Where the user is in the flow: one wide dot among narrow ones, read out
-/// as "Step 2 of 3".
+/// as "Step 2 of 3" in the user's language.
 class const _Dots({required final int position, required final int dots})
     extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Semantics(
-      label: 'Step ${position + 1} of $dots',
+      label: context.l10n.stepProgress(position + 1, dots),
       child: ExcludeSemantics(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

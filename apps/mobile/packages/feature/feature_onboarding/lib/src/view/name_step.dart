@@ -1,4 +1,4 @@
-import 'package:feature_onboarding/src/view/onboarding_text.dart';
+import 'package:feature_onboarding/src/l10n/l10n.dart';
 import 'package:feature_onboarding/src/view/step_frame.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:profile_repository/profile_repository.dart';
@@ -39,6 +39,7 @@ class _NameStepViewState() extends State<NameStepView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = context.l10n;
     return StepFrame(
       onBack: widget.onBack,
       position: widget.position,
@@ -46,12 +47,12 @@ class _NameStepViewState() extends State<NameStepView> {
       actions: [
         PrimaryAction(
           key: NameStepView.continueKey,
-          label: continueLabel,
+          label: strings.continueButton,
           onPressed: _acceptable ? widget.onContinue : null,
         ),
         SecondaryAction(
           key: NameStepView.skipKey,
-          label: skipLabel,
+          label: strings.skipNameButton,
           onPressed: widget.onSkip,
         ),
       ],
@@ -59,7 +60,7 @@ class _NameStepViewState() extends State<NameStepView> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 28,
         children: [
-          const StepHeading(title: nameTitle, body: nameBody),
+          StepHeading(title: strings.nameTitle, body: strings.nameBody),
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             spacing: 8,
@@ -73,10 +74,10 @@ class _NameStepViewState() extends State<NameStepView> {
                 autocorrect: false,
                 style: theme.textTheme.titleLarge,
                 decoration: InputDecoration(
-                  labelText: nameLabel,
-                  hintText: nameHint,
+                  labelText: strings.nameFieldLabel,
+                  hintText: strings.nameFieldHint,
                   border: const OutlineInputBorder(),
-                  errorText: _describe(widget.problem),
+                  errorText: _describe(widget.problem, strings),
                   errorMaxLines: 3,
                 ),
                 onChanged: widget.onChanged,
@@ -91,10 +92,15 @@ class _NameStepViewState() extends State<NameStepView> {
   }
 
   /// An empty field needs no telling: Continue is simply not there yet.
-  static String? _describe(DisplayNameProblem? problem) => switch (problem) {
-    DisplayNameProblem.tooLong => nameTooLong,
+  static String? _describe(
+    DisplayNameProblem? problem,
+    OnboardingLocalizations strings,
+  ) => switch (problem) {
+    DisplayNameProblem.tooLong => strings.nameTooLongError(
+      maxDisplayNameLength,
+    ),
     DisplayNameProblem.controlCharacter ||
-    DisplayNameProblem.layoutCharacter => nameInvisibleCharacter,
+    DisplayNameProblem.layoutCharacter => strings.nameInvisibleCharacterError,
     DisplayNameProblem.empty || null => null,
   };
 }
@@ -117,7 +123,7 @@ class const _NameUse() extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              nameUse,
+              context.l10n.nameUse,
               style: theme.textTheme.bodySmall?.copyWith(color: muted),
             ),
           ),

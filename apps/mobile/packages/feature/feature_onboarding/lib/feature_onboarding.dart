@@ -13,6 +13,8 @@
 library;
 
 export 'src/flow.dart';
+// The app lists the delegate, and its tests read the strings on screen.
+export 'src/l10n/onboarding_localizations.dart' show OnboardingLocalizations;
 export 'src/navigator.dart';
 export 'src/onboarding_store.dart';
 export 'src/progress.dart';

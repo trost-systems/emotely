@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:analytics/analytics.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
+import 'package:feature_onboarding/src/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:material_ui/material_ui.dart';
@@ -71,12 +72,20 @@ class OnboardingRobot(
   Future<void> kept(Map<String, Object?> progress) => analytics.preferences
       .setString(OnboardingStore.key, jsonEncode(progress));
 
-  /// Onboarding's route as the app mounts it, opened in [phase]. Reading
-  /// this composes the container, so read it once per test.
+  /// Onboarding's strings as the screen reads them, in the locale the test
+  /// pumped: tests assert a message by its key, so a rewording never breaks
+  /// them and each holds in every language.
+  OnboardingLocalizations get strings =>
+      tester.element(find.byType(OnboardingView)).l10n;
+
+  /// Onboarding's route as the app mounts it, opened in [phase], in
+  /// [locale] or else the helpers' own. Reading this composes the
+  /// container, so read it once per test.
   Widget app({
     OnboardingPhase phase = OnboardingPhase.beforeSignUp,
     String? from,
     ThemeMode themeMode = ThemeMode.light,
+    Locale? locale,
   }) {
     registerUtilitiesUnderTest(
       GetIt.I,
@@ -86,19 +95,32 @@ class OnboardingRobot(
     );
     registerOnboarding(GetIt.I);
     GetIt.I.registerSingleton<OnboardingNavigator>(navigator);
-    return featureUnderTest(
-      routes: [$onboardingRoute],
-      initialLocation: OnboardingRoute(phase: phase, from: from).location,
-      themeMode: themeMode,
-    );
+    final routes = [$onboardingRoute];
+    final initialLocation = OnboardingRoute(phase: phase, from: from).location;
+    const localizations = [OnboardingLocalizations.delegate];
+    return locale == null
+        ? featureUnderTest(
+            routes: routes,
+            initialLocation: initialLocation,
+            themeMode: themeMode,
+            localizations: localizations,
+          )
+        : featureUnderTest(
+            routes: routes,
+            initialLocation: initialLocation,
+            themeMode: themeMode,
+            localizations: localizations,
+            locale: locale,
+          );
   }
 
   /// Opens onboarding the way `main` does: the progress restored first.
   Future<void> launch({
     OnboardingPhase phase = OnboardingPhase.beforeSignUp,
     String? from,
+    Locale? locale,
   }) async {
-    final widget = app(phase: phase, from: from);
+    final widget = app(phase: phase, from: from, locale: locale);
     await store.restore();
     await tester.pumpWidget(widget);
     await settle();

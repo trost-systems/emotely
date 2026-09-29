@@ -1,5 +1,5 @@
+import 'package:feature_onboarding/src/l10n/l10n.dart';
 import 'package:feature_onboarding/src/view/art.dart';
-import 'package:feature_onboarding/src/view/onboarding_text.dart';
 import 'package:feature_onboarding/src/view/step_frame.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -16,33 +16,36 @@ class const WelcomeStepView({
   static const haveAccountKey = Key('onboarding.welcome.have_account');
 
   @override
-  Widget build(BuildContext context) => StepFrame(
-    position: position,
-    dots: dots,
-    actions: [
-      PrimaryAction(
-        key: getStartedKey,
-        label: getStartedLabel,
-        onPressed: onGetStarted,
-      ),
-      SecondaryAction(
-        key: haveAccountKey,
-        label: haveAccountLabel,
-        onPressed: onHaveAccount,
-      ),
-    ],
-    child: const Column(
-      spacing: 36,
-      children: [
-        SunriseArt(),
-        StepHeading(
-          title: welcomeTitle,
-          body: welcomeBody,
-          textAlign: TextAlign.center,
+  Widget build(BuildContext context) {
+    final strings = context.l10n;
+    return StepFrame(
+      position: position,
+      dots: dots,
+      actions: [
+        PrimaryAction(
+          key: getStartedKey,
+          label: strings.getStartedButton,
+          onPressed: onGetStarted,
+        ),
+        SecondaryAction(
+          key: haveAccountKey,
+          label: strings.haveAccountButton,
+          onPressed: onHaveAccount,
         ),
       ],
-    ),
-  );
+      child: Column(
+        spacing: 36,
+        children: [
+          const SunriseArt(),
+          StepHeading(
+            title: strings.welcomeTitle,
+            body: strings.welcomeBody,
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// What a few minutes gets the user: three promises, each with its mark.
@@ -55,38 +58,44 @@ class const ValueStepView({
 }) extends StatelessWidget {
   static const continueKey = Key('onboarding.value.continue');
 
-  static const _icons = [
-    Icons.chat_bubble_outline,
-    Icons.palette_outlined,
-    Icons.menu_book_outlined,
-  ];
-
   @override
-  Widget build(BuildContext context) => StepFrame(
-    onBack: onBack,
-    position: position,
-    dots: dots,
-    actions: [
-      PrimaryAction(
-        key: continueKey,
-        label: continueLabel,
-        onPressed: onContinue,
-      ),
-    ],
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 32,
-      children: [
-        const StepHeading(title: valueTitle),
-        for (final (index, promise) in promises.indexed)
-          _Promise(
-            icon: _icons[index],
-            title: promise.title,
-            body: promise.body,
-          ),
+  Widget build(BuildContext context) {
+    final strings = context.l10n;
+    return StepFrame(
+      onBack: onBack,
+      position: position,
+      dots: dots,
+      actions: [
+        PrimaryAction(
+          key: continueKey,
+          label: strings.continueButton,
+          onPressed: onContinue,
+        ),
       ],
-    ),
-  );
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 32,
+        children: [
+          StepHeading(title: strings.valueTitle),
+          _Promise(
+            icon: Icons.chat_bubble_outline,
+            title: strings.guidedPromiseTitle,
+            body: strings.guidedPromiseBody,
+          ),
+          _Promise(
+            icon: Icons.palette_outlined,
+            title: strings.answerPromiseTitle,
+            body: strings.answerPromiseBody,
+          ),
+          _Promise(
+            icon: Icons.menu_book_outlined,
+            title: strings.journalPromiseTitle,
+            body: strings.journalPromiseBody,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class const _Promise({

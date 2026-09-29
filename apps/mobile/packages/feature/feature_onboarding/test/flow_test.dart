@@ -1,6 +1,9 @@
 import 'package:analytics/analytics.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
+import 'package:feature_onboarding/src/l10n/l10n.dart';
+import 'package:feature_onboarding/src/view/placeholder_names.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:profile_repository/profile_repository.dart';
 
 void main() {
   group(OnboardingFlow, () {
@@ -130,20 +133,22 @@ void main() {
     });
   });
 
-  test('the placeholders are the twelve agreed names', () {
-    expect(placeholderNames, [
-      'Pebble',
-      'Pip',
-      'Maple',
-      'Biscuit',
-      'Sparrow',
-      'Clover',
-      'Noodle',
-      'Sunny',
-      'Juniper',
-      'Button',
-      'Toffee',
-      'Wren',
-    ]);
+  group(OnboardingLocalizations, () {
+    test('offers distinct placeholder names the profile takes, in every '
+        'locale', () {
+      for (final locale in OnboardingLocalizations.supportedLocales) {
+        final names = lookupOnboardingLocalizations(locale).placeholderNameList;
+
+        expect(names, isNotEmpty, reason: '$locale');
+        expect(names.toSet(), hasLength(names.length), reason: '$locale');
+        for (final name in names) {
+          expect(
+            DisplayName.check(name),
+            isA<DisplayNameAccepted>(),
+            reason: '$locale: $name',
+          );
+        }
+      }
+    });
   });
 }

@@ -1,9 +1,12 @@
 import 'package:analytics/analytics.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
-import 'package:feature_onboarding/src/view/onboarding_text.dart';
+import 'package:feature_onboarding/src/l10n/l10n.dart';
+import 'package:feature_onboarding/src/view/placeholder_names.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:profile_repository/profile_repository.dart'
+    show maxDisplayNameLength;
 import 'package:supabase_flutter/supabase_flutter.dart'
     show PostgrestApiException;
 import 'package:testing/testing.dart';
@@ -40,22 +43,28 @@ void main() {
       final robot = OnboardingRobot(tester);
       await robot.launch();
 
+      final strings = robot.strings;
+
       expect(robot.welcome, findsOneWidget);
-      expect(find.text(welcomeTitle), findsOneWidget);
-      expect(find.bySemanticsLabel('Step 1 of 3'), findsOneWidget);
+      expect(find.text(strings.welcomeTitle), findsOneWidget);
+      expect(find.bySemanticsLabel(strings.stepProgress(1, 3)), findsOneWidget);
 
       await robot.tap(robot.getStarted);
 
       expect(robot.value, findsOneWidget);
-      for (final promise in promises) {
-        expect(find.text(promise.title), findsOneWidget);
+      for (final title in [
+        strings.guidedPromiseTitle,
+        strings.answerPromiseTitle,
+        strings.journalPromiseTitle,
+      ]) {
+        expect(find.text(title), findsOneWidget);
       }
-      expect(find.bySemanticsLabel('Step 2 of 3'), findsOneWidget);
+      expect(find.bySemanticsLabel(strings.stepProgress(2, 3)), findsOneWidget);
 
       await robot.tap(robot.valueContinue);
 
       expect(robot.name, findsOneWidget);
-      expect(find.text(nameTitle), findsOneWidget);
+      expect(find.text(strings.nameTitle), findsOneWidget);
       expect(tester.widget<TextField>(robot.nameField).autofillHints, [
         AutofillHints.givenName,
       ]);
@@ -64,8 +73,8 @@ void main() {
       await robot.tap(robot.nameContinue);
 
       expect(robot.hello, findsOneWidget);
-      expect(find.text(helloTitle('Peter')), findsOneWidget);
-      final title = tester.widget<Text>(find.text(helloTitle('Peter')));
+      expect(find.text(strings.helloTitle('Peter')), findsOneWidget);
+      final title = tester.widget<Text>(find.text(strings.helloTitle('Peter')));
       expect(title.style?.fontStyle, FontStyle.normal);
     });
 
@@ -126,29 +135,32 @@ void main() {
         ),
       );
 
+      final tooLong = robot.strings.nameTooLongError(maxDisplayNameLength);
+      final invisible = robot.strings.nameInvisibleCharacterError;
+
       expect(button().onPressed, isNull);
 
       await robot.type('   ');
       expect(button().onPressed, isNull);
-      expect(find.text(nameTooLong), findsNothing);
+      expect(find.text(tooLong), findsNothing);
 
       await robot.type('a' * 41);
       expect(button().onPressed, isNull);
-      expect(find.text(nameTooLong), findsOneWidget);
+      expect(find.text(tooLong), findsOneWidget);
 
       await robot.type('Pe\tter');
       expect(button().onPressed, isNull);
-      expect(find.text(nameInvisibleCharacter), findsOneWidget);
+      expect(find.text(invisible), findsOneWidget);
 
       // A paragraph separator or a right-to-left override is as invisible
       // as a tab, and gets the same answer (#214).
       await robot.type('Pe\u2029ter');
       expect(button().onPressed, isNull);
-      expect(find.text(nameInvisibleCharacter), findsOneWidget);
+      expect(find.text(invisible), findsOneWidget);
 
       await robot.type('Pe\u202eter');
       expect(button().onPressed, isNull);
-      expect(find.text(nameInvisibleCharacter), findsOneWidget);
+      expect(find.text(invisible), findsOneWidget);
 
       // The keyboard's "done" does not slip past the check either.
       await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -171,11 +183,12 @@ void main() {
       await robot.type('Pe');
       await robot.tap(robot.skip);
 
+      final strings = robot.strings;
       final placeholder = robot.store.progress.placeholder;
-      expect(placeholderNames, contains(placeholder));
+      expect(strings.placeholderNameList, contains(placeholder));
       expect(robot.skipped, findsOneWidget);
-      expect(find.text(skippedTitle), findsOneWidget);
-      expect(find.text(skippedBody(placeholder!)), findsOneWidget);
+      expect(find.text(strings.skippedTitle), findsOneWidget);
+      expect(find.text(strings.skippedBody(placeholder!)), findsOneWidget);
 
       await robot.tap(robot.tellYou);
 
@@ -267,7 +280,7 @@ void main() {
       await robot.launch(phase: OnboardingPhase.afterSignIn);
 
       expect(robot.retry, findsOneWidget);
-      expect(find.text(saveFailedMessage), findsOneWidget);
+      expect(find.text(robot.strings.saveFailedMessage), findsOneWidget);
       expect(robot.store.readyForAccount, isTrue);
       expect(robot.navigator.asked, isEmpty);
       expect(robot.analytics.exceptions, [
@@ -432,7 +445,11 @@ void main() {
 
       expect(robot.name, findsOneWidget);
       expect(robot.back, findsNothing);
-      expect(find.bySemanticsLabel(RegExp('Step')), findsNothing);
+      // Its only step would read as the first of one, were it counted.
+      expect(
+        find.bySemanticsLabel(robot.strings.stepProgress(1, 1)),
+        findsNothing,
+      );
 
       await robot.type('Peter');
       await robot.tap(robot.nameContinue);
@@ -449,7 +466,10 @@ void main() {
       await robot.tap(robot.skip);
 
       expect(robot.saved, hasLength(1));
-      expect(placeholderNames, contains(robot.saved.single.name));
+      expect(
+        robot.strings.placeholderNameList,
+        contains(robot.saved.single.name),
+      );
       expect(robot.saved.single.isPlaceholder, isTrue);
       expect(robot.navigator.asked, ['finish journal from null']);
     });
@@ -594,15 +614,67 @@ void main() {
       await after.launch(phase: OnboardingPhase.afterSignIn);
 
       expect(after.saved.single.name, needle);
+      final placeholders = [
+        for (final locale in OnboardingLocalizations.supportedLocales)
+          ...lookupOnboardingLocalizations(locale).placeholderNameList,
+      ];
       for (final spy in [robot.analytics, after.analytics]) {
         expect(spy.events, isNotEmpty);
         for (final sent in spy.outgoingStrings) {
           expect(sent, isNot(contains(needle)));
-          for (final placeholder in placeholderNames) {
+          for (final placeholder in placeholders) {
             expect(sent, isNot(contains(placeholder)));
           }
         }
       }
+    });
+  });
+
+  group('placeholder names', () {
+    // Which list a skip picks from depends on the phone's language, so these
+    // pump a locale of their own and read every other through the lookup.
+    final languages = _Languages();
+
+    testWidgets("names a skipper from the phone's language", (tester) async {
+      final language = languages.currentValue!;
+      final robot = OnboardingRobot(tester);
+      await robot.launch(locale: language);
+      await robot.toName();
+
+      await robot.tap(robot.skip);
+
+      final placeholder = robot.store.progress.placeholder!;
+      expect(robot.strings.placeholderNameList, contains(placeholder));
+      expect(find.text(robot.strings.skippedBody(placeholder)), findsOneWidget);
+      for (final other in OnboardingLocalizations.supportedLocales) {
+        if (other != language) {
+          expect(
+            lookupOnboardingLocalizations(other).placeholderNameList,
+            isNot(contains(placeholder)),
+            reason: 'picked from $language, found in $other',
+          );
+        }
+      }
+    }, variant: languages);
+
+    testWidgets('keeps the name it picked when the phone speaks another '
+        'language later', (tester) async {
+      final picked = lookupOnboardingLocalizations(const Locale('de'))
+          .placeholderNameList
+          .first;
+      final robot = OnboardingRobot(tester);
+      await robot.kept({
+        'flow_version': onboardingFlowVersion,
+        'completed': ['welcome', 'value', 'name'],
+        'draft': '',
+        'placeholder': picked,
+        'started': true,
+      });
+      await robot.launch(locale: const Locale('en'));
+
+      // The English list has no such name, so only the kept one can show.
+      expect(robot.strings.placeholderNameList, isNot(contains(picked)));
+      expect(find.text(robot.strings.skippedBody(picked)), findsOneWidget);
     });
   });
 
@@ -673,4 +745,9 @@ void main() {
       await tester.expectMeetsAccessibilityGuidelines(widget);
     });
   });
+}
+
+/// Every language onboarding speaks, one run of the test in each.
+class _Languages() extends ValueVariant<Locale> {
+  this : super({...OnboardingLocalizations.supportedLocales});
 }
