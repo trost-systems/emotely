@@ -33,7 +33,8 @@ is the template; every other locale the app ships has the same keys.
 
 1. **The words.** Use [`CONTEXT.md`](../../../CONTEXT.md)'s terms, in
    English and German; a term missing there is added there first, with its
-   German form. German says "du" and keeps "emotely" lower case.
+   German form. English is US English ("color", "journaling"); German says
+   "du". "emotely" stays lower case in both.
 2. **The template.** Add the key to `l10n/<package>_en.arb` with an
    `@description`: which screen, what the words do there, who reads them —
    the translator's only context. Keys name the role (`deleteAccountButton`),
@@ -74,7 +75,7 @@ touching the digest or the version.
 | --- | --- | --- |
 | `avoid_hardcoded_ui_text` (analyze) | a literal, or a `const` holding one, reaches the UI in `lib/` | move it to the ARB files |
 | `melos run l10n:check` | generated code is stale or uncommitted, or a locale lacks a key | `flutter gen-l10n`, commit; add the key |
-| `pnpm spell` (tripwire job) | a word is misspelt, or a term `CONTEXT.md` says to avoid appears | fix the copy; a real word goes into `cspell/words.txt` |
+| `pnpm spell` (tripwire job) | a word is misspelt, or a term `CONTEXT.md` says to avoid appears | fix the copy; a real word goes into `cspell/project-words.txt` (names, any language) or `cspell/de-words.txt` |
 | `test/app/localizations_test.dart` | a package lacks a shipped locale, or iOS does not declare it | add the ARB file; `Info.plist` |
 
 ## Adding a package that shows text, or a locale

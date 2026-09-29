@@ -665,6 +665,9 @@ if [ "$VERIFY" -eq 1 ]; then
   info "tripwire: no workaround comments, no suppression without a reason"
   (cd "$REPO_ROOT" && pnpm tripwire)
 
+  info "spell: the app's copy, English and German, and the words CONTEXT.md avoids"
+  (cd "$REPO_ROOT" && pnpm spell)
+
   info "agent: lint, typecheck, tests, contract tripwire"
   (cd "$REPO_ROOT" && pnpm lint && pnpm typecheck && pnpm -r --if-present test)
   (cd "$REPO_ROOT" && pnpm --filter @emotely/contract schema \

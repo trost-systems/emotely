@@ -229,6 +229,11 @@ jobs:
       - run: pnpm exec ast-grep test
       - run: pnpm exec bash scripts/tripwire.test.sh
       - run: pnpm exec bash scripts/tripwire.sh --format github
+      # The copy spell check (ADR 0020): the app's ARB messages, English and
+      # German, and the words CONTEXT.md says to avoid. Offline, under a
+      # second; every pull request, since copy can change anywhere.
+      - run: |
+          pnpm spell --issue-template '::error file=$filename,line=$row,col=$col::$message: $text'
 
   # The schema gate: migrations apply to a fresh Postgres, and the pgTAP suite
   # proves row-level security holds (ADR 0010). Only the database container

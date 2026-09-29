@@ -7,13 +7,15 @@ It is also the vocabulary of every word a user reads, wherever it is
 written: the app's ARB files, the site, the sign-in mails, the store
 listings, the companion's prompts. A term's **German** line is how every
 German surface says it. What a term says to **avoid** stays out of copy in
-every language; the single words among those are in `cspell/avoid.txt`,
-which the copy spell check (`pnpm spell`, CI's tripwire job) flags.
+every language; the single words among those are `flagWords` in
+`cspell.config.yaml`, which the copy spell check (`pnpm spell`, CI's
+tripwire job) fails on.
 
 Keeping it: add a term here before the first copy that needs it, with its
 German form. Change a term here first, then every surface that uses it, in
-one pull request. A new word to avoid goes into `cspell/avoid.txt` in the
-same change; a phrase cannot be checked there, so review holds it.
+one pull request. A new word to avoid goes into `cspell.config.yaml`
+in the same change, per language; a phrase cannot be checked there, so
+review holds it.
 
 ## Companion
 

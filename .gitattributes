@@ -1,5 +1,37 @@
-# Generated code: collapsed in GitHub diffs and excluded from language stats.
-*.g.dart linguist-generated=true
-*.freezed.dart linguist-generated=true
-*.mocks.dart linguist-generated=true
-packages/contract/contract.schema.json linguist-generated=true
+# How files read in a pull request on GitHub, and how git stores them.
+# `git check-attr --all <path>` shows what applies to a file.
+
+# Every tracked text file is LF already; this keeps CRLF from arriving.
+* text=auto eol=lf
+
+# Generated: hidden by default in a pull request's diff (a click shows it),
+# left out of the language bar and code search, still counted in the +/-
+# totals. The CI regeneration checks guard these files, not review. Never
+# mark a hand-written file this way: its changes would be hidden too.
+*.g.dart linguist-generated
+*.freezed.dart linguist-generated
+*.mocks.dart linguist-generated
+packages/contract/contract.schema.json linguist-generated
+# flutter gen-l10n's output. The ARB files beside it are the hand-written
+# copy, reviewed in full: never mark *.arb.
+apps/mobile/**/l10n/*_localizations*.dart linguist-generated
+# Jaspr's builder output.
+apps/web/lib/*.options.dart linguist-generated
+# Lockfiles GitHub does not already know as generated (pnpm-lock.yaml it
+# does).
+pubspec.lock linguist-generated
+Podfile.lock linguist-generated
+Gemfile.lock linguist-generated
+
+# ARB files are JSON: highlighted as such in a diff.
+*.arb linguist-language=JSON
+
+# Hunk headers name the enclosing section or function. git has built-in
+# drivers for these; none exists for Dart or TypeScript.
+*.md diff=markdown
+*.sh diff=bash
+*.swift diff=swift
+*.kt diff=kotlin
+*.kts diff=kotlin
+*.css diff=css
+*.html diff=html
