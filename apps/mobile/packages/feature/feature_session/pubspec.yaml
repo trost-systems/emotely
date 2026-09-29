@@ -13,7 +13,8 @@ dependencies:
   design_system: any
   # The emoji picker the legacy app shipped, at its current major; it still
   # builds on package:flutter/material.dart, which is why it is shown under
-  # a MaterialUiCompatibilityBridge (see emoji_input.dart).
+  # a MaterialUiCompatibilityBridge (see emoji_input.dart), and why its
+  # search is our own (emoji_search.dart).
   emoji_picker_flutter: 4.5.4
   # The color picker: hue wheel plus Material swatches, built on
   # material_ui like the rest of the app (the legacy flutter_colorpicker

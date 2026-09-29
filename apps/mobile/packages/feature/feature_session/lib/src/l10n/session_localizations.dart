@@ -260,6 +260,12 @@ abstract class SessionLocalizations {
   /// **'Smile, heart, …'**
   String get emojiSearchHint;
 
+  /// Emoji picker sheet, while searching: tooltip and screen-reader label of the arrow left of the search field that closes the search and shows every emoji again.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to all emoji'**
+  String get emojiSearchBackTooltip;
+
   /// Emoji picker sheet: shown in the 'recently used' tab before the user has picked any emoji.
   ///
   /// In en, this message translates to:

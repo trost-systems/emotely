@@ -26,5 +26,6 @@
   "emojiPickLabel": "Emoji wählen",
   "emojiClearLabel": "Emoji entfernen",
   "emojiSearchHint": "Lächeln, Herz, …",
+  "emojiSearchBackTooltip": "Zurück zu allen Emoji",
   "emojiNoRecents": "Noch keine zuletzt genutzten Emoji"
 }

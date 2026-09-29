@@ -30,3 +30,14 @@ target, dedupe analyzes zero files here and reports a clean result. Fold a clone
 helper in `lib/`. In tests, fold one only when a file repeats the same setup
 often enough that a robot or `setUp` reads better; one explicit arrange block
 per test is the norm there.
+
+## Dependencies still on `flutter/material.dart`
+
+Such a package is shown under `MaterialUiCompatibilityBridge`, which maps
+the theme and localizations but supplies no legacy `Material`. Any of its
+widgets that needs one (`TextField`, `IconButton`, `InkWell`) throws "No
+Material widget found" in debug builds only, so release hides it. Replace
+those parts through the package's builder hooks with `material_ui` widgets,
+which find the `Material` the screen or sheet already has — the emoji
+picker's search in `feature_session` (`emoji_search.dart`) is the pattern —
+and drive every part a user can open in a widget test.
