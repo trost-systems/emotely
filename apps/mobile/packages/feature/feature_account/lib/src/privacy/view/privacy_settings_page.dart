@@ -44,7 +44,9 @@ class const PrivacySettingsPage({super.key}) extends StatelessWidget {
               alignment: AlignmentDirectional.centerStart,
               child: TextButton(
                 key: noticeKey,
-                onPressed: () => unawaited(openPrivacyNotice()),
+                onPressed: () => unawaited(
+                  openPrivacyNotice(Localizations.localeOf(context)),
+                ),
                 child: Text(context.l10n.privacyNoticeLink),
               ),
             ),

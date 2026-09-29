@@ -84,7 +84,9 @@ class const SignInPage({final SignInMode mode = SignInMode.signIn, super.key})
                     // behind a menu.
                     TextButton(
                       key: privacyNoticeKey,
-                      onPressed: () => unawaited(openPrivacyNotice()),
+                      onPressed: () => unawaited(
+                        openPrivacyNotice(Localizations.localeOf(context)),
+                      ),
                       child: Text(context.l10n.privacyNoticeButton),
                     ),
                   ],

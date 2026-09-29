@@ -352,7 +352,7 @@ void main() {
 
       await robot.tap(robot.notice);
 
-      expect(launcher.launched, [privacyNoticeUrl]);
+      expect(launcher.launched, [privacyNoticeUrl(const Locale('en'))]);
       // Reading the notice is not consenting to it.
       expect(robot.supabase.to(consentGrant), isEmpty);
       expect(robot.consent, findsOneWidget);
