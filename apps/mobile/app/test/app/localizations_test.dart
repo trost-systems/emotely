@@ -45,6 +45,29 @@ void main() {
       );
     });
 
+    test('are all offered by Android as a per-app language', () {
+      // Android 13+ lists an app under Settings → Apps → Language only with
+      // an android:localeConfig; without one the app follows the system
+      // language alone, and a German speaker on an English phone cannot
+      // pick German for emotely.
+      final manifest = File('android/app/src/main/AndroidManifest.xml')
+          .readAsStringSync();
+      expect(
+        manifest,
+        contains('android:localeConfig="@xml/locale_config"'),
+        reason: 'the manifest does not point Android at locale_config.xml',
+      );
+
+      final config = File('android/app/src/main/res/xml/locale_config.xml')
+          .readAsStringSync();
+      expect(
+        RegExp('<locale android:name="([^"]+)"')
+            .allMatches(config)
+            .map((match) => match.group(1)),
+        unorderedEquals(supportedLocales.map((locale) => locale.languageCode)),
+      );
+    });
+
     testWidgets('are what a phone in another language reads', (tester) async {
       // The one test in the app that looks at the words themselves: every
       // other test asserts a message by its key, so rewording never breaks
