@@ -1,6 +1,7 @@
 import 'package:design_system/design_system.dart'
     show DesignSystemLocalizations;
 import 'package:emotely/l10n/l10n.dart';
+import 'package:feature_account/feature_account.dart' show AccountLocalizations;
 import 'package:material_ui/material_ui.dart';
 
 /// Every package's strings, then Flutter's own (ADR 0020). A package that
@@ -14,6 +15,7 @@ import 'package:material_ui/material_ui.dart';
 /// `flutter_localizations` that gen-l10n's `localizationsDelegates` lists.
 const localizationsDelegates = <LocalizationsDelegate<Object?>>[
   AppLocalizations.delegate,
+  AccountLocalizations.delegate,
   DesignSystemLocalizations.delegate,
   ...GlobalMaterialLocalizations.delegates,
 ];

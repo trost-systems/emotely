@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:feature_account/src/account/bloc/account_bloc.dart';
 import 'package:feature_account/src/consent/bloc/consent_bloc.dart';
+import 'package:feature_account/src/l10n/l10n.dart';
 import 'package:feature_account/src/more/view/profile_card.dart';
 import 'package:feature_account/src/profile/bloc/profile_bloc.dart';
 import 'package:feature_account/src/routes.dart';
 import 'package:feature_account/src/usage_analytics/bloc/usage_analytics_bloc.dart';
-import 'package:feedback_link/feedback_link.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:legal_links/legal_links.dart';
@@ -49,72 +49,64 @@ class const MoreView({super.key}) extends StatelessWidget {
   static const accountKey = Key('more_view.account');
   static const profileKey = ProfileCard.tileKey;
 
-  static const privacySection = 'Privacy';
-  static const aboutSection = 'About';
-  static const accountSection = 'Account';
-
-  static const privacySettingsLabel = 'Privacy settings';
-
-  static const accountLabel = 'Delete account';
-  static const accountExplanation = 'Removes your account and every entry.';
-
-  /// Under the feedback row: says what the mail already contains, so
-  /// nobody has to wonder whether tapping it sends anything they wrote.
-  static const feedbackExplanation =
-      'Opens your mail app. Carries your app version and device, '
-      'nothing from your journal.';
-
   /// The gap above every section heading: what tells one section from the
   /// next at a glance.
   static const sectionGap = 24.0;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('More')),
-    body: const SafeArea(
-      // A handful of rows, all built at once rather than as they scroll
-      // into view: a screen reader, and a test, can reach every row
-      // without scrolling first.
-      child: SingleChildScrollView(
-        padding: EdgeInsets.only(bottom: sectionGap),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ProfileCard(),
-            // The privacy notice and the imprint are required to be
-            // reachable from inside the app — Apple guideline 5.1.1 (i) and
-            // Google Play's User Data policy for the notice, § 5 DDG for the
-            // imprint of a German provider.
-            _Section(
-              title: privacySection,
-              children: [_PrivacySettingsRow(), _PrivacyNoticeRow()],
-            ),
-            _Section(
-              title: aboutSection,
-              children: [_FeedbackRow(), _ImprintRow()],
-            ),
-            // Last, alone, below everything the user might want first.
-            _Section(title: accountSection, children: [_AccountRow()]),
-          ],
+  Widget build(BuildContext context) {
+    final strings = context.l10n;
+    return Scaffold(
+      appBar: AppBar(title: Text(strings.moreTitle)),
+      body: SafeArea(
+        // A handful of rows, all built at once rather than as they scroll
+        // into view: a screen reader, and a test, can reach every row
+        // without scrolling first.
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: sectionGap),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const ProfileCard(),
+              // The privacy notice and the imprint are required to be
+              // reachable from inside the app — Apple guideline 5.1.1 (i)
+              // and Google Play's User Data policy for the notice, § 5 DDG
+              // for the imprint of a German provider.
+              _Section(
+                title: strings.morePrivacySection,
+                children: const [_PrivacySettingsRow(), _PrivacyNoticeRow()],
+              ),
+              _Section(
+                title: strings.moreAboutSection,
+                children: const [_FeedbackRow(), _ImprintRow()],
+              ),
+              // Last, alone, below everything the user might want first.
+              _Section(
+                title: strings.moreAccountSection,
+                children: const [_AccountRow()],
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// Privacy settings, with where both consents stand in one line.
 class const _PrivacySettingsRow() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final strings = context.l10n;
     final journal = context.select<ConsentBloc, String?>(
-      (bloc) => _journalStatus(bloc.state),
+      (bloc) => _journalStatus(bloc.state, strings),
     );
     final usage = context.select<UsageAnalyticsBloc, String?>(
-      (bloc) => _usageAnalyticsStatus(bloc.state),
+      (bloc) => _usageAnalyticsStatus(bloc.state, strings),
     );
     return ListTile(
       key: MoreView.privacySettingsKey,
-      title: const Text(MoreView.privacySettingsLabel),
+      title: Text(strings.morePrivacySettingsRow),
       subtitle: Text([?journal, ?usage].join(' · ')),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => unawaited(_open(context)),
@@ -132,18 +124,25 @@ class const _PrivacySettingsRow() extends StatelessWidget {
 }
 
 /// The journal consent in a word, or nothing while it is not in hand.
-String? _journalStatus(ConsentState state) => switch (state) {
-  ConsentKnown(:final granted) => granted ? 'Journal: allowed' : 'Journal: off',
-  ConsentWithdrawFailure() => 'Journal: allowed',
-  ConsentWriteFailure() => 'Journal: off',
-  ConsentUnknown() || ConsentBusy() || ConsentFailure() => null,
-};
+String? _journalStatus(ConsentState state, AccountLocalizations strings) =>
+    switch (state) {
+      ConsentKnown(:final granted) =>
+        granted
+            ? strings.moreJournalAllowedStatus
+            : strings.moreJournalOffStatus,
+      ConsentWithdrawFailure() => strings.moreJournalAllowedStatus,
+      ConsentWriteFailure() => strings.moreJournalOffStatus,
+      ConsentUnknown() || ConsentBusy() || ConsentFailure() => null,
+    };
 
 /// Usage analytics in a word, or nothing while the choice is not read.
-String? _usageAnalyticsStatus(UsageAnalyticsState state) => switch (state) {
-  UsageAnalyticsState.allowed => 'Usage analytics: on',
+String? _usageAnalyticsStatus(
+  UsageAnalyticsState state,
+  AccountLocalizations strings,
+) => switch (state) {
+  UsageAnalyticsState.allowed => strings.moreUsageAnalyticsOnStatus,
   UsageAnalyticsState.denied ||
-  UsageAnalyticsState.undecided => 'Usage analytics: off',
+  UsageAnalyticsState.undecided => strings.moreUsageAnalyticsOffStatus,
   UsageAnalyticsState.unknown => null,
 };
 
@@ -152,7 +151,7 @@ class const _PrivacyNoticeRow() extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListTile(
     key: MoreView.privacyNoticeKey,
-    title: const Text(privacyNoticeLabel),
+    title: Text(context.l10n.morePrivacyNoticeRow),
     trailing: const Icon(Icons.open_in_new),
     onTap: () => unawaited(openPrivacyNotice()),
   );
@@ -163,24 +162,30 @@ class const _ImprintRow() extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListTile(
     key: MoreView.imprintKey,
-    title: const Text(imprintLabel),
+    title: Text(context.l10n.moreImprintRow),
     trailing: const Icon(Icons.open_in_new),
     onTap: () => unawaited(openImprint()),
   );
 }
 
 /// The feedback mail, which the [AccountBloc] composes because it carries
-/// the build the app runs.
+/// the build the app runs. The line under it says what the mail already
+/// contains, so nobody has to wonder whether tapping it sends anything they
+/// wrote.
 class const _FeedbackRow() extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => ListTile(
-    key: MoreView.feedbackKey,
-    title: const Text(feedbackLabel),
-    subtitle: const Text(MoreView.feedbackExplanation),
-    trailing: const Icon(Icons.mail_outline),
-    onTap: () =>
-        context.read<AccountBloc>().add(const AccountEvent.feedbackRequested()),
-  );
+  Widget build(BuildContext context) {
+    final strings = context.l10n;
+    return ListTile(
+      key: MoreView.feedbackKey,
+      title: Text(strings.moreFeedbackRow),
+      subtitle: Text(strings.moreFeedbackExplanation),
+      trailing: const Icon(Icons.mail_outline),
+      onTap: () => context.read<AccountBloc>().add(
+        const AccountEvent.feedbackRequested(),
+      ),
+    );
+  }
 }
 
 /// The account screen, on the feature's own route (ADR 0016), in the error
@@ -188,11 +193,12 @@ class const _FeedbackRow() extends StatelessWidget {
 class const _AccountRow() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final strings = context.l10n;
     final error = Theme.of(context).colorScheme.error;
     return ListTile(
       key: MoreView.accountKey,
-      title: Text(MoreView.accountLabel, style: TextStyle(color: error)),
-      subtitle: const Text(MoreView.accountExplanation),
+      title: Text(strings.moreDeleteAccountRow, style: TextStyle(color: error)),
+      subtitle: Text(strings.moreDeleteAccountExplanation),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => const AccountRoute().go(context),
     );

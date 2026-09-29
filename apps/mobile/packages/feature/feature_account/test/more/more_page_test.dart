@@ -1,6 +1,5 @@
 import 'package:analytics/analytics.dart';
 import 'package:feature_account/feature_account.dart';
-import 'package:feature_account/src/more/view/profile_card.dart';
 import 'package:feedback_link/feedback_link.dart';
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +10,7 @@ import 'package:testing/testing.dart';
 
 import '../fake_account_device_data.dart';
 import '../fake_account_navigator.dart';
+import '../strings.dart';
 
 /// Drives the More tab on its own, composed the way the app composes it:
 /// the utilities and this feature registered over a scripted Supabase, the
@@ -55,6 +55,7 @@ class _MoreRobot(
     return featureUnderTest(
       routes: [$moreRoute],
       initialLocation: const MoreRoute().location,
+      localizations: accountLocalizations,
     );
   }
 
@@ -107,13 +108,13 @@ void main() {
 
       final rows = [
         robot.profile,
-        robot.heading(MoreView.privacySection),
+        robot.heading(tester.strings.morePrivacySection),
         robot.privacySettings,
         robot.notice,
-        robot.heading(MoreView.aboutSection),
+        robot.heading(tester.strings.moreAboutSection),
         robot.feedback,
         robot.imprint,
-        robot.heading(MoreView.accountSection),
+        robot.heading(tester.strings.moreAccountSection),
         robot.account,
       ];
       for (var i = 0; i + 1 < rows.length; i++) {
@@ -133,11 +134,13 @@ void main() {
       // what tells the sections apart at a glance; a row-to-row gap is
       // none at all.
       final beforeAbout =
-          tester.getTopLeft(robot.heading(MoreView.aboutSection)).dy -
+          tester.getTopLeft(robot.heading(tester.strings.moreAboutSection)).dy -
           tester.getBottomLeft(robot.notice).dy;
       expect(beforeAbout, greaterThanOrEqualTo(MoreView.sectionGap));
       final beforeAccount =
-          tester.getTopLeft(robot.heading(MoreView.accountSection)).dy -
+          tester
+              .getTopLeft(robot.heading(tester.strings.moreAccountSection))
+              .dy -
           tester.getBottomLeft(robot.imprint).dy;
       expect(beforeAccount, greaterThanOrEqualTo(MoreView.sectionGap));
       expect(
@@ -154,11 +157,14 @@ void main() {
       final delete = tester.widget<Text>(
         find.descendant(
           of: robot.account,
-          matching: find.text(MoreView.accountLabel),
+          matching: find.text(tester.strings.moreDeleteAccountRow),
         ),
       );
       expect(delete.style?.color, colors.error);
-      expect(find.text(MoreView.accountExplanation), findsOneWidget);
+      expect(
+        find.text(tester.strings.moreDeleteAccountExplanation),
+        findsOneWidget,
+      );
     });
 
     group('privacy settings', () {
@@ -166,7 +172,11 @@ void main() {
         final robot = robotWith(tester);
         await robot.launch();
 
-        expect(robot.status, 'Journal: allowed · Usage analytics: on');
+        expect(
+          robot.status,
+          '${tester.strings.moreJournalAllowedStatus} · '
+          '${tester.strings.moreUsageAnalyticsOnStatus}',
+        );
       });
 
       testWidgets('says so when neither stands', (tester) async {
@@ -177,14 +187,18 @@ void main() {
         );
         await robot.launch();
 
-        expect(robot.status, 'Journal: off · Usage analytics: off');
+        expect(
+          robot.status,
+          '${tester.strings.moreJournalOffStatus} · '
+          '${tester.strings.moreUsageAnalyticsOffStatus}',
+        );
       });
 
       testWidgets('leaves out what it could not read', (tester) async {
         final robot = robotWith(tester, reads: [restRefused()]);
         await robot.launch();
 
-        expect(robot.status, 'Usage analytics: on');
+        expect(robot.status, tester.strings.moreUsageAnalyticsOnStatus);
       });
 
       testWidgets('opens on its own route, and the line follows what '
@@ -199,11 +213,15 @@ void main() {
 
         await robot.tap(find.byKey(PrivacySettingsPage.usageAnalyticsKey));
         robot.supabase.rest(consentRead, [consentStands(granted: false)]);
-        await tester.pageBack();
+        await tester.tapBack();
         await robot.settle();
 
         expect(robot.more, findsOneWidget);
-        expect(robot.status, 'Journal: off · Usage analytics: off');
+        expect(
+          robot.status,
+          '${tester.strings.moreJournalOffStatus} · '
+          '${tester.strings.moreUsageAnalyticsOffStatus}',
+        );
       });
     });
 
@@ -218,7 +236,7 @@ void main() {
       expect(find.byType(AccountPage), findsOneWidget);
       expect(robot.more, findsNothing);
 
-      await tester.pageBack();
+      await tester.tapBack();
       await robot.settle();
 
       expect(robot.more, findsOneWidget);
@@ -258,7 +276,7 @@ void main() {
         expect(
           find.descendant(
             of: robot.profile,
-            matching: find.text(ProfileCard.addName),
+            matching: find.text(tester.strings.profileCardAddName),
           ),
           findsOneWidget,
         );
@@ -275,7 +293,7 @@ void main() {
         expect(
           find.descendant(
             of: robot.profile,
-            matching: find.text(ProfileView.hiddenByApple),
+            matching: find.text(tester.strings.signInHiddenByApple),
           ),
           findsOneWidget,
         );
@@ -292,7 +310,7 @@ void main() {
         expect(
           find.descendant(
             of: robot.profile,
-            matching: find.text(ProfileCard.title),
+            matching: find.text(tester.strings.profileCardTitle),
           ),
           findsOneWidget,
         );
@@ -303,7 +321,7 @@ void main() {
         expect(
           find.descendant(
             of: robot.profile,
-            matching: find.text(ProfileCard.title),
+            matching: find.text(tester.strings.profileCardTitle),
           ),
           findsOneWidget,
         );
@@ -327,7 +345,7 @@ void main() {
 
         expect(find.byType(ProfilePage), findsOneWidget);
 
-        await tester.pageBack();
+        await tester.tapBack();
         await robot.settle();
 
         expect(robot.more, findsOneWidget);
@@ -341,7 +359,7 @@ void main() {
         final robot = robotWith(tester);
         await robot.launch();
 
-        expect(find.text(ProfileView.signOutLabel), findsNothing);
+        expect(find.text(tester.strings.profileSignOutButton), findsNothing);
       });
     });
 
@@ -361,7 +379,7 @@ void main() {
         expect(rect.width, screen.width);
       }
       expect(
-        tester.getRect(find.text(privacyNoticeLabel)).left,
+        tester.getRect(find.text(tester.strings.morePrivacyNoticeRow)).left,
         screen.left + 16,
       );
     });

@@ -53,7 +53,7 @@ void main() {
       // The gate, not the session.
       expect(robot.consent, findsOneWidget);
       expect(robot.session, findsNothing);
-      expect(find.text(consentTitle), findsOneWidget);
+      expect(find.text(robot.strings.consentTitle), findsOneWidget);
 
       // The box starts unticked, and until it is ticked the button cannot
       // be pressed at all: no pre-ticked box, and no "by continuing".
@@ -292,7 +292,7 @@ void main() {
       // already consented, every time the network hiccups, is what trains
       // people to tick boxes without reading them.
       expect(robot.checkbox, findsNothing);
-      expect(find.text(consentUnknownMessage), findsOneWidget);
+      expect(find.text(robot.strings.consentUnknownMessage), findsOneWidget);
       // The screen's failed read is reported, content-free, as its own
       // step; the journal's only defers to the screen, so it is not counted
       // twice.
@@ -305,7 +305,7 @@ void main() {
       await robot.tap(robot.retry);
 
       expect(robot.checkbox, findsOneWidget);
-      expect(find.text(consentUnknownMessage), findsNothing);
+      expect(find.text(robot.strings.consentUnknownMessage), findsNothing);
     });
 
     testWidgets('a failed read can be backed out of', (tester) async {
@@ -341,7 +341,7 @@ void main() {
       // write failed, so calling that a refusal would be the app
       // misreporting its own history.
       expect(robot.declined, findsNothing);
-      expect(find.text(consentFailureMessage), findsOneWidget);
+      expect(find.text(robot.strings.consentFailureMessage), findsOneWidget);
     });
 
     testWidgets('the notice is a link the screen can open', (tester) async {
@@ -369,27 +369,16 @@ void main() {
       // app's own words and in three points: what is sent and to whom, what
       // may not be done with it, why it is sensitive and that it can be
       // taken back. The full notice is one tap away for the rest.
-      expect(consentPoints, hasLength(3));
-      for (final point in consentPoints) {
+      final points = consentPoints(robot.strings);
+      expect(points, hasLength(3));
+      for (final point in points) {
         expect(find.text('${point.lead} ${point.body}'), findsOneWidget);
       }
-      expect(find.textContaining('training'), findsOneWidget);
-      expect(find.text(consentCheckboxLabel), findsOneWidget);
+      expect(find.text(robot.strings.consentCheckboxLabel), findsOneWidget);
       expect(find.byKey(ConsentView.noticeKey), findsOneWidget);
-
-      // EDPB 05/2020 para 64 (vi): a third-country transfer and its
-      // safeguard are minimum elements, so they are named rather than
-      // implied.
-      expect(find.textContaining('outside the EU'), findsOneWidget);
-      expect(
-        find.textContaining('standard contractual clauses'),
-        findsOneWidget,
-      );
-
-      // The name travels with the answers so the companion can address the
-      // user (#204), whether they chose it or emotely picked a nickname.
-      expect(find.textContaining('the name you chose'), findsOneWidget);
-      expect(find.textContaining('nickname emotely picked'), findsOneWidget);
+      // That the wording names each element explicit consent requires is
+      // checked on the wording itself, in every language: feature_account's
+      // consent_version_test.
     });
 
     testWidgets('stays usable and complete at double text size', (
@@ -424,11 +413,12 @@ void main() {
 
       // The consent events carry a version and nothing else; no wording of
       // the notice and nothing the user wrote ever reaches PostHog.
+      final strings = robot.strings;
       for (final outgoing in robot.analytics.outgoingStrings) {
-        for (final point in consentPoints) {
+        for (final point in consentPoints(strings)) {
           expect(outgoing, isNot(contains(point.body)));
         }
-        expect(outgoing, isNot(contains(consentCheckboxLabel)));
+        expect(outgoing, isNot(contains(strings.consentCheckboxLabel)));
       }
       expect(robot.analytics.events, [
         event('journal_viewed', journalViewed),

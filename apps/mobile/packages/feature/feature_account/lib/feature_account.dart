@@ -11,7 +11,8 @@
 /// bloc, screen and outcome are exported because the app owns that route
 /// and the journal gates every session on its answer; the usage-analytics
 /// prompt because the app mounts it above every screen, and its version
-/// because the app hands it to the consent record.
+/// because the app hands it to the consent record. Its strings are
+/// `AccountLocalizations`, whose delegate the app lists (ADR 0020).
 library;
 
 export 'src/account/account_device_data.dart';
@@ -20,6 +21,9 @@ export 'src/consent/bloc/consent_bloc.dart';
 export 'src/consent/consent_outcome.dart';
 export 'src/consent/consent_text.dart';
 export 'src/consent/view/consent_page.dart';
+// The app lists the delegate, and reads the strings where it words
+// something for this feature (the snack bar after the consent screen).
+export 'src/l10n/account_localizations.dart' show AccountLocalizations;
 export 'src/more/view/more_page.dart';
 export 'src/navigator.dart';
 export 'src/privacy/view/privacy_settings_page.dart';

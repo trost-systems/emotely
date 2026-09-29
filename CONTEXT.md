@@ -86,13 +86,18 @@ version**, which names one particular sequence.
 What the user asked to be called: the name the app greets them by and the
 companion addresses them with. Chosen in the app, never taken from Apple or
 Google, and not the account's email or legal name. Either typed by the user
-or a **placeholder name**. Avoid "username", "first name" and "nickname".
+or a **placeholder name**. Copy calls it the user's name; avoid "username",
+and "first name" or "nickname" as a label for it. Those two only suggest
+what a user might type, as the name step does.
 
 ## Placeholder name
 
 A display name the user did not choose: the playful stand-in (Pebble, Maple,
 Wren, …) given when they skip the name step. It stays a placeholder until the
-user types a name of their own.
+user types a name of their own. Copy calls it the name emotely picked, and
+code and prompts call it a placeholder name. Never a nickname (German: never
+"Spitzname"): the name step invites "a first name or a nickname", so a
+nickname is one the user gives themselves, and the word means only that.
 
 ## User context
 

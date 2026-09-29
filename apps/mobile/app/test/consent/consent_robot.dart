@@ -39,8 +39,8 @@ class ConsentRobot(
   Finder get decline => find.byKey(ConsentView.declineKey);
   Finder get notice => find.byKey(ConsentView.noticeKey);
   Finder get retry => find.byKey(ConsentView.retryKey);
-  Finder get consentFailure => find.text(consentFailureMessage);
-  Finder get declined => find.text(consentDeclinedMessage);
+  Finder get consentFailure => find.text(strings.consentFailureMessage);
+  Finder get declined => find.text(strings.consentDeclinedMessage);
 
   Finder get privacySettings => find.byKey(MoreView.privacySettingsKey);
   Finder get journalSwitch => find.byKey(PrivacySettingsPage.journalKey);
@@ -48,7 +48,12 @@ class ConsentRobot(
   Finder get journalRetry => find.byKey(PrivacySettingsPage.journalRetryKey);
   Finder get moreNotice => find.byKey(MoreView.privacyNoticeKey);
   Finder get moreImprint => find.byKey(MoreView.imprintKey);
-  Finder get withdrawFailure => find.text(withdrawFailureMessage);
+  Finder get withdrawFailure =>
+      find.text(strings.consentWithdrawFailureMessage);
+
+  /// The account feature's strings in the language the app shows.
+  AccountLocalizations get strings =>
+      AccountLocalizations.of(tester.element(find.byType(Navigator).first));
 
   Widget get app =>
       appUnderTest(agent: agent, supabase: supabase, analytics: analytics);
@@ -91,7 +96,6 @@ class ConsentRobot(
   }
 
   Future<void> back() async {
-    await tester.pageBack();
-    await settle();
+    await tester.tapBack();
   }
 }

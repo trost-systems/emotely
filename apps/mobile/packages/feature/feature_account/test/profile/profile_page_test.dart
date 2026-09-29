@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart'
     show PostgrestApiException;
 import 'package:testing/testing.dart';
 
+import '../strings.dart';
 import 'profile_robot.dart';
 
 void main() {
@@ -31,7 +32,7 @@ void main() {
 
       expect(robot.name, 'peter');
       expect(robot.initial, 'P');
-      expect(find.text(ProfileView.nameHelper), findsOneWidget);
+      expect(find.text(tester.strings.profileNameHelper), findsOneWidget);
       expect(
         find.descendant(
           of: robot.email,
@@ -39,15 +40,22 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(tester.widget<Text>(robot.method).data, ProfileView.viaGoogle);
+      expect(
+        tester.widget<Text>(robot.method).data,
+        tester.strings.signInViaGoogle,
+      );
       expect(robot.placeholderLine, findsNothing);
     });
 
-    for (final (provider, email, line) in [
-      ('email', SupabaseStub.email, ProfileView.viaEmailCode),
-      ('apple', 'peter@icloud.com', ProfileView.viaApple),
-      ('apple', 'x7k2@privaterelay.appleid.com', ProfileView.viaAppleRelay),
-      ('phone', SupabaseStub.email, ProfileView.viaUnknown),
+    for (final (provider, email, line) in <(String, String, _LineOf)>[
+      ('email', SupabaseStub.email, (strings) => strings.signInViaEmailCode),
+      ('apple', 'peter@icloud.com', (strings) => strings.signInViaApple),
+      (
+        'apple',
+        'x7k2@privaterelay.appleid.com',
+        (strings) => strings.signInViaAppleRelay,
+      ),
+      ('phone', SupabaseStub.email, (strings) => strings.signInViaUnknown),
     ]) {
       testWidgets('says how an account of $provider signs in ($email)', (
         tester,
@@ -55,7 +63,7 @@ void main() {
         final robot = robotWith(tester, row: profileRow(displayName: 'Peter'));
         await robot.launch(email: email, provider: provider);
 
-        expect(tester.widget<Text>(robot.method).data, line);
+        expect(tester.widget<Text>(robot.method).data, line(tester.strings));
       });
     }
 
@@ -68,7 +76,7 @@ void main() {
       expect(
         find.descendant(
           of: robot.email,
-          matching: find.text(ProfileView.hiddenByApple),
+          matching: find.text(tester.strings.signInHiddenByApple),
         ),
         findsOneWidget,
       );
@@ -90,7 +98,7 @@ void main() {
       await robot.launch();
 
       expect(robot.name, isEmpty);
-      expect(find.text(ProfileView.nameHint), findsOneWidget);
+      expect(find.text(tester.strings.profileNameHint), findsOneWidget);
       expect(robot.initial, isNull);
     });
 
@@ -104,9 +112,9 @@ void main() {
       expect(robot.name, 'Pebble');
       expect(
         tester.widget<Text>(robot.placeholderLine).data,
-        'Pebble · a nickname I picked – tell me yours',
+        tester.strings.profilePlaceholderLine('Pebble'),
       );
-      expect(find.text(ProfileView.nameHelper), findsNothing);
+      expect(find.text(tester.strings.profileNameHelper), findsNothing);
     });
 
     testWidgets('saves a new name on the done key, and says so', (
@@ -122,7 +130,7 @@ void main() {
         'display_name': 'zoë',
         'name_is_placeholder': false,
       });
-      expect(robot.message, ProfileView.savedMessage);
+      expect(robot.message, tester.strings.profileSavedMessage);
       expect(robot.analytics.events, [
         event('display_name_changed', {
           'flow_version': testOnboardingFlowVersion,
@@ -149,7 +157,7 @@ void main() {
         'display_name': 'Petra',
         'name_is_placeholder': false,
       });
-      expect(robot.message, ProfileView.savedMessage);
+      expect(robot.message, tester.strings.profileSavedMessage);
       expect(robot.placeholderLine, findsNothing);
     });
 
@@ -175,7 +183,7 @@ void main() {
 
       expect(robot.supabase.to(profileSave), hasLength(1));
       expect(robot.name, 'Petra');
-      expect(robot.message, ProfileView.savedMessage);
+      expect(robot.message, tester.strings.profileSavedMessage);
     });
 
     testWidgets('writes nothing when the name did not change', (tester) async {
@@ -200,7 +208,7 @@ void main() {
 
       expect(robot.supabase.to(profileSave), isEmpty);
       expect(robot.name, 'Peter');
-      expect(robot.message, ProfileView.emptyMessage);
+      expect(robot.message, tester.strings.profileNameEmptyMessage);
     });
 
     testWidgets('says nothing when an empty field stays empty', (tester) async {
@@ -225,7 +233,7 @@ void main() {
 
       expect(robot.supabase.to(profileSave), isEmpty);
       expect(robot.name, 'Peter');
-      expect(robot.message, ProfileView.refusedMessage);
+      expect(robot.message, tester.strings.profileNameRefusedMessage);
     });
 
     testWidgets('refuses a name with a line separator in it the same way', (
@@ -239,7 +247,7 @@ void main() {
 
       expect(robot.supabase.to(profileSave), isEmpty);
       expect(robot.name, 'Peter');
-      expect(robot.message, ProfileView.refusedMessage);
+      expect(robot.message, tester.strings.profileNameRefusedMessage);
     });
 
     testWidgets('goes back to the saved name when saving fails, and reports '
@@ -255,7 +263,7 @@ void main() {
       await robot.done();
 
       expect(robot.name, 'Peter');
-      expect(robot.message, ProfileView.saveFailedMessage);
+      expect(robot.message, tester.strings.profileSaveFailedMessage);
       expect(robot.analytics.exceptions, [
         captured(
           withheld(PostgrestApiException, code: 'XX000', statusCode: 409),
@@ -287,7 +295,10 @@ void main() {
       await robot.launch();
 
       expect(robot.nameField, findsNothing);
-      expect(find.text(ProfileView.loadFailedMessage), findsOneWidget);
+      expect(
+        find.text(tester.strings.profileLoadFailedMessage),
+        findsOneWidget,
+      );
       expect(robot.analytics.exceptions, [
         captured(
           withheld(PostgrestApiException, code: 'XX000', statusCode: 409),
@@ -339,7 +350,8 @@ void main() {
       await robot.launch();
 
       expect(find.byType(AccountPage), findsNothing);
-      expect(find.textContaining('Delete'), findsNothing);
+      expect(find.text(tester.strings.accountDeleteButton), findsNothing);
+      expect(find.text(tester.strings.moreDeleteAccountRow), findsNothing);
     });
 
     testWidgets('meets accessibility guidelines with a name and without', (
@@ -358,3 +370,6 @@ void main() {
     });
   });
 }
+
+/// How a test names the line a method shows, before a locale is at hand.
+typedef _LineOf = String Function(AccountLocalizations strings);

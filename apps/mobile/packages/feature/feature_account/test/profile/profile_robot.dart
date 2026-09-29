@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:testing/testing.dart';
 
 import '../fake_account_navigator.dart';
+import '../strings.dart';
 
 /// Drives the Profile screen, composed the way the app composes it: the
 /// utilities and this feature registered over a scripted Supabase, a fake
@@ -59,7 +60,10 @@ class ProfileRobot(
     GetIt.I.registerSingleton<AccountNavigator>(navigator);
     // The page alone rather than its route under More: More reads the
     // profile too, and would take the rounds a test scripts for this screen.
-    return pageUnderTest(const ProfilePage());
+    return pageUnderTest(
+      const ProfilePage(),
+      localizations: accountLocalizations,
+    );
   }
 
   /// Opens the screen for an account of [provider] with address [email].
@@ -88,7 +92,7 @@ class ProfileRobot(
 
   /// Leaves the field without the done key: a tap elsewhere on the screen.
   Future<void> leaveField() async {
-    await tester.tap(find.text(ProfileView.signedInAsLabel));
+    await tester.tap(find.text(tester.strings.profileSignedInAsLabel));
     await settle();
   }
 

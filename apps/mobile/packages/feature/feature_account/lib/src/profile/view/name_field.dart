@@ -1,3 +1,4 @@
+import 'package:feature_account/src/l10n/l10n.dart';
 import 'package:feature_account/src/profile/bloc/profile_bloc.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -65,7 +66,7 @@ class _NameFieldState() extends State<NameField> {
       // The counter is in code points, as the limit is; redraw it per key.
       onChanged: (_) => setState(() {}),
       decoration: InputDecoration(
-        labelText: 'Name',
+        labelText: context.l10n.profileNameLabel,
         // The label stays up so the empty field shows its question.
         floatingLabelBehavior: FloatingLabelBehavior.always,
         hintText: widget.hint,

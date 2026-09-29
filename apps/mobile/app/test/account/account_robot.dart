@@ -29,8 +29,12 @@ class AccountRobot(
   Finder get cancel => find.byKey(AccountView.cancelKey);
   Finder get retry => find.byKey(AccountView.retryKey);
   Finder get signOut => find.byKey(AccountView.signOutKey);
-  Finder get failure => find.text(AccountView.failureMessage);
+  Finder get failure => find.text(strings.accountFailureMessage);
   Finder get busy => find.byType(CircularProgressIndicator);
+
+  /// The account feature's strings in the language the app shows.
+  AccountLocalizations get strings =>
+      AccountLocalizations.of(tester.element(find.byType(Navigator).first));
 
   Widget get app =>
       appUnderTest(agent: agent, supabase: supabase, analytics: analytics);
@@ -63,7 +67,6 @@ class AccountRobot(
   }
 
   Future<void> back() async {
-    await tester.pageBack();
-    await settle();
+    await tester.tapBack();
   }
 }

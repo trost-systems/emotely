@@ -82,7 +82,4 @@ class AccountBloc({
     }
     emit(const AccountState.deleted());
   }
-
-  static const failureMessage =
-      'Could not delete your account. Check your connection and try again.';
 }

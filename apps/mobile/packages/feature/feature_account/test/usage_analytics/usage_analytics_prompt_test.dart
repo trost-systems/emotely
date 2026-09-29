@@ -7,6 +7,8 @@ import 'package:legal_links/legal_links.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:testing/testing.dart';
 
+import '../strings.dart';
+
 /// Drives the first-launch sheet the way the app mounts it: above the
 /// navigator, over whatever screen is underneath, with the utilities and
 /// this feature registered over a spied PostHog and the device's stored
@@ -31,23 +33,25 @@ class _PromptRobot(final WidgetTester tester, {final AnalyticsChoice? stored}) {
       analytics: analytics,
     );
     registerAccount(GetIt.I);
-    return featureUnderTest(
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (context, state) => Scaffold(
-            body: Center(
-              child: FilledButton(
-                key: underneathKey,
-                onPressed: () {},
-                child: const Text('Sign in'),
-              ),
+    final routes = [
+      GoRoute(
+        path: '/',
+        builder: (context, state) => Scaffold(
+          body: Center(
+            child: FilledButton(
+              key: underneathKey,
+              onPressed: () {},
+              child: const Text('Sign in'),
             ),
           ),
         ),
-      ],
+      ),
+    ];
+    return featureUnderTest(
+      routes: routes,
       initialLocation: '/',
       above: (context, child) => UsageAnalyticsPrompt(child: child),
+      localizations: accountLocalizations,
     );
   }
 
@@ -71,15 +75,12 @@ void main() {
       await robot.launch();
 
       expect(robot.sheet, findsOneWidget);
-      for (final text in [
-        usageAnalyticsTitle,
-        usageAnalyticsBody,
-        usageAnalyticsCounted,
-        usageAnalyticsNever,
-        usageAnalyticsChangeHint,
-      ]) {
-        expect(find.text(text), findsOneWidget);
+      // Every string the answer is given on: the wording the version names.
+      final strings = tester.strings;
+      for (final text in usageAnalyticsWording(strings)) {
+        expect(find.text(text), findsOneWidget, reason: text);
       }
+      expect(find.text(strings.usageAnalyticsNoticeLink), findsOneWidget);
       // Nothing is set up while the question stands.
       expect(robot.analytics.lifecycle, isEmpty);
 

@@ -45,7 +45,10 @@ void main() {
       await robot.askToDelete();
 
       expect(robot.confirmation, findsOneWidget);
-      expect(find.text(AccountView.confirmationMessage), findsOneWidget);
+      expect(
+        find.text(robot.strings.accountConfirmationMessage),
+        findsOneWidget,
+      );
       expect(robot.supabase.to(deletion), isEmpty);
 
       await robot.tap(robot.confirm);

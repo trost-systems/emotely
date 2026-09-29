@@ -7,6 +7,7 @@ import 'package:testing/testing.dart';
 
 import '../fake_account_device_data.dart';
 import '../fake_account_navigator.dart';
+import '../strings.dart';
 
 /// Drives the account screen on its own route, composed the way the app
 /// composes it: the utilities and this feature registered over a scripted
@@ -30,7 +31,7 @@ class _AccountRobot(
   Finder get cancel => find.byKey(AccountView.cancelKey);
   Finder get retry => find.byKey(AccountView.retryKey);
   Finder get signOut => find.byKey(AccountView.signOutKey);
-  Finder get failure => find.text(AccountView.failureMessage);
+  Finder get failure => find.text(tester.strings.accountFailureMessage);
   Finder get busy => find.byType(CircularProgressIndicator);
 
   /// A launcher route that pushes the account screen, as the More tab
@@ -45,21 +46,20 @@ class _AccountRobot(
     registerAccount(GetIt.I);
     GetIt.I.registerSingleton<AccountNavigator>(navigator);
     GetIt.I.registerSingleton<AccountDeviceData>(deviceData);
-    return pageUnderTest(
-      Builder(
-        builder: (context) => Scaffold(
-          body: Center(
-            child: FilledButton(
-              key: openKey,
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const AccountPage()),
-              ),
-              child: const Text('Account'),
+    final home = Builder(
+      builder: (context) => Scaffold(
+        body: Center(
+          child: FilledButton(
+            key: openKey,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const AccountPage()),
             ),
+            child: const Text('Account'),
           ),
         ),
       ),
     );
+    return pageUnderTest(home, localizations: accountLocalizations);
   }
 
   /// Signed in, on the account screen.
@@ -81,8 +81,7 @@ class _AccountRobot(
   }
 
   Future<void> back() async {
-    await tester.pageBack();
-    await settle();
+    await tester.tapBack();
   }
 }
 
@@ -122,13 +121,19 @@ void main() {
       await robot.launch();
 
       expect(robot.account, findsOneWidget);
-      expect(find.text(AccountView.consequenceMessage), findsOneWidget);
+      expect(
+        find.text(tester.strings.accountConsequenceMessage),
+        findsOneWidget,
+      );
       expect(robot.confirmation, findsNothing);
 
       await robot.askToDelete();
 
       expect(robot.confirmation, findsOneWidget);
-      expect(find.text(AccountView.confirmationMessage), findsOneWidget);
+      expect(
+        find.text(tester.strings.accountConfirmationMessage),
+        findsOneWidget,
+      );
       expect(robot.supabase.to(deletion), isEmpty);
 
       await robot.tap(robot.confirm);

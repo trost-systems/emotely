@@ -6,6 +6,8 @@ import 'package:legal_links/legal_links.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:testing/testing.dart';
 
+import '../strings.dart';
+
 /// Drives the consent screen on its own route, mounted the way the app
 /// mounts it and pushed from a launcher the way the journal pushes it —
 /// and records what the route popped with.
@@ -39,27 +41,29 @@ class _ConsentRobot(
     registerAccount(GetIt.I);
     // The consent route as the app mounts it, pushed from a launcher the
     // way the journal pushes it; the route brings its own bloc.
-    return featureUnderTest(
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (context, state) => Scaffold(
-            body: Center(
-              child: FilledButton(
-                key: openKey,
-                onPressed: () async {
-                  result = await const ConsentRoute().push<ConsentOutcome>(
-                    context,
-                  );
-                },
-                child: const Text('Start'),
-              ),
+    final routes = [
+      GoRoute(
+        path: '/',
+        builder: (context, state) => Scaffold(
+          body: Center(
+            child: FilledButton(
+              key: openKey,
+              onPressed: () async {
+                result = await const ConsentRoute().push<ConsentOutcome>(
+                  context,
+                );
+              },
+              child: const Text('Start'),
             ),
           ),
         ),
-        $consentRoute,
-      ],
+      ),
+      $consentRoute,
+    ];
+    return featureUnderTest(
+      routes: routes,
       initialLocation: '/',
+      localizations: accountLocalizations,
     );
   }
 
@@ -88,8 +92,7 @@ class _ConsentRobot(
   }
 
   Future<void> back() async {
-    await tester.pageBack();
-    await settle();
+    await tester.tapBack();
   }
 }
 
@@ -116,11 +119,20 @@ void main() {
       final robot = robotWith(tester, grants: [rpcReturned(null)]);
       await robot.launch();
 
-      expect(find.text(consentTitle), findsOneWidget);
+      final strings = tester.strings;
+      expect(find.text(strings.consentTitle), findsOneWidget);
       // Three points, each read as one sentence by a screen reader: the
       // lead and its body are one text, not a heading and a paragraph.
-      for (final point in consentPoints) {
+      for (final point in consentPoints(strings)) {
         expect(find.text('${point.lead} ${point.body}'), findsOneWidget);
+      }
+      for (final text in [
+        strings.consentCheckboxLabel,
+        strings.consentAgreeButton,
+        strings.consentDeclineButton,
+        strings.consentReadNoticeLink,
+      ]) {
+        expect(find.text(text), findsOneWidget, reason: text);
       }
       // The box starts unticked, and until it is ticked the button cannot
       // be pressed at all: no pre-ticked box, and no "by continuing".
@@ -135,6 +147,24 @@ void main() {
       expect(robot.result, ConsentOutcome.granted);
       expect(robot.consent, findsNothing);
       expect(robot.analytics.events, [event('consent_granted', version)]);
+    });
+
+    testWidgets('shows the whole title as its heading, never cut short', (
+      tester,
+    ) async {
+      // A phone-wide app bar holds one short line, and the title is part
+      // of the wording agreed to: in German it lost its last words there.
+      await robotWith(tester).launch();
+
+      final title = find.text(tester.strings.consentTitle);
+      expect(
+        find.descendant(of: find.byType(AppBar), matching: title),
+        findsNothing,
+      );
+      // In the body it wraps: a heading, and read as one.
+      expect(title, findsOneWidget);
+      expect(tester.widget<Text>(title).maxLines, isNull);
+      expect(tester.getSemantics(title), isSemantics(isHeader: true));
     });
 
     testWidgets('declining records nothing and answers no', (tester) async {
@@ -213,7 +243,7 @@ void main() {
 
       expect(robot.busy, findsOneWidget);
       // The write is in flight; leaving now would strand it.
-      await tester.pageBack();
+      await tester.tap(find.byType(BackButton));
       await tester.pump();
 
       expect(robot.consent, findsOneWidget);
@@ -235,7 +265,7 @@ void main() {
       await robot.consentAndContinue();
 
       expect(robot.result, isNull);
-      expect(find.text(consentFailureMessage), findsOneWidget);
+      expect(find.text(tester.strings.consentFailureMessage), findsOneWidget);
       expect(robot.analytics.events, isEmpty);
       expect(robot.analytics.exceptions, hasLength(1));
 
@@ -267,7 +297,7 @@ void main() {
       final robot = robotWith(tester, reads: [restRefused()]);
       await robot.launch();
 
-      expect(find.text(consentUnknownMessage), findsOneWidget);
+      expect(find.text(tester.strings.consentUnknownMessage), findsOneWidget);
       expect(robot.checkbox, findsNothing);
       expect(robot.analytics.exceptions, hasLength(1));
 

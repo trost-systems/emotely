@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:testing/testing.dart';
 
 import '../fake_account_navigator.dart';
+import '../strings.dart';
 
 /// Drives Privacy settings on its own route under More, composed the way
 /// the app composes it: the utilities and this feature over a scripted
@@ -44,6 +45,7 @@ class _PrivacyRobot(
     return featureUnderTest(
       routes: [$moreRoute],
       initialLocation: const PrivacySettingsRoute().location,
+      localizations: accountLocalizations,
     );
   }
 
@@ -85,11 +87,14 @@ void main() {
       final robot = robotWith(tester);
       await robot.launch();
 
-      expect(find.text(PrivacySettingsPage.title), findsOneWidget);
+      expect(find.text(tester.strings.privacySettingsTitle), findsOneWidget);
       expect(robot.isOn(robot.journal), isTrue);
-      expect(find.text(PrivacySettingsPage.journalOnNote), findsOneWidget);
+      expect(find.text(tester.strings.privacyJournalOnNote), findsOneWidget);
       expect(robot.isOn(robot.usage), isTrue);
-      expect(find.text(PrivacySettingsPage.usageAnalyticsNote), findsOneWidget);
+      expect(
+        find.text(tester.strings.privacyUsageAnalyticsNote),
+        findsOneWidget,
+      );
     });
 
     group('journal sessions', () {
@@ -104,7 +109,10 @@ void main() {
         await robot.launch();
 
         expect(
-          find.text('Given 20 Sep 2026. ${PrivacySettingsPage.journalOnNote}'),
+          find.text(
+            '${tester.strings.privacyJournalGiven(given)} '
+            '${tester.strings.privacyJournalOnNote}',
+          ),
           findsOneWidget,
         );
       });
@@ -115,7 +123,7 @@ void main() {
         await robot.launch();
 
         expect(robot.isOn(robot.journal), isTrue);
-        expect(find.text(PrivacySettingsPage.journalOnNote), findsOneWidget);
+        expect(find.text(tester.strings.privacyJournalOnNote), findsOneWidget);
         // Not worth a report: nothing but a line of text depends on it.
         expect(robot.analytics.exceptions, isEmpty);
       });
@@ -126,14 +134,14 @@ void main() {
 
         await robot.tap(robot.journal);
 
-        expect(find.text(PrivacySettingsPage.confirmMessage), findsOneWidget);
+        expect(find.text(tester.strings.privacyConfirmMessage), findsOneWidget);
         expect(robot.supabase.to(consentWithdraw), isEmpty);
 
         await robot.tap(robot.confirm);
 
         expect(robot.supabase.to(consentWithdraw), hasLength(1));
         expect(robot.isOn(robot.journal), isFalse);
-        expect(find.text(PrivacySettingsPage.journalOffNote), findsOneWidget);
+        expect(find.text(tester.strings.privacyJournalOffNote), findsOneWidget);
         expect(robot.analytics.events, [
           event('consent_withdrawn', {'version': testConsentVersion}),
         ]);
@@ -178,7 +186,10 @@ void main() {
 
         expect(robot.isOn(robot.journal), isTrue);
         expect(robot.isEnabled(robot.journal), isTrue);
-        expect(find.text(withdrawFailureMessage), findsOneWidget);
+        expect(
+          find.text(tester.strings.consentWithdrawFailureMessage),
+          findsOneWidget,
+        );
       });
 
       testWidgets('cannot be switched while the answer is not in hand', (
@@ -188,7 +199,7 @@ void main() {
         await robot.launch();
 
         expect(robot.isEnabled(robot.journal), isFalse);
-        expect(find.text(consentUnknownMessage), findsOneWidget);
+        expect(find.text(tester.strings.consentUnknownMessage), findsOneWidget);
 
         await robot.tap(robot.retry);
 

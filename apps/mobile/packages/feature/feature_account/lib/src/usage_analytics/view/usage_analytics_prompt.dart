@@ -1,7 +1,7 @@
 import 'dart:async';
 
+import 'package:feature_account/src/l10n/l10n.dart';
 import 'package:feature_account/src/usage_analytics/bloc/usage_analytics_bloc.dart';
-import 'package:feature_account/src/usage_analytics/usage_analytics_text.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:legal_links/legal_links.dart';
@@ -71,7 +71,7 @@ class const UsageAnalyticsSheet({super.key}) extends StatelessWidget {
             scopesRoute: true,
             namesRoute: true,
             explicitChildNodes: true,
-            label: usageAnalyticsTitle,
+            label: context.l10n.usageAnalyticsTitle,
             child: const Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -89,6 +89,7 @@ class const _Question() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 12,
@@ -96,12 +97,12 @@ class const _Question() extends StatelessWidget {
         Semantics(
           header: true,
           child: Text(
-            usageAnalyticsTitle,
+            strings.usageAnalyticsTitle,
             style: theme.textTheme.headlineSmall,
           ),
         ),
         Text(
-          usageAnalyticsBody,
+          strings.usageAnalyticsBody,
           style: theme.textTheme.bodyLarge?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -114,14 +115,17 @@ class const _Question() extends StatelessWidget {
 /// What is counted, and what never is, each with its mark.
 class const _Points() extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => const Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    spacing: 8,
-    children: [
-      _Point(icon: Icons.check, text: usageAnalyticsCounted),
-      _Point(icon: Icons.close, text: usageAnalyticsNever),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final strings = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 8,
+      children: [
+        _Point(icon: Icons.check, text: strings.usageAnalyticsCounted),
+        _Point(icon: Icons.close, text: strings.usageAnalyticsNever),
+      ],
+    );
+  }
 }
 
 class const _Point({required final IconData icon, required final String text})
@@ -152,6 +156,7 @@ class const _Answers() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bloc = context.read<UsageAnalyticsBloc>();
+    final strings = context.l10n;
     return Row(
       spacing: 12,
       children: [
@@ -159,14 +164,14 @@ class const _Answers() extends StatelessWidget {
           child: OutlinedButton(
             key: UsageAnalyticsSheet.denyKey,
             onPressed: () => bloc.add(const UsageAnalyticsEvent.denied()),
-            child: const Text(usageAnalyticsDenyLabel),
+            child: Text(strings.usageAnalyticsDenyButton),
           ),
         ),
         Expanded(
           child: OutlinedButton(
             key: UsageAnalyticsSheet.allowKey,
             onPressed: () => bloc.add(const UsageAnalyticsEvent.allowed()),
-            child: const Text(usageAnalyticsAllowLabel),
+            child: Text(strings.usageAnalyticsAllowButton),
           ),
         ),
       ],
@@ -179,10 +184,11 @@ class const _ChangeLater() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final strings = context.l10n;
     return Column(
       children: [
         Text(
-          usageAnalyticsChangeHint,
+          strings.usageAnalyticsChangeHint,
           textAlign: TextAlign.center,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
@@ -191,7 +197,7 @@ class const _ChangeLater() extends StatelessWidget {
         TextButton(
           key: UsageAnalyticsSheet.noticeKey,
           onPressed: () => unawaited(openPrivacyNotice()),
-          child: const Text(privacyNoticeLabel),
+          child: Text(strings.usageAnalyticsNoticeLink),
         ),
       ],
     );
