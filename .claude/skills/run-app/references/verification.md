@@ -59,7 +59,11 @@ own reference (`marionette help-ai`).
    stays.
 
 `up --skip-build` reuses the last `Runner.app` that `up` built in this
-checkout.
+checkout. `up --locale de_DE` sets the simulator to German before the app
+launches, and reboots it once so the whole system takes the language: the
+way to see copy the way a German phone shows it, cut-off titles included.
+The keys stay the same in every language, so the steps above do not
+change.
 
 ## Worked example: start a session and answer the first question
 

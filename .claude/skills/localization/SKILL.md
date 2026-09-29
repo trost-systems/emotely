@@ -48,6 +48,14 @@ is the template; every other locale the app ships has the same keys.
    `lib/l10n/l10n.dart`) and never exports it, so `context.l10n` always
    means the strings of the package the code is in.
 
+**Leave room for German.** It runs about a third longer than English, and
+a slot that holds one line — an app bar title, a button, a tab label —
+cuts the rest off with "…". Such a slot gets a word or two; a sentence goes
+in the body, where it wraps (the consent screen's title is a heading there
+for that reason). Widget tests do not see an ellipsis: look at a new or
+reworded screen on the simulator in German (`run-app.sh up --locale
+de_DE`) before calling it done.
+
 A message that is part of a consent's versioned wording (`feature_account`,
 ADR 0014) changes a digest test: read that test's failure message before
 touching the digest or the version.
