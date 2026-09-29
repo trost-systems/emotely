@@ -6,6 +6,5 @@ plugins:
   emotely_lints:
     path: ../../../../../../tools/emotely_lints
     diagnostics:
-      # Off while the features' strings move into their ARB files; the last
-      # pull request of the localization stack turns it on (ADR 0020).
-      avoid_hardcoded_ui_text: false
+      # A user-facing literal in any package's lib/ (ADR 0020).
+      avoid_hardcoded_ui_text: error

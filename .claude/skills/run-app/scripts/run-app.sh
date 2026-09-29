@@ -79,6 +79,10 @@ Options for up:
                    which sits over sign-in on a fresh simulator. Default:
                    allow, so \`collect\` finds the session's PostHog events.
                    deny runs with PostHog never set up.
+  --locale <locale>
+                   The simulator's language and region before the app
+                   launches, e.g. de_DE to check the German copy. Default:
+                   the runtime's own (en_US).
 
 Between up and down, drive the app with marionette:
   marionette -i <instance> get-interactive-elements
@@ -378,6 +382,18 @@ simulator() {
   state_set UDID "$UDID"
   xcrun simctl boot "$UDID" || die "could not boot simulator $UDID"
   xcrun simctl bootstatus "$UDID" -b >/dev/null || die "simulator $UDID did not boot"
+  if [[ -n "${LOCALE:-}" ]]; then
+    # The phone's language, read by apps at launch; a reboot makes every
+    # system process pick it up too.
+    xcrun simctl spawn "$UDID" defaults write -g AppleLanguages -array "${LOCALE%%_*}" ||
+      die "could not set the simulator's language to ${LOCALE%%_*}"
+    xcrun simctl spawn "$UDID" defaults write -g AppleLocale -string "$LOCALE" ||
+      die "could not set the simulator's region to $LOCALE"
+    xcrun simctl shutdown "$UDID" || die "could not shut simulator $UDID down"
+    xcrun simctl boot "$UDID" || die "could not reboot simulator $UDID"
+    xcrun simctl bootstatus "$UDID" -b >/dev/null || die "simulator $UDID did not reboot"
+    log "locale $LOCALE"
+  fi
   log "device $UDID ($INSTANCE)"
 }
 
@@ -475,6 +491,7 @@ cmd_up() {
       --out) OUT="${2:?--out needs a directory}"; shift 2 ;;
       --skip-build) SKIP_BUILD=1; shift ;;
       --analytics) ANALYTICS="${2:?--analytics needs allow or deny}"; shift 2 ;;
+      --locale) LOCALE="${2:?--locale needs a locale such as de_DE}"; shift 2 ;;
       *) die "unknown option $1" ;;
     esac
   done

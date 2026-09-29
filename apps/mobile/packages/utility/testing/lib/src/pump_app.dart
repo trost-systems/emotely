@@ -19,8 +19,10 @@ import 'package:material_ui/material_ui.dart';
 // Assert a message by its key, read from the pumped tree
 // (`tester.element(find.byType(EntryPage)).l10n.entryScreenTitle`), never
 // the words: the same test then holds in every locale and through every
-// rewording, and a string that bypassed the ARB files shows in English
-// whatever locale is asked for, so it fails.
+// rewording. The default locale is German, not English, so a string that
+// bypassed the ARB files — English whatever the locale — fails the test
+// that reads it by its key. Pass `locale: const Locale('en')` only where a
+// test is about English itself.
 
 /// The delegates a helper pumps with: the package's own, the design
 /// system's, then Flutter's — the order the app lists them in.
@@ -39,7 +41,7 @@ Widget appWrapper(
   Widget child, {
   ThemeMode themeMode = ThemeMode.light,
   Iterable<LocalizationsDelegate<Object?>> localizations = const [],
-  Locale locale = const Locale('en'),
+  Locale locale = const Locale('de'),
 }) => MaterialApp(
   theme: lightTheme,
   darkTheme: darkTheme,
@@ -59,7 +61,7 @@ Widget pageUnderTest(
   Widget page, {
   ThemeMode themeMode = ThemeMode.light,
   Iterable<LocalizationsDelegate<Object?>> localizations = const [],
-  Locale locale = const Locale('en'),
+  Locale locale = const Locale('de'),
 }) => MaterialApp(
   theme: lightTheme,
   darkTheme: darkTheme,
@@ -81,7 +83,7 @@ Widget featureUnderTest({
   Widget Function(BuildContext context, Widget child)? above,
   ThemeMode themeMode = ThemeMode.light,
   Iterable<LocalizationsDelegate<Object?>> localizations = const [],
-  Locale locale = const Locale('en'),
+  Locale locale = const Locale('de'),
 }) => MaterialApp.router(
   theme: lightTheme,
   darkTheme: darkTheme,
@@ -109,7 +111,7 @@ extension PumpApp on WidgetTester {
     Widget widget, {
     ThemeMode themeMode = ThemeMode.light,
     Iterable<LocalizationsDelegate<Object?>> localizations = const [],
-    Locale locale = const Locale('en'),
+    Locale locale = const Locale('de'),
   }) => pumpWidget(
     appWrapper(
       widget,

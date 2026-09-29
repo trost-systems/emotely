@@ -8,12 +8,6 @@ const privacyNoticeUrl = 'https://getemotely.com/app-privacy';
 /// The imprint § 5 DDG asks of a German provider; linked next to the notice.
 const imprintUrl = 'https://getemotely.com/imprint';
 
-/// The link to the notice, wherever it is offered.
-const privacyNoticeLabel = 'Privacy notice';
-
-/// The link to the imprint, wherever it is offered.
-const imprintLabel = 'Imprint';
-
 /// Opens the full notice in the browser. Fire-and-forget: if no browser can
 /// be opened there is nothing a screen can do, and what the screen says
 /// already covers the essentials.

@@ -6,9 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 /// the notices name, so a reply comes from somewhere the user recognises.
 const feedbackAddress = 'hello@getemotely.com';
 
-/// The row that opens the mail app, wherever it is offered.
-const feedbackLabel = 'Send feedback';
-
 /// What the app knows about itself, for the footer of a feedback mail:
 /// enough to tell one build and one device class from another, and nothing
 /// that identifies the person writing.
