@@ -341,6 +341,19 @@ void main() {
       );
     });
 
+    testComponents('says the account keeps the language of the sign-in mail', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacy());
+
+      // #229: the app keeps its language on the account (Supabase Auth's
+      // user metadata) so the sign-in mail comes in it.
+      expect(
+        find.textContaining('the language the app is shown in'),
+        findsComponents,
+      );
+    });
+
     testComponents('says the app asks what to call you, and where it goes', (
       tester,
     ) {
@@ -419,7 +432,7 @@ void main() {
       tester.pumpComponent(const AppPrivacy());
 
       expect(
-        find.textContaining('Last updated 27 September 2026'),
+        find.textContaining('Last updated 30 September 2026'),
         findsOneComponent,
       );
     });
