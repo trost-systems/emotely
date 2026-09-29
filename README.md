@@ -39,6 +39,7 @@ The load-bearing decisions and their rationale live in [`docs/adr/`](docs/adr/):
 17. [State management stays on bloc](docs/adr/0017-state-management-stays-on-bloc.md) — Riverpod weighed and deferred; four conditions reopen the decision
 18. [Custom checks are engine rules first](docs/adr/0018-custom-checks-are-engine-rules-first.md) — ast-grep or analyzer rules before any program of our own; Rust prebuilt only as a last resort
 19. [Onboarding before sign-up](docs/adr/0019-onboarding-before-sign-up.md) — a versioned list of typed steps on the device, sign-up last, the name asked (never taken from Apple or Google) and sent to the companion as `userContext`
+20. [Localization per package](docs/adr/0020-localization-per-package.md) — gen-l10n ARB files owned by each package that shows text, composed by the app; design_system components word their own chrome; literal UI strings an analyzer error; German first
 
 The project's language is defined in [`CONTEXT.md`](CONTEXT.md).
 
