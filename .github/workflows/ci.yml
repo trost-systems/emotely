@@ -272,8 +272,8 @@ jobs:
   # job runs and the lints job tests.
   # The same job keeps the run-app skill's feature map honest: every typed
   # route the Flutter workspace declares (the ast-grep rule `typed-go-route`,
-  # off in the scan above) has its entry, and every entry a route. Runners
-  # ship jq and yq.
+  # off in the scan above; `ast-grep.sh test` still runs its tests) has its
+  # entry, and every entry a route. Runners ship jq and yq.
   ast-grep:
     runs-on: ubuntu-latest
     steps:

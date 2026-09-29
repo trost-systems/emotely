@@ -186,6 +186,58 @@ test_rule_tests_fail_on_a_test_whose_rule_was_renamed() {
 ${output}"
 }
 
+# A `severity: off` rule extracts rather than lints (feature-map.sh switches
+# one on by id), and plain `ast-grep test` skips its tests, printing the same
+# "Configuration not found" as for a rule that is gone. `ast-grep.sh test`
+# runs them, so an off rule is neither untested nor taken for an orphan.
+# The probe is a bash rule of its own, in the throwaway copy only; its test
+# file holds the given cases.
+off_rule() {
+  write "$1/ast-grep/rules/probe/off-probe.yml" \
+    'id: off-probe\nlanguage: bash\nseverity: off\nmessage: a probe\nrule:\n  kind: command\n  regex: "^probe"\n'
+  write "$1/ast-grep/tests/probe/off-probe-test.yml" "id: off-probe\n$2"
+}
+
+test_rule_tests_run_an_off_rules_passing_test() {
+  local dir output
+  dir="$(repo)"
+  off_rule "${dir}" 'valid:\n  - echo hi\n'
+
+  output="$(cd "${dir}" && bash scripts/ast-grep.sh test 2>&1)" ||
+    fail "passes an off rule's passing test: exited non-zero:
+${output}"
+  [[ "${output}" == *'PASS off-probe'* ]] ||
+    fail "runs an off rule's test: got
+${output}"
+}
+
+test_rule_tests_fail_an_off_rules_failing_test() {
+  local dir output
+  dir="$(repo)"
+  off_rule "${dir}" 'valid:\n  - probe now\n'
+
+  if output="$(cd "${dir}" && bash scripts/ast-grep.sh test 2>&1)"; then
+    fail "fails an off rule's failing test: exited 0"
+  fi
+  [[ "${output}" == *'FAIL off-probe'* ]] ||
+    fail "fails the off rule's own test, not an orphan: got
+${output}"
+}
+
+test_rule_tests_fail_on_a_test_whose_off_rule_was_renamed() {
+  local dir output
+  dir="$(repo)"
+  off_rule "${dir}" 'valid:\n  - echo hi\n'
+  sed -i.orig 's/^id: off-probe$/id: probe/' "${dir}/ast-grep/rules/probe/off-probe.yml"
+
+  if output="$(cd "${dir}" && bash scripts/ast-grep.sh test 2>&1)"; then
+    fail "fails a test whose off rule was renamed: exited 0"
+  fi
+  [[ "${output}" == *'no rule with the id "off-probe"'* ]] ||
+    fail "names the orphaned off rule's id: got
+${output}"
+}
+
 test_writes_github_annotations_when_asked() {
   local dir output
   dir="$(repo scripts/a.sh '# TODO\n')"
@@ -212,6 +264,9 @@ test_fails_a_define_read_in_a_feature_package
 test_wants_rule_ids_and_a_reason_on_ast_grep_ignore
 test_rule_tests_pass_with_every_rule_in_place
 test_rule_tests_fail_on_a_test_whose_rule_was_renamed
+test_rule_tests_run_an_off_rules_passing_test
+test_rule_tests_fail_an_off_rules_failing_test
+test_rule_tests_fail_on_a_test_whose_off_rule_was_renamed
 test_writes_github_annotations_when_asked
 test_passes_a_clean_tree_from_any_directory_inside_it
 

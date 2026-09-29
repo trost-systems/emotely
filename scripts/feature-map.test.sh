@@ -2,8 +2,8 @@
 # Tests for feature-map.sh, through its command line only: a throwaway git
 # repository with this repository's rules and the script in, feature sources
 # and a feature map written per test, the messages and the exit code out.
-# What the route rule matches is tested by `ast-grep test --include-off`
-# (ast-grep/tests/feature-map); this covers what the rule alone cannot: which
+# What the route rule matches is tested by `scripts/ast-grep.sh test`, which
+# runs off rules' tests too (ast-grep/tests/feature-map); this covers what the rule alone cannot: which
 # files are read, the full location of a nested route, the comparison with the
 # map, and the messages. ast-grep, jq and yq must be on PATH:
 #   pnpm exec bash scripts/feature-map.test.sh

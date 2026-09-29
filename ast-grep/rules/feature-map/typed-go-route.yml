@@ -7,8 +7,8 @@
 #
 # An extraction, not a lint: `severity: off` keeps it out of the ast-grep
 # gate's scan (scripts/ast-grep.sh), and the script switches it on
-# (`--filter` plus `--info`). Its test runs under `ast-grep test
-# --include-off`.
+# (`--filter` plus `--info`). Its test runs under `scripts/ast-grep.sh
+# test`, which passes `--include-off`.
 id: typed-go-route
 language: dart
 severity: off
