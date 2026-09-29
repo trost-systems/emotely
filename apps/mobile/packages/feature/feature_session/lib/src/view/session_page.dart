@@ -60,7 +60,6 @@ class const SessionView({super.key}) extends StatelessWidget {
               answered: answered,
             ),
             SessionCompleted(:final entry, :final questions) => EntryView(
-              title: 'Your entry',
               entry: entry,
               questions: questions,
             ),

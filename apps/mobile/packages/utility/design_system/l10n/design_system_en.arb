@@ -1,0 +1,7 @@
+{
+  "@@locale": "en",
+  "entryViewTitle": "Your entry",
+  "@entryViewTitle": {
+    "description": "Heading above a finished journal entry, wherever one is shown: at the end of a session and when reading it back from the journal. The entry below it is the user's own, summarised."
+  }
+}

@@ -4,8 +4,8 @@
   localization. `pageUnderTest(page)` is the same for a whole page that
   brings its own `Scaffold`, `featureUnderTest(routes:)` for a feature's
   routes. Each takes `localizations:` (the package's own delegate,
-  `const [JournalLocalizations.delegate]`; Flutter's are always added) and
-  `locale:`.
+  `const [JournalLocalizations.delegate]`; design_system's and Flutter's
+  are always added) and `locale:`.
 - Read expected text through the package's class,
   `lookupJournalLocalizations(locale).entryTitle`, never as a literal: the
   test then holds in every locale, and a string that skipped the ARB files

@@ -12,18 +12,24 @@ import 'package:material_ui/material_ui.dart';
 //       localizations: const [JournalLocalizations.delegate],
 //     )
 //
-// Flutter's own strings (back buttons, dialogs, pickers) are always there,
-// from `material_ui`, whose widgets the app uses.
+// The design system's own words (a component's heading, say) and Flutter's
+// (back buttons, dialogs, pickers, from `material_ui`, whose widgets the app
+// uses) are always there.
 //
 // Read a string through the package's own class
 // (`lookupJournalLocalizations(locale).entryTitle`), never as a literal: the
 // same test then holds in every locale, and a string that bypassed the ARB
 // files shows in English whatever locale is asked for, so it fails.
 
-/// The delegates a helper pumps with: the package's own, then Flutter's.
+/// The delegates a helper pumps with: the package's own, the design
+/// system's, then Flutter's — the order the app lists them in.
 List<LocalizationsDelegate<Object?>> _delegates(
   Iterable<LocalizationsDelegate<Object?>> localizations,
-) => [...localizations, ...GlobalMaterialLocalizations.delegates];
+) => [
+  ...localizations,
+  DesignSystemLocalizations.delegate,
+  ...GlobalMaterialLocalizations.delegates,
+];
 
 /// Wraps [child] the way the app does: real themes, a scaffold, no mocked
 /// chrome. Use it wherever a bare widget must be pumped, e.g. for the

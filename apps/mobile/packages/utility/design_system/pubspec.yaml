@@ -11,6 +11,11 @@ dependencies:
   contract: any
   flutter:
     sdk: flutter
+  # The generated localizations import it; the SDK pins the intl it needs.
+  flutter_localizations:
+    sdk: flutter
+  # The version flutter_localizations requires (^0.20.3), pinned.
+  intl: 0.20.3
   material_ui: ^1.1.0
 
 dev_dependencies:
@@ -18,3 +23,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   testing: any
+
+flutter:
+  # gen-l10n: the words the components say themselves, from l10n/ (l10n.yaml,
+  # ADR 0020).
+  generate: true

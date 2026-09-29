@@ -30,7 +30,7 @@ repository for data) or a navigator call (§ 5). Never an import.
 ├─ analysis_options.yaml   the one line: include: package:analysis/analysis_options.yaml
 ├─ build.yaml              only if it generates code — copy the block from
 │                          another package (see the freezed skill)
-├─ l10n.yaml               features only (ADR 0020) — copy another feature's
+├─ l10n.yaml               features and design_system (ADR 0020) — copy one
 │                          and rename the ARB files and the class
 ├─ l10n/<short>_en.arb     the English template, every message described
 ├─ l10n/<short>_de.arb     one per other locale the app ships
@@ -47,8 +47,9 @@ A feature that shows text (every one so far) also needs, in its pubspec,
 (`export 'src/l10n/session_localizations.dart' show SessionLocalizations;`),
 and the app adds `SessionLocalizations.delegate` to
 `localizationsDelegates` in `app/lib/app/localizations.dart`; the app's
-test fails if the new package lacks a locale the app ships. A utility
-shows no text: its widgets take their strings as parameters.
+test fails if the new package lacks a locale the app ships. Of the
+utilities only `design_system` shows text, its components' own words; the
+others show none.
 
 Dev-dependencies every package has: `analysis`, `flutter_test`, and
 `testing` (stubs, spies, `pumpApp`, `pageUnderTest`, the composition

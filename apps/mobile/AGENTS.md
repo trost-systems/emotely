@@ -25,15 +25,20 @@ for it.
 Every string a user reads is a message in the ARB files of the package that
 shows it, never a literal in Dart.
 
-- A feature and the app each own `l10n.yaml`, `l10n/<name>_en.arb` (the
-  template) and one ARB per other locale, generated into their `lib/` by
+- Every feature, `design_system` and the app own `l10n.yaml`,
+  `l10n/<name>_en.arb` (the template) and one ARB per other locale,
+  generated into their `lib/` by
   `flutter gen-l10n` and committed. Add a message to the English template
   with its `@description` (what the screen is and what the words do there:
   the translator's only context), to every other ARB in the same change,
   then run `flutter gen-l10n` in the package.
-- Utilities show no text: a `design_system` widget takes its strings as
-  parameters from the feature that uses it. A feature declares every word
-  it shows, even one another feature also says.
+- Text belongs to whatever renders it. A `design_system` component words
+  its own chrome — heading, buttons, screen-reader labels, its empty and
+  error states — in `design_system`'s ARB files, the same on every screen;
+  what it displays is passed in, and no parameter overrides its wording. A
+  feature words everything else it shows, even a word another feature also
+  says. When the same text and widgets recur across features, extract a
+  component. The other utilities show no text.
 - Blocs and repositories carry no text either. A failure is a typed reason
   (an enum, a sealed class) and the view words it; an exception's message
   is for error tracking, in English, and never shown.

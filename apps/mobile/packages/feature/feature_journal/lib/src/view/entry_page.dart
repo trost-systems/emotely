@@ -40,7 +40,6 @@ class const EntryPageView({required final String entryId, super.key})
           child: switch (state) {
             EntryLoading() => const Center(child: CircularProgressIndicator()),
             EntryReady(:final record) => EntryView(
-              title: 'Your entry',
               entry: record.entry,
               questions: record.questionsById,
             ),
