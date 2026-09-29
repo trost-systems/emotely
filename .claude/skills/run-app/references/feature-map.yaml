@@ -13,7 +13,11 @@
 #            There are no deep links: the app registers no URL scheme, so
 #            every screen is reached by tapping keys.
 #   does     what the screen is for
-#   looks    what tells it apart in a screenshot, even a cropped one
+#   looks    what tells it apart in a screenshot, even a cropped one. Quoted
+#            text is the English copy (the `_en.arb` files), what a simulator
+#            shows by default (en_US), and what the walk behind this map used.
+#            A German phone shows the `_de.arb` wording instead
+#            (`run-app.sh up --locale de_DE`); the layout and keys are the same.
 #   states   per bloc, each state and what the screen shows in it
 #   keys     the widget keys that drive it (`--key` in marionette). The app
 #            sets no semantics identifiers; keys are the handles.
@@ -124,8 +128,7 @@ screens:
           The filed entry, the same body as EntryRoute; here under
           "Journaling session" and with no tab bar.
         SessionFailure: >-
-          The reason in words ("Could not reach the journaling assistant."
-          and five others) and Try again, or Start over when the session
+          The reason in words ("Could not reach emotely." and five others) and Try again, or Start over when the session
           cannot continue.
     keys:
       session_view.question: The question text.
