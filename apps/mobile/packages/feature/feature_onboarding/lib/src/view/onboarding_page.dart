@@ -1,7 +1,7 @@
 import 'package:analytics/analytics.dart';
 import 'package:feature_onboarding/src/bloc/onboarding_bloc.dart';
 import 'package:feature_onboarding/src/flow.dart';
-import 'package:feature_onboarding/src/l10n/onboarding_localizations.dart';
+import 'package:feature_onboarding/src/l10n/l10n.dart';
 import 'package:feature_onboarding/src/navigator.dart';
 import 'package:feature_onboarding/src/progress.dart';
 import 'package:feature_onboarding/src/view/hello_step.dart';
@@ -110,10 +110,7 @@ class const _Step(final OnboardingShowing state, {required final String? from})
         onChanged: (text) => bloc.add(OnboardingEvent.nameChanged(text)),
         onContinue: forward,
         onSkip: () => bloc.add(
-          OnboardingEvent.skipped(
-            id,
-            nicknames: OnboardingLocalizations.of(context).nicknames,
-          ),
+          OnboardingEvent.skipped(id, nicknames: context.l10n.nicknames),
         ),
       ),
       HelloStep() => switch (state.progress.placeholder) {
@@ -135,7 +132,7 @@ class const _Step(final OnboardingShowing state, {required final String? from})
 class const _SaveFailed() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final strings = OnboardingLocalizations.of(context);
+    final strings = context.l10n;
     return Scaffold(
       body: SafeArea(
         child: Center(

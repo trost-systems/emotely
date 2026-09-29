@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:analytics/analytics.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
+import 'package:feature_onboarding/src/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:material_ui/material_ui.dart';
@@ -71,10 +72,11 @@ class OnboardingRobot(
   Future<void> kept(Map<String, Object?> progress) => analytics.preferences
       .setString(OnboardingStore.key, jsonEncode(progress));
 
-  /// The words on screen, in the locale the test pumped: tests read what
-  /// they expect through it, so each holds in every language.
+  /// Onboarding's strings as the screen reads them, in the locale the test
+  /// pumped: tests assert a message by its key, so a rewording never breaks
+  /// them and each holds in every language.
   OnboardingLocalizations get strings =>
-      OnboardingLocalizations.of(tester.element(find.byType(OnboardingView)));
+      tester.element(find.byType(OnboardingView)).l10n;
 
   /// Onboarding's route as the app mounts it, opened in [phase], in
   /// [locale] or else the helpers' own. Reading this composes the

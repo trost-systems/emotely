@@ -1,4 +1,4 @@
-import 'package:feature_onboarding/src/l10n/onboarding_localizations.dart';
+import 'package:feature_onboarding/src/l10n/l10n.dart';
 import 'package:feature_onboarding/src/view/art.dart';
 import 'package:feature_onboarding/src/view/step_frame.dart';
 import 'package:material_ui/material_ui.dart';
@@ -17,7 +17,7 @@ class const WelcomeStepView({
 
   @override
   Widget build(BuildContext context) {
-    final strings = OnboardingLocalizations.of(context);
+    final strings = context.l10n;
     return StepFrame(
       position: position,
       dots: dots,
@@ -60,7 +60,7 @@ class const ValueStepView({
 
   @override
   Widget build(BuildContext context) {
-    final strings = OnboardingLocalizations.of(context);
+    final strings = context.l10n;
     return StepFrame(
       onBack: onBack,
       position: position,

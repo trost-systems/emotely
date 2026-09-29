@@ -41,7 +41,7 @@ class OnboardingLocalizationsEn extends OnboardingLocalizations {
 
   @override
   String get answerPromiseBody =>
-      'Words, emojis, colours or a quick rating – whatever fits the moment.';
+      'Words, emojis, colors or a quick rating – whatever fits the moment.';
 
   @override
   String get journalPromiseTitle => 'A journal that writes itself';
@@ -96,7 +96,7 @@ class OnboardingLocalizationsEn extends OnboardingLocalizations {
 
   @override
   String get helloBody =>
-      'Your first reflection takes about five minutes. I ask, you answer – in words, emojis or colours.';
+      'Your first reflection takes about five minutes. I ask, you answer – in words, emojis or colors.';
 
   @override
   String get skippedTitle => 'Fine, stay mysterious.';

@@ -1,4 +1,4 @@
-import 'package:feature_onboarding/src/l10n/onboarding_localizations.dart';
+import 'package:feature_onboarding/src/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The frame every step sits in: a bar with the way back and the dots,
@@ -68,7 +68,7 @@ class const _TopBar({
               ? null
               : IconButton(
                   key: StepFrame.backKey,
-                  tooltip: OnboardingLocalizations.of(context).backTooltip,
+                  tooltip: context.l10n.backTooltip,
                   onPressed: onBack,
                   icon: const Icon(Icons.chevron_left),
                 ),
@@ -96,8 +96,7 @@ class const _Dots({required final int position, required final int dots})
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Semantics(
-      label: OnboardingLocalizations.of(context)
-          .stepProgress(position + 1, dots),
+      label: context.l10n.stepProgress(position + 1, dots),
       child: ExcludeSemantics(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

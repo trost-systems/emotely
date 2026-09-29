@@ -1,4 +1,4 @@
-import 'package:feature_onboarding/src/l10n/onboarding_localizations.dart';
+import 'package:feature_onboarding/src/l10n/l10n.dart';
 import 'package:feature_onboarding/src/view/art.dart';
 import 'package:feature_onboarding/src/view/step_frame.dart';
 import 'package:material_ui/material_ui.dart';
@@ -15,7 +15,7 @@ class const HelloStepView({
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final strings = OnboardingLocalizations.of(context);
+    final strings = context.l10n;
     return StepFrame(
       actions: [
         PrimaryAction(
@@ -59,7 +59,7 @@ class const SkippedStepView({
 
   @override
   Widget build(BuildContext context) {
-    final strings = OnboardingLocalizations.of(context);
+    final strings = context.l10n;
     return StepFrame(
       actions: [
         PrimaryAction(

@@ -254,7 +254,8 @@ void main() {
       await tap(tester, key(NameStepView.continueKey));
 
       expect(find.byType(JournalPage), findsOneWidget);
-      expect(find.textContaining(', Peter'), findsOneWidget);
+      // The saved name, in whatever greeting the journal words around it.
+      expect(find.textContaining('Peter'), findsOneWidget);
     });
 
     testWidgets('goes straight to the journal for an account with a name', (

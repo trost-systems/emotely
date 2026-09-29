@@ -1,4 +1,4 @@
-import 'package:feature_onboarding/src/l10n/onboarding_localizations.dart';
+import 'package:feature_onboarding/src/l10n/l10n.dart';
 import 'package:feature_onboarding/src/view/step_frame.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:profile_repository/profile_repository.dart';
@@ -39,7 +39,7 @@ class _NameStepViewState() extends State<NameStepView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final strings = OnboardingLocalizations.of(context);
+    final strings = context.l10n;
     return StepFrame(
       onBack: widget.onBack,
       position: widget.position,
@@ -123,7 +123,7 @@ class const _NameUse() extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              OnboardingLocalizations.of(context).nameUse,
+              context.l10n.nameUse,
               style: theme.textTheme.bodySmall?.copyWith(color: muted),
             ),
           ),

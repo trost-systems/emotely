@@ -1,4 +1,4 @@
-import 'package:feature_onboarding/src/l10n/onboarding_localizations.dart';
+import 'package:feature_onboarding/src/l10n/l10n.dart';
 
 /// The names given on "Skip for now", in the user's language: playful,
 /// gender-neutral, and plainly not anyone's real name, so nobody mistakes

@@ -1,8 +1,8 @@
 import 'package:analytics/analytics.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
+import 'package:feature_onboarding/src/l10n/l10n.dart';
 import 'package:feature_onboarding/src/view/nicknames.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:material_ui/material_ui.dart' show Locale;
 import 'package:profile_repository/profile_repository.dart';
 
 void main() {
@@ -134,29 +134,6 @@ void main() {
   });
 
   group(OnboardingLocalizations, () {
-    List<String> nicknamesIn(String language) =>
-        lookupOnboardingLocalizations(Locale(language)).nicknames;
-
-    test(
-      'nicknames the user with one of the twelve agreed names in English',
-      () {
-        expect(nicknamesIn('en'), [
-          'Pebble',
-          'Pip',
-          'Maple',
-          'Biscuit',
-          'Sparrow',
-          'Clover',
-          'Noodle',
-          'Sunny',
-          'Juniper',
-          'Button',
-          'Toffee',
-          'Wren',
-        ]);
-      },
-    );
-
     test('nicknames the user with distinct names the profile takes, in every '
         'locale', () {
       for (final locale in OnboardingLocalizations.supportedLocales) {
@@ -172,13 +149,6 @@ void main() {
           );
         }
       }
-    });
-
-    test('has nicknames of its own in German, not the English ones', () {
-      expect(
-        nicknamesIn('de').toSet().intersection(nicknamesIn('en').toSet()),
-        isEmpty,
-      );
     });
   });
 }

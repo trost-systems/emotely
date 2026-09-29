@@ -32,7 +32,7 @@
   "@answerPromiseTitle": {
     "description": "Onboarding, second step, second of three promises (next to a palette icon): the user can answer in many forms."
   },
-  "answerPromiseBody": "Words, emojis, colours or a quick rating – whatever fits the moment.",
+  "answerPromiseBody": "Words, emojis, colors or a quick rating – whatever fits the moment.",
   "@answerPromiseBody": {
     "description": "Onboarding, second step, the line under the second promise: the kinds of answer a session accepts."
   },
@@ -114,7 +114,7 @@
       }
     }
   },
-  "helloBody": "Your first reflection takes about five minutes. I ask, you answer – in words, emojis or colours.",
+  "helloBody": "Your first reflection takes about five minutes. I ask, you answer – in words, emojis or colors.",
   "@helloBody": {
     "description": "Onboarding, greeting step: the line under the heading, saying what the first session is like. The companion speaks as \"I\"."
   },

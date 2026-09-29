@@ -155,7 +155,7 @@ abstract class OnboardingLocalizations {
   /// Onboarding, second step, the line under the second promise: the kinds of answer a session accepts.
   ///
   /// In en, this message translates to:
-  /// **'Words, emojis, colours or a quick rating – whatever fits the moment.'**
+  /// **'Words, emojis, colors or a quick rating – whatever fits the moment.'**
   String get answerPromiseBody;
 
   /// Onboarding, second step, third of three promises (next to a book icon): each session is turned into a journal entry for the user.
@@ -245,7 +245,7 @@ abstract class OnboardingLocalizations {
   /// Onboarding, greeting step: the line under the heading, saying what the first session is like. The companion speaks as "I".
   ///
   /// In en, this message translates to:
-  /// **'Your first reflection takes about five minutes. I ask, you answer – in words, emojis or colours.'**
+  /// **'Your first reflection takes about five minutes. I ask, you answer – in words, emojis or colors.'**
   String get helloBody;
 
   /// Onboarding, greeting step after the user skipped the name: a playful, good-natured heading accepting that they did not say.

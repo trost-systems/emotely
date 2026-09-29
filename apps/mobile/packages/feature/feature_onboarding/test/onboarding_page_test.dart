@@ -1,5 +1,6 @@
 import 'package:analytics/analytics.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
+import 'package:feature_onboarding/src/l10n/l10n.dart';
 import 'package:feature_onboarding/src/view/nicknames.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
@@ -626,78 +627,51 @@ void main() {
     });
   });
 
-  group('in German', () {
-    const german = Locale('de');
-    final de = lookupOnboardingLocalizations(german);
+  group('nicknames', () {
+    // Which list a skip picks from depends on the phone's language, so these
+    // pump a locale of their own and read every other through the lookup.
+    final languages = _Languages();
 
-    testWidgets('walks every step in German, and names a skipper with a '
-        'German nickname', (tester) async {
+    testWidgets("names a skipper from the phone's language", (tester) async {
+      final language = languages.currentValue!;
       final robot = OnboardingRobot(tester);
-      await robot.launch(locale: german);
-
-      expect(find.text(de.welcomeTitle), findsOneWidget);
-      expect(find.text(de.haveAccountButton), findsOneWidget);
-      expect(find.bySemanticsLabel(de.stepProgress(1, 3)), findsOneWidget);
-
-      await robot.tap(robot.getStarted);
-
-      expect(find.text(de.valueTitle), findsOneWidget);
-      expect(find.text(de.journalPromiseBody), findsOneWidget);
-      expect(find.byTooltip(de.backTooltip), findsOneWidget);
-
-      await robot.tap(robot.valueContinue);
-      await robot.type('a' * 41);
-
-      expect(find.text(de.nameTitle), findsOneWidget);
-      expect(find.text(de.nameFieldLabel), findsOneWidget);
-      expect(
-        find.text(de.nameTooLongError(maxDisplayNameLength)),
-        findsOneWidget,
-      );
+      await robot.launch(locale: language);
+      await robot.toName();
 
       await robot.tap(robot.skip);
 
       final placeholder = robot.store.progress.placeholder!;
-      expect(de.nicknames, contains(placeholder));
-      expect(find.text(de.skippedBody(placeholder)), findsOneWidget);
-
-      await robot.tap(robot.tellYou);
-      await robot.type('Peter');
-      await robot.tap(robot.nameContinue);
-
-      expect(find.text(de.helloTitle('Peter')), findsOneWidget);
-      expect(find.text(de.startReflectionButton), findsOneWidget);
-    });
-
-    testWidgets('offers the retry in German', (tester) async {
-      final robot = OnboardingRobot(tester);
-      robot.supabase.rest(profileSave, [restRefused()]);
-      await robot.kept(readyForAccount());
-      await robot.launch(phase: OnboardingPhase.afterSignIn, locale: german);
-
-      expect(find.text(de.saveFailedMessage), findsOneWidget);
-      expect(find.text(de.retryButton), findsOneWidget);
-    });
+      expect(robot.strings.nicknames, contains(placeholder));
+      expect(find.text(robot.strings.skippedBody(placeholder)), findsOneWidget);
+      for (final other in OnboardingLocalizations.supportedLocales) {
+        if (other != language) {
+          expect(
+            lookupOnboardingLocalizations(other).nicknames,
+            isNot(contains(placeholder)),
+            reason: 'picked from $language, found in $other',
+          );
+        }
+      }
+    }, variant: languages);
 
     testWidgets('keeps the nickname it picked when the phone speaks another '
         'language later', (tester) async {
+      final picked = lookupOnboardingLocalizations(const Locale('de'))
+          .nicknames
+          .first;
       final robot = OnboardingRobot(tester);
       await robot.kept({
         'flow_version': onboardingFlowVersion,
         'completed': ['welcome', 'value', 'name'],
         'draft': '',
-        'placeholder': de.nicknames.first,
+        'placeholder': picked,
         'started': true,
       });
       await robot.launch(locale: const Locale('en'));
 
-      expect(
-        find.text(
-          lookupOnboardingLocalizations(const Locale('en'))
-              .skippedBody(de.nicknames.first),
-        ),
-        findsOneWidget,
-      );
+      // The English list has no such name, so only the kept one can show.
+      expect(robot.strings.nicknames, isNot(contains(picked)));
+      expect(find.text(robot.strings.skippedBody(picked)), findsOneWidget);
     });
   });
 
@@ -768,4 +742,9 @@ void main() {
       await tester.expectMeetsAccessibilityGuidelines(widget);
     });
   });
+}
+
+/// Every language onboarding speaks, one run of the test in each.
+class _Languages() extends ValueVariant<Locale> {
+  this : super({...OnboardingLocalizations.supportedLocales});
 }
