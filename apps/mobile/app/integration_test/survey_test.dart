@@ -24,11 +24,13 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'perf/compose.dart';
 import 'perf/fake_backend.dart';
+import 'survey/device_directory.dart';
 import 'survey/survey_walk.dart';
 
 const _screens = String.fromEnvironment('SURVEY_SCREENS');
@@ -56,17 +58,11 @@ void main() {
   }, timeout: const Timeout(Duration(minutes: 20)));
 }
 
-/// Where Test Lab pulls the survey from: a directory the app may write
-/// without asking for a permission. On Android, its own external files
-/// directory (`--directories-to-pull`, which Test Lab allows under
-/// /sdcard), which the instrumentation test creates
-/// (android/app/src/androidTest); on iOS, its Documents
-/// (`<bundle id>:/Documents/survey`).
-String get surveyDirectory => Platform.isIOS
-    ? '${Platform.environment['HOME']}/Documents/survey'
-    : '/sdcard/Android/data/de.emotely.emotely/files/survey';
-
 Future<void> _writeOnDevice(Map<String, Object?> survey) async {
-  final directory = await Directory(surveyDirectory).create(recursive: true);
-  await File('${directory.path}/survey.json').writeAsString(jsonEncode(survey));
+  final directory = await Directory(surveyDirectory()).create(recursive: true);
+  final file = File('${directory.path}/survey.json');
+  await file.writeAsString(jsonEncode(survey));
+  // In the device's log, which Test Lab keeps: where to look when the pull
+  // comes back empty.
+  debugPrint('survey: wrote ${file.path}');
 }

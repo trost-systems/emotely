@@ -81,6 +81,9 @@ dev_dependencies:
   # test support, both workspace packages.
   analysis: any
   build_runner: 2.16.1
+  # The performance survey finds the app's container on an iPhone in Test
+  # Lab, where the app has no HOME (integration_test/survey/).
+  ffi: 2.2.0
   # The host side of the performance run (test_driver/perf_driver.dart):
   # it receives the traced timelines and summarizes them. Part of the SDK,
   # so it moves with the pinned Flutter.

@@ -139,27 +139,69 @@ build_android() {
   cp "$APP_DIR/build/app/outputs/apk/androidTest/profile/app-profile-androidTest.apk" "$out/test.apk"
 }
 
-# build ios <out> <screens>: the XCTest bundle Test Lab runs on an iPhone:
-# a profile build of the walk and its RunnerTests, built for devices and
-# signed with what the environment's keychain holds (in CI: match, see the
-# reference), zipped with its .xctestrun.
+# build ios <out> <screens> <profile>: the XCTest bundle Test Lab runs on
+# an iPhone: a profile build of the walk and its RunnerTests for devices,
+# signed (sign_ios) and zipped with its .xctestrun.
 build_ios() {
   STEP="build"
-  local out="$1" screens="$2" flutter defines=(--dart-define=SURVEY_ON_DEVICE=true) derived
+  local out="$1" screens="$2" profile="$3" flutter defines=(--dart-define=SURVEY_ON_DEVICE=true) derived
+  [[ -f "$profile" ]] || die "build ios needs --profile <.mobileprovision> (or SURVEY_PROFILE): see the reference"
   read -r -a flutter <<<"$(flutter_cmd)"
   [[ -n "$screens" ]] && defines+=(--dart-define="SURVEY_SCREENS=$screens")
   mkdir -p "$out"
   derived="$APP_DIR/build/ios_survey"
+  rm -rf "$derived/Build/Products"
   log "profile build of the walk for iOS"
-  (cd "$APP_DIR" && "${flutter[@]}" build ios --profile --config-only \
+  # CocoaPods fails under a locale that is not UTF-8.
+  (cd "$APP_DIR" && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 "${flutter[@]}" build ios --profile --config-only \
     --target=integration_test/survey_test.dart "${defines[@]}") >"$out/build.log" 2>&1 ||
     die "flutter build ios --config-only failed; see $out/build.log"
+  # Built unsigned, then signed below: signing settings passed to xcodebuild
+  # would reach every Pods target too, and the project's own stay automatic
+  # for local development.
   (cd "$APP_DIR/ios" && xcodebuild build-for-testing -workspace Runner.xcworkspace -scheme Runner \
-    -configuration Profile -sdk iphoneos -derivedDataPath "$derived") >>"$out/build.log" 2>&1 ||
-    die "xcodebuild build-for-testing failed; see $out/build.log"
+    -configuration Profile -sdk iphoneos -derivedDataPath "$derived" CODE_SIGNING_ALLOWED=NO) \
+    >>"$out/build.log" 2>&1 || die "xcodebuild build-for-testing failed; see $out/build.log"
+  sign_ios "$derived/Build/Products/Profile-iphoneos/Runner.app" "$profile"
   (cd "$derived/Build/Products" && rm -f survey-ios.zip &&
-    zip -qr survey-ios.zip Profile-iphoneos ./*.xctestrun) || die "could not zip the XCTest bundle"
+    zip -qry survey-ios.zip Profile-iphoneos ./*.xctestrun) || die "could not zip the XCTest bundle"
   cp "$derived/Build/Products/survey-ios.zip" "$out/survey-ios.zip"
+}
+
+# sign_ios <Runner.app> <profile>: signs the app, its frameworks and its
+# test bundle with the profile's certificate, as Test Lab requires ("all
+# artifacts in the app and test are signed"; it re-signs them with its
+# own). The profile is match's App Store one: Test Lab needs no development
+# profile or registered device. The identity is the keychain's certificate
+# that the profile names, by fingerprint, since a keychain can hold two of
+# the same name.
+sign_ios() {
+  STEP="sign"
+  local app="$1" profile="$2" tmp identity="" i sha
+  tmp="$(mktemp -d)"
+  security cms -D -i "$profile" >"$tmp/profile.plist" || die "could not read $profile"
+  for ((i = 0; ; i++)); do
+    plutil -extract "DeveloperCertificates.$i" raw "$tmp/profile.plist" >"$tmp/cert.b64" 2>/dev/null || break
+    sha="$(base64 -D -i "$tmp/cert.b64" | openssl x509 -inform der -noout -fingerprint -sha1 |
+      sed 's/.*=//; s/://g')"
+    if security find-identity -v -p codesigning | grep -q "$sha"; then
+      identity="$sha"
+      break
+    fi
+  done
+  [[ -n "$identity" ]] || die "the keychain has no certificate that $profile names"
+  plutil -extract Entitlements xml1 -o "$tmp/entitlements.plist" "$tmp/profile.plist"
+  cp "$profile" "$app/embedded.mobileprovision"
+  # Inside out: whatever is nested is signed before what contains it.
+  find "$app/Frameworks" "$app/PlugIns" -depth \( -name '*.framework' -o -name '*.dylib' -o -name '*.xctest' \) \
+    -print0 2>/dev/null | while IFS= read -r -d '' bundle; do
+    codesign --force --sign "$identity" --timestamp=none "$bundle" >/dev/null 2>&1 ||
+      die "could not sign $bundle"
+  done
+  codesign --force --sign "$identity" --timestamp=none --entitlements "$tmp/entitlements.plist" "$app" \
+    >/dev/null 2>&1 || die "could not sign $app"
+  codesign --verify --deep "$app" || die "$app does not verify"
+  rm -rf "$tmp"
 }
 
 # --- run on Test Lab --------------------------------------------------------------
@@ -205,6 +247,7 @@ ftl_run() {
 
 cmd_ftl() {
   local device="" screens="" out="" app="" test="" zip="" config="$CONFIG" source="adhoc" judge=1
+  local profile="${SURVEY_PROFILE:-}"
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --device) device="${2:?}"; shift 2 ;;
@@ -213,6 +256,7 @@ cmd_ftl() {
       --app) app="${2:?}"; shift 2 ;;
       --test) test="${2:?}"; shift 2 ;;
       --zip) zip="${2:?}"; shift 2 ;;
+      --profile) profile="${2:?}"; shift 2 ;;
       --config) config="${2:?}"; shift 2 ;;
       --source) source="${2:?}"; shift 2 ;;
       --no-judge) judge=0; shift ;;
@@ -243,7 +287,7 @@ cmd_ftl() {
   out="$(cd "$out" && pwd)"
   if [[ "$platform" == ios ]]; then
     if [[ -z "$zip" ]]; then
-      build_ios "$out" "$screens"
+      build_ios "$out" "$screens" "$profile"
       zip="$out/survey-ios.zip"
     fi
     ftl_run ios "$model" "$version" "$out" "$zip"
@@ -531,19 +575,20 @@ main() {
     local) shift; cmd_local "$@" ;;
     build)
       shift
-      local platform="${1:-}" screens="" out=""
+      local platform="${1:-}" screens="" out="" profile="${SURVEY_PROFILE:-}"
       shift || true
       while [[ $# -gt 0 ]]; do
         case "$1" in
           --screens) screens="${2:?}"; shift 2 ;;
           --out) out="${2:?}"; shift 2 ;;
+          --profile) profile="${2:?}"; shift 2 ;;
           *) die "unknown option $1" ;;
         esac
       done
       out="${out:-$APP_DIR/build/survey/build-$platform}"
       case "$platform" in
         android) build_android "$out" "$screens" ;;
-        ios) build_ios "$out" "$screens" ;;
+        ios) build_ios "$out" "$screens" "$profile" ;;
         *) die "build android or build ios" ;;
       esac
       printf 'survey: built into %s\n' "$out" >&2
