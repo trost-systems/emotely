@@ -1,4 +1,4 @@
-import 'package:emotely/l10n/app_localizations.dart';
+import 'package:emotely/l10n/l10n.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -31,12 +31,12 @@ class const AppShell({
           key: journalTabKey,
           icon: const Icon(Icons.menu_book_outlined),
           selectedIcon: const Icon(Icons.menu_book),
-          label: AppLocalizations.of(context).journalTab,
+          label: context.l10n.journalTab,
         ),
         NavigationDestination(
           key: moreTabKey,
           icon: const Icon(Icons.more_horiz),
-          label: AppLocalizations.of(context).moreTab,
+          label: context.l10n.moreTab,
         ),
       ],
     ),

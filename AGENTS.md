@@ -56,6 +56,9 @@ twice was held too low: move it up a layer. A one-off needs only its fix.
   with `flutter analyze --fatal-infos`. Disabling any rule requires an
   in-config justification comment next to the override. Never fix a
   diagnostic by weakening a rule without that justification.
+- Words a user reads — the app, the site, sign-in mails, store listings,
+  the companion's prompts — use [`CONTEXT.md`](CONTEXT.md)'s terms, in
+  every language; its header says how to add or change one.
 - Deferred work goes into an issue, not a comment: the Dart analyzer, biome and CI's tripwire (ast-grep rules in `ast-grep/rules/tripwire`, for what those two miss) fail on a TODO or workaround comment and on a suppression without its reason.
 - A new custom check is rules for an existing engine, never a hand-rolled
   tool: ast-grep (`ast-grep/rules`, each with a test in `ast-grep/tests`)

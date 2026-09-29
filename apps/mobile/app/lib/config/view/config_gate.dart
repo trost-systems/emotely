@@ -1,5 +1,5 @@
 import 'package:emotely/config/bloc/config_bloc.dart';
-import 'package:emotely/l10n/app_localizations.dart';
+import 'package:emotely/l10n/l10n.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -72,14 +72,14 @@ class const _UpdateRequired({required final String minAppVersion})
     contentKey: ConfigGate.updateRequiredKey,
     children: [
       Text(
-        AppLocalizations.of(context).updateRequiredMessage(minAppVersion),
+        context.l10n.updateRequiredMessage(minAppVersion),
         textAlign: TextAlign.center,
       ),
       FilledButton(
         key: ConfigGate.updateKey,
         onPressed: () =>
             context.read<ConfigBloc>().add(const ConfigEvent.updateRequested()),
-        child: Text(AppLocalizations.of(context).updateButton),
+        child: Text(context.l10n.updateButton),
       ),
     ],
   );
@@ -96,7 +96,7 @@ class const _Failure({required final ConfigProblem problem})
     contentKey: ConfigGate.failureKey,
     children: [
       Text(
-        _messageFor(AppLocalizations.of(context)),
+        _messageFor(context.l10n),
         style: TextStyle(color: Theme.of(context).colorScheme.error),
         textAlign: TextAlign.center,
       ),
@@ -104,7 +104,7 @@ class const _Failure({required final ConfigProblem problem})
         key: ConfigGate.retryKey,
         onPressed: () =>
             context.read<ConfigBloc>().add(const ConfigEvent.loaded()),
-        child: Text(AppLocalizations.of(context).tryAgainButton),
+        child: Text(context.l10n.tryAgainButton),
       ),
     ],
   );

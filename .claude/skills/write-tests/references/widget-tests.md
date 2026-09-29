@@ -6,11 +6,10 @@
   routes. Each takes `localizations:` (the package's own delegate,
   `const [JournalLocalizations.delegate]`; design_system's and Flutter's
   are always added) and `locale:`.
-- Read expected text through the package's class,
-  `lookupJournalLocalizations(locale).entryTitle`, never as a literal: the
-  test then holds in every locale, and a string that skipped the ARB files
-  stays English under German and fails. Run the screens that matter once
-  under `Locale('de')` too.
+- Assert text by its key, through the widget tree:
+  `find.text(tester.element(find.byType(EntryPage)).l10n.entryScreenTitle)`,
+  never the words. A rewording changes no test; the one test that looks at
+  the words themselves is the app's `test/app/localizations_test.dart`.
 - Go back with `tester.tapBack()` from `package:testing`, not
   `tester.pageBack()`: the latter finds the button by its English tooltip.
 - A feature package's page tests compose the way the app does, in a robot:
@@ -24,8 +23,7 @@
   rare states (errors, timeouts) by making the mocked API produce them.
 - Finders, in order of preference: static `Key` constants declared on the
   widget class (`find.byKey(SubmitButton.submitKey)`), `find.byType`,
-  localized text via the real l10n object
-  (`tester.element(find.byType(WidgetUnderTest))`) — never hardcoded strings.
+  localized text by its key (above) — never hardcoded copy.
 - Explicit `pump()` over `pumpAndSettle()`; settle only for animated
   transitions/navigation.
 - Assert widget properties via `tester.widget<FilledButton>(finder).onPressed`

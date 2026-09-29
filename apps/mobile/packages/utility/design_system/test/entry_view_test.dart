@@ -1,6 +1,7 @@
 import 'package:agent_client/agent_client.dart';
 import 'package:contract/contract.dart';
 import 'package:design_system/design_system.dart';
+import 'package:design_system/src/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:testing/testing.dart';
@@ -48,21 +49,12 @@ void main() {
   group(EntryView, () {
     // The component words its own heading, the same on every screen that
     // shows an entry (ADR 0020).
-    for (final locale in DesignSystemLocalizations.supportedLocales) {
-      testWidgets('heads the entry in its own words, in $locale', (
-        tester,
-      ) async {
-        await tester.pumpApp(
-          const EntryView(entry: entry, questions: questions),
-          locale: locale,
-        );
+    testWidgets('heads the entry in its own words', (tester) async {
+      await tester.pumpApp(const EntryView(entry: entry, questions: questions));
 
-        expect(
-          find.text(lookupDesignSystemLocalizations(locale).entryViewTitle),
-          findsOneWidget,
-        );
-      });
-    }
+      final strings = tester.element(find.byType(EntryView)).l10n;
+      expect(find.text(strings.entryViewTitle), findsOneWidget);
+    });
 
     testWidgets('shows the summary, then every question with its answer', (
       tester,

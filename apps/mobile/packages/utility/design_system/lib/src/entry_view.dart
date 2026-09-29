@@ -1,7 +1,7 @@
 import 'package:agent_client/agent_client.dart';
 import 'package:contract/contract.dart';
 import 'package:design_system/src/color_text.dart';
-import 'package:design_system/src/l10n/design_system_localizations.dart';
+import 'package:design_system/src/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The finished journal entry: its heading, the agent's summary, then each
@@ -19,10 +19,7 @@ class const EntryView({
     final theme = Theme.of(context);
     return ListView(
       children: [
-        Text(
-          DesignSystemLocalizations.of(context).entryViewTitle,
-          style: theme.textTheme.headlineSmall,
-        ),
+        Text(context.l10n.entryViewTitle, style: theme.textTheme.headlineSmall),
         const SizedBox(height: 12),
         Text(entry.summary, key: summaryKey, style: theme.textTheme.bodyLarge),
         const SizedBox(height: 24),

@@ -16,10 +16,11 @@ import 'package:material_ui/material_ui.dart';
 // (back buttons, dialogs, pickers, from `material_ui`, whose widgets the app
 // uses) are always there.
 //
-// Read a string through the package's own class
-// (`lookupJournalLocalizations(locale).entryTitle`), never as a literal: the
-// same test then holds in every locale, and a string that bypassed the ARB
-// files shows in English whatever locale is asked for, so it fails.
+// Assert a message by its key, read from the pumped tree
+// (`tester.element(find.byType(EntryPage)).l10n.entryScreenTitle`), never
+// the words: the same test then holds in every locale and through every
+// rewording, and a string that bypassed the ARB files shows in English
+// whatever locale is asked for, so it fails.
 
 /// The delegates a helper pumps with: the package's own, the design
 /// system's, then Flutter's — the order the app lists them in.

@@ -6,5 +6,5 @@ library;
 export 'src/color_text.dart';
 export 'src/entry_view.dart';
 export 'src/l10n/design_system_localizations.dart'
-    show DesignSystemLocalizations, lookupDesignSystemLocalizations;
+    show DesignSystemLocalizations;
 export 'src/theme.dart';

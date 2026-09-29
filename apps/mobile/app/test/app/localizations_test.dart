@@ -1,8 +1,12 @@
 import 'dart:io';
 
 import 'package:emotely/app/localizations.dart';
+import 'package:emotely/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
+
+import '../config/config_robot.dart';
+import '../helpers/helpers.dart';
 
 /// The app decides which languages ship; every package it composes has to
 /// speak all of them (ADR 0020).
@@ -38,6 +42,31 @@ void main() {
             .allMatches(declared!)
             .map((match) => match.group(1)),
         unorderedEquals(supportedLocales.map((locale) => locale.languageCode)),
+      );
+    });
+
+    testWidgets('are what a phone in another language reads', (tester) async {
+      // The one test in the app that looks at the words themselves: every
+      // other test asserts a message by its key, so rewording never breaks
+      // it. This one proves the device's language reaches the screen, and
+      // that the German is a translation, not the English again.
+      tester.platformDispatcher.localesTestValue = const [Locale('de')];
+      addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+      final robot = ConfigRobot(
+        tester,
+        ConfigStub()..script([configMalformed()]),
+      );
+
+      await robot.launch();
+      await robot.settle();
+
+      final german = robot.strings;
+      final english = lookupAppLocalizations(const Locale('en'));
+      expect(german.localeName, 'de');
+      expect(find.text(german.configUnreadableMessage), findsOneWidget);
+      expect(
+        german.configUnreadableMessage,
+        isNot(english.configUnreadableMessage),
       );
     });
 

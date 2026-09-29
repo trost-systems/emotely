@@ -9,7 +9,9 @@ A static [Jaspr](https://jaspr.site) site in Dart: `lib/main.server.dart`
 renders every route to HTML at build time, `lib/main.client.dart` mounts the
 `@client` islands in the browser: the waitlist form, the waitlist
 confirmation, and the account-deletion form (`components/`). Plain
-CSS in `web/styles.css`. No Node anywhere in this app.
+CSS in `web/styles.css`. No Node anywhere in this app. The site's copy
+uses [`CONTEXT.md`](../../../CONTEXT.md)'s terms, like every surface a user
+reads.
 
 Everything below is agent-executable; run from `apps/web`.
 
