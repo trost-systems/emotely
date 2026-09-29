@@ -1,4 +1,4 @@
-import 'package:feature_auth/src/l10n/auth_localizations.dart';
+import 'package:feature_auth/src/l10n/l10n.dart';
 import 'package:feature_auth/src/navigator.dart';
 import 'package:feature_auth/src/view/sign_in_page.dart';
 import 'package:material_ui/material_ui.dart';
@@ -12,7 +12,7 @@ class const SignInHeading({
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final strings = AuthLocalizations.of(context);
+    final strings = context.l10n;
     final (title, body) = switch (mode) {
       SignInMode.signUp => (
         switch (name) {

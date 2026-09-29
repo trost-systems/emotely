@@ -1,5 +1,5 @@
 import 'package:feature_auth/src/bloc/auth_bloc.dart';
-import 'package:feature_auth/src/l10n/auth_localizations.dart';
+import 'package:feature_auth/src/l10n/l10n.dart';
 import 'package:feature_auth/src/last_sign_in/last_sign_in_store.dart';
 import 'package:feature_auth/src/providers/provider_sign_in.dart';
 import 'package:feature_auth/src/view/last_used_tag.dart';
@@ -75,7 +75,7 @@ class const GoogleSignInButton({
       Brightness.dark => 'dark',
       Brightness.light => 'light',
     };
-    final strings = AuthLocalizations.of(context);
+    final strings = context.l10n;
     // One node for assistive technology: the ink well's tap and the
     // image's label, announced as a button.
     return MergeSemantics(
@@ -123,7 +123,7 @@ class const _AppleButton({
 
   @override
   Widget build(BuildContext context) {
-    final strings = AuthLocalizations.of(context);
+    final strings = context.l10n;
     final label = strings.appleButton;
     return Semantics(
       button: true,
@@ -157,7 +157,7 @@ class const OrWithEmail({super.key}) extends StatelessWidget {
       children: [
         const Expanded(child: Divider()),
         Text(
-          AuthLocalizations.of(context).orWithEmail,
+          context.l10n.orWithEmail,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

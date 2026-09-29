@@ -1,5 +1,5 @@
 import 'package:feature_auth/src/bloc/auth_bloc.dart';
-import 'package:feature_auth/src/l10n/auth_localizations.dart';
+import 'package:feature_auth/src/l10n/l10n.dart';
 import 'package:feature_auth/src/view/sign_in_page.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -11,7 +11,7 @@ class const SignInError(final SignInProblem? problem, {super.key})
   Widget build(BuildContext context) => switch (problem) {
     null => const SizedBox.shrink(),
     final problem => Text(
-      _messageFor(problem, AuthLocalizations.of(context)),
+      _messageFor(problem, context.l10n),
       key: SignInPage.errorKey,
       style: TextStyle(color: Theme.of(context).colorScheme.error),
     ),

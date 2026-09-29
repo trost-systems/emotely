@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:feature_auth/src/bloc/auth_bloc.dart';
-import 'package:feature_auth/src/l10n/auth_localizations.dart';
+import 'package:feature_auth/src/l10n/l10n.dart';
 import 'package:feature_auth/src/last_sign_in/last_sign_in_bloc.dart';
 import 'package:feature_auth/src/last_sign_in/last_sign_in_store.dart';
 import 'package:feature_auth/src/navigator.dart';
@@ -84,9 +84,7 @@ class const SignInPage({final SignInMode mode = SignInMode.signIn, super.key})
                   TextButton(
                     key: privacyNoticeKey,
                     onPressed: () => unawaited(openPrivacyNotice()),
-                    child: Text(
-                      AuthLocalizations.of(context).privacyNoticeButton,
-                    ),
+                    child: Text(context.l10n.privacyNoticeButton),
                   ),
                 ],
               ),
@@ -166,8 +164,8 @@ class _EmailStepState() extends State<_EmailStep> {
         keyboardType: TextInputType.emailAddress,
         autocorrect: false,
         decoration: InputDecoration(
-          labelText: AuthLocalizations.of(context).emailLabel,
-          hintText: AuthLocalizations.of(context).emailHint,
+          labelText: context.l10n.emailLabel,
+          hintText: context.l10n.emailHint,
           border: const OutlineInputBorder(),
         ),
         onChanged: (_) => setState(() {}),
@@ -195,7 +193,7 @@ class const _SendCode({required final VoidCallback? onPressed})
     extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final strings = AuthLocalizations.of(context);
+    final strings = context.l10n;
     final label = strings.sendCodeButton;
     final lastUsed =
         context.watch<LastSignInBloc>().state == SignInOption.emailCode;
@@ -244,7 +242,7 @@ class _CodeStepState() extends State<_CodeStep> {
     spacing: 16,
     children: [
       Text(
-        AuthLocalizations.of(context).codeSentMessage(widget.email),
+        context.l10n.codeSentMessage(widget.email),
         style: Theme.of(context).textTheme.bodyLarge,
       ),
       TextField(
@@ -254,9 +252,7 @@ class _CodeStepState() extends State<_CodeStep> {
         autofillHints: const [AutofillHints.oneTimeCode],
         keyboardType: TextInputType.number,
         maxLength: _CodeStep.codeLength,
-        decoration: InputDecoration(
-          labelText: AuthLocalizations.of(context).codeLabel,
-        ),
+        decoration: InputDecoration(labelText: context.l10n.codeLabel),
         onChanged: (_) => setState(() {}),
       ),
       SignInError(widget.problem),
@@ -305,7 +301,7 @@ class _PasswordStepState() extends State<_PasswordStep> {
     spacing: 16,
     children: [
       Text(
-        AuthLocalizations.of(context).passwordPrompt(widget.email),
+        context.l10n.passwordPrompt(widget.email),
         style: Theme.of(context).textTheme.bodyLarge,
       ),
       TextField(
@@ -318,9 +314,7 @@ class _PasswordStepState() extends State<_PasswordStep> {
         autofillHints: const [AutofillHints.password],
         keyboardType: TextInputType.visiblePassword,
         textInputAction: TextInputAction.done,
-        decoration: InputDecoration(
-          labelText: AuthLocalizations.of(context).passwordLabel,
-        ),
+        decoration: InputDecoration(labelText: context.l10n.passwordLabel),
         onChanged: (_) => setState(() {}),
         // The field is disabled while a check is in flight, so "done"
         // cannot submit twice.
@@ -351,14 +345,14 @@ class const _StepActions({
       FilledButton(
         key: signInKey,
         onPressed: onSignIn,
-        child: Text(AuthLocalizations.of(context).signInButton),
+        child: Text(context.l10n.signInButton),
       ),
       TextButton(
         key: SignInPage.changeEmailKey,
         onPressed: () => context.read<AuthBloc>().add(
           const AuthEvent.emailChangeRequested(),
         ),
-        child: Text(AuthLocalizations.of(context).changeEmailButton),
+        child: Text(context.l10n.changeEmailButton),
       ),
     ],
   );

@@ -1,4 +1,5 @@
 import 'package:feature_auth/feature_auth.dart';
+import 'package:feature_auth/src/l10n/l10n.dart';
 import 'package:feature_auth/src/view/last_used_tag.dart';
 import 'package:feature_auth/src/view/provider_buttons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,7 +31,6 @@ class SignInRobot(
   final Set<String> passwordAccounts = const {},
   final SignInMode mode = SignInMode.signIn,
   final String? name,
-  final Locale? locale,
 }) {
   final analytics = AnalyticsSpy();
   late final navigator = FakeSignInNavigator(name: name);
@@ -80,7 +80,7 @@ class SignInRobot(
 
   /// The screen's strings in the locale it is shown in: what every
   /// expectation about its words reads, so a test holds in any locale.
-  AuthLocalizations get strings => AuthLocalizations.of(tester.element(signIn));
+  AuthLocalizations get strings => tester.element(signIn).l10n;
 
   String get headingText => tester.widget<Text>(heading).data!;
 
@@ -145,16 +145,7 @@ class SignInRobot(
             : SignInPage(mode: mode),
       ),
     );
-    // Without a locale of its own, the helper's default: the one every
-    // other test of the workspace runs in.
-    return switch (locale) {
-      null => pageUnderTest(root, localizations: localizations),
-      final locale => pageUnderTest(
-        root,
-        localizations: localizations,
-        locale: locale,
-      ),
-    };
+    return pageUnderTest(root, localizations: localizations);
   }
 
   /// The feature's own strings, as the app composes them.

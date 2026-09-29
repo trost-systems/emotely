@@ -1,4 +1,4 @@
-import 'package:feature_auth/src/l10n/auth_localizations.dart';
+import 'package:feature_auth/src/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// A small pill on the top edge of the button last used to sign in on
@@ -51,7 +51,7 @@ class const _Pill() extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
         child: Text(
-          AuthLocalizations.of(context).lastUsedTag,
+          context.l10n.lastUsedTag,
           style: theme.textTheme.labelMedium?.copyWith(
             color: theme.colorScheme.onPrimary,
           ),
