@@ -27,6 +27,11 @@ sealed class AuthEvent with _$AuthEvent {
   const factory providerSelected(IdentityProvider provider) =
       AuthProviderSelected;
 
+  /// The sign-in screen is shown in [languageCode] (`en`, `de`): the
+  /// language the account's sign-in mail is written in from now on. The
+  /// screen says so when it first shows and whenever its language changes.
+  const factory languageShown(String languageCode) = AuthLanguageShown;
+
   /// Back to the email step.
   const factory emailChangeRequested() = AuthEmailChangeRequested;
 

@@ -51,42 +51,44 @@ class const SignInPage({final SignInMode mode = SignInMode.signIn, super.key})
       onPopInvokedWithResult: (didPop, _) => didPop ? null : leave(),
       child: BlocProvider(
         create: (_) => GetIt.I<LastSignInBloc>(),
-        child: Scaffold(
-          appBar: AppBar(
-            leading: BackButton(key: backKey, onPressed: leave),
-          ),
-          body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              child: Column(
-                children: [
-                  // The providers' buttons make the first step taller than a
-                  // small phone in landscape, or at a large text size.
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        spacing: 32,
-                        children: [
-                          SignInHeading(
-                            mode: mode,
-                            name: navigator.signUpName(),
-                          ),
-                          _Step(mode: mode),
-                        ],
+        child: _MailLanguage(
+          child: Scaffold(
+            appBar: AppBar(
+              leading: BackButton(key: backKey, onPressed: leave),
+            ),
+            body: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                child: Column(
+                  children: [
+                    // The providers' buttons make the first step taller than a
+                    // small phone in landscape, or at a large text size.
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          spacing: 32,
+                          children: [
+                            SignInHeading(
+                              mode: mode,
+                              name: navigator.signUpName(),
+                            ),
+                            _Step(mode: mode),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  // Reachable before an account exists, and before an address
-                  // has been typed: Play's disclosure expectations are
-                  // stricter than Apple's about a policy that lives only
-                  // behind a menu.
-                  TextButton(
-                    key: privacyNoticeKey,
-                    onPressed: () => unawaited(openPrivacyNotice()),
-                    child: Text(context.l10n.privacyNoticeButton),
-                  ),
-                ],
+                    // Reachable before an account exists, and before an address
+                    // has been typed: Play's disclosure expectations are
+                    // stricter than Apple's about a policy that lives only
+                    // behind a menu.
+                    TextButton(
+                      key: privacyNoticeKey,
+                      onPressed: () => unawaited(openPrivacyNotice()),
+                      child: Text(context.l10n.privacyNoticeButton),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -94,6 +96,29 @@ class const SignInPage({final SignInMode mode = SignInMode.signIn, super.key})
       ),
     );
   }
+}
+
+/// Tells the auth bloc the language the screen is shown in, when it first
+/// shows and whenever that changes: the language of the account's sign-in
+/// mail. The one place that knows it, since the bloc lives above the app's
+/// localizations.
+class const _MailLanguage({required final Widget child})
+    extends StatefulWidget {
+  @override
+  State<_MailLanguage> createState() => _MailLanguageState();
+}
+
+class _MailLanguageState() extends State<_MailLanguage> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    context.read<AuthBloc>().add(
+      AuthEvent.languageShown(Localizations.localeOf(context).languageCode),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
 
 /// The one step the sign-in state asks for.

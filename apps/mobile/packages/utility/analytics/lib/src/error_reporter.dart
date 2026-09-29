@@ -85,6 +85,13 @@ class const ErrorReporter({required final PostHogGate gate}) {
     properties: {'provider': provider.name},
   );
 
+  /// The app's language could not be kept on the account after a sign-in.
+  /// Costs the sign-in nothing; only the next sign-in mail comes in the
+  /// language kept before (English if none), and the next sign-in tries
+  /// again.
+  Future<void> mailLanguageSaveFailed(Exception error, StackTrace stackTrace) =>
+      _report(error, stackTrace, step: 'mail_language_save');
+
   /// The `delete_account` call failed.
   Future<void> accountDeletionFailed(Exception error, StackTrace stackTrace) =>
       _report(error, stackTrace, step: 'account_deletion');

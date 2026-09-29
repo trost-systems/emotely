@@ -52,14 +52,15 @@ extension AuthEventPatterns on AuthEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AuthEmailSubmitted value)?  emailSubmitted,TResult Function( AuthCodeSubmitted value)?  codeSubmitted,TResult Function( AuthPasswordSubmitted value)?  passwordSubmitted,TResult Function( AuthProviderSelected value)?  providerSelected,TResult Function( AuthEmailChangeRequested value)?  emailChangeRequested,TResult Function( AuthSignOutRequested value)?  signOutRequested,TResult Function( AuthSessionChanged value)?  sessionChanged,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AuthEmailSubmitted value)?  emailSubmitted,TResult Function( AuthCodeSubmitted value)?  codeSubmitted,TResult Function( AuthPasswordSubmitted value)?  passwordSubmitted,TResult Function( AuthProviderSelected value)?  providerSelected,TResult Function( AuthLanguageShown value)?  languageShown,TResult Function( AuthEmailChangeRequested value)?  emailChangeRequested,TResult Function( AuthSignOutRequested value)?  signOutRequested,TResult Function( AuthSessionChanged value)?  sessionChanged,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case AuthEmailSubmitted() when emailSubmitted != null:
 return emailSubmitted(_that);case AuthCodeSubmitted() when codeSubmitted != null:
 return codeSubmitted(_that);case AuthPasswordSubmitted() when passwordSubmitted != null:
 return passwordSubmitted(_that);case AuthProviderSelected() when providerSelected != null:
-return providerSelected(_that);case AuthEmailChangeRequested() when emailChangeRequested != null:
+return providerSelected(_that);case AuthLanguageShown() when languageShown != null:
+return languageShown(_that);case AuthEmailChangeRequested() when emailChangeRequested != null:
 return emailChangeRequested(_that);case AuthSignOutRequested() when signOutRequested != null:
 return signOutRequested(_that);case AuthSessionChanged() when sessionChanged != null:
 return sessionChanged(_that);case _:
@@ -80,14 +81,15 @@ return sessionChanged(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AuthEmailSubmitted value)  emailSubmitted,required TResult Function( AuthCodeSubmitted value)  codeSubmitted,required TResult Function( AuthPasswordSubmitted value)  passwordSubmitted,required TResult Function( AuthProviderSelected value)  providerSelected,required TResult Function( AuthEmailChangeRequested value)  emailChangeRequested,required TResult Function( AuthSignOutRequested value)  signOutRequested,required TResult Function( AuthSessionChanged value)  sessionChanged,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AuthEmailSubmitted value)  emailSubmitted,required TResult Function( AuthCodeSubmitted value)  codeSubmitted,required TResult Function( AuthPasswordSubmitted value)  passwordSubmitted,required TResult Function( AuthProviderSelected value)  providerSelected,required TResult Function( AuthLanguageShown value)  languageShown,required TResult Function( AuthEmailChangeRequested value)  emailChangeRequested,required TResult Function( AuthSignOutRequested value)  signOutRequested,required TResult Function( AuthSessionChanged value)  sessionChanged,}){
 final _that = this;
 switch (_that) {
 case AuthEmailSubmitted():
 return emailSubmitted(_that);case AuthCodeSubmitted():
 return codeSubmitted(_that);case AuthPasswordSubmitted():
 return passwordSubmitted(_that);case AuthProviderSelected():
-return providerSelected(_that);case AuthEmailChangeRequested():
+return providerSelected(_that);case AuthLanguageShown():
+return languageShown(_that);case AuthEmailChangeRequested():
 return emailChangeRequested(_that);case AuthSignOutRequested():
 return signOutRequested(_that);case AuthSessionChanged():
 return sessionChanged(_that);}
@@ -104,14 +106,15 @@ return sessionChanged(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AuthEmailSubmitted value)?  emailSubmitted,TResult? Function( AuthCodeSubmitted value)?  codeSubmitted,TResult? Function( AuthPasswordSubmitted value)?  passwordSubmitted,TResult? Function( AuthProviderSelected value)?  providerSelected,TResult? Function( AuthEmailChangeRequested value)?  emailChangeRequested,TResult? Function( AuthSignOutRequested value)?  signOutRequested,TResult? Function( AuthSessionChanged value)?  sessionChanged,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AuthEmailSubmitted value)?  emailSubmitted,TResult? Function( AuthCodeSubmitted value)?  codeSubmitted,TResult? Function( AuthPasswordSubmitted value)?  passwordSubmitted,TResult? Function( AuthProviderSelected value)?  providerSelected,TResult? Function( AuthLanguageShown value)?  languageShown,TResult? Function( AuthEmailChangeRequested value)?  emailChangeRequested,TResult? Function( AuthSignOutRequested value)?  signOutRequested,TResult? Function( AuthSessionChanged value)?  sessionChanged,}){
 final _that = this;
 switch (_that) {
 case AuthEmailSubmitted() when emailSubmitted != null:
 return emailSubmitted(_that);case AuthCodeSubmitted() when codeSubmitted != null:
 return codeSubmitted(_that);case AuthPasswordSubmitted() when passwordSubmitted != null:
 return passwordSubmitted(_that);case AuthProviderSelected() when providerSelected != null:
-return providerSelected(_that);case AuthEmailChangeRequested() when emailChangeRequested != null:
+return providerSelected(_that);case AuthLanguageShown() when languageShown != null:
+return languageShown(_that);case AuthEmailChangeRequested() when emailChangeRequested != null:
 return emailChangeRequested(_that);case AuthSignOutRequested() when signOutRequested != null:
 return signOutRequested(_that);case AuthSessionChanged() when sessionChanged != null:
 return sessionChanged(_that);case _:
@@ -131,13 +134,14 @@ return sessionChanged(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String email,  bool createAccount)?  emailSubmitted,TResult Function( String code)?  codeSubmitted,TResult Function( String password)?  passwordSubmitted,TResult Function( IdentityProvider provider)?  providerSelected,TResult Function()?  emailChangeRequested,TResult Function()?  signOutRequested,TResult Function( String? userId,  SignInIdentity? identity)?  sessionChanged,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String email,  bool createAccount)?  emailSubmitted,TResult Function( String code)?  codeSubmitted,TResult Function( String password)?  passwordSubmitted,TResult Function( IdentityProvider provider)?  providerSelected,TResult Function( String languageCode)?  languageShown,TResult Function()?  emailChangeRequested,TResult Function()?  signOutRequested,TResult Function( String? userId,  SignInIdentity? identity)?  sessionChanged,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AuthEmailSubmitted() when emailSubmitted != null:
 return emailSubmitted(_that.email,_that.createAccount);case AuthCodeSubmitted() when codeSubmitted != null:
 return codeSubmitted(_that.code);case AuthPasswordSubmitted() when passwordSubmitted != null:
 return passwordSubmitted(_that.password);case AuthProviderSelected() when providerSelected != null:
-return providerSelected(_that.provider);case AuthEmailChangeRequested() when emailChangeRequested != null:
+return providerSelected(_that.provider);case AuthLanguageShown() when languageShown != null:
+return languageShown(_that.languageCode);case AuthEmailChangeRequested() when emailChangeRequested != null:
 return emailChangeRequested();case AuthSignOutRequested() when signOutRequested != null:
 return signOutRequested();case AuthSessionChanged() when sessionChanged != null:
 return sessionChanged(_that.userId,_that.identity);case _:
@@ -158,13 +162,14 @@ return sessionChanged(_that.userId,_that.identity);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String email,  bool createAccount)  emailSubmitted,required TResult Function( String code)  codeSubmitted,required TResult Function( String password)  passwordSubmitted,required TResult Function( IdentityProvider provider)  providerSelected,required TResult Function()  emailChangeRequested,required TResult Function()  signOutRequested,required TResult Function( String? userId,  SignInIdentity? identity)  sessionChanged,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String email,  bool createAccount)  emailSubmitted,required TResult Function( String code)  codeSubmitted,required TResult Function( String password)  passwordSubmitted,required TResult Function( IdentityProvider provider)  providerSelected,required TResult Function( String languageCode)  languageShown,required TResult Function()  emailChangeRequested,required TResult Function()  signOutRequested,required TResult Function( String? userId,  SignInIdentity? identity)  sessionChanged,}) {final _that = this;
 switch (_that) {
 case AuthEmailSubmitted():
 return emailSubmitted(_that.email,_that.createAccount);case AuthCodeSubmitted():
 return codeSubmitted(_that.code);case AuthPasswordSubmitted():
 return passwordSubmitted(_that.password);case AuthProviderSelected():
-return providerSelected(_that.provider);case AuthEmailChangeRequested():
+return providerSelected(_that.provider);case AuthLanguageShown():
+return languageShown(_that.languageCode);case AuthEmailChangeRequested():
 return emailChangeRequested();case AuthSignOutRequested():
 return signOutRequested();case AuthSessionChanged():
 return sessionChanged(_that.userId,_that.identity);}
@@ -181,13 +186,14 @@ return sessionChanged(_that.userId,_that.identity);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String email,  bool createAccount)?  emailSubmitted,TResult? Function( String code)?  codeSubmitted,TResult? Function( String password)?  passwordSubmitted,TResult? Function( IdentityProvider provider)?  providerSelected,TResult? Function()?  emailChangeRequested,TResult? Function()?  signOutRequested,TResult? Function( String? userId,  SignInIdentity? identity)?  sessionChanged,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String email,  bool createAccount)?  emailSubmitted,TResult? Function( String code)?  codeSubmitted,TResult? Function( String password)?  passwordSubmitted,TResult? Function( IdentityProvider provider)?  providerSelected,TResult? Function( String languageCode)?  languageShown,TResult? Function()?  emailChangeRequested,TResult? Function()?  signOutRequested,TResult? Function( String? userId,  SignInIdentity? identity)?  sessionChanged,}) {final _that = this;
 switch (_that) {
 case AuthEmailSubmitted() when emailSubmitted != null:
 return emailSubmitted(_that.email,_that.createAccount);case AuthCodeSubmitted() when codeSubmitted != null:
 return codeSubmitted(_that.code);case AuthPasswordSubmitted() when passwordSubmitted != null:
 return passwordSubmitted(_that.password);case AuthProviderSelected() when providerSelected != null:
-return providerSelected(_that.provider);case AuthEmailChangeRequested() when emailChangeRequested != null:
+return providerSelected(_that.provider);case AuthLanguageShown() when languageShown != null:
+return languageShown(_that.languageCode);case AuthEmailChangeRequested() when emailChangeRequested != null:
 return emailChangeRequested();case AuthSignOutRequested() when signOutRequested != null:
 return signOutRequested();case AuthSessionChanged() when sessionChanged != null:
 return sessionChanged(_that.userId,_that.identity);case _:
@@ -450,6 +456,70 @@ class _$AuthProviderSelectedCopyWithImpl<$Res>
   return _then(AuthProviderSelected(
 null == provider ? _self.provider : provider // ignore: cast_nullable_to_non_nullable
 as IdentityProvider,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class AuthLanguageShown implements AuthEvent {
+  const AuthLanguageShown(this.languageCode);
+  
+
+ final  String languageCode;
+
+/// Create a copy of AuthEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AuthLanguageShownCopyWith<AuthLanguageShown> get copyWith => _$AuthLanguageShownCopyWithImpl<AuthLanguageShown>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthLanguageShown&&(identical(other.languageCode, languageCode) || other.languageCode == languageCode));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,languageCode);
+}
+
+
+
+}
+
+/// @nodoc
+abstract mixin class $AuthLanguageShownCopyWith<$Res> implements $AuthEventCopyWith<$Res> {
+  factory $AuthLanguageShownCopyWith(AuthLanguageShown value, $Res Function(AuthLanguageShown) _then) = _$AuthLanguageShownCopyWithImpl;
+@useResult
+$Res call({
+ String languageCode
+});
+
+
+
+
+}
+/// @nodoc
+class _$AuthLanguageShownCopyWithImpl<$Res>
+    implements $AuthLanguageShownCopyWith<$Res> {
+  _$AuthLanguageShownCopyWithImpl(this._self, this._then);
+
+  final AuthLanguageShown _self;
+  final $Res Function(AuthLanguageShown) _then;
+
+/// Create a copy of AuthEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? languageCode = null,}) {
+  return _then(AuthLanguageShown(
+null == languageCode ? _self.languageCode : languageCode // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

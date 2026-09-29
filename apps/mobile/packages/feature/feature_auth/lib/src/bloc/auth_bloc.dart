@@ -23,7 +23,9 @@ part 'auth_state.dart';
 /// which has no mailbox either). Supabase Auth owns the session
 /// (persistence, refresh); this bloc mirrors it into UI state and tells
 /// PostHog who the user is. Each sign-in through the screen also leaves the
-/// way in on the device ([LastSignInStore]), for the "Last used" tag.
+/// way in on the device ([LastSignInStore]), for the "Last used" tag, and
+/// the language the screen was shown in on the account
+/// ([mailLanguageKey]), for the language of the sign-in mail.
 class AuthBloc({
   required final SupabaseClient _supabase,
   required final AuthAnalytics _analytics,
@@ -37,6 +39,7 @@ class AuthBloc({
     on<AuthCodeSubmitted>(_onCodeSubmitted);
     on<AuthPasswordSubmitted>(_onPasswordSubmitted);
     on<AuthProviderSelected>(_onProviderSelected);
+    on<AuthLanguageShown>((event, _) => _language = event.languageCode);
     on<AuthEmailChangeRequested>(_onEmailChangeRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
     on<AuthSessionChanged>(_onSessionChanged);
@@ -59,6 +62,17 @@ class AuthBloc({
   }
 
   late final StreamSubscription<void> _sessionChanges;
+
+  /// Where the account keeps the language its sign-in mail is written in:
+  /// `user_metadata`, which the mail template reads as `.Data`
+  /// (`supabase/templates/sign_in_code.html`; English when it is missing).
+  /// A key of the app's own, not `locale`: Google's claims are merged into
+  /// the same metadata on every sign-in, and they carry a `locale` of
+  /// their own.
+  static const mailLanguageKey = 'app_locale';
+
+  /// The language the sign-in screen is shown in, once it has said so.
+  String? _language;
 
   static AuthState _initial(Session? session) => session == null
       ? const AuthState.signedOut()
@@ -89,6 +103,10 @@ class AuthBloc({
       await _supabase.auth.signInWithOtp(
         email: email,
         shouldCreateUser: event.createAccount,
+        // Supabase keeps it only on an account this request creates, so the
+        // very first mail is in the app's language; an existing account
+        // learns it once signed in ([_keepMailLanguage]).
+        data: {mailLanguageKey: ?_language},
       );
       emit(AuthState.codeSent(email: email));
     } on Exception catch (error, stackTrace) {
@@ -286,8 +304,29 @@ class AuthBloc({
     emit(AuthState.passwordRequired(email: email, problem: problem));
   }
 
-  void _signedIn(User user, Emitter<AuthState> emit) =>
-      _signed(user.id, SignInIdentity.ofUser(user), emit);
+  /// A sign-in through the screen, by any way in.
+  void _signedIn(User user, Emitter<AuthState> emit) {
+    _signed(user.id, SignInIdentity.ofUser(user), emit);
+    unawaited(_keepMailLanguage(user));
+  }
+
+  /// Keeps the screen's language on [user]'s account for the next sign-in
+  /// mail, unless the account has it already. Never in the way of the
+  /// sign-in: a failure only leaves the next mail in the language kept
+  /// before, and the next sign-in tries again.
+  Future<void> _keepMailLanguage(User user) async {
+    final language = _language;
+    if (language == null || user.userMetadata[mailLanguageKey] == language) {
+      return;
+    }
+    try {
+      await _supabase.auth.updateUser(
+        UserAttributes(data: {mailLanguageKey: language}),
+      );
+    } on Exception catch (error, stackTrace) {
+      unawaited(_errors.mailLanguageSaveFailed(error, stackTrace));
+    }
+  }
 
   void _signed(
     String userId,
