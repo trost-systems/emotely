@@ -20,11 +20,11 @@ sealed class OnboardingEvent with _$OnboardingEvent {
   const factory continued(OnboardingStepId step) = OnboardingContinued;
 
   /// Forward from [step] without doing it: the name, left for later. The
-  /// user is named with one of [nicknames], the screen's own words in the
-  /// user's language; the one picked is data from then on.
+  /// user is named with one of [placeholderNames], the screen's own words in
+  /// the user's language; the one picked is data from then on.
   const factory skipped(
     OnboardingStepId step, {
-    required List<String> nicknames,
+    required List<String> placeholderNames,
   }) = OnboardingSkipped;
 
   /// Back from [step] to the one before.

@@ -1,7 +1,7 @@
 import 'package:analytics/analytics.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:feature_onboarding/src/l10n/l10n.dart';
-import 'package:feature_onboarding/src/view/nicknames.dart';
+import 'package:feature_onboarding/src/view/placeholder_names.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:material_ui/material_ui.dart';
@@ -185,7 +185,7 @@ void main() {
 
       final strings = robot.strings;
       final placeholder = robot.store.progress.placeholder;
-      expect(strings.nicknames, contains(placeholder));
+      expect(strings.placeholderNameList, contains(placeholder));
       expect(robot.skipped, findsOneWidget);
       expect(find.text(strings.skippedTitle), findsOneWidget);
       expect(find.text(strings.skippedBody(placeholder!)), findsOneWidget);
@@ -466,7 +466,10 @@ void main() {
       await robot.tap(robot.skip);
 
       expect(robot.saved, hasLength(1));
-      expect(robot.strings.nicknames, contains(robot.saved.single.name));
+      expect(
+        robot.strings.placeholderNameList,
+        contains(robot.saved.single.name),
+      );
       expect(robot.saved.single.isPlaceholder, isTrue);
       expect(robot.navigator.asked, ['finish journal from null']);
     });
@@ -613,7 +616,7 @@ void main() {
       expect(after.saved.single.name, needle);
       final placeholders = [
         for (final locale in OnboardingLocalizations.supportedLocales)
-          ...lookupOnboardingLocalizations(locale).nicknames,
+          ...lookupOnboardingLocalizations(locale).placeholderNameList,
       ];
       for (final spy in [robot.analytics, after.analytics]) {
         expect(spy.events, isNotEmpty);
@@ -627,7 +630,7 @@ void main() {
     });
   });
 
-  group('nicknames', () {
+  group('placeholder names', () {
     // Which list a skip picks from depends on the phone's language, so these
     // pump a locale of their own and read every other through the lookup.
     final languages = _Languages();
@@ -641,12 +644,12 @@ void main() {
       await robot.tap(robot.skip);
 
       final placeholder = robot.store.progress.placeholder!;
-      expect(robot.strings.nicknames, contains(placeholder));
+      expect(robot.strings.placeholderNameList, contains(placeholder));
       expect(find.text(robot.strings.skippedBody(placeholder)), findsOneWidget);
       for (final other in OnboardingLocalizations.supportedLocales) {
         if (other != language) {
           expect(
-            lookupOnboardingLocalizations(other).nicknames,
+            lookupOnboardingLocalizations(other).placeholderNameList,
             isNot(contains(placeholder)),
             reason: 'picked from $language, found in $other',
           );
@@ -654,10 +657,10 @@ void main() {
       }
     }, variant: languages);
 
-    testWidgets('keeps the nickname it picked when the phone speaks another '
+    testWidgets('keeps the name it picked when the phone speaks another '
         'language later', (tester) async {
       final picked = lookupOnboardingLocalizations(const Locale('de'))
-          .nicknames
+          .placeholderNameList
           .first;
       final robot = OnboardingRobot(tester);
       await robot.kept({
@@ -670,7 +673,7 @@ void main() {
       await robot.launch(locale: const Locale('en'));
 
       // The English list has no such name, so only the kept one can show.
-      expect(robot.strings.nicknames, isNot(contains(picked)));
+      expect(robot.strings.placeholderNameList, isNot(contains(picked)));
       expect(find.text(robot.strings.skippedBody(picked)), findsOneWidget);
     });
   });

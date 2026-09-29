@@ -230,7 +230,7 @@ abstract class OnboardingLocalizations {
   /// **'Please leave out tabs and other invisible characters.'**
   String get nameInvisibleCharacterError;
 
-  /// Onboarding, name step: the quieter button under Continue that goes on without a name; emotely then picks a playful nickname for the user.
+  /// Onboarding, name step: the quieter button under Continue that goes on without a name; emotely then picks a playful placeholder name for the user.
   ///
   /// In en, this message translates to:
   /// **'Skip for now'**
@@ -254,7 +254,7 @@ abstract class OnboardingLocalizations {
   /// **'Fine, stay mysterious.'**
   String get skippedTitle;
 
-  /// Onboarding, greeting step after a skip: announces the nickname emotely picked (one of placeholderNames) and says the real name can be given later in the profile.
+  /// Onboarding, greeting step after a skip: announces the name emotely picked (one of placeholderNames) and says the real name can be given later in the profile.
   ///
   /// In en, this message translates to:
   /// **'I’ll call you {placeholder} for now. When you’re ready to tell me your real name, it’s in your profile.'**
@@ -284,7 +284,7 @@ abstract class OnboardingLocalizations {
   /// **'Try again'**
   String get retryButton;
 
-  /// Onboarding: the nicknames emotely picks one of, at random, when the user skips the name step. The pick becomes the user's name: shown in the greeting and the profile, and given to the companion, and it stays as picked even if the phone's language changes later. Separated by commas. Do not translate word for word: give equally playful, gender-neutral nicknames that are plainly nobody's real name, each at most 40 characters. The number of names may differ.
+  /// Onboarding: the placeholder names emotely picks one of, at random, when the user skips the name step. The pick becomes the user's name: shown in the greeting and the profile, and given to the companion, and it stays as picked even if the phone's language changes later. Separated by commas. Do not translate word for word: give equally playful, gender-neutral names that are plainly nobody's real name, each at most 40 characters. The number of names may differ.
   ///
   /// In en, this message translates to:
   /// **'Pebble, Pip, Maple, Biscuit, Sparrow, Clover, Noodle, Sunny, Juniper, Button, Toffee, Wren'**

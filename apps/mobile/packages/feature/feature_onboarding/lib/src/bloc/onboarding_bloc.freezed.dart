@@ -128,13 +128,13 @@ return retried(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( OnboardingPhase phase)?  started,TResult Function( String text)?  nameChanged,TResult Function( OnboardingStepId step)?  continued,TResult Function( OnboardingStepId step,  List<String> nicknames)?  skipped,TResult Function( OnboardingStepId step)?  back,TResult Function()?  retried,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( OnboardingPhase phase)?  started,TResult Function( String text)?  nameChanged,TResult Function( OnboardingStepId step)?  continued,TResult Function( OnboardingStepId step,  List<String> placeholderNames)?  skipped,TResult Function( OnboardingStepId step)?  back,TResult Function()?  retried,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case OnboardingStarted() when started != null:
 return started(_that.phase);case OnboardingNameChanged() when nameChanged != null:
 return nameChanged(_that.text);case OnboardingContinued() when continued != null:
 return continued(_that.step);case OnboardingSkipped() when skipped != null:
-return skipped(_that.step,_that.nicknames);case OnboardingBack() when back != null:
+return skipped(_that.step,_that.placeholderNames);case OnboardingBack() when back != null:
 return back(_that.step);case OnboardingRetried() when retried != null:
 return retried();case _:
   return orElse();
@@ -154,13 +154,13 @@ return retried();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( OnboardingPhase phase)  started,required TResult Function( String text)  nameChanged,required TResult Function( OnboardingStepId step)  continued,required TResult Function( OnboardingStepId step,  List<String> nicknames)  skipped,required TResult Function( OnboardingStepId step)  back,required TResult Function()  retried,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( OnboardingPhase phase)  started,required TResult Function( String text)  nameChanged,required TResult Function( OnboardingStepId step)  continued,required TResult Function( OnboardingStepId step,  List<String> placeholderNames)  skipped,required TResult Function( OnboardingStepId step)  back,required TResult Function()  retried,}) {final _that = this;
 switch (_that) {
 case OnboardingStarted():
 return started(_that.phase);case OnboardingNameChanged():
 return nameChanged(_that.text);case OnboardingContinued():
 return continued(_that.step);case OnboardingSkipped():
-return skipped(_that.step,_that.nicknames);case OnboardingBack():
+return skipped(_that.step,_that.placeholderNames);case OnboardingBack():
 return back(_that.step);case OnboardingRetried():
 return retried();}
 }
@@ -176,13 +176,13 @@ return retried();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( OnboardingPhase phase)?  started,TResult? Function( String text)?  nameChanged,TResult? Function( OnboardingStepId step)?  continued,TResult? Function( OnboardingStepId step,  List<String> nicknames)?  skipped,TResult? Function( OnboardingStepId step)?  back,TResult? Function()?  retried,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( OnboardingPhase phase)?  started,TResult? Function( String text)?  nameChanged,TResult? Function( OnboardingStepId step)?  continued,TResult? Function( OnboardingStepId step,  List<String> placeholderNames)?  skipped,TResult? Function( OnboardingStepId step)?  back,TResult? Function()?  retried,}) {final _that = this;
 switch (_that) {
 case OnboardingStarted() when started != null:
 return started(_that.phase);case OnboardingNameChanged() when nameChanged != null:
 return nameChanged(_that.text);case OnboardingContinued() when continued != null:
 return continued(_that.step);case OnboardingSkipped() when skipped != null:
-return skipped(_that.step,_that.nicknames);case OnboardingBack() when back != null:
+return skipped(_that.step,_that.placeholderNames);case OnboardingBack() when back != null:
 return back(_that.step);case OnboardingRetried() when retried != null:
 return retried();case _:
   return null;
@@ -388,15 +388,15 @@ as OnboardingStepId,
 
 
 class OnboardingSkipped implements OnboardingEvent {
-  const OnboardingSkipped(this.step, {required  List<String> nicknames}): _nicknames = nicknames;
+  const OnboardingSkipped(this.step, {required  List<String> placeholderNames}): _placeholderNames = placeholderNames;
   
 
  final  OnboardingStepId step;
- final  List<String> _nicknames;
- List<String> get nicknames {
-  if (_nicknames is EqualUnmodifiableListView) return _nicknames;
+ final  List<String> _placeholderNames;
+ List<String> get placeholderNames {
+  if (_placeholderNames is EqualUnmodifiableListView) return _placeholderNames;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_nicknames);
+  return EqualUnmodifiableListView(_placeholderNames);
 }
 
 
@@ -410,13 +410,13 @@ $OnboardingSkippedCopyWith<OnboardingSkipped> get copyWith => _$OnboardingSkippe
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is OnboardingSkipped&&(identical(other.step, step) || other.step == step)&&const DeepCollectionEquality().equals(other.nicknames, _nicknames));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is OnboardingSkipped&&(identical(other.step, step) || other.step == step)&&const DeepCollectionEquality().equals(other.placeholderNames, _placeholderNames));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,step,const DeepCollectionEquality().hash(_nicknames));
+    return Object.hash(runtimeType,step,const DeepCollectionEquality().hash(_placeholderNames));
 }
 
 
@@ -428,7 +428,7 @@ abstract mixin class $OnboardingSkippedCopyWith<$Res> implements $OnboardingEven
   factory $OnboardingSkippedCopyWith(OnboardingSkipped value, $Res Function(OnboardingSkipped) _then) = _$OnboardingSkippedCopyWithImpl;
 @useResult
 $Res call({
- OnboardingStepId step, List<String> nicknames
+ OnboardingStepId step, List<String> placeholderNames
 });
 
 
@@ -445,10 +445,10 @@ class _$OnboardingSkippedCopyWithImpl<$Res>
 
 /// Create a copy of OnboardingEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? step = null,Object? nicknames = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? step = null,Object? placeholderNames = null,}) {
   return _then(OnboardingSkipped(
 null == step ? _self.step : step // ignore: cast_nullable_to_non_nullable
-as OnboardingStepId,nicknames: null == nicknames ? _self._nicknames : nicknames // ignore: cast_nullable_to_non_nullable
+as OnboardingStepId,placeholderNames: null == placeholderNames ? _self._placeholderNames : placeholderNames // ignore: cast_nullable_to_non_nullable
 as List<String>,
   ));
 }

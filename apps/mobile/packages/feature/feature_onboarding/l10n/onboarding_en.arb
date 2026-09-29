@@ -102,7 +102,7 @@
   },
   "skipNameButton": "Skip for now",
   "@skipNameButton": {
-    "description": "Onboarding, name step: the quieter button under Continue that goes on without a name; emotely then picks a playful nickname for the user."
+    "description": "Onboarding, name step: the quieter button under Continue that goes on without a name; emotely then picks a playful placeholder name for the user."
   },
   "helloTitle": "Nice to meet you, {name}.",
   "@helloTitle": {
@@ -124,7 +124,7 @@
   },
   "skippedBody": "I’ll call you {placeholder} for now. When you’re ready to tell me your real name, it’s in your profile.",
   "@skippedBody": {
-    "description": "Onboarding, greeting step after a skip: announces the nickname emotely picked (one of placeholderNames) and says the real name can be given later in the profile.",
+    "description": "Onboarding, greeting step after a skip: announces the name emotely picked (one of placeholderNames) and says the real name can be given later in the profile.",
     "placeholders": {
       "placeholder": {
         "type": "String",
@@ -150,6 +150,6 @@
   },
   "placeholderNames": "Pebble, Pip, Maple, Biscuit, Sparrow, Clover, Noodle, Sunny, Juniper, Button, Toffee, Wren",
   "@placeholderNames": {
-    "description": "Onboarding: the nicknames emotely picks one of, at random, when the user skips the name step. The pick becomes the user's name: shown in the greeting and the profile, and given to the companion, and it stays as picked even if the phone's language changes later. Separated by commas. Do not translate word for word: give equally playful, gender-neutral nicknames that are plainly nobody's real name, each at most 40 characters. The number of names may differ."
+    "description": "Onboarding: the placeholder names emotely picks one of, at random, when the user skips the name step. The pick becomes the user's name: shown in the greeting and the profile, and given to the companion, and it stays as picked even if the phone's language changes later. Separated by commas. Do not translate word for word: give equally playful, gender-neutral names that are plainly nobody's real name, each at most 40 characters. The number of names may differ."
   }
 }

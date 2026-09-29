@@ -1,7 +1,7 @@
 import 'package:analytics/analytics.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:feature_onboarding/src/l10n/l10n.dart';
-import 'package:feature_onboarding/src/view/nicknames.dart';
+import 'package:feature_onboarding/src/view/placeholder_names.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:profile_repository/profile_repository.dart';
 
@@ -134,10 +134,10 @@ void main() {
   });
 
   group(OnboardingLocalizations, () {
-    test('nicknames the user with distinct names the profile takes, in every '
+    test('offers distinct placeholder names the profile takes, in every '
         'locale', () {
       for (final locale in OnboardingLocalizations.supportedLocales) {
-        final names = lookupOnboardingLocalizations(locale).nicknames;
+        final names = lookupOnboardingLocalizations(locale).placeholderNameList;
 
         expect(names, isNotEmpty, reason: '$locale');
         expect(names.toSet(), hasLength(names.length), reason: '$locale');

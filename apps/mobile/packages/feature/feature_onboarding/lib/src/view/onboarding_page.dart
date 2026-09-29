@@ -7,7 +7,7 @@ import 'package:feature_onboarding/src/progress.dart';
 import 'package:feature_onboarding/src/view/hello_step.dart';
 import 'package:feature_onboarding/src/view/intro_steps.dart';
 import 'package:feature_onboarding/src/view/name_step.dart';
-import 'package:feature_onboarding/src/view/nicknames.dart';
+import 'package:feature_onboarding/src/view/placeholder_names.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:material_ui/material_ui.dart';
@@ -110,7 +110,10 @@ class const _Step(final OnboardingShowing state, {required final String? from})
         onChanged: (text) => bloc.add(OnboardingEvent.nameChanged(text)),
         onContinue: forward,
         onSkip: () => bloc.add(
-          OnboardingEvent.skipped(id, nicknames: context.l10n.nicknames),
+          OnboardingEvent.skipped(
+            id,
+            placeholderNames: context.l10n.placeholderNameList,
+          ),
         ),
       ),
       HelloStep() => switch (state.progress.placeholder) {
