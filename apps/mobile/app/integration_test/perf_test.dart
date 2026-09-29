@@ -13,11 +13,13 @@
 
 import 'dart:convert';
 
+import 'package:analytics/analytics.dart';
 import 'package:design_system/design_system.dart';
 import 'package:emotely/app/app.dart';
 import 'package:emotely/app/dependencies.dart';
 import 'package:emotely/app/environment.dart';
 import 'package:feature_journal/feature_journal.dart';
+import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:feature_session/feature_session.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
@@ -72,11 +74,12 @@ class PerfPaths(
   /// Each path's requests as `service METHOD /path`, in order.
   final requests = <String, List<String>>{};
 
-  /// The app, composed as `main` composes it, signed in, over [backend].
+  /// The app as `main` composes it, over [backend]: signed in, and past
+  /// the first-launch usage-analytics sheet.
+  late EmotelyApp app;
+
+  /// Composes [app] as `main` does, signed in, over [backend].
   Future<void> compose() async {
-    // The same call `main` makes; without a POSTHOG_KEY define it sets
-    // nothing up, and analytics stay off as in a build without the key.
-    await Posthog().setup(PostHogConfig(posthogKey)..host = posthogHost);
     final supabase = SupabaseClient(
       FakeBackend.supabaseUrl,
       SupabaseStub.publishableKey,
@@ -94,12 +97,28 @@ class PerfPaths(
       configHttpClient: backend,
       supabase: supabase,
       posthog: Posthog(),
+      // Without a POSTHOG_KEY define the gate sets nothing up, and
+      // analytics stay off as in a build without the key.
+      posthogConfig: PostHogConfig(posthogKey)..host = posthogHost,
       appVersion: '1.0.0',
       build: testBuildInfo,
       agentUrl: FakeBackend.agentUrl,
       configUrl: FakeBackend.configUrl,
       passwordAccounts: const {},
       google: googleClients,
+    );
+    // What `main` reads before the first frame. Usage analytics are
+    // allowed, as a tester would on the first-launch sheet, so the sheet
+    // never covers the journal and the analytics calls run as they do for
+    // most users (#204).
+    final gate = GetIt.I<PostHogGate>();
+    await gate.restore(account: supabase.auth.currentUser?.id);
+    await gate.allow();
+    final onboarding = GetIt.I<OnboardingStore>();
+    await onboarding.restore();
+    app = EmotelyApp(
+      screenViews: gate.screenObserver(),
+      onboarding: onboarding,
     );
   }
 
@@ -122,7 +141,7 @@ class PerfPaths(
   /// Launches onto the journal, then flings through all of it and back,
   /// [scrollPasses] times.
   Future<void> openJournalAndScroll() async {
-    await tester.pumpWidget(const EmotelyApp());
+    await tester.pumpWidget(app);
     await tester.pumpAndSettle();
     expect(find.byKey(JournalView.entryKey(backend.firstId)), findsOneWidget);
     final list = find.byType(Scrollable).last;

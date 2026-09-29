@@ -85,7 +85,11 @@ class FakeBackend(
         ('GET', '/rest/v1/sessions') => (200, const <Object?>[]),
         ('POST', '/rest/v1/sessions') => (201, {'id': SupabaseStub.sessionId}),
         ('DELETE' || 'PATCH', '/rest/v1/sessions') => (204, null),
+        // Both consents stand, the journal's and usage analytics' (#204),
+        // so nothing is recorded or withdrawn.
         ('POST', '/rest/v1/rpc/consent_stands') => (200, true),
+        // The name the journal greets by and a session hands the agent.
+        ('GET', '/rest/v1/profiles') => (200, [profileRow(displayName: 'Sam')]),
         (final method, final path) => throw StateError(
           'fake backend: nothing answers $method $path',
         ),

@@ -32,13 +32,16 @@ requests:
   # its end and back.
   journal_scroll:
     config: 1
-    supabase: 2 # the entries, the open session
+    supabase: 3 # the entries, the open session, the profile (the greeting)
   # Open the newest entry and go back, 12 times.
   entry_open:
     supabase: 12 # the entry, each time
   # Start a session and answer 16 rating questions.
   session_round:
-    supabase: 19 # consent check, clear + create the session, 16 saved rounds
+    # Consent check, clear + create the session, 16 saved rounds, and the
+    # profile before each of the 17 agent rounds: the app's UserContextSource
+    # reads the name afresh for every round's user_context (#210).
+    supabase: 36
     agent: 17 # the first round, then one per answer
 
 # The deployed backend, measured from the runner as the smoke account
