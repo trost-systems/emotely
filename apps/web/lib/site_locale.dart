@@ -7,6 +7,8 @@
 /// cookieless.
 library;
 
+import 'package:emotely_web/beta_links.dart';
+
 /// A language of the site.
 enum SiteLocale() {
   /// English, the original of every page, at `/…`.
@@ -33,8 +35,23 @@ enum SiteLocale() {
 }
 
 /// Every page that exists in German, keyed by its English path. The one
-/// table the routes, the links between the languages and the tests read.
+/// table the routes, the links between the languages, the `hreflang`
+/// alternates and the tests read.
 const germanPaths = {
+  '/': '/de',
+  '/confirm': '/de/confirm',
   '/app-privacy': '/de/app-privacy',
+  '/delete-account': '/de/delete-account',
   '/imprint': '/de/imprint',
+  // Unlisted like its original: only the two beta pages name each other.
+  betaPath: germanBetaPath,
 };
+
+/// The English original of the page at [path]: the path itself for an
+/// English page, the table's key for a German one.
+String englishPathOf(String path) =>
+    [
+      for (final MapEntry(key: english, value: german) in germanPaths.entries)
+        if (german == path) english,
+    ].firstOrNull ??
+    path;

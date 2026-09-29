@@ -8,11 +8,6 @@ import 'package:emotely_web/environment.dart';
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/server.dart';
 
-const _description =
-    'emotely asks you a few good questions every evening and writes the '
-    'journal entry for you. Five minutes, no blank page, open source, your '
-    'words stay yours.';
-
 /// PostHog, cookieless (ADR 0004): nothing is stored in the browser, no
 /// person profiles, no autocapture, no replay, no surveys. The library is
 /// loaded deferred from the EU asset host and initialised once the document
@@ -25,17 +20,15 @@ const _posthogInit =
     'autocapture:false,capture_pageview:true,'
     'disable_session_recording:true,disable_surveys:true})})';
 
-/// The document. `<html lang>` is not set here: each page's shell sets it
-/// for the language the page is written in (`SiteShell`).
+/// The document. `<html lang>`, the description and the `hreflang`
+/// alternates are not set here: each page's shell sets them for the
+/// language the page is written in (`SiteShell`).
 Component siteDocument() => Document(
   title: 'emotely — a journal that asks, listens and writes',
-  meta: const {'description': _description, 'theme-color': '#f6f1e9'},
+  meta: const {'theme-color': '#f6f1e9'},
   head: [
     // Open Graph wants `property`, which Document.meta cannot emit.
     const meta(attributes: {'property': 'og:title', 'content': 'emotely'}),
-    const meta(
-      attributes: {'property': 'og:description', 'content': _description},
-    ),
     const meta(attributes: {'property': 'og:type', 'content': 'website'}),
     const meta(
       attributes: {'property': 'og:url', 'content': 'https://getemotely.com/'},

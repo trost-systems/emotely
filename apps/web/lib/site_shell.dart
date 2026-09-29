@@ -12,7 +12,8 @@ final class const _Chrome({
   required final String appPrivacy,
   required final String deleteAccount,
   required final String untranslated,
-  final String? description,
+  required final String languageName,
+  required final String description,
 });
 
 const _english = _Chrome(
@@ -23,6 +24,11 @@ const _english = _Chrome(
   appPrivacy: 'App privacy',
   deleteAccount: 'Delete your account',
   untranslated: '',
+  languageName: 'English',
+  description:
+      'emotely asks you a few good questions every evening and writes the '
+      'journal entry for you. Five minutes, no blank page, open source, your '
+      'words stay yours.',
 );
 
 // The words the app itself uses for the same rows (feature_account's
@@ -35,8 +41,7 @@ const _german = _Chrome(
   appPrivacy: 'Datenschutz in der App',
   deleteAccount: 'Konto löschen',
   untranslated: ' (auf Englisch)',
-  // The site-wide description, for German pages without one of their own;
-  // English pages keep the one in the document (site_document.dart).
+  languageName: 'Deutsch',
   description:
       'emotely stellt dir jeden Abend ein paar gute Fragen und schreibt '
       'den Tagebucheintrag für dich. Fünf Minuten, keine leere Seite, Open '
@@ -49,10 +54,12 @@ _Chrome _chromeOf(SiteLocale locale) => switch (locale) {
 };
 
 /// The frame of every page in one [locale]: the page's language on
-/// `<html lang>`, the header, the page, the footer. Built only on the
-/// server, like the pages it frames.
+/// `<html lang>`, the `hreflang` alternates of the page at [path], the
+/// header with the switch to the other language, the page, the footer.
+/// Built only on the server, like the pages it frames.
 class const SiteShell({
   required final SiteLocale locale,
+  required final String path,
   required final Component child,
   super.key,
 }) extends StatelessComponent {
@@ -60,16 +67,56 @@ class const SiteShell({
   Component build(BuildContext context) {
     final chrome = _chromeOf(locale);
     final home = locale.pathFor('/');
+    final english = englishPathOf(path);
+    final translated = SiteLocale.de.has(english);
+    final other = switch (locale) {
+      .en => SiteLocale.de,
+      .de => SiteLocale.en,
+    };
     return div(classes: 'site', [
       Document.html(attributes: {'lang': locale.code}),
-      if (chrome.description case final description?)
-        Document.head(meta: {'description': description}),
+      Document.head(
+        // The fallback for a page without a description of its own; a
+        // page's own Document.head sits deeper, so it wins.
+        meta: {'description': chrome.description},
+        children: [
+          // Open Graph wants `property`, which Document.meta cannot emit.
+          meta(
+            attributes: {
+              'property': 'og:description',
+              'content': chrome.description,
+            },
+          ),
+          // Every version lists every version, itself included, with
+          // absolute URLs; x-default is the English original (Google,
+          // "Tell Google about localized versions of your page").
+          if (translated)
+            for (final (hreflang, target) in [
+              ('en', english),
+              ('de', SiteLocale.de.pathFor(english)),
+              ('x-default', english),
+            ])
+              link(
+                rel: 'alternate',
+                href: '$siteUrl$target',
+                attributes: {'hreflang': hreflang},
+              ),
+        ],
+      ),
       header(classes: 'site-header', [
         a(href: home, classes: 'wordmark', const [.text('emotely')]),
         nav([
           a(href: '$home#how', [.text(chrome.howItWorks)]),
           a(href: '$home#faq', [.text(chrome.questions)]),
           const a(href: repositoryUrl, [.text('GitHub')]),
+          // The other language, named in itself, where this page has one:
+          // chosen by the reader, never by the browser's language.
+          if (translated)
+            a(
+              href: other.pathFor(english),
+              attributes: {'hreflang': other.code, 'lang': other.code},
+              [.text(_chromeOf(other).languageName)],
+            ),
         ]),
       ]),
       child,

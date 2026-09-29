@@ -7,6 +7,10 @@ import 'package:emotely_web/pages/app_privacy.dart';
 import 'package:emotely_web/pages/beta.dart';
 import 'package:emotely_web/pages/confirm.dart';
 import 'package:emotely_web/pages/de/app_privacy.dart';
+import 'package:emotely_web/pages/de/beta.dart';
+import 'package:emotely_web/pages/de/confirm.dart';
+import 'package:emotely_web/pages/de/delete_account.dart';
+import 'package:emotely_web/pages/de/home.dart';
 import 'package:emotely_web/pages/de/imprint.dart';
 import 'package:emotely_web/pages/delete_account.dart';
 import 'package:emotely_web/pages/home.dart';
@@ -1124,6 +1128,232 @@ void main() {
         expect(find.textContaining('anonyme Zählung'), findsNothing);
       });
     });
+  });
+
+  // The German landing pages, held to what their English originals say, one
+  // test per English test.
+  group('HomeDe', () {
+    testComponents('leads with the promise and asks for an address', (tester) {
+      tester.pumpComponent(const HomeDe());
+
+      expect(
+        find.textContaining('ohne vor einer leeren Seite zu sitzen'),
+        findsOneComponent,
+      );
+      expect(find.byType(WaitlistForm), findsOneComponent);
+    });
+
+    testComponents('shows how it works, what you get and the risk reversal', (
+      tester,
+    ) {
+      tester.pumpComponent(const HomeDe());
+
+      expect(find.text('So funktioniert’s'), findsOneComponent);
+      expect(find.text('Was du bekommst'), findsOneComponent);
+      expect(
+        find.textContaining('Kostenlos während des frühen Zugangs'),
+        findsOneComponent,
+      );
+      expect(find.textContaining('lösch'), findsComponents);
+    });
+
+    testComponents('answers the questions people ask before they sign up', (
+      tester,
+    ) {
+      tester.pumpComponent(const HomeDe());
+
+      expect(find.text('Fragen'), findsOneComponent);
+      expect(find.textContaining('Therapie'), findsComponents);
+      expect(find.textContaining('Trainieren'), findsComponents);
+    });
+
+    testComponents('links to the code', (tester) {
+      tester.pumpComponent(const HomeDe());
+
+      expect(find.textContaining('Den Code auf GitHub lesen'), findsComponents);
+    });
+
+    testComponents('names the platforms, not one phone brand', (tester) {
+      tester.pumpComponent(const HomeDe());
+
+      expect(find.textContaining('iOS und Android'), findsComponents);
+      expect(find.textContaining('iPhone'), findsNothing);
+    });
+  });
+
+  group('ConfirmDe', () {
+    testComponents('pre-renders the checking state for the island', (tester) {
+      tester.pumpComponent(const ConfirmDe());
+
+      expect(find.byType(ConfirmWaitlist), findsOneComponent);
+      expect(find.textContaining('Dein Link wird geprüft'), findsOneComponent);
+    });
+  });
+
+  group('DeleteAccountDe', () {
+    testComponents('gives the in-app path first, then the form', (tester) {
+      tester.pumpComponent(const DeleteAccountDe());
+
+      expect(find.textContaining('Wenn du die App noch hast'), findsComponents);
+      expect(find.textContaining('Mehr → Konto löschen'), findsComponents);
+      expect(
+        find.textContaining('Wenn du die App nicht mehr hast'),
+        findsComponents,
+      );
+      expect(find.byType(DeleteAccountForm), findsOneComponent);
+    });
+
+    testComponents('says what is deleted and that it does not come back', (
+      tester,
+    ) {
+      tester.pumpComponent(const DeleteAccountDe());
+
+      expect(find.textContaining('Tagebucheintrag'), findsComponents);
+      expect(find.textContaining('hello@getemotely.com'), findsComponents);
+    });
+
+    testComponents('promises nothing the form does not do', (tester) {
+      tester.pumpComponent(const DeleteAccountDe());
+
+      expect(find.textContaining('sofort'), findsComponents);
+    });
+
+    testComponents('names the app and developer as the Play listing has them', (
+      tester,
+    ) {
+      tester.pumpComponent(const DeleteAccountDe());
+
+      expect(
+        find.textContaining('Reflect Therapy AI: emotely'),
+        findsOneComponent,
+      );
+      expect(find.textContaining('Peter Trost'), findsComponents);
+    });
+
+    testComponents('is honest about backups rather than claiming none', (
+      tester,
+    ) {
+      tester.pumpComponent(const DeleteAccountDe());
+
+      expect(find.textContaining('Live-Datenbank'), findsComponents);
+      expect(find.textContaining('Aufbewahrungsfenster'), findsComponents);
+      expect(find.textContaining('kein Backup'), findsNothing);
+    });
+
+    testComponents('says what survives the deletion, and calls it that', (
+      tester,
+    ) {
+      tester.pumpComponent(const DeleteAccountDe());
+
+      expect(find.text('Was nicht gelöscht wird'), findsOneComponent);
+      expect(find.textContaining('pseudonym'), findsComponents);
+    });
+  });
+
+  group('BetaDe', () {
+    testComponents('says it is an invitation and asks not to share it', (
+      tester,
+    ) {
+      tester.pumpComponent(const BetaDe());
+
+      expect(find.text('emotely-Beta'), findsOneComponent);
+      expect(find.textContaining('eingeladen'), findsComponents);
+      expect(find.textContaining('nur mit Einladung'), findsComponents);
+      expect(find.textContaining('nicht weiterzugeben'), findsComponents);
+    });
+
+    testComponents('tells crawlers not to index or follow it', (tester) {
+      tester.pumpComponent(const BetaDe());
+
+      expect(
+        find.byComponentPredicate((component) {
+          if (component is! DomComponent || component.tag != 'meta') {
+            return false;
+          }
+          final attributes = component.attributes;
+          return attributes?['name'] == 'robots' &&
+              attributes?['content'] == 'noindex, nofollow';
+        }),
+        findsOneComponent,
+      );
+    });
+
+    testComponents('gives iPhone the TestFlight link and the two steps', (
+      tester,
+    ) {
+      tester.pumpComponent(const BetaDe());
+
+      expect(find.text('iPhone'), findsOneComponent);
+      expect(find.text('Bei TestFlight mitmachen'), findsOneComponent);
+      expect(find.textContaining('TestFlight-App'), findsComponents);
+      expect(find.textContaining('auf dem iPhone'), findsComponents);
+    });
+
+    testComponents('gives Android the Play link and the account caveat', (
+      tester,
+    ) {
+      tester.pumpComponent(const BetaDe());
+
+      expect(find.text('Android'), findsOneComponent);
+      expect(find.text('Bei Google Play mitmachen'), findsOneComponent);
+      expect(
+        find.textContaining('Google-Konto beschränkt, das wir eingeladen'),
+        findsComponents,
+      );
+      expect(
+        find.textContaining('antworte auf die Einladung'),
+        findsComponents,
+      );
+    });
+
+    testComponents('sets expectations for a beta rather than a release', (
+      tester,
+    ) {
+      tester.pumpComponent(const BetaDe());
+
+      expect(find.text('Was dich erwartet'), findsOneComponent);
+      expect(find.textContaining('kaputtgehen'), findsComponents);
+      expect(find.textContaining('neuer Build'), findsComponents);
+      expect(find.textContaining('privat'), findsComponents);
+      expect(find.textContaining('Umfrage'), findsComponents);
+    });
+
+    testComponents('promises no build per merge and warns of forced updates', (
+      tester,
+    ) {
+      tester.pumpComponent(const BetaDe());
+
+      expect(find.textContaining('Jeder Merge'), findsNothing);
+      expect(find.textContaining('ohne Vorwarnung'), findsNothing);
+      expect(find.textContaining('zu aktualisieren'), findsComponents);
+    });
+
+    testComponents('gives both feedback channels and asks for the version', (
+      tester,
+    ) {
+      tester.pumpComponent(const BetaDe());
+
+      expect(find.text('Feedback'), findsOneComponent);
+      expect(find.textContaining('Feedback senden'), findsComponents);
+      expect(find.textContaining('Tab „Mehr“'), findsComponents);
+      expect(find.textContaining('hello@getemotely.com'), findsComponents);
+      expect(find.textContaining('App-Version'), findsComponents);
+    });
+  });
+
+  testComponents('the German pages use the glossary’s German terms', (tester) {
+    for (final page in const [
+      HomeDe(),
+      ConfirmDe(),
+      DeleteAccountDe(),
+      BetaDe(),
+    ]) {
+      tester.pumpComponent(page);
+
+      expect(find.textContaining('Assistent'), findsNothing);
+      expect(find.textContaining('Sitzung'), findsNothing);
+      expect(find.textContaining('Datenschutzhinweis'), findsNothing);
+    }
   });
 
   group('Beta', () {

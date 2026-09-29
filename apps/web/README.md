@@ -13,7 +13,7 @@ lib/
   site_locale.dart        English at /…, German at /de/…, and which page has which
   pages/                  Home (the offer), Privacy, Imprint, …
   pages/de/               their German translations
-  components/             WaitlistForm (@client)
+  components/             the @client islands, each with a `lang`
   waitlist.dart           joinWaitlist(): the one HTTP call (ADR 0011)
   environment.dart        Supabase URL/key defaults (public by design)
 web/                      styles.css, favicon, robots.txt

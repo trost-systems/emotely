@@ -8,12 +8,12 @@ export PATH="$PWD/.dart-sdk/bin:$HOME/.pub-cache/bin:$PATH"
 # POSTHOG_KEY is a plain (public) project env var on Vercel; unset means the
 # site ships without the analytics script.
 #
-# /beta is unlisted: it is the single link an invitation mail carries, and
-# listing it in sitemap.xml would hand it to every crawler that reads the
-# sitemap. robots.txt stays clean for the same reason — a Disallow line
+# /beta and /de/beta are unlisted: /beta is the single link an invitation
+# mail carries, and listing either in sitemap.xml would hand it to every
+# crawler that reads the sitemap. robots.txt stays clean for the same reason — a Disallow line
 # would advertise the path rather than hide it.
 jaspr build --sitemap-domain https://getemotely.com \
-  --sitemap-exclude '^/beta$' \
+  --sitemap-exclude '^(/de)?/beta$' \
   --dart-define="POSTHOG_KEY=${POSTHOG_KEY:-}"
 
 # build_web_compilers copies every package's non-Dart assets next to the

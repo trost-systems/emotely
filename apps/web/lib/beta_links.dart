@@ -20,3 +20,7 @@ const testFlightJoinUrl = 'https://testflight.apple.com/join/SDw1xhYF';
 /// build and the tester's account is on the list.
 const playTestingUrl =
     'https://play.google.com/apps/testing/de.emotely.emotely';
+
+/// The German beta page, unlisted like [betaPath]: only the English beta
+/// page's language switch links here.
+const germanBetaPath = '/de/beta';

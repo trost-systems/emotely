@@ -31,13 +31,28 @@ ServerOptions get defaultServerOptions => ServerOptions(
   clientId: 'main.client.dart.js',
   clients: {
     _confirm_waitlist.ConfirmWaitlist:
-        ClientTarget<_confirm_waitlist.ConfirmWaitlist>('confirm_waitlist'),
+        ClientTarget<_confirm_waitlist.ConfirmWaitlist>(
+          'confirm_waitlist',
+          params: __confirm_waitlistConfirmWaitlist,
+        ),
     _delete_account_form.DeleteAccountForm:
         ClientTarget<_delete_account_form.DeleteAccountForm>(
           'delete_account_form',
+          params: __delete_account_formDeleteAccountForm,
         ),
     _waitlist_form.WaitlistForm: ClientTarget<_waitlist_form.WaitlistForm>(
       'waitlist_form',
+      params: __waitlist_formWaitlistForm,
     ),
   },
 );
+
+Map<String, Object?> __confirm_waitlistConfirmWaitlist(
+  _confirm_waitlist.ConfirmWaitlist c,
+) => {'lang': c.lang};
+Map<String, Object?> __delete_account_formDeleteAccountForm(
+  _delete_account_form.DeleteAccountForm c,
+) => {'lang': c.lang};
+Map<String, Object?> __waitlist_formWaitlistForm(
+  _waitlist_form.WaitlistForm c,
+) => {'lang': c.lang};
