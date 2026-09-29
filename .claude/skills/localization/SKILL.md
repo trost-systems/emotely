@@ -84,7 +84,7 @@ touching the digest or the version.
 | `avoid_hardcoded_ui_text` (analyze) | a literal, or a `const` holding one, reaches the UI in `lib/` | move it to the ARB files |
 | `melos run l10n:check` | generated code is stale or uncommitted, or a locale lacks a key | `flutter gen-l10n`, commit; add the key |
 | `pnpm spell` (tripwire job) | a word is misspelt, or a term `CONTEXT.md` says to avoid appears | fix the copy; a real word goes into `cspell/project-words.txt` (names, any language) or `cspell/de-words.txt` |
-| `test/app/localizations_test.dart` | a package lacks a shipped locale, or iOS does not declare it | add the ARB file; `Info.plist` |
+| `test/app/localizations_test.dart` | a package lacks a shipped locale, or iOS or Android does not declare it | add the ARB file; `Info.plist`; `locale_config.xml` |
 
 ## Adding a package that shows text, or a locale
 
@@ -94,5 +94,8 @@ touching the digest or the version.
   barrel; add its delegate to `apps/mobile/app/lib/app/localizations.dart`;
   add `lib/src/l10n/l10n.dart` with its `context.l10n`.
 - **A locale**: one ARB file per package that shows text, one entry in
-  `CFBundleLocalizations` in `apps/mobile/app/ios/Runner/Info.plist`, its
-  column in `CONTEXT.md`, and its dictionary in `cspell.config.yaml`.
+  `CFBundleLocalizations` in `apps/mobile/app/ios/Runner/Info.plist`, one
+  `<locale>` in
+  `apps/mobile/app/android/app/src/main/res/xml/locale_config.xml` (the
+  languages Android 13+ offers as emotely's per-app language), its column
+  in `CONTEXT.md`, and its dictionary in `cspell.config.yaml`.

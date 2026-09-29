@@ -29,7 +29,8 @@ void main() {
     test('are all declared to iOS', () {
       // iOS hands Flutter only the languages in CFBundleLocalizations: a
       // locale missing there never reaches the app on an iPhone, however
-      // complete its ARB files are.
+      // complete its ARB files are. It is also the bundle's list of
+      // localizations, the one iOS offers as emotely's own language.
       final plist = File('ios/Runner/Info.plist').readAsStringSync();
       final declared = RegExp(
         r'<key>CFBundleLocalizations</key>\s*<array>(.*?)</array>',
