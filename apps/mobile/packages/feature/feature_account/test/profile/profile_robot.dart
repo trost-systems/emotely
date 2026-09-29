@@ -13,7 +13,6 @@ import '../strings.dart';
 class ProfileRobot(
   final WidgetTester tester, {
   required final SupabaseStub supabase,
-  final Locale? locale,
 }) {
   final analytics = AnalyticsSpy();
   final navigator = FakeAccountNavigator();
@@ -61,18 +60,10 @@ class ProfileRobot(
     GetIt.I.registerSingleton<AccountNavigator>(navigator);
     // The page alone rather than its route under More: More reads the
     // profile too, and would take the rounds a test scripts for this screen.
-    // The helpers' own locale unless a test asks for another.
-    return switch (locale) {
-      final locale? => pageUnderTest(
-        const ProfilePage(),
-        localizations: accountLocalizations,
-        locale: locale,
-      ),
-      null => pageUnderTest(
-        const ProfilePage(),
-        localizations: accountLocalizations,
-      ),
-    };
+    return pageUnderTest(
+      const ProfilePage(),
+      localizations: accountLocalizations,
+    );
   }
 
   /// Opens the screen for an account of [provider] with address [email].

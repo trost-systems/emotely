@@ -14,7 +14,6 @@ import '../strings.dart';
 class _ConsentRobot(
   final WidgetTester tester, {
   required final SupabaseStub supabase,
-  final Locale? locale,
 }) {
   final analytics = AnalyticsSpy();
 
@@ -61,20 +60,11 @@ class _ConsentRobot(
       ),
       $consentRoute,
     ];
-    // The helpers' own locale unless a test asks for another.
-    return switch (locale) {
-      final locale? => featureUnderTest(
-        routes: routes,
-        initialLocation: '/',
-        localizations: accountLocalizations,
-        locale: locale,
-      ),
-      null => featureUnderTest(
-        routes: routes,
-        initialLocation: '/',
-        localizations: accountLocalizations,
-      ),
-    };
+    return featureUnderTest(
+      routes: routes,
+      initialLocation: '/',
+      localizations: accountLocalizations,
+    );
   }
 
   /// Signed in, with the consent screen open.
@@ -115,13 +105,12 @@ void main() {
       bool granted = false,
       List<AuthRound> grants = const [],
       List<AuthRound> reads = const [],
-      Locale? locale,
     }) {
       final supabase = SupabaseStub()
         ..rest(consentRead, reads)
         ..always(consentRead, consentStands(granted: granted))
         ..rest(consentGrant, grants);
-      return _ConsentRobot(tester, supabase: supabase, locale: locale);
+      return _ConsentRobot(tester, supabase: supabase);
     }
 
     testWidgets('asks, and records the consent once box and button agree', (
@@ -136,6 +125,14 @@ void main() {
       // lead and its body are one text, not a heading and a paragraph.
       for (final point in consentPoints(strings)) {
         expect(find.text('${point.lead} ${point.body}'), findsOneWidget);
+      }
+      for (final text in [
+        strings.consentCheckboxLabel,
+        strings.consentAgreeButton,
+        strings.consentDeclineButton,
+        strings.consentReadNoticeLink,
+      ]) {
+        expect(find.text(text), findsOneWidget, reason: text);
       }
       // The box starts unticked, and until it is ticked the button cannot
       // be pressed at all: no pre-ticked box, and no "by continuing".
@@ -300,36 +297,6 @@ void main() {
       // Not an answer: nothing was asked.
       expect(robot.result, isNull);
       expect(robot.analytics.events, isEmpty);
-    });
-
-    testWidgets('asks in German on a German phone', (tester) async {
-      final german = lookupAccountLocalizations(const Locale('de'));
-      final robot = robotWith(
-        tester,
-        grants: [rpcReturned(null)],
-        locale: const Locale('de'),
-      );
-      await robot.launch();
-
-      // The German wording the version names, as the screen shows it.
-      expect(find.text(german.consentTitle), findsOneWidget);
-      for (final point in consentPoints(german)) {
-        expect(find.text('${point.lead} ${point.body}'), findsOneWidget);
-      }
-      for (final text in [
-        german.consentCheckboxLabel,
-        german.consentAgreeButton,
-        german.consentDeclineButton,
-        german.consentReadNoticeLink,
-      ]) {
-        expect(find.text(text), findsOneWidget, reason: text);
-      }
-
-      await robot.consentAndContinue();
-
-      // The record names the one version, whatever the language.
-      expect(robot.supabase.bodies('/rest/v1/rpc/record_consent'), [version]);
-      expect(robot.result, ConsentOutcome.granted);
     });
 
     testWidgets('meets accessibility guidelines asking and failing', (

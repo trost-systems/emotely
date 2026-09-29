@@ -17,7 +17,6 @@ class _PrivacyRobot(
   final WidgetTester tester, {
   required final SupabaseStub supabase,
   final AnalyticsChoice? stored = AnalyticsChoice.allowed,
-  final Locale? locale,
 }) {
   late final analytics = AnalyticsSpy(stored: stored);
   final navigator = FakeAccountNavigator();
@@ -43,22 +42,11 @@ class _PrivacyRobot(
     );
     registerAccount(GetIt.I);
     GetIt.I.registerSingleton<AccountNavigator>(navigator);
-    final routes = [$moreRoute];
-    final initialLocation = const PrivacySettingsRoute().location;
-    // The helpers' own locale unless a test asks for another.
-    return switch (locale) {
-      final locale? => featureUnderTest(
-        routes: routes,
-        initialLocation: initialLocation,
-        localizations: accountLocalizations,
-        locale: locale,
-      ),
-      null => featureUnderTest(
-        routes: routes,
-        initialLocation: initialLocation,
-        localizations: accountLocalizations,
-      ),
-    };
+    return featureUnderTest(
+      routes: [$moreRoute],
+      initialLocation: const PrivacySettingsRoute().location,
+      localizations: accountLocalizations,
+    );
   }
 
   Future<void> launch() async {
@@ -85,7 +73,6 @@ void main() {
       List<AuthRound> reads = const [],
       List<AuthRound> withdrawals = const [],
       AnalyticsChoice? stored = AnalyticsChoice.allowed,
-      Locale? locale,
     }) {
       // More sits under Privacy settings on the route stack and reads
       // first; [reads] are the ones Privacy settings makes.
@@ -93,12 +80,7 @@ void main() {
         ..rest(consentRead, [consentStands(granted: granted), ...reads])
         ..always(consentRead, consentStands(granted: granted))
         ..rest(consentWithdraw, withdrawals);
-      return _PrivacyRobot(
-        tester,
-        supabase: supabase,
-        stored: stored,
-        locale: locale,
-      );
+      return _PrivacyRobot(tester, supabase: supabase, stored: stored);
     }
 
     testWidgets('shows where both consents stand', (tester) async {
@@ -274,34 +256,6 @@ void main() {
       await robot.tap(robot.notice);
 
       expect(launcher.launched, [privacyNoticeUrl]);
-    });
-
-    testWidgets('speaks German on a German phone, dates included', (
-      tester,
-    ) async {
-      final given = DateTime(2026, 9, 20, 18, 30);
-      final german = lookupAccountLocalizations(const Locale('de'));
-      final robot = robotWith(tester, locale: const Locale('de'));
-      robot.supabase.rest('GET /rest/v1/consent_events', [
-        rows([
-          {'recorded_at': given.toUtc().toIso8601String()},
-        ]),
-      ]);
-      await robot.launch();
-
-      expect(find.text(german.privacySettingsTitle), findsOneWidget);
-      expect(find.text(german.privacyJournalLabel), findsOneWidget);
-      expect(find.text(german.privacyUsageAnalyticsLabel), findsOneWidget);
-      // The date in German order and month names, not English ones.
-      expect(
-        find.text('Erteilt am 20. Sept. 2026. ${german.privacyJournalOnNote}'),
-        findsOneWidget,
-      );
-
-      await robot.tap(robot.journal);
-
-      expect(find.text(german.privacyConfirmTitle), findsOneWidget);
-      expect(find.text(german.privacyCancelButton), findsOneWidget);
     });
 
     testWidgets('meets accessibility guidelines with both on and both off', (

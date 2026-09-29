@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:feature_account/src/l10n/account_localizations.dart';
+import 'package:feature_account/src/l10n/l10n.dart';
 import 'package:feature_account/src/usage_analytics/bloc/usage_analytics_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -71,7 +71,7 @@ class const UsageAnalyticsSheet({super.key}) extends StatelessWidget {
             scopesRoute: true,
             namesRoute: true,
             explicitChildNodes: true,
-            label: AccountLocalizations.of(context).usageAnalyticsTitle,
+            label: context.l10n.usageAnalyticsTitle,
             child: const Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -89,7 +89,7 @@ class const _Question() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final strings = AccountLocalizations.of(context);
+    final strings = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 12,
@@ -116,7 +116,7 @@ class const _Question() extends StatelessWidget {
 class const _Points() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final strings = AccountLocalizations.of(context);
+    final strings = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 8,
@@ -156,7 +156,7 @@ class const _Answers() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bloc = context.read<UsageAnalyticsBloc>();
-    final strings = AccountLocalizations.of(context);
+    final strings = context.l10n;
     return Row(
       spacing: 12,
       children: [
@@ -184,7 +184,7 @@ class const _ChangeLater() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final strings = AccountLocalizations.of(context);
+    final strings = context.l10n;
     return Column(
       children: [
         Text(

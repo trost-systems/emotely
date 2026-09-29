@@ -50,7 +50,7 @@
   "privacyJournalOffNote": "Aus: Es kann keine neue Session starten. Beim Einschalten siehst du zuerst, wozu du einwilligst.",
   "privacyJournalGiven": "Erteilt am {date}.",
   "privacyJournalRetryButton": "Erneut prüfen",
-  "privacyConfirmTitle": "Tagebuchsitzungen ausschalten?",
+  "privacyConfirmTitle": "Tagebuch-Sessions ausschalten?",
   "privacyConfirmMessage": "Neue Sessions starten nicht mehr; deine Einträge bleiben.",
   "privacyConfirmButton": "Ausschalten",
   "privacyCancelButton": "Abbrechen",

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:feature_account/src/account/bloc/account_bloc.dart';
-import 'package:feature_account/src/l10n/account_localizations.dart';
+import 'package:feature_account/src/l10n/l10n.dart';
 import 'package:feature_account/src/navigator.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -43,9 +43,7 @@ class const AccountView({super.key}) extends StatelessWidget {
     builder: (context, state) => PopScope(
       canPop: state is! AccountDeleting,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(AccountLocalizations.of(context).accountTitle),
-        ),
+        appBar: AppBar(title: Text(context.l10n.accountTitle)),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -71,7 +69,7 @@ class const _DeleteAccount() extends StatelessWidget {
     spacing: 16,
     children: [
       Text(
-        AccountLocalizations.of(context).accountConsequenceMessage,
+        context.l10n.accountConsequenceMessage,
         style: Theme.of(context).textTheme.bodyLarge,
       ),
       OutlinedButton(
@@ -80,7 +78,7 @@ class const _DeleteAccount() extends StatelessWidget {
           foregroundColor: Theme.of(context).colorScheme.error,
         ),
         onPressed: () => unawaited(_confirm(context)),
-        child: Text(AccountLocalizations.of(context).accountDeleteButton),
+        child: Text(context.l10n.accountDeleteButton),
       ),
     ],
   );
@@ -103,12 +101,12 @@ class const _Confirmation({required final VoidCallback onConfirm})
     extends StatelessWidget {
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: Text(AccountLocalizations.of(context).accountConfirmationMessage),
+    title: Text(context.l10n.accountConfirmationMessage),
     actions: [
       TextButton(
         key: AccountView.cancelKey,
         onPressed: () => Navigator.of(context).pop(),
-        child: Text(AccountLocalizations.of(context).accountCancelButton),
+        child: Text(context.l10n.accountCancelButton),
       ),
       FilledButton(
         key: AccountView.confirmKey,
@@ -120,9 +118,7 @@ class const _Confirmation({required final VoidCallback onConfirm})
           Navigator.of(context).pop();
           onConfirm();
         },
-        child: Text(
-          AccountLocalizations.of(context).accountConfirmDeleteButton,
-        ),
+        child: Text(context.l10n.accountConfirmDeleteButton),
       ),
     ],
   );
@@ -139,7 +135,7 @@ class const _Failure() extends StatelessWidget {
     spacing: 16,
     children: [
       Text(
-        AccountLocalizations.of(context).accountFailureMessage,
+        context.l10n.accountFailureMessage,
         style: TextStyle(color: Theme.of(context).colorScheme.error),
       ),
       FilledButton(
@@ -147,7 +143,7 @@ class const _Failure() extends StatelessWidget {
         onPressed: () => context.read<AccountBloc>().add(
           const AccountEvent.deletionRequested(),
         ),
-        child: Text(AccountLocalizations.of(context).accountRetryButton),
+        child: Text(context.l10n.accountRetryButton),
       ),
       TextButton(
         key: AccountView.signOutKey,
@@ -158,7 +154,7 @@ class const _Failure() extends StatelessWidget {
           GetIt.I<AccountNavigator>().signOut(context);
           Navigator.of(context).pop();
         },
-        child: Text(AccountLocalizations.of(context).accountSignOutButton),
+        child: Text(context.l10n.accountSignOutButton),
       ),
     ],
   );

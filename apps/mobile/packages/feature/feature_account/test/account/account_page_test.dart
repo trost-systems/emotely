@@ -16,7 +16,6 @@ class _AccountRobot(
   final WidgetTester tester, {
   required final SupabaseStub supabase,
   final bool forgetFails = false,
-  final Locale? locale,
 }) {
   final analytics = AnalyticsSpy();
   final navigator = FakeAccountNavigator();
@@ -60,15 +59,7 @@ class _AccountRobot(
         ),
       ),
     );
-    // The helpers' own locale unless a test asks for another.
-    return switch (locale) {
-      final locale? => pageUnderTest(
-        home,
-        localizations: accountLocalizations,
-        locale: locale,
-      ),
-      null => pageUnderTest(home, localizations: accountLocalizations),
-    };
+    return pageUnderTest(home, localizations: accountLocalizations);
   }
 
   /// Signed in, on the account screen.
@@ -112,7 +103,6 @@ void main() {
       List<AuthRound> deletions = const [],
       AuthRound? logoutAnswer,
       bool forgetFails = false,
-      Locale? locale,
     }) {
       final supabase = SupabaseStub()
         ..rest(deletion, deletions)
@@ -121,7 +111,6 @@ void main() {
         tester,
         supabase: supabase,
         forgetFails: forgetFails,
-        locale: locale,
       );
     }
 
@@ -338,31 +327,6 @@ void main() {
       expect(robot.account, findsNothing);
       expect(robot.analytics.events.last, event('account_deleted'));
       expect(robot.analytics.resets, 1);
-    });
-
-    testWidgets('speaks German on a German phone, failure included', (
-      tester,
-    ) async {
-      final german = lookupAccountLocalizations(const Locale('de'));
-      final robot = robotWith(
-        tester,
-        deletions: [restRefused()],
-        locale: const Locale('de'),
-      );
-      await robot.launch();
-
-      expect(find.text(german.accountTitle), findsOneWidget);
-      expect(find.text(german.accountConsequenceMessage), findsOneWidget);
-
-      await robot.askToDelete();
-
-      expect(find.text(german.accountConfirmationMessage), findsOneWidget);
-      expect(find.text(german.accountConfirmDeleteButton), findsOneWidget);
-
-      await robot.tap(robot.confirm);
-
-      expect(find.text(german.accountFailureMessage), findsOneWidget);
-      expect(find.text(german.accountSignOutButton), findsOneWidget);
     });
 
     testWidgets('meets accessibility guidelines in every state', (

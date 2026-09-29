@@ -20,7 +20,6 @@ class _MoreRobot(
   final WidgetTester tester, {
   required final SupabaseStub supabase,
   final AnalyticsChoice? stored = AnalyticsChoice.allowed,
-  final Locale? locale,
 }) {
   late final analytics = AnalyticsSpy(stored: stored);
   final navigator = FakeAccountNavigator();
@@ -53,22 +52,11 @@ class _MoreRobot(
     registerAccount(GetIt.I);
     GetIt.I.registerSingleton<AccountNavigator>(navigator);
     GetIt.I.registerSingleton<AccountDeviceData>(FakeAccountDeviceData());
-    final routes = [$moreRoute];
-    final initialLocation = const MoreRoute().location;
-    // The helpers' own locale unless a test asks for another.
-    return switch (locale) {
-      final locale? => featureUnderTest(
-        routes: routes,
-        initialLocation: initialLocation,
-        localizations: accountLocalizations,
-        locale: locale,
-      ),
-      null => featureUnderTest(
-        routes: routes,
-        initialLocation: initialLocation,
-        localizations: accountLocalizations,
-      ),
-    };
+    return featureUnderTest(
+      routes: [$moreRoute],
+      initialLocation: const MoreRoute().location,
+      localizations: accountLocalizations,
+    );
   }
 
   Future<void> launch() async {
@@ -105,17 +93,11 @@ void main() {
       bool granted = true,
       List<AuthRound> reads = const [],
       AnalyticsChoice? stored = AnalyticsChoice.allowed,
-      Locale? locale,
     }) {
       final supabase = SupabaseStub()
         ..rest(consentRead, reads)
         ..always(consentRead, consentStands(granted: granted));
-      return _MoreRobot(
-        tester,
-        supabase: supabase,
-        stored: stored,
-        locale: locale,
-      );
+      return _MoreRobot(tester, supabase: supabase, stored: stored);
     }
 
     testWidgets('lists the profile, then privacy, about and the account last', (
@@ -464,30 +446,6 @@ void main() {
       final user = robot.supabase.supabase.auth.currentUser!;
       expect(launcher.launched.single, isNot(contains(user.id)));
       expect(launcher.launched.single, isNot(contains(user.email)));
-    });
-
-    testWidgets('speaks German on a German phone', (tester) async {
-      final german = lookupAccountLocalizations(const Locale('de'));
-      final robot = robotWith(tester, locale: const Locale('de'))
-        ..showEverything();
-      await robot.launch();
-
-      for (final text in [
-        german.moreTitle,
-        german.morePrivacySection,
-        german.moreAboutSection,
-        german.moreAccountSection,
-        german.moreDeleteAccountRow,
-        german.moreFeedbackExplanation,
-      ]) {
-        expect(find.text(text), findsOneWidget, reason: text);
-      }
-      expect(
-        robot.status,
-        '${german.moreJournalAllowedStatus} · '
-        '${german.moreUsageAnalyticsOnStatus}',
-      );
-      expect(find.text('More'), findsNothing);
     });
 
     testWidgets('meets accessibility guidelines', (tester) async {

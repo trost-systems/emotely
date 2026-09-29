@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:feature_account/src/l10n/account_localizations.dart';
+import 'package:feature_account/src/l10n/l10n.dart';
 import 'package:feature_account/src/profile/bloc/profile_bloc.dart';
 import 'package:feature_account/src/profile/sign_in_copy.dart';
 import 'package:feature_account/src/profile/view/profile_avatar.dart';
@@ -21,7 +21,7 @@ class const ProfileCard({super.key}) extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.watch<ProfileBloc>().state;
     final name = state.profile?.displayName;
-    final strings = AccountLocalizations.of(context);
+    final strings = context.l10n;
     final email = state.identity?.shownEmail(strings);
     final text = Theme.of(context).textTheme;
     return Card.filled(

@@ -374,23 +374,11 @@ void main() {
       for (final point in points) {
         expect(find.text('${point.lead} ${point.body}'), findsOneWidget);
       }
-      expect(find.textContaining('training'), findsOneWidget);
       expect(find.text(robot.strings.consentCheckboxLabel), findsOneWidget);
       expect(find.byKey(ConsentView.noticeKey), findsOneWidget);
-
-      // EDPB 05/2020 para 64 (vi): a third-country transfer and its
-      // safeguard are minimum elements, so they are named rather than
-      // implied.
-      expect(find.textContaining('outside the EU'), findsOneWidget);
-      expect(
-        find.textContaining('standard contractual clauses'),
-        findsOneWidget,
-      );
-
-      // The name travels with the answers so the companion can address the
-      // user (#204), whether they chose it or emotely picked a nickname.
-      expect(find.textContaining('the name you chose'), findsOneWidget);
-      expect(find.textContaining('nickname emotely picked'), findsOneWidget);
+      // That the wording names each element explicit consent requires is
+      // checked on the wording itself, in every language: feature_account's
+      // consent_version_test.
     });
 
     testWidgets('stays usable and complete at double text size', (

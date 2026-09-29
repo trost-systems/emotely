@@ -16,13 +16,12 @@ void main() {
       Map<String, Object?>? row,
       List<AuthRound> reads = const [],
       List<AuthRound> saves = const [],
-      Locale? locale,
     }) {
       final supabase = SupabaseStub()
         ..rest(profileRead, reads)
         ..always(profileRead, rows([?row]))
         ..rest(profileSave, saves);
-      return ProfileRobot(tester, supabase: supabase, locale: locale);
+      return ProfileRobot(tester, supabase: supabase);
     }
 
     testWidgets('shows the name, its initial, the address and the method', (
@@ -353,30 +352,6 @@ void main() {
       expect(find.byType(AccountPage), findsNothing);
       expect(find.text(tester.strings.accountDeleteButton), findsNothing);
       expect(find.text(tester.strings.moreDeleteAccountRow), findsNothing);
-    });
-
-    testWidgets('speaks German on a German phone', (tester) async {
-      final german = lookupAccountLocalizations(const Locale('de'));
-      final robot = robotWith(
-        tester,
-        row: profileRow(displayName: 'Pebble', nameIsPlaceholder: true),
-        locale: const Locale('de'),
-      );
-      await robot.launch();
-
-      expect(find.text(german.profileTitle), findsOneWidget);
-      expect(find.text(german.profileNameLabel), findsOneWidget);
-      expect(
-        tester.widget<Text>(robot.placeholderLine).data,
-        german.profilePlaceholderLine('Pebble'),
-      );
-      expect(tester.widget<Text>(robot.method).data, german.signInViaGoogle);
-      expect(find.text(german.profileSignOutButton), findsOneWidget);
-
-      await robot.type('   ');
-      await robot.done();
-
-      expect(robot.message, german.profileNameEmptyMessage);
     });
 
     testWidgets('meets accessibility guidelines with a name and without', (

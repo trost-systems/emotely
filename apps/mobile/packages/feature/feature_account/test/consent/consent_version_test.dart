@@ -1,5 +1,7 @@
 import 'package:feature_account/feature_account.dart';
+import 'package:feature_account/src/l10n/account_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' show Locale;
 
 /// The tripwire that keeps [consentVersion] honest.
 ///
@@ -101,6 +103,48 @@ void main() {
           ]),
           reason: '$locale',
         );
+      }
+    });
+
+    // The one place outside the app's localizations test that reads the
+    // words themselves: here they are the requirement. Explicit consent has
+    // to name what is sent, to whom, what may not be done with it, and a
+    // third-country transfer with its safeguard (EDPB 05/2020 para 64 (vi)),
+    // in every language the consent is given in. A rewording that drops one
+    // fails here, whatever the digest says.
+    const requiredPhrases = {
+      'en': [
+        'the name you chose',
+        'nickname emotely picked',
+        'training',
+        'outside the EU',
+        'standard contractual clauses',
+      ],
+      'de': [
+        'Namen, den du gewählt hast',
+        'Spitznamen, den emotely für dich ausgesucht hat',
+        'trainieren',
+        'außerhalb der EU',
+        'Standardvertragsklauseln',
+      ],
+    };
+
+    test('names every element an explicit consent must, in every language', () {
+      expect(
+        requiredPhrases.keys,
+        unorderedEquals(
+          AccountLocalizations.supportedLocales.map((l) => l.languageCode),
+        ),
+        reason: 'a new locale needs its required phrases here',
+      );
+      for (final MapEntry(key: language, value: phrases)
+          in requiredPhrases.entries) {
+        final wording = consentWording(
+          lookupAccountLocalizations(Locale(language)),
+        ).join(' ');
+        for (final phrase in phrases) {
+          expect(wording, contains(phrase), reason: language);
+        }
       }
     });
   });

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:feature_account/src/consent/bloc/consent_bloc.dart';
-import 'package:feature_account/src/l10n/account_localizations.dart';
+import 'package:feature_account/src/l10n/l10n.dart';
 import 'package:feature_account/src/navigator.dart';
 import 'package:feature_account/src/usage_analytics/bloc/usage_analytics_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,9 +30,7 @@ class const PrivacySettingsPage({super.key}) extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(AccountLocalizations.of(context).privacySettingsTitle),
-    ),
+    appBar: AppBar(title: Text(context.l10n.privacySettingsTitle)),
     body: SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -47,7 +45,7 @@ class const PrivacySettingsPage({super.key}) extends StatelessWidget {
               child: TextButton(
                 key: noticeKey,
                 onPressed: () => unawaited(openPrivacyNotice()),
-                child: Text(AccountLocalizations.of(context).privacyNoticeLink),
+                child: Text(context.l10n.privacyNoticeLink),
               ),
             ),
           ],
@@ -126,7 +124,7 @@ class const _JournalCard() extends StatelessWidget {
   Widget build(BuildContext context) => BlocBuilder<ConsentBloc, ConsentState>(
     builder: (context, state) => _PrivacyCard(
       switchKey: PrivacySettingsPage.journalKey,
-      label: AccountLocalizations.of(context).privacyJournalLabel,
+      label: context.l10n.privacyJournalLabel,
       // Consent stands until the server says it no longer does: while a
       // withdrawal is written, and after one that failed.
       value: switch (state) {
@@ -141,7 +139,7 @@ class const _JournalCard() extends StatelessWidget {
         // Nothing to switch while the answer is not in hand.
         ConsentUnknown() || ConsentBusy() || ConsentFailure() => null,
       },
-      explanation: AccountLocalizations.of(context).privacyJournalExplanation,
+      explanation: context.l10n.privacyJournalExplanation,
       note: _JournalNote(state),
     ),
   );
@@ -173,7 +171,7 @@ class const _JournalCard() extends StatelessWidget {
 class const _JournalNote(final ConsentState state) extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final strings = AccountLocalizations.of(context);
+    final strings = context.l10n;
     return switch (state) {
       // When it was given, on the device's calendar, in the user's language.
       ConsentKnown(granted: true, :final since?) => _Note(
@@ -213,7 +211,7 @@ class const _JournalNote(final ConsentState state) extends StatelessWidget {
 class const _ConfirmWithdrawal() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final strings = AccountLocalizations.of(context);
+    final strings = context.l10n;
     return AlertDialog(
       title: Text(strings.privacyConfirmTitle),
       content: Text(strings.privacyConfirmMessage),
@@ -239,7 +237,7 @@ class const _UsageAnalyticsCard() extends StatelessWidget {
       BlocBuilder<UsageAnalyticsBloc, UsageAnalyticsState>(
         builder: (context, state) => _PrivacyCard(
           switchKey: PrivacySettingsPage.usageAnalyticsKey,
-          label: AccountLocalizations.of(context).privacyUsageAnalyticsLabel,
+          label: context.l10n.privacyUsageAnalyticsLabel,
           value: state == UsageAnalyticsState.allowed,
           onChanged: state == UsageAnalyticsState.unknown
               ? null
@@ -248,11 +246,8 @@ class const _UsageAnalyticsCard() extends StatelessWidget {
                       ? const UsageAnalyticsEvent.allowed()
                       : const UsageAnalyticsEvent.denied(),
                 ),
-          explanation: AccountLocalizations.of(context)
-              .privacyUsageAnalyticsExplanation,
-          note: _Note(
-            AccountLocalizations.of(context).privacyUsageAnalyticsNote,
-          ),
+          explanation: context.l10n.privacyUsageAnalyticsExplanation,
+          note: _Note(context.l10n.privacyUsageAnalyticsNote),
         ),
       );
 }

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:feature_account/src/account/bloc/account_bloc.dart';
 import 'package:feature_account/src/consent/bloc/consent_bloc.dart';
-import 'package:feature_account/src/l10n/account_localizations.dart';
+import 'package:feature_account/src/l10n/l10n.dart';
 import 'package:feature_account/src/more/view/profile_card.dart';
 import 'package:feature_account/src/profile/bloc/profile_bloc.dart';
 import 'package:feature_account/src/routes.dart';
@@ -55,7 +55,7 @@ class const MoreView({super.key}) extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final strings = AccountLocalizations.of(context);
+    final strings = context.l10n;
     return Scaffold(
       appBar: AppBar(title: Text(strings.moreTitle)),
       body: SafeArea(
@@ -97,7 +97,7 @@ class const MoreView({super.key}) extends StatelessWidget {
 class const _PrivacySettingsRow() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final strings = AccountLocalizations.of(context);
+    final strings = context.l10n;
     final journal = context.select<ConsentBloc, String?>(
       (bloc) => _journalStatus(bloc.state, strings),
     );
@@ -151,7 +151,7 @@ class const _PrivacyNoticeRow() extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListTile(
     key: MoreView.privacyNoticeKey,
-    title: Text(AccountLocalizations.of(context).morePrivacyNoticeRow),
+    title: Text(context.l10n.morePrivacyNoticeRow),
     trailing: const Icon(Icons.open_in_new),
     onTap: () => unawaited(openPrivacyNotice()),
   );
@@ -162,7 +162,7 @@ class const _ImprintRow() extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ListTile(
     key: MoreView.imprintKey,
-    title: Text(AccountLocalizations.of(context).moreImprintRow),
+    title: Text(context.l10n.moreImprintRow),
     trailing: const Icon(Icons.open_in_new),
     onTap: () => unawaited(openImprint()),
   );
@@ -175,7 +175,7 @@ class const _ImprintRow() extends StatelessWidget {
 class const _FeedbackRow() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final strings = AccountLocalizations.of(context);
+    final strings = context.l10n;
     return ListTile(
       key: MoreView.feedbackKey,
       title: Text(strings.moreFeedbackRow),
@@ -193,7 +193,7 @@ class const _FeedbackRow() extends StatelessWidget {
 class const _AccountRow() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final strings = AccountLocalizations.of(context);
+    final strings = context.l10n;
     final error = Theme.of(context).colorScheme.error;
     return ListTile(
       key: MoreView.accountKey,

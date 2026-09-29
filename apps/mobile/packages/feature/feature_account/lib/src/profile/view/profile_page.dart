@@ -1,4 +1,4 @@
-import 'package:feature_account/src/l10n/account_localizations.dart';
+import 'package:feature_account/src/l10n/l10n.dart';
 import 'package:feature_account/src/navigator.dart';
 import 'package:feature_account/src/profile/bloc/profile_bloc.dart';
 import 'package:feature_account/src/profile/sign_in_copy.dart';
@@ -38,16 +38,10 @@ class const ProfileView({super.key}) extends StatelessWidget {
     listener: (context, state) => ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        SnackBar(
-          content: Text(
-            _message(state.notice, AccountLocalizations.of(context)),
-          ),
-        ),
+        SnackBar(content: Text(_message(state.notice, context.l10n))),
       ),
     child: Scaffold(
-      appBar: AppBar(
-        title: Text(AccountLocalizations.of(context).profileTitle),
-      ),
+      appBar: AppBar(title: Text(context.l10n.profileTitle)),
       body: const SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -106,7 +100,7 @@ class const _Name() extends StatelessWidget {
       ProfileStatus.ready => NameField(
         fieldKey: ProfileView.nameKey,
         saved: state.profile?.displayName,
-        hint: AccountLocalizations.of(context).profileNameHint,
+        hint: context.l10n.profileNameHint,
         helper: const _Helper(),
       ),
     },
@@ -120,10 +114,10 @@ class const _Helper() extends StatelessWidget {
   Widget build(BuildContext context) => switch (context
       .select<ProfileBloc, Profile?>((bloc) => bloc.state.profile)) {
     Profile(nameIsPlaceholder: true, :final displayName) => Text(
-      AccountLocalizations.of(context).profilePlaceholderLine(displayName),
+      context.l10n.profilePlaceholderLine(displayName),
       key: ProfileView.placeholderKey,
     ),
-    _ => Text(AccountLocalizations.of(context).profileNameHelper),
+    _ => Text(context.l10n.profileNameHelper),
   };
 }
 
@@ -133,14 +127,14 @@ class const _LoadFailed() extends StatelessWidget {
     spacing: 8,
     children: [
       Text(
-        AccountLocalizations.of(context).profileLoadFailedMessage,
+        context.l10n.profileLoadFailedMessage,
         style: TextStyle(color: Theme.of(context).colorScheme.error),
       ),
       TextButton(
         key: ProfileView.retryKey,
         onPressed: () =>
             context.read<ProfileBloc>().add(const ProfileEvent.loaded()),
-        child: Text(AccountLocalizations.of(context).profileRetryButton),
+        child: Text(context.l10n.profileRetryButton),
       ),
     ],
   );
@@ -154,7 +148,7 @@ class const _SignedInAs() extends StatelessWidget {
     final identity = context.select<ProfileBloc, SignInIdentity?>(
       (bloc) => bloc.state.identity,
     );
-    final strings = AccountLocalizations.of(context);
+    final strings = context.l10n;
     final email = identity?.shownEmail(strings);
     if (identity == null || email == null) {
       return const SizedBox.shrink();
@@ -190,7 +184,7 @@ class const _SignOut() extends StatelessWidget {
   Widget build(BuildContext context) => ListTile(
     key: ProfileView.signOutKey,
     leading: const Icon(Icons.logout),
-    title: Text(AccountLocalizations.of(context).profileSignOutButton),
+    title: Text(context.l10n.profileSignOutButton),
     onTap: () => GetIt.I<AccountNavigator>().signOut(context),
   );
 }

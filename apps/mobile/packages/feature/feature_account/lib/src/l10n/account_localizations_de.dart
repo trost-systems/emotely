@@ -190,7 +190,7 @@ class AccountLocalizationsDe extends AccountLocalizations {
   String get privacyJournalRetryButton => 'Erneut prüfen';
 
   @override
-  String get privacyConfirmTitle => 'Tagebuchsitzungen ausschalten?';
+  String get privacyConfirmTitle => 'Tagebuch-Sessions ausschalten?';
 
   @override
   String get privacyConfirmMessage =>

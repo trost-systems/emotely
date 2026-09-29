@@ -13,11 +13,7 @@ import '../strings.dart';
 /// navigator, over whatever screen is underneath, with the utilities and
 /// this feature registered over a spied PostHog and the device's stored
 /// choice.
-class _PromptRobot(
-  final WidgetTester tester, {
-  final AnalyticsChoice? stored,
-  final Locale? locale,
-}) {
+class _PromptRobot(final WidgetTester tester, {final AnalyticsChoice? stored}) {
   late final analytics = AnalyticsSpy(stored: stored);
 
   static const underneathKey = Key('underneath');
@@ -51,24 +47,12 @@ class _PromptRobot(
         ),
       ),
     ];
-    Widget above(BuildContext context, Widget child) =>
-        UsageAnalyticsPrompt(child: child);
-    // The helpers' own locale unless a test asks for another.
-    return switch (locale) {
-      final locale? => featureUnderTest(
-        routes: routes,
-        initialLocation: '/',
-        above: above,
-        localizations: accountLocalizations,
-        locale: locale,
-      ),
-      null => featureUnderTest(
-        routes: routes,
-        initialLocation: '/',
-        above: above,
-        localizations: accountLocalizations,
-      ),
-    };
+    return featureUnderTest(
+      routes: routes,
+      initialLocation: '/',
+      above: (context, child) => UsageAnalyticsPrompt(child: child),
+      localizations: accountLocalizations,
+    );
   }
 
   Future<void> launch() async {
@@ -91,16 +75,12 @@ void main() {
       await robot.launch();
 
       expect(robot.sheet, findsOneWidget);
+      // Every string the answer is given on: the wording the version names.
       final strings = tester.strings;
-      for (final text in [
-        strings.usageAnalyticsTitle,
-        strings.usageAnalyticsBody,
-        strings.usageAnalyticsCounted,
-        strings.usageAnalyticsNever,
-        strings.usageAnalyticsChangeHint,
-      ]) {
-        expect(find.text(text), findsOneWidget);
+      for (final text in usageAnalyticsWording(strings)) {
+        expect(find.text(text), findsOneWidget, reason: text);
       }
+      expect(find.text(strings.usageAnalyticsNoticeLink), findsOneWidget);
       // Nothing is set up while the question stands.
       expect(robot.analytics.lifecycle, isEmpty);
 
@@ -202,19 +182,6 @@ void main() {
 
       expect(launcher.launched, [privacyNoticeUrl]);
       expect(robot.sheet, findsOneWidget);
-    });
-
-    testWidgets('asks in German on a German phone', (tester) async {
-      final german = lookupAccountLocalizations(const Locale('de'));
-      final robot = _PromptRobot(tester, locale: const Locale('de'));
-      await robot.launch();
-
-      // Every string the answer is given on, in German: the wording the
-      // version names in that language.
-      for (final text in usageAnalyticsWording(german)) {
-        expect(find.text(text), findsOneWidget, reason: text);
-      }
-      expect(find.text(german.usageAnalyticsNoticeLink), findsOneWidget);
     });
 
     testWidgets('meets accessibility guidelines, in light and dark', (

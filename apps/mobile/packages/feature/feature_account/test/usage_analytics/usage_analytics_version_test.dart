@@ -1,4 +1,5 @@
 import 'package:feature_account/feature_account.dart';
+import 'package:feature_account/src/l10n/account_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// The tripwire that keeps [usageAnalyticsVersion] honest, the way
