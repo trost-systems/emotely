@@ -8,7 +8,9 @@ description: How to ship the Flutter app (apps/mobile/app) to the TestFlight Tea
 Decisions in [ADR 0012](../../../docs/adr/0012-reuse-the-original-store-listings.md)
 (store identity `de.emotely.emotely`, version `2.0.0+`) and
 [ADR 0013](../../../docs/adr/0013-fastlane-release-pipeline.md) (fastlane +
-match, the `release` environment).
+match, the `release` environment). Listing text, release notes and review
+notes, in English and German, use [`CONTEXT.md`](../../../CONTEXT.md)'s
+terms.
 
 ## Two stages: internal on every merge, beta on demand
 

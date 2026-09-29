@@ -66,6 +66,38 @@ void main() {
       });
     });
 
+    test('says when the server could not be reached at all', () async {
+      // The app tells "check your connection" apart from "the server is
+      // wrong" by this, never by the message, which is for error tracking.
+      final stub = ConfigStub()..script([configUnreachable()]);
+
+      await expectLater(
+        stub.configClient.fetch(),
+        throwsA(
+          isA<ConfigException>().having(
+            (e) => e.unreachable,
+            'unreachable',
+            isTrue,
+          ),
+        ),
+      );
+    });
+
+    test('an answer it cannot use is not unreachable', () async {
+      final stub = ConfigStub()..script([configRefused(503)]);
+
+      await expectLater(
+        stub.configClient.fetch(),
+        throwsA(
+          isA<ConfigException>().having(
+            (e) => e.unreachable,
+            'unreachable',
+            isFalse,
+          ),
+        ),
+      );
+    });
+
     test('keeps the original stack trace when the transport fails', () async {
       // The trace names the socket layer that gave up; it is the only clue a
       // report of this carries, and it is content-free (ADR 0005).

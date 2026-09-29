@@ -1,4 +1,5 @@
 import 'package:emotely/config/view/config_gate.dart';
+import 'package:emotely/l10n/l10n.dart';
 import 'package:feature_journal/feature_journal.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -24,6 +25,11 @@ class ConfigRobot(
   Finder get updateButton => find.byKey(ConfigGate.updateKey);
   Finder get failure => find.byKey(ConfigGate.failureKey);
   Finder get retryButton => find.byKey(ConfigGate.retryKey);
+
+  /// The app's strings as the gate on screen reads them, in whatever
+  /// language the device speaks: tests assert the message by its key, so a
+  /// rewording never breaks them.
+  AppLocalizations get strings => tester.element(find.byType(ConfigGate)).l10n;
   Finder get welcome => find.byType(WelcomeStepView);
   Finder get journal => find.byType(JournalPage);
 

@@ -78,7 +78,8 @@ run the suite, watch it fail, `supabase db reset --local`.
 `supabase/config.toml` `[auth]` sections are pushed to the hosted project by
 CI (`supabase config push`). The sign-in code email is
 `supabase/templates/sign_in_code.html`, wired under
-`[auth.email.template.magic_link]`; locally it renders into Inbucket.
+`[auth.email.template.magic_link]`; locally it renders into Inbucket. Its
+words use [`CONTEXT.md`](../../../CONTEXT.md)'s terms, as all copy does.
 
 The hosted project sends through Resend (custom SMTP, #52), configured in
 the `[remotes.production]` block at the end of `config.toml`. The CLI applies

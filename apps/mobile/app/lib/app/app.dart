@@ -1,7 +1,9 @@
 import 'package:design_system/design_system.dart';
+import 'package:emotely/app/localizations.dart';
 import 'package:emotely/app/router.dart';
 import 'package:emotely/config/bloc/config_bloc.dart';
 import 'package:emotely/config/view/config_gate.dart';
+import 'package:emotely/l10n/l10n.dart';
 import 'package:feature_account/feature_account.dart';
 import 'package:feature_auth/feature_auth.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
@@ -76,7 +78,9 @@ class _RouterState() extends State<_Router> {
 
   @override
   Widget build(BuildContext context) => MaterialApp.router(
-    title: 'emotely',
+    onGenerateTitle: (context) => context.l10n.appTitle,
+    localizationsDelegates: localizationsDelegates,
+    supportedLocales: supportedLocales,
     theme: lightTheme,
     darkTheme: darkTheme,
     routerConfig: _router,

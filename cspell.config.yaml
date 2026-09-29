@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
+# The copy spell check (ADR 0020, `pnpm spell`, CI's tripwire job): every
+# message a user reads in the app's ARB files, in its own language, and the
+# words CONTEXT.md says to avoid. Keys, descriptions and placeholder examples
+# are not copy and are not checked.
+version: "0.2"
+# Short copy words matter too ("teh"); the default is 4.
+minWordLength: 3
+files:
+  - "apps/mobile/**/l10n/*.arb"
+import:
+  - "@cspell/dict-de-de/cspell-ext.json"
+dictionaryDefinitions:
+  # Names and terms the copy uses in every language.
+  - name: project-words
+    path: ./cspell/project-words.txt
+    addWords: true
+  # German words the de-DE dictionary lacks but the copy uses correctly.
+  - name: de-words
+    path: ./cspell/de-words.txt
+    addWords: true
+dictionaries:
+  - project-words
+patterns:
+  # A message's value: the string after a key that is neither metadata
+  # (`@key`) nor one of the metadata's own fields. A new string-valued
+  # metadata field goes into this list, or its text is checked as copy.
+  - name: arb-message-value
+    pattern: |
+      /
+        (?<= (?<!\\)"
+             (?!@)
+             (?!(?:description|type|example|format|optionalParameters|isCustomDateFormat)")
+             [^"\\]+ " \s* : \s* " )
+        (?: [^"\\] | \\. )*
+      /gmx
+  # ICU syntax inside a message: `{name}`, `{count, plural,` and the
+  # selectors before a branch (`=1{`, `other{`).
+  - name: icu-argument
+    pattern: /\{\s*\w+\s*(?:,\s*(?:plural|select|selectordinal|number|date|time)\s*,?)?\s*(?=[{},])/g
+  - name: icu-selector
+    pattern: /(?<=[{},]\s*)(?:=\d+|\w+)\s*(?=\{)/g
+  - name: json-escape
+    pattern: /\\[nrtbf"\\\/]|\\u[0-9a-fA-F]{4}/g
+includeRegExpList: [arb-message-value]
+ignoreRegExpList: [icu-argument, icu-selector, json-escape]
+# The words CONTEXT.md says to avoid, per language. A new one goes here in
+# the same change that adds it there; `from->to` names the word to use.
+overrides:
+  - filename: "**/l10n/*_en.arb"
+    language: en-US
+    flagWords:
+      - "assistant->emotely"
+      - "assistants->emotely"
+      - "colour->color"
+      - "colours->colors"
+  - filename: "**/l10n/*_de.arb"
+    language: de
+    dictionaries: [de-words]
+    flagWords:
+      - "assistent->emotely"
+      - "sitzung->Session"
+      - "sitzungen->Sessions"
+      - "datenschutzhinweis->Datenschutzerklärung"
+      - "datenschutzhinweise->Datenschutzerklärung"

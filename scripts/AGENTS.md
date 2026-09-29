@@ -24,6 +24,11 @@ untracked scratch file never fails it; `pnpm tripwire` runs it after the rule
 tests and its own tests (`tripwire.test.sh`), all three of which CI's
 `tripwire` job runs.
 
+`l10n-check.sh` is what `melos run l10n:check` runs in each Flutter package
+with an `l10n.yaml` (ADR 0020): it regenerates the localizations and fails
+on stale or uncommitted generated code and on a message a locale lacks.
+`l10n-check.test.sh` drives it with a fake `flutter` on the PATH.
+
 Shell here is linted by the `scripts` CI job: `shellcheck --external-sources
 --severity=style scripts/*.sh`, clean; the same job runs
-`bash scripts/release-status.test.sh`.
+`bash scripts/release-status.test.sh` and `bash scripts/l10n-check.test.sh`.

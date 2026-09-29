@@ -66,6 +66,20 @@ void main() {
       expect(robot.journal, findsNothing);
     });
 
+    testWidgets('names the version to update to', (tester) async {
+      final config = ConfigStub()..serves(minAppVersion: '9.0.0');
+      final robot = ConfigRobot(tester, config);
+
+      await robot.launch();
+      await robot.settle();
+
+      expect(
+        find.text(robot.strings.updateRequiredMessage('9.0.0')),
+        findsOneWidget,
+      );
+      expect(find.text(robot.strings.updateButton), findsOneWidget);
+    });
+
     testWidgets('blocks a signed-in user just the same', (tester) async {
       final config = ConfigStub()..serves(minAppVersion: '9.0.0');
       final robot = ConfigRobot(tester, config);
@@ -151,6 +165,29 @@ void main() {
   });
 
   group('startup gate failures', () {
+    testWidgets('says the server could not be reached', (tester) async {
+      final config = ConfigStub()..script([configUnreachable()]);
+      final robot = ConfigRobot(tester, config);
+
+      await robot.launch();
+      await robot.settle();
+
+      // What the user can act on, and nothing of the socket error behind
+      // it: that goes to error tracking, not onto the screen.
+      expect(find.text(robot.strings.configUnreachableMessage), findsOneWidget);
+    });
+
+    testWidgets('says the server is not answering correctly', (tester) async {
+      final config = ConfigStub()..script([configRefused(500)]);
+      final robot = ConfigRobot(tester, config);
+
+      await robot.launch();
+      await robot.settle();
+
+      expect(find.text(robot.strings.configUnreadableMessage), findsOneWidget);
+      expect(find.text(robot.strings.tryAgainButton), findsOneWidget);
+    });
+
     testWidgets('blocks with a retry when the server cannot be reached', (
       tester,
     ) async {

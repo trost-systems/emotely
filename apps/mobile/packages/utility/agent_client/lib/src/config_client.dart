@@ -57,7 +57,7 @@ class const ConfigClient({
       // The original trace is kept: it names the socket or TLS layer that
       // failed, which is the only clue a report of this carries.
       Error.throwWithStackTrace(
-        ConfigException('Could not reach emotely: $error'),
+        ConfigException('Could not reach emotely: $error', unreachable: true),
         stackTrace,
       );
     }
@@ -95,7 +95,15 @@ class const ConfigClient({
 
 /// The startup config could not be read. Always blocking: the app cannot tell
 /// "no minimum" from "could not ask", and must not assume the friendlier one.
-class const ConfigException(final String message) implements Exception {
+///
+/// [message] is for error tracking, in English, and never shown: the app
+/// words what the user reads itself, in their language (ADR 0020), and
+/// tells the two cases apart by [unreachable] — no answer at all, as against
+/// an answer it cannot use.
+class const ConfigException(
+  final String message, {
+  final bool unreachable = false,
+}) implements Exception {
   @override
   String toString() => 'ConfigException: $message';
 }

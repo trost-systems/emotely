@@ -10,11 +10,14 @@
     "lint": "biome ci --error-on-warnings .",
     "format": "biome check --write .",
     "typecheck": "tsc --build",
-    "tripwire": "ast-grep test && bash scripts/tripwire.test.sh && bash scripts/tripwire.sh"
+    "tripwire": "ast-grep test && bash scripts/tripwire.test.sh && bash scripts/tripwire.sh",
+    "spell": "cspell lint --no-progress --no-summary --no-cache"
   },
   "devDependencies": {
     "@ast-grep/cli": "0.45.3",
     "@biomejs/biome": "2.5.14",
+    "@cspell/dict-de-de": "4.1.2",
+    "cspell": "10.3.5",
     "typescript": "7.0.2"
   }
 }

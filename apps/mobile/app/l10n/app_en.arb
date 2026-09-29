@@ -1,0 +1,41 @@
+{
+  "@@locale": "en",
+  "appTitle": "emotely",
+  "@appTitle": {
+    "description": "The product name, shown by the OS in the app switcher. A brand: never translated, always lower case."
+  },
+  "journalTab": "Journal",
+  "@journalTab": {
+    "description": "Bottom navigation tab that opens the list of journal entries."
+  },
+  "moreTab": "More",
+  "@moreTab": {
+    "description": "Bottom navigation tab that opens profile, privacy, feedback and account settings."
+  },
+  "updateRequiredMessage": "This version of emotely is no longer supported. Please update to {minAppVersion} or newer to continue.",
+  "@updateRequiredMessage": {
+    "description": "Force-update screen: this app build is below the minimum the server accepts. There is no way around it but updating.",
+    "placeholders": {
+      "minAppVersion": {
+        "type": "String",
+        "example": "1.4.0"
+      }
+    }
+  },
+  "updateButton": "Update",
+  "@updateButton": {
+    "description": "Force-update screen button that opens the app's store listing."
+  },
+  "tryAgainButton": "Try again",
+  "@tryAgainButton": {
+    "description": "Startup failure screen button that asks the server for its config again."
+  },
+  "configUnreachableMessage": "Could not reach emotely. Check your connection and try again.",
+  "@configUnreachableMessage": {
+    "description": "Startup failure: the app could not reach the server at all (offline, timeout, DNS)."
+  },
+  "configUnreadableMessage": "emotely is not answering correctly right now. Please try again.",
+  "@configUnreadableMessage": {
+    "description": "Startup failure: the server answered, but with an error or something the app cannot read. Nothing the user did wrong."
+  }
+}

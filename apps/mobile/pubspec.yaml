@@ -55,6 +55,11 @@ melos:
     codegen:check:
       description: Committed generated code (freezed, json_serializable, mockito) must match its source.
       run: melos exec --fail-fast --concurrency=1 --file-exists=build.yaml $EMOTELY_SCOPE -- dart run build_runner build --only-check
+    l10n:check:
+      description: Committed gen-l10n output must match the ARB files, and every locale must carry every message (ADR 0020).
+      # From each package directory; the script lives with the repo's other
+      # shell scripts, where CI lints and tests it.
+      run: melos exec --fail-fast --concurrency=1 --file-exists=l10n.yaml $EMOTELY_SCOPE -- bash '$MELOS_ROOT_PATH/../../scripts/l10n-check.sh'
     format:
       description: dart format, failing on any change.
       run: melos exec --fail-fast $EMOTELY_SCOPE -- dart format --set-exit-if-changed .
@@ -74,8 +79,12 @@ melos:
       # The target is absolute because the tool changes directory to
       # $GITHUB_WORKSPACE (the repo root) whenever that is set, as it is in CI,
       # so a relative `lib` would miss. Single quotes defer the expansion to
-      # each package's run.
-      run: melos exec --fail-fast --dir-exists=lib $EMOTELY_SCOPE -- dart run cognitive_complexity --threshold 10 --fail-threshold 15 --max-function-lines 60 --max-file-lines 400 '$MELOS_PACKAGE_PATH/lib'
+      # each package's run. The tool knows generated files only by their
+      # name (*.g.dart and the like), so gen-l10n's output is excluded by
+      # its own (ADR 0020). Quoted twice: melos hands the command to a shell
+      # again in each package, and there the bare glob would expand to the
+      # app's own lib/l10n files.
+      run: melos exec --fail-fast --dir-exists=lib $EMOTELY_SCOPE -- dart run cognitive_complexity --threshold 10 --fail-threshold 15 --max-function-lines 60 --max-file-lines 400 --exclude "'**/l10n/*_localizations*.dart'" '$MELOS_PACKAGE_PATH/lib'
     ci:
       description: Everything the CI app job runs, in its order.
-      run: melos run codegen:check && melos run format && melos run analyze && melos run complexity && melos run test
+      run: melos run codegen:check && melos run l10n:check && melos run format && melos run analyze && melos run complexity && melos run test

@@ -49,6 +49,8 @@ jobs:
               - 'apps/mobile/**'
               # The Dart contract is pinned against the emitted JSON Schema.
               - 'packages/contract/contract.schema.json'
+              # What `melos run l10n:check` runs in every package.
+              - 'scripts/l10n-check.sh'
               - '.github/workflows/ci.yml'
             scripts:
               - 'scripts/**'
@@ -137,7 +139,8 @@ jobs:
       # On a pull request, run only the packages that changed plus their
       # dependents — unless something outside a package changed (the workspace
       # pubspec or lock, the shared rule set in packages/utility/analysis, the
-      # contract schema the app is pinned against, this workflow), which
+      # l10n check script, the contract schema the app is pinned against, this
+      # workflow), which
       # affects every package and runs everything. Merge-queue runs and pushes
       # to main always run everything.
       - name: Scope the gates to what changed
@@ -147,7 +150,8 @@ jobs:
         run: |
           # `:/` pathspecs resolve from the repo root, not this working directory.
           changed=$(git diff --name-only "$BASE...HEAD" -- \
-            :/apps/mobile :/packages/contract/contract.schema.json :/.github/workflows/ci.yml)
+            :/apps/mobile :/scripts/l10n-check.sh \
+            :/packages/contract/contract.schema.json :/.github/workflows/ci.yml)
           outside=$(printf '%s\n' "$changed" \
             | grep -vE '^apps/mobile/(app|packages/[^/]+/[^/]+)/' \
             | grep -v '^$' || true)
@@ -203,6 +207,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - run: shellcheck --external-sources --severity=style scripts/*.sh .claude/skills/*/scripts/*.sh
       - run: bash scripts/release-status.test.sh
+      - run: bash scripts/l10n-check.test.sh
       - run: bash .claude/skills/run-app/scripts/run-app.test.sh
 
   # The comment tripwire (ast-grep rules, ADR 0018): hand-written Dart,
@@ -224,6 +229,11 @@ jobs:
       - run: pnpm exec ast-grep test
       - run: pnpm exec bash scripts/tripwire.test.sh
       - run: pnpm exec bash scripts/tripwire.sh --format github
+      # The copy spell check (ADR 0020): the app's ARB messages, English and
+      # German, and the words CONTEXT.md says to avoid. Offline, under a
+      # second; every pull request, since copy can change anywhere.
+      - run: |
+          pnpm spell --issue-template '::error file=$filename,line=$row,col=$col::$message: $text'
 
   # The schema gate: migrations apply to a fresh Postgres, and the pgTAP suite
   # proves row-level security holds (ADR 0010). Only the database container

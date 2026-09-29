@@ -3,19 +3,35 @@
 The language of this project. Glossary only — decisions live in
 [`docs/adr/`](docs/adr/), architecture in [`README.md`](README.md).
 
+It is also the vocabulary of every word a user reads, wherever it is
+written: the app's ARB files, the site, the sign-in mails, the store
+listings, the companion's prompts. A term's **German** line is how every
+German surface says it. What a term says to **avoid** stays out of copy in
+every language; the single words among those are `flagWords` in
+`cspell.config.yaml`, which the copy spell check (`pnpm spell`, CI's
+tripwire job) fails on.
+
+Keeping it: add a term here before the first copy that needs it, with its
+German form. Change a term here first, then every surface that uses it, in
+one pull request. A new word to avoid goes into `cspell.config.yaml`
+in the same change, per language; a phrase cannot be checked there, so
+review holds it.
+
 ## Companion
 
 The persona the user talks to: the voice that asks the questions in a
 session and speaks to the user as "I" in onboarding. A character, not a
 service — the software behind it is **the agent**. It has no name of its own
-yet. Avoid "Journaling Assistant", "the assistant" and "the bot".
+yet: copy names it "emotely" or lets it speak as "I". Avoid "Journaling
+Assistant", "the assistant" and "the bot" (German: "Assistent").
 
 ## Session
 
 One complete journaling conversation: the **companion** walks the user through
 the **questions** of a chosen **question set** and ends by producing a
 **journal entry**. A session is the unit the cost ceiling is measured against
-(~30 sessions/month for a daily poweruser).
+(~30 sessions/month for a daily poweruser). German: die Session (plural
+Sessions); avoid "Sitzung", which reads as a meeting, or as therapy.
 
 ## Question
 
@@ -25,6 +41,7 @@ One thing the companion asks about within a session — a concrete question text
 distinct from a free-form chat turn. One `record_answer` per question carries
 the complete answer; a repeated call for the same question overwrites.
 ("Topic" is not a term in this project; the legacy app used it only in prompts.)
+German: die Frage.
 
 ## Question set
 
@@ -47,7 +64,8 @@ calls; `minAnswers` on a question is the only cardinality constraint.
 
 The durable artifact a session produces: the summary passed to
 `complete_session`, persisted for the user. Distinct from the session itself,
-which is the conversation that produced it.
+which is the conversation that produced it. German: der Eintrag; all of a
+user's entries together are the journal, das Tagebuch.
 
 ## Onboarding
 
@@ -95,7 +113,8 @@ Two kinds, never used interchangeably:
   account exists.
 
 Each has its own wording and its own **consent version**. "Consent" alone is
-ambiguous; qualify it.
+ambiguous; qualify it. German: die Einwilligung; taking it back is
+"widerrufen".
 
 ## Contract
 
@@ -128,3 +147,17 @@ Two distinct layers, never used interchangeably:
   against candidate models. A CI gate. Proves *correct and cheap in the lab*.
 - **Online experiment** (PostHog) — real sessions, live variant comparison.
   Proves *cheap and retained in the wild*.
+
+## Interface words
+
+The parts of the app a user is pointed to by name. Not domain terms, but
+one word each on every screen and in every language.
+
+| English | German | Avoid |
+| --- | --- | --- |
+| the More tab | „Mehr“ | |
+| account | das Konto | |
+| profile | das Profil | |
+| privacy notice | die Datenschutzerklärung | "Datenschutzhinweise" |
+| privacy settings | die Datenschutzeinstellungen | |
+| reflection (onboarding's word for a session) | die Reflexion | |
