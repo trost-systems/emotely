@@ -92,7 +92,9 @@ or a **placeholder name**. Avoid "username", "first name" and "nickname".
 
 A display name the user did not choose: the playful stand-in (Pebble, Maple,
 Wren, …) given when they skip the name step. It stays a placeholder until the
-user types a name of their own.
+user types a name of their own. Copy calls it the name emotely picked, never
+a nickname (German: never "Spitzname"); "nickname" may only describe what a
+user might type as their own name.
 
 ## User context
 

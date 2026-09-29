@@ -21,7 +21,7 @@ class AccountLocalizationsEn extends AccountLocalizations {
 
   @override
   String get consentSendingBody =>
-      'Each answer goes to our server and on to a language model provider through the Vercel AI Gateway, together with the name you chose, or the nickname emotely picked for you, so emotely can ask the next question, address you by name and write your entry. The provider may be outside the EU; where it is, the transfer rests on the EU’s standard contractual clauses.';
+      'Each answer goes to our server and on to a language model provider through the Vercel AI Gateway, together with the name you chose or emotely picked for you, so emotely can ask the next question, address you by name and write your entry. The provider may be outside the EU; where it is, the transfer rests on the EU’s standard contractual clauses.';
 
   @override
   String get consentRetentionLead => 'Never used for training, never kept.';
@@ -223,7 +223,7 @@ class AccountLocalizationsEn extends AccountLocalizations {
 
   @override
   String profilePlaceholderLine(String name) {
-    return '$name · a nickname I picked – tell me yours';
+    return '$name · a name I picked – tell me yours';
   }
 
   @override

@@ -119,7 +119,7 @@ abstract class AccountLocalizations {
   /// Consent screen, first point, after its lead: what is sent, to whom, and the third-country transfer with its safeguard (EDPB 05/2020 para 64 (vi)). Part of the versioned wording of the explicit consent under Art. 9 (2) (a) GDPR: changing it means bumping consentVersion. The recipients must match the privacy notice at getemotely.com/app-privacy: same recipients, same order, same names. 'Vercel AI Gateway' is a product name and stays as is.
   ///
   /// In en, this message translates to:
-  /// **'Each answer goes to our server and on to a language model provider through the Vercel AI Gateway, together with the name you chose, or the nickname emotely picked for you, so emotely can ask the next question, address you by name and write your entry. The provider may be outside the EU; where it is, the transfer rests on the EU’s standard contractual clauses.'**
+  /// **'Each answer goes to our server and on to a language model provider through the Vercel AI Gateway, together with the name you chose or emotely picked for you, so emotely can ask the next question, address you by name and write your entry. The provider may be outside the EU; where it is, the transfer rests on the EU’s standard contractual clauses.'**
   String get consentSendingBody;
 
   /// Consent screen, second of three points: its bold lead, followed by consentRetentionBody. Part of the versioned wording of the explicit consent under Art. 9 (2) (a) GDPR: changing it means bumping consentVersion.
@@ -476,10 +476,10 @@ abstract class AccountLocalizations {
   /// **'How emotely greets you.'**
   String get profileNameHelper;
 
-  /// Profile screen, under the name field while the name is a nickname emotely picked when the user skipped giving one: an invitation in the companion's voice, never a demand.
+  /// Profile screen, under the name field while the name is a placeholder name emotely picked when the user skipped giving one: an invitation in the companion's voice, never a demand.
   ///
   /// In en, this message translates to:
-  /// **'{name} · a nickname I picked – tell me yours'**
+  /// **'{name} · a name I picked – tell me yours'**
   String profilePlaceholderLine(String name);
 
   /// Profile screen snack bar: the new name is saved.

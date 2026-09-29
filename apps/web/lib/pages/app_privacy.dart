@@ -152,7 +152,7 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
       .text(
         'The app asks what to call you, normally before you sign up. '
         'Answering is optional: if you skip, it picks a placeholder '
-        'nickname and tells you so. Until your account exists the name '
+        'name and tells you so. Until your account exists the name '
         'stays on your phone; then it moves to your profile in the same '
         'Supabase database in Frankfurt, with a note of whether you chose it '
         'or the app did. The app uses it to greet you, and the assistant '

@@ -35,7 +35,13 @@ void main() {
     // to did not change, so the version stayed 2026-09-26 and nobody was
     // re-asked. The English strings are byte for byte those of 2026-09-26:
     // alone, they still digest to eaf90d83.
-    const wordingDigest = '52d691e8';
+    //
+    // 2026-09-29: version and digest. The placeholder name is no longer
+    // called a nickname ("the name you chose or emotely picked for you"),
+    // as CONTEXT.md names it. The same data goes to the same recipient, but
+    // a consent names one text, and nobody had consented yet, so the
+    // version moved with it rather than the digest alone.
+    const wordingDigest = '4fdda4d8';
 
     /// A stable 32-bit FNV-1a over the wording. Not a security hash and it
     /// does not need to be: it only has to change when the text does, and
@@ -115,14 +121,14 @@ void main() {
     const requiredPhrases = {
       'en': [
         'the name you chose',
-        'nickname emotely picked',
+        'emotely picked for you',
         'training',
         'outside the EU',
         'standard contractual clauses',
       ],
       'de': [
         'Namen, den du gewählt hast',
-        'Spitznamen, den emotely für dich ausgesucht hat',
+        'den emotely für dich ausgesucht hat',
         'trainieren',
         'außerhalb der EU',
         'Standardvertragsklauseln',
