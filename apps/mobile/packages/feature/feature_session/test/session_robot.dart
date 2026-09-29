@@ -19,7 +19,6 @@ class SessionRobot(
   final AnalyticsSpy? spy,
   final SupabaseStub? supabase,
   final String? resume,
-  final Locale? locale,
 }) {
   /// Set up by [launch]; the spy every test can inspect.
   late final AnalyticsSpy analytics = spy ?? AnalyticsSpy();
@@ -53,22 +52,11 @@ class SessionRobot(
     );
     registerSession(GetIt.I);
     GetIt.I.registerSingleton<UserContextSource>(userContext);
-    final routes = [$sessionRoute];
-    final location = SessionRoute(resume: resume).location;
-    // The helpers' own default locale, unless a test asks for one.
-    return switch (locale) {
-      null => featureUnderTest(
-        routes: routes,
-        initialLocation: location,
-        localizations: sessionLocalizations,
-      ),
-      final locale => featureUnderTest(
-        routes: routes,
-        initialLocation: location,
-        localizations: sessionLocalizations,
-        locale: locale,
-      ),
-    };
+    return featureUnderTest(
+      routes: [$sessionRoute],
+      initialLocation: SessionRoute(resume: resume).location,
+      localizations: sessionLocalizations,
+    );
   }
 
   /// Opens the session signed in; the first round is in flight until

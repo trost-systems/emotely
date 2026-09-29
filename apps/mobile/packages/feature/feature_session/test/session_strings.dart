@@ -1,4 +1,4 @@
-import 'package:feature_session/feature_session.dart';
+import 'package:feature_session/src/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -7,9 +7,10 @@ import 'package:material_ui/material_ui.dart';
 const sessionLocalizations = [SessionLocalizations.delegate];
 
 extension SessionStrings on WidgetTester {
-  /// The session's strings in whatever locale the test pumped, read from
-  /// the tree: an assertion made through them holds in every locale, and a
-  /// string that skipped the ARB files fails outside English.
+  /// The session's strings as the widgets on screen read them, in whatever
+  /// language the test pumped: tests assert a message by its key, so a
+  /// rewording never breaks them, and a string that skipped the ARB files
+  /// fails wherever the test runs in another language.
   SessionLocalizations get strings =>
-      SessionLocalizations.of(element(find.byType(Navigator).first));
+      element(find.byType(Navigator).first).l10n;
 }

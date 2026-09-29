@@ -1,5 +1,5 @@
 import 'package:contract/contract.dart';
-import 'package:feature_session/src/l10n/session_localizations.dart';
+import 'package:feature_session/src/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// How much room [answer] has left before the agent refuses it
@@ -24,7 +24,7 @@ class const AnswerLength({required final Answer answer, super.key})
     if (length < shownFrom) {
       return const SizedBox.shrink();
     }
-    final strings = SessionLocalizations.of(context);
+    final strings = context.l10n;
     final theme = Theme.of(context);
     final fits = length <= maxAnswerLength;
     return Semantics(

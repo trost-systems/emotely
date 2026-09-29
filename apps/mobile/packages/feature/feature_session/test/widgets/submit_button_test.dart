@@ -30,6 +30,21 @@ void main() {
       expect(pressed, 1);
     });
 
+    testWidgets('says what it does in its own words', (tester) async {
+      await tester.pumpApp(
+        const SubmitButton(buttonKey: key, onPressed: null),
+        localizations: sessionLocalizations,
+      );
+
+      expect(
+        find.descendant(
+          of: find.byKey(key),
+          matching: find.text(tester.strings.submitButton),
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('meets accessibility guidelines', (tester) async {
       await tester.expectMeetsAccessibilityGuidelines(
         appWrapper(

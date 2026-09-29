@@ -1,6 +1,5 @@
 import 'package:contract/contract.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
-import 'package:feature_session/src/l10n/session_localizations.dart';
 import 'package:feature_session/src/widgets/emoji_input.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -128,25 +127,25 @@ void main() {
       expect(submitted.single, const Answer.emoji(['😂', '😊']));
     });
 
-    testWidgets('the slots and the picker speak German', (tester) async {
+    testWidgets('the picker searches in the language the app speaks', (
+      tester,
+    ) async {
+      // Any locale but the picker's own default English: the subject is
+      // that the app's locale reaches the picker, not the words.
       const german = Locale('de');
-      final strings = lookupSessionLocalizations(german);
       await tester.pumpApp(
         const EmojiInput(onSubmit: ignoreAnswer),
         localizations: sessionLocalizations,
         locale: german,
       );
-
-      expect(find.bySemanticsLabel(strings.emojiPickLabel), findsOneWidget);
-      expect(find.text(strings.submitButton), findsOneWidget);
-
       await pick(tester, 0, '😊');
       await openSlot(tester, 0);
 
+      final strings = tester.strings;
       expect(find.bySemanticsLabel(strings.emojiClearLabel), findsOneWidget);
-      // Its search matches the German emoji names, so the German hint's
-      // words find something; the pages it only shows on demand speak
-      // German too.
+      // Its search matches the emoji names in that language, so the hint's
+      // example words find something; the pages it only shows on demand
+      // are worded by the session too.
       final config = tester.widget<EmojiPicker>(picker).config;
       expect(config.locale, german);
       expect(config.searchViewConfig.hintText, strings.emojiSearchHint);

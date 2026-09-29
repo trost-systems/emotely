@@ -1,9 +1,7 @@
 import 'package:contract/contract.dart';
-import 'package:feature_session/src/l10n/session_localizations.dart';
 import 'package:feature_session/src/widgets/answer_length.dart';
 import 'package:feature_session/src/widgets/longtext_input.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:material_ui/material_ui.dart';
 
 import 'package:testing/testing.dart';
 
@@ -68,21 +66,10 @@ void main() {
       expect(find.text(tester.strings.answerLengthLeft(0)), findsOneWidget);
     });
 
-    testWidgets('speaks German', (tester) async {
-      const german = Locale('de');
-      final strings = lookupSessionLocalizations(german);
-      await tester.pumpApp(
-        const LongtextInput(onSubmit: ignoreAnswer),
-        localizations: sessionLocalizations,
-        locale: german,
-      );
+    testWidgets('invites free writing while empty', (tester) async {
+      await pumpTestWidget(tester);
 
-      expect(find.text(strings.longtextHint), findsOneWidget);
-      expect(find.text(strings.submitButton), findsOneWidget);
-
-      await type(tester, 'a' * 4096);
-
-      expect(find.text(strings.answerLengthOver(2)), findsOneWidget);
+      expect(find.text(tester.strings.longtextHint), findsOneWidget);
     });
 
     testWidgets('counts down only once the answer nears the limit', (

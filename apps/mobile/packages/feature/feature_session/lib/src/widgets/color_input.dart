@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:contract/contract.dart';
-import 'package:feature_session/src/l10n/session_localizations.dart';
+import 'package:feature_session/src/l10n/l10n.dart';
 import 'package:feature_session/src/widgets/submit_button.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:material_ui/material_ui.dart';
@@ -73,7 +73,7 @@ class _ColorInputState() extends State<ColorInput> {
             key: ColorInput.slotKey(_colors.length),
             color: null,
             // The empty slot is called what the picker it opens is called.
-            label: SessionLocalizations.of(context).colorPickLabel,
+            label: context.l10n.colorPickLabel,
             onTap: () => unawaited(_open(_colors.length)),
           ),
         ],
@@ -151,7 +151,7 @@ class _ColorPickerDialogState() extends State<_ColorPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final strings = SessionLocalizations.of(context);
+    final strings = context.l10n;
     return AlertDialog(
       title: Text(strings.colorPickLabel),
       content: SingleChildScrollView(

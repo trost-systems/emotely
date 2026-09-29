@@ -1,5 +1,4 @@
 import 'package:contract/contract.dart';
-import 'package:feature_session/src/l10n/session_localizations.dart';
 import 'package:feature_session/src/widgets/text_list_input.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -121,21 +120,10 @@ void main() {
       expect(find.text(tester.strings.answerLengthLeft(0)), findsOneWidget);
     });
 
-    testWidgets('speaks German', (tester) async {
-      const german = Locale('de');
-      final strings = lookupSessionLocalizations(german);
-      await tester.pumpApp(
-        const TextListInput(onSubmit: ignoreAnswer),
-        localizations: sessionLocalizations,
-        locale: german,
-      );
+    testWidgets('invites one thing per field', (tester) async {
+      await pumpTestWidget(tester);
 
-      expect(find.text(strings.textListHint), findsOneWidget);
-
-      // ["…"]: 4090 letters, two quotes and two brackets, two short.
-      await type(tester, 0, 'a' * 4090);
-
-      expect(find.text(strings.answerLengthLeft(2)), findsOneWidget);
+      expect(find.text(tester.strings.textListHint), findsOneWidget);
     });
 
     testWidgets('meets accessibility guidelines', (tester) async {

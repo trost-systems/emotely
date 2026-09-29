@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:agent_client/agent_client.dart';
 import 'package:contract/contract.dart';
 import 'package:design_system/design_system.dart';
-import 'package:feature_session/src/l10n/session_localizations.dart';
 import 'package:feature_session/src/view/session_page.dart';
 import 'package:feature_session/src/widgets/longtext_input.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,7 +26,9 @@ void main() {
 
       await robot.launch();
 
+      expect(find.text(tester.strings.sessionTitle), findsOneWidget);
       expect(robot.thinking, findsOneWidget);
+      expect(find.text(tester.strings.thinkingLabel), findsOneWidget);
       expect(agent.requests, hasLength(1));
       expect(agent.lastRequest, {'app_version': AgentStub.appVersion});
       // The round runs as the signed-in user (ADR 0010).
@@ -244,7 +245,7 @@ void main() {
       expect(robot.retry, findsOneWidget);
     });
 
-    testWidgets('a refused model says the assistant is unavailable', (
+    testWidgets('a refused model says the companion is unavailable', (
       tester,
     ) async {
       final agent = AgentStub()
@@ -259,7 +260,13 @@ void main() {
       expect(find.text(AgentErrorCode.modelUnavailable.wire), findsNothing);
       expect(find.text(tester.strings.unreachableMessage), findsNothing);
       // The round never completed, so the same round is still the retry.
-      expect(robot.retry, findsOneWidget);
+      expect(
+        find.descendant(
+          of: robot.retry,
+          matching: find.text(tester.strings.tryAgainButton),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('a refused model mid-session keeps the entry and retries', (
@@ -700,6 +707,13 @@ void main() {
         expect(find.textContaining('signature'), findsNothing);
         // Resending the same transcript can never succeed.
         expect(robot.retry, findsNothing);
+        expect(
+          find.descendant(
+            of: robot.startOver,
+            matching: find.text(tester.strings.startOverButton),
+          ),
+          findsOneWidget,
+        );
 
         await robot.tapStartOver();
 
@@ -743,75 +757,6 @@ void main() {
 
         expect(robot.questionText, rateQuestion.question);
         expect(agent.requests, isEmpty);
-      });
-    });
-
-    group('in German', () {
-      const german = Locale('de');
-      final strings = lookupSessionLocalizations(german);
-
-      testWidgets('thinks, asks and shows the entry in German', (tester) async {
-        final agent = AgentStub()
-          ..script([
-            delayed(awaiting(toolCallId: 'c1', question: SessionRobot.rate)),
-            completed(
-              summary: 'Ein ruhiger Tag.',
-              answers: const {'q-rate': Answer.rating(9)},
-            ),
-          ]);
-        final robot = SessionRobot(tester, agent, locale: german);
-        await robot.launch();
-
-        expect(find.text(strings.sessionTitle), findsOneWidget);
-        expect(find.text(strings.thinkingLabel), findsOneWidget);
-
-        await robot.settle();
-
-        expect(find.text(strings.questionNumber(1)), findsOneWidget);
-        // The question is the agent's own text, in the agent's language.
-        expect(robot.questionText, SessionRobot.rate.question);
-        expect(find.text(strings.ratingNoAnswer), findsOneWidget);
-        expect(find.text(strings.submitButton), findsOneWidget);
-
-        await robot.answerRating(9);
-
-        // The heading is the entry component's own, from design_system.
-        expect(find.text('Dein Eintrag'), findsOneWidget);
-        expect(find.text('Ein ruhiger Tag.'), findsOneWidget);
-      });
-
-      testWidgets('words a failure and its retry in German', (tester) async {
-        final agent = AgentStub()
-          ..script([refused(502, AgentErrorCode.modelUnavailable)]);
-        final robot = SessionRobot(tester, agent, locale: german);
-        await robot.launch();
-        await robot.settle();
-
-        expect(find.text(strings.modelUnavailableMessage), findsOneWidget);
-        expect(
-          find.descendant(
-            of: robot.retry,
-            matching: find.text(strings.tryAgainButton),
-          ),
-          findsOneWidget,
-        );
-      });
-
-      testWidgets('offers a fresh session in German', (tester) async {
-        final agent = AgentStub()
-          ..script([refused(401, AgentErrorCode.invalidSignature)]);
-        final robot = SessionRobot(tester, agent, locale: german);
-        await robot.launch();
-        await robot.settle();
-
-        expect(find.text(strings.cannotContinueMessage), findsOneWidget);
-        expect(
-          find.descendant(
-            of: robot.startOver,
-            matching: find.text(strings.startOverButton),
-          ),
-          findsOneWidget,
-        );
       });
     });
 

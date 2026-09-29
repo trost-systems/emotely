@@ -1,7 +1,7 @@
 import 'package:agent_client/agent_client.dart';
 import 'package:design_system/design_system.dart';
 import 'package:feature_session/src/bloc/session_bloc.dart';
-import 'package:feature_session/src/l10n/session_localizations.dart';
+import 'package:feature_session/src/l10n/l10n.dart';
 import 'package:feature_session/src/widgets/answer_input.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -28,7 +28,7 @@ class const SessionView({super.key}) extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(SessionLocalizations.of(context).sessionTitle)),
+    appBar: AppBar(title: Text(context.l10n.sessionTitle)),
     body: SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -59,7 +59,7 @@ class const _Thinking() extends StatelessWidget {
       spacing: 16,
       children: [
         const CircularProgressIndicator(),
-        Text(SessionLocalizations.of(context).thinkingLabel),
+        Text(context.l10n.thinkingLabel),
       ],
     ),
   );
@@ -78,7 +78,7 @@ class const _Question({
         spacing: 16,
         children: [
           Text(
-            SessionLocalizations.of(context).questionNumber(answered + 1),
+            context.l10n.questionNumber(answered + 1),
             style: theme.textTheme.labelLarge,
           ),
           Text(
@@ -103,7 +103,7 @@ class const _Failure({required final SessionFailureReason reason})
     extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final strings = SessionLocalizations.of(context);
+    final strings = context.l10n;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,

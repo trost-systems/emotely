@@ -1,5 +1,5 @@
 import 'package:contract/contract.dart';
-import 'package:feature_session/src/l10n/session_localizations.dart';
+import 'package:feature_session/src/l10n/l10n.dart';
 import 'package:feature_session/src/widgets/answer_length.dart';
 import 'package:feature_session/src/widgets/submit_button.dart';
 import 'package:material_ui/material_ui.dart';
@@ -80,7 +80,7 @@ class _TextListInputState() extends State<TextListInput> {
 
   @override
   Widget build(BuildContext context) {
-    final hint = SessionLocalizations.of(context).textListHint;
+    final hint = context.l10n.textListHint;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 12,

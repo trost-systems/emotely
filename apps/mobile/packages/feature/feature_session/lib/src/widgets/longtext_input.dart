@@ -1,5 +1,5 @@
 import 'package:contract/contract.dart';
-import 'package:feature_session/src/l10n/session_localizations.dart';
+import 'package:feature_session/src/l10n/l10n.dart';
 import 'package:feature_session/src/widgets/answer_length.dart';
 import 'package:feature_session/src/widgets/submit_button.dart';
 import 'package:material_ui/material_ui.dart';
@@ -42,9 +42,7 @@ class _LongtextInputState() extends State<LongtextInput> {
         minLines: 3,
         maxLines: 8,
         textCapitalization: TextCapitalization.sentences,
-        decoration: InputDecoration(
-          hintText: SessionLocalizations.of(context).longtextHint,
-        ),
+        decoration: InputDecoration(hintText: context.l10n.longtextHint),
         onChanged: (_) => setState(() {}),
       ),
       AnswerLength(answer: _answer),

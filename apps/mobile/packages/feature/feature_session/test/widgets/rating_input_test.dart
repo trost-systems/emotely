@@ -1,5 +1,4 @@
 import 'package:contract/contract.dart';
-import 'package:feature_session/src/l10n/session_localizations.dart';
 import 'package:feature_session/src/widgets/rating_input.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -33,6 +32,8 @@ void main() {
       // Whole numbers only: one stop per value, plus the "no answer" stop.
       expect(slider.divisions, RatingInput.max);
       expect(shownValue(tester), tester.strings.ratingNoAnswer);
+      // To a screen reader too, as the slider's value.
+      expect(find.semantics.byValue(tester.strings.ratingNoAnswer), findsOne);
       expect(isSubmitEnabled(tester, RatingInput.submitKey), isFalse);
     });
 
@@ -55,22 +56,6 @@ void main() {
 
       expect(shownValue(tester), tester.strings.ratingNoAnswer);
       expect(isSubmitEnabled(tester, RatingInput.submitKey), isFalse);
-    });
-
-    testWidgets('speaks German, to the eye and to a screen reader', (
-      tester,
-    ) async {
-      const german = Locale('de');
-      final strings = lookupSessionLocalizations(german);
-      await tester.pumpApp(
-        const RatingInput(onSubmit: ignoreAnswer),
-        localizations: sessionLocalizations,
-        locale: german,
-      );
-
-      expect(shownValue(tester), strings.ratingNoAnswer);
-      expect(find.semantics.byValue(strings.ratingNoAnswer), findsOne);
-      expect(find.text(strings.submitButton), findsOneWidget);
     });
 
     testWidgets('submits the value the slider rests on', (tester) async {

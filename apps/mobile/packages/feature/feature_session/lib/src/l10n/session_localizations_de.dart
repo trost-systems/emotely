@@ -25,12 +25,11 @@ class SessionLocalizationsDe extends SessionLocalizations {
   }
 
   @override
-  String get unreachableMessage =>
-      'Der Tagebuch-Assistent ist nicht erreichbar.';
+  String get unreachableMessage => 'emotely ist gerade nicht erreichbar.';
 
   @override
   String get modelUnavailableMessage =>
-      'Der Tagebuch-Assistent ist gerade nicht verfügbar. Das liegt nicht an deiner Verbindung, und dein Eintrag ist sicher. Bitte versuche es später noch einmal.';
+      'emotely ist gerade nicht verfügbar. Das liegt nicht an deiner Verbindung, und dein Eintrag ist sicher. Bitte versuche es später noch einmal.';
 
   @override
   String get refusedMessage =>

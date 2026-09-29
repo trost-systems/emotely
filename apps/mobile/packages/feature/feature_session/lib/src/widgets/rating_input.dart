@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:contract/contract.dart';
-import 'package:feature_session/src/l10n/session_localizations.dart';
+import 'package:feature_session/src/l10n/l10n.dart';
 import 'package:feature_session/src/widgets/submit_button.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
@@ -44,7 +44,7 @@ class _RatingInputState() extends State<RatingInput> {
     final theme = Theme.of(context);
     // What the value line, the slider's label and a screen reader say while
     // the slider rests on no answer. A value is a bare digit, no words.
-    final noAnswer = SessionLocalizations.of(context).ratingNoAnswer;
+    final noAnswer = context.l10n.ratingNoAnswer;
     final value = _value;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

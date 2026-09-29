@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:contract/contract.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
-import 'package:feature_session/src/l10n/session_localizations.dart';
+import 'package:feature_session/src/l10n/l10n.dart';
 import 'package:feature_session/src/widgets/submit_button.dart';
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform;
@@ -96,7 +96,7 @@ class const _Slot({
     final scheme = Theme.of(context).colorScheme;
     return Semantics(
       button: true,
-      label: emoji ?? SessionLocalizations.of(context).emojiPickLabel,
+      label: emoji ?? context.l10n.emojiPickLabel,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
@@ -162,7 +162,7 @@ class const _EmojiSheet({required final bool canClear})
   /// clear. The locale picks the emoji names search matches against, so a
   /// German hint finds German words.
   Config _config(BuildContext context) {
-    final strings = SessionLocalizations.of(context);
+    final strings = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final background = scheme.surfaceContainerLow;

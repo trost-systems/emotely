@@ -2,15 +2,15 @@
   "@@locale": "en",
   "sessionTitle": "Journaling session",
   "@sessionTitle": {
-    "description": "Session screen: app bar title while the journaling assistant asks its questions one by one and the user answers."
+    "description": "Session screen: app bar title while the companion asks its questions one by one and the user answers."
   },
   "thinkingLabel": "Thinking…",
   "@thinkingLabel": {
-    "description": "Session screen: shown under a spinner while the journaling assistant prepares its next question or writes the entry."
+    "description": "Session screen: shown under a spinner while the companion prepares its next question or writes the entry."
   },
   "questionNumber": "Question {number}",
   "@questionNumber": {
-    "description": "Session screen: small label above the assistant's current question, counting the questions of this session from 1.",
+    "description": "Session screen: small label above the companion's current question, counting the questions of this session from 1.",
     "placeholders": {
       "number": {
         "type": "int",
@@ -18,17 +18,17 @@
       }
     }
   },
-  "unreachableMessage": "Could not reach the journaling assistant.",
+  "unreachableMessage": "Could not reach emotely.",
   "@unreachableMessage": {
-    "description": "Session screen failure: the app got no answer from the journaling assistant at all (offline, timed out). Shown above a Try again button."
+    "description": "Session screen failure: the app got no answer from the companion at all (offline, timed out). Names the companion \"emotely\", always lower case. Shown above a Try again button."
   },
-  "modelUnavailableMessage": "The journaling assistant is unavailable right now. This is not your connection, and your entry is safe. Please try again later.",
+  "modelUnavailableMessage": "emotely is unavailable right now. This is not your connection, and your entry is safe. Please try again later.",
   "@modelUnavailableMessage": {
-    "description": "Session screen failure: the AI model behind the assistant is down on our side. It must say it is not the user's connection, that what they wrote is safe, and that waiting helps. Shown above a Try again button."
+    "description": "Session screen failure: the AI model behind the companion is down on our side. Names the companion \"emotely\", lower case even at the start of the sentence. It must say it is not the user's connection, that what they wrote is safe, and that waiting helps. Shown above a Try again button."
   },
   "refusedMessage": "Something went wrong on our side. Please try again.",
   "@refusedMessage": {
-    "description": "Session screen failure: the assistant rejected this step for a reason a retry may fix. Nothing the user did wrong. Shown above a Try again button."
+    "description": "Session screen failure: the companion rejected this step for a reason a retry may fix. Nothing the user did wrong. Shown above a Try again button."
   },
   "cannotContinueMessage": "This session can no longer be continued. Start a new one; your saved entries are not affected.",
   "@cannotContinueMessage": {
@@ -52,7 +52,7 @@
   },
   "submitButton": "Submit",
   "@submitButton": {
-    "description": "Session screen: button under every answer field (text, list, rating, colors, emoji) that sends the answer to the assistant. Disabled until there is an answer."
+    "description": "Session screen: button under every answer field (text, list, rating, colors, emoji) that sends the answer to the companion. Disabled until there is an answer."
   },
   "longtextHint": "Write freely…",
   "@longtextHint": {

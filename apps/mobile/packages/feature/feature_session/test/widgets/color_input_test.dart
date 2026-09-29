@@ -1,5 +1,4 @@
 import 'package:contract/contract.dart';
-import 'package:feature_session/src/l10n/session_localizations.dart';
 import 'package:feature_session/src/widgets/color_input.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -136,21 +135,14 @@ void main() {
       );
     });
 
-    testWidgets('speaks German, the picker included', (tester) async {
-      const german = Locale('de');
-      final strings = lookupSessionLocalizations(german);
-      await tester.pumpApp(
-        const ColorInput(onSubmit: ignoreAnswer),
-        localizations: sessionLocalizations,
-        locale: german,
-      );
-
-      expect(find.bySemanticsLabel(strings.colorPickLabel), findsOneWidget);
-      expect(find.text(strings.submitButton), findsOneWidget);
-
+    testWidgets('the picker words its own title, pages and buttons', (
+      tester,
+    ) async {
+      await pumpTestWidget(tester);
       await pick(tester, 0, Colors.red);
       await openSlot(tester, 0);
 
+      final strings = tester.strings;
       for (final text in [
         strings.colorPickLabel,
         strings.colorSwatchesTab,

@@ -25,11 +25,11 @@ class SessionLocalizationsEn extends SessionLocalizations {
   }
 
   @override
-  String get unreachableMessage => 'Could not reach the journaling assistant.';
+  String get unreachableMessage => 'Could not reach emotely.';
 
   @override
   String get modelUnavailableMessage =>
-      'The journaling assistant is unavailable right now. This is not your connection, and your entry is safe. Please try again later.';
+      'emotely is unavailable right now. This is not your connection, and your entry is safe. Please try again later.';
 
   @override
   String get refusedMessage =>

@@ -1,4 +1,4 @@
-import 'package:feature_session/src/l10n/session_localizations.dart';
+import 'package:feature_session/src/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The one way an answer leaves its widget: disabled until the widget holds
@@ -18,7 +18,7 @@ class const SubmitButton({
     child: FilledButton(
       key: buttonKey,
       onPressed: onPressed,
-      child: Text(SessionLocalizations.of(context).submitButton),
+      child: Text(context.l10n.submitButton),
     ),
   );
 }
