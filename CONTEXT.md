@@ -102,9 +102,10 @@ nickname is one the user gives themselves, and the word means only that.
 ## User context
 
 What the companion is told about the user for a session, as one object beside
-the transcript: now the display name and whether it is a placeholder, later
-such facts as the local date, time zone and locale. Facts about the person,
-never journal content.
+the transcript: now the display name, whether it is a placeholder, and the
+locale the app shows (the companion asks and writes the entry in its
+language, English for any it does not speak); later such facts as the local
+date and time zone. Facts about the person, never journal content.
 
 ## Consent
 

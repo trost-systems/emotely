@@ -392,6 +392,23 @@ void main() {
       },
     );
 
+    testComponents('says the language the app shows goes to the model', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacy());
+
+      // #228: the companion asks and writes in the app's language, so the
+      // locale rides along with each round and reaches the provider too.
+      expect(
+        find.textContaining('the language the app is set to'),
+        findsComponents,
+      );
+      expect(
+        find.textContaining('the name the app calls you and its language'),
+        findsComponents,
+      );
+    });
+
     testComponents('describes analytics by kind, never by event name', (
       tester,
     ) {

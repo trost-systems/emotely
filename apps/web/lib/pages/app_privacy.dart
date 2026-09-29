@@ -259,8 +259,10 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
       .text(
         'This is the part that leaves your phone. Each round of a session '
         'sends the emotely agent — a small server of ours — the transcript '
-        'so far, the name the app calls you (yours or the placeholder), the '
-        'app version, your sign-in token, and a signature proving the '
+        'so far, the name the app calls you (yours or the placeholder), '
+        'the language the app is set to (so the questions and your entry '
+        'come in it), the app version, your sign-in token, and a signature '
+        'proving the '
         'transcript is one the server itself produced. The agent adds the '
         'assistant’s instructions and hands the conversation to a language '
         'model through the ',
@@ -269,7 +271,8 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
       .text(
         ', which passes it to whichever provider serves the model. The '
         'gateway and the provider receive the conversation, the '
-        'instructions and the name the app calls you — no email address and '
+        'instructions, the name the app calls you and its language — no '
+        'email address and '
         'no sign-in token. The reply comes back the same way and becomes the '
         'next question, or your entry.',
       ),
