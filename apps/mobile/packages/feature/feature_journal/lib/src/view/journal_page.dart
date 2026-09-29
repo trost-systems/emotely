@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:feature_journal/src/bloc/journal_bloc.dart';
-import 'package:feature_journal/src/l10n/journal_localizations.dart';
+import 'package:feature_journal/src/l10n/l10n.dart';
 import 'package:feature_journal/src/navigator.dart';
 import 'package:feature_journal/src/routes.dart';
 import 'package:feature_journal/src/view/greeting.dart';
@@ -100,7 +100,7 @@ class const _Journal({
         Padding(
           padding: const EdgeInsets.all(32),
           child: Text(
-            JournalLocalizations.of(context).emptyJournalMessage,
+            context.l10n.emptyJournalMessage,
             key: JournalView.emptyKey,
             textAlign: TextAlign.center,
           ),
@@ -116,7 +116,7 @@ class const _SessionCard({required final OpenSession? openSession})
     extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final strings = JournalLocalizations.of(context);
+    final strings = context.l10n;
     return switch (openSession) {
       null => FilledButton(
         key: JournalView.startKey,
@@ -199,7 +199,7 @@ class const _EntryTile({required final EntryRecord record})
 class const _Failure() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final strings = JournalLocalizations.of(context);
+    final strings = context.l10n;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,

@@ -1,4 +1,4 @@
-import 'package:feature_journal/src/l10n/journal_localizations.dart';
+import 'package:feature_journal/src/l10n/l10n.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// The part of the day a greeting names, by the phone's local hour: morning
@@ -50,7 +50,7 @@ class const JournalGreeting({
         Semantics(
           header: true,
           child: Text(
-            greeting(JournalLocalizations.of(context), PartOfDay.at(now), name),
+            greeting(context.l10n, PartOfDay.at(now), name),
             key: titleKey,
             // Never italic: it names the user.
             style: theme.textTheme.headlineMedium?.copyWith(

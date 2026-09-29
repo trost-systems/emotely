@@ -1,6 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:feature_journal/src/bloc/entry_bloc.dart';
-import 'package:feature_journal/src/l10n/journal_localizations.dart';
+import 'package:feature_journal/src/l10n/l10n.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:journal_repository/journal_repository.dart';
@@ -31,8 +31,7 @@ class const EntryPageView({required final String entryId, super.key})
           EntryReady(:final record) =>
             // Month, day and year: a journal spans years.
             MaterialLocalizations.of(context).formatShortDate(record.createdAt),
-          EntryLoading() ||
-          EntryFailure() => JournalLocalizations.of(context).entryScreenTitle,
+          EntryLoading() || EntryFailure() => context.l10n.entryScreenTitle,
         }),
       ),
       body: SafeArea(
@@ -55,7 +54,7 @@ class const EntryPageView({required final String entryId, super.key})
 class const _Failure({required final String entryId}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final strings = JournalLocalizations.of(context);
+    final strings = context.l10n;
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,

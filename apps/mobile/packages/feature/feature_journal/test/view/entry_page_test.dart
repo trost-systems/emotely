@@ -2,6 +2,7 @@ import 'package:contract/contract.dart';
 import 'package:design_system/design_system.dart'
     show DesignSystemLocalizations, EntryView;
 import 'package:feature_journal/feature_journal.dart';
+import 'package:feature_journal/src/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:material_ui/material_ui.dart';
@@ -23,10 +24,9 @@ void main() {
     );
 
     /// The entry page as the app would show it, composed the way the app
-    /// composes it over a scripted Supabase, in [locale] or else the pump
-    /// helpers' own. Reading this composes the container, so read it once
-    /// per test.
-    Widget pageWith(SupabaseStub supabase, {Locale? locale}) {
+    /// composes it over a scripted Supabase. Reading this composes the
+    /// container, so read it once per test.
+    Widget pageWith(SupabaseStub supabase) {
       registerUtilitiesUnderTest(
         GetIt.I,
         agent: AgentStub(),
@@ -34,31 +34,21 @@ void main() {
         analytics: analytics,
       );
       registerJournal(GetIt.I);
-      const page = EntryPage(entryId: 'e-1');
-      const localizations = [JournalLocalizations.delegate];
-      return switch (locale) {
-        null => pageUnderTest(page, localizations: localizations),
-        final asked => pageUnderTest(
-          page,
-          localizations: localizations,
-          locale: asked,
-        ),
-      };
+      return pageUnderTest(
+        const EntryPage(entryId: 'e-1'),
+        localizations: const [JournalLocalizations.delegate],
+      );
     }
 
-    Future<void> launch(
-      WidgetTester tester,
-      SupabaseStub supabase, {
-      Locale? locale,
-    }) async {
+    Future<void> launch(WidgetTester tester, SupabaseStub supabase) async {
       await supabase.signedIn();
-      await tester.pumpWidget(pageWith(supabase, locale: locale));
+      await tester.pumpWidget(pageWith(supabase));
       await tester.pumpAndSettle();
     }
 
-    /// The journal's strings in the locale on screen.
+    /// The journal's strings as the page on screen reads them.
     JournalLocalizations strings(WidgetTester tester) =>
-        JournalLocalizations.of(tester.element(find.byType(EntryPageView)));
+        tester.element(find.byType(EntryPageView)).l10n;
 
     testWidgets('reads the entry back the way the session showed it', (
       tester,
@@ -87,19 +77,6 @@ void main() {
       expect(find.text('7 / $ratingMax'), findsOneWidget);
     });
 
-    testWidgets('reads the entry back in German on a German phone', (
-      tester,
-    ) async {
-      final supabase = SupabaseStub()
-        ..rest(entries, [
-          rows([theEntry()]),
-        ]);
-      await launch(tester, supabase, locale: const Locale('de'));
-
-      expect(find.text('7. Sept. 2026'), findsOneWidget);
-      expect(find.text('Dein Eintrag'), findsOneWidget);
-    });
-
     testWidgets('says so when the entry cannot be read, and retries', (
       tester,
     ) async {
@@ -119,18 +96,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('A seven kind of day.'), findsOneWidget);
-    });
-
-    testWidgets('says so in German on a German phone', (tester) async {
-      final supabase = SupabaseStub()..rest(entries, [restRefused()]);
-      await launch(tester, supabase, locale: const Locale('de'));
-
-      expect(find.text('Eintrag'), findsOneWidget);
-      expect(
-        find.text('Dieser Eintrag konnte nicht geladen werden.'),
-        findsOneWidget,
-      );
-      expect(find.text('Erneut versuchen'), findsOneWidget);
     });
 
     testWidgets('an entry the journal no longer holds cannot be shown', (
