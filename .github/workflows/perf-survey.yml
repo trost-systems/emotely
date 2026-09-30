@@ -22,10 +22,6 @@ on:
     # After the emulator budget (04:30), so the two never share a runner's
     # morning.
     - cron: "30 5 * * *"
-  # Temporary proof for #242, reverted before review: a push to this
-  # branch runs the medium-phone ad hoc, journal only, filing tagged issues.
-  push:
-    branches: [claude/ftl-survey-242]
   workflow_dispatch:
     inputs:
       device:
@@ -75,7 +71,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - id: plan
         env:
-          DEVICE: ${{ inputs.device || (github.event_name == 'push' && 'medium-phone') || '' }}
+          DEVICE: ${{ inputs.device }}
         run: |
           set -euo pipefail
           if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
@@ -118,7 +114,7 @@ jobs:
           cache: true
       - run: flutter pub get
         working-directory: apps/mobile
-      - run: bash "$SURVEY" build android --screens "${{ inputs.screens || (github.event_name == 'push' && 'journal') || '' }}" --out "$RUNNER_TEMP/build"
+      - run: bash "$SURVEY" build android --screens "${{ inputs.screens }}" --out "$RUNNER_TEMP/build"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: survey-android-build
@@ -155,7 +151,7 @@ jobs:
         env:
           FTL_PROJECT_ID: ${{ vars.FTL_PROJECT_ID }}
         run: >-
-          bash "$SURVEY" ftl --device "${{ matrix.device.key }}" --screens "${{ inputs.screens || (github.event_name == 'push' && 'journal') || '' }}"
+          bash "$SURVEY" ftl --device "${{ matrix.device.key }}" --screens "${{ inputs.screens }}"
           --app build/app.apk --test build/test.apk --source "${{ needs.plan.outputs.source }}"
           --no-judge --out "$RUNNER_TEMP/out"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -204,7 +200,7 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-      - run: bash "$SURVEY" build ios --screens "${{ inputs.screens || (github.event_name == 'push' && 'journal') || '' }}" --out "$RUNNER_TEMP/build"
+      - run: bash "$SURVEY" build ios --screens "${{ inputs.screens }}" --out "$RUNNER_TEMP/build"
       - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           project_id: ${{ vars.FTL_PROJECT_ID }}
@@ -217,7 +213,7 @@ jobs:
         env:
           FTL_PROJECT_ID: ${{ vars.FTL_PROJECT_ID }}
         run: >-
-          bash "$SURVEY" ftl --device "${{ matrix.device.key }}" --screens "${{ inputs.screens || (github.event_name == 'push' && 'journal') || '' }}"
+          bash "$SURVEY" ftl --device "${{ matrix.device.key }}" --screens "${{ inputs.screens }}"
           --zip "$RUNNER_TEMP/build/survey-ios.zip" --source "${{ needs.plan.outputs.source }}"
           --no-judge --out "$RUNNER_TEMP/out"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -249,7 +245,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE: ${{ needs.plan.outputs.source }}
-          ISSUE_TAG: "${{ inputs.issue_tag || (github.event_name == 'push' && '[test #242]') || '' }}"
+          ISSUE_TAG: ${{ inputs.issue_tag }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
