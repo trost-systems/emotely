@@ -32,7 +32,12 @@ $S history --device galaxy-s24 --days 90 --json | jq -s 'map(.build_ms.p90)'
   `FTL_SERVICE_ACCOUNT`.
 - The results land in the project's default bucket
   (`gs://test-lab-da5r8r2b0t3mw-ii9dsjb3i5fn4/survey/<run>/`): the device
-  log, the test result, and `survey.json`.
+  log, the test result, and `survey.json`. gcloud uploads the build there
+  and `survey.sh` reads the results back, so the runner needs object
+  create and read on that bucket (`roles/storage.objectCreator` and
+  `roles/storage.objectViewer`, on the bucket only). Without them the
+  keyless sign-in works and the upload fails with 403 on
+  `storage.objects.create`.
 
 ## The device matrix and the quota
 
