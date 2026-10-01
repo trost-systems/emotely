@@ -10,7 +10,7 @@ minWordLength: 3
 files:
   - "apps/mobile/**/l10n/*.arb"
   # The questions a user reads word for word (#228): the agent's question
-  # set, English `text` and German `de` (overrides below).
+  # set, each wording under its language key (overrides below).
   - "apps/agent/src/default-question-set.ts"
 import:
   - "@cspell/dict-de-de/cspell-ext.json"
@@ -46,7 +46,7 @@ patterns:
     pattern: /(?<=[{},]\s*)(?:=\d+|\w+)\s*(?=\{)/g
   # A question's wording in the agent's question set, per language.
   - name: question-text
-    pattern: '/(?<=\b(?:text|de): ")[^"]*/g'
+    pattern: '/(?<=\b(?:en|de): ")[^"]*/g'
   - name: json-escape
     pattern: /\\[nrtbf"\\\/]|\\u[0-9a-fA-F]{4}/g
 includeRegExpList: [arb-message-value]
@@ -71,7 +71,7 @@ overrides:
       - "datenschutzhinweis->Datenschutzerklärung"
       - "datenschutzhinweise->Datenschutzerklärung"
   # The question set holds both languages in one file: only the wordings are
-  # copy (`text: "…"` English, `de: "…"` German), checked against both
+  # copy (`en: "…"`, `de: "…"` inside each `text`), checked against both
   # languages and the words to avoid in each.
   - filename: "apps/agent/src/default-question-set.ts"
     language: en-US,de

@@ -1,17 +1,20 @@
-import type { QuestionSet } from "./session-core.ts";
+import type { QuestionSet, WordedQuestionSet } from "./session-core.ts";
 
 /**
  * The languages the companion speaks, by BCP 47 language subtag, with the
  * English name a prompt calls each by. They are the app's own (ADR 0020):
  * a language the app does not show is one the companion does not speak.
- * English is the source every other text is translated from.
  */
 export const languageNames = { en: "English", de: "German" } as const;
 
 export type Language = keyof typeof languageNames;
 
-/** A text's translations, one per language other than English (#228). */
-export type Translations = Partial<Record<Exclude<Language, "en">, string>>;
+/**
+ * One text in every language the companion speaks (#228). Every language is
+ * required: adding one to [languageNames] makes each text missing it a type
+ * error, never a silent fallback to English.
+ */
+export type Wording = Record<Language, string>;
 
 function isLanguage(subtag: string): subtag is Language {
   return Object.hasOwn(languageNames, subtag);
@@ -19,7 +22,8 @@ function isLanguage(subtag: string): subtag is Language {
 
 /**
  * The language to speak for the locale the app sent: its language subtag
- * when the companion speaks it, English for any other and for none.
+ * when the companion speaks it, English for any other and for none. This is
+ * the only fallback to English there is.
  */
 export function languageOf(locale: string | undefined): Language {
   const subtag = locale?.split("-")[0]?.toLowerCase();
@@ -27,19 +31,19 @@ export function languageOf(locale: string | undefined): Language {
 }
 
 /**
- * [set] worded in [language]: each question's translation, or its English
- * text where it has none. Ids, answer types and counts stay as they are —
+ * [set] worded in [language], the only bridge from an authored set to the
+ * one a session runs on. Ids, answer types and counts stay as they are —
  * they are what stored sessions and PostHog events name, in any language.
  */
-export function inLanguage(set: QuestionSet, language: Language): QuestionSet {
+export function inLanguage(
+  set: QuestionSet,
+  language: Language,
+): WordedQuestionSet {
   return {
     ...set,
-    questions: set.questions.map(({ translations, ...question }) => ({
+    questions: set.questions.map((question) => ({
       ...question,
-      text:
-        language === "en"
-          ? question.text
-          : (translations?.[language] ?? question.text),
+      text: question.text[language],
     })),
   };
 }

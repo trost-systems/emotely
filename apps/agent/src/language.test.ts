@@ -30,12 +30,18 @@ describe("inLanguage", () => {
     questions: [
       {
         id: "q-learn",
-        text: "What did you learn today?",
-        translations: { de: "Was hast du heute gelernt?" },
+        text: {
+          en: "What did you learn today?",
+          de: "Was hast du heute gelernt?",
+        },
         answer_type: "text_list",
         min_answers: 2,
       },
-      { id: "q-best", text: "Best thing?", answer_type: "longtext" },
+      {
+        id: "q-best",
+        text: { en: "Best thing?", de: "Das Beste?" },
+        answer_type: "longtext",
+      },
     ],
   };
 
@@ -51,14 +57,22 @@ describe("inLanguage", () => {
     });
   });
 
-  it("keeps the English text of a question that has no translation", () => {
-    assert.equal(inLanguage(set, "de").questions[1]?.text, "Best thing?");
-  });
-
-  it("is the English set in English", () => {
+  it("is the English wording in English", () => {
     assert.deepEqual(
       inLanguage(set, "en").questions.map((q) => q.text),
       ["What did you learn today?", "Best thing?"],
     );
+  });
+
+  it("refuses, at compile time, a question missing a language's wording", () => {
+    // English is a fallback only for a locale the companion does not speak,
+    // never for a wording someone forgot: every language is required.
+    const unworded: QuestionSet["questions"][number] = {
+      id: "q",
+      // @ts-expect-error the German wording is missing on purpose here
+      text: { en: "English only?" },
+      answer_type: "longtext",
+    };
+    assert.equal(unworded.id, "q");
   });
 });

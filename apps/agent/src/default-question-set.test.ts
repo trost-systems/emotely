@@ -22,14 +22,11 @@ describe("defaultQuestionSet", () => {
     );
   });
 
-  it("words every question in German too", () => {
-    const german = inLanguage(defaultQuestionSet, "de");
-
-    for (const [i, q] of german.questions.entries()) {
-      const english = defaultQuestionSet.questions[i];
-      assert.ok(english, q.id);
-      assert.notEqual(q.text, english.text, `${q.id} has no German text`);
-      assert.equal(q.answer_type, english.answer_type, q.id);
+  it("words every question in German, not the English again", () => {
+    // That a German wording exists at all is the type's job; this catches
+    // one pasted from the English.
+    for (const q of defaultQuestionSet.questions) {
+      assert.notEqual(q.text.de, q.text.en, q.id);
     }
   });
 

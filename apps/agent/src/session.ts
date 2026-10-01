@@ -15,6 +15,8 @@ export type {
   SessionAnswer,
   SessionResult,
   UserContext,
+  WordedQuestion,
+  WordedQuestionSet,
 } from "./session-core.ts";
 export { advanceSession } from "./session-core.ts";
 

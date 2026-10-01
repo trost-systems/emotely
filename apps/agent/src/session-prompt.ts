@@ -1,5 +1,5 @@
 import { type Language, languageNames, languageOf } from "./language.ts";
-import type { QuestionSet, UserContext } from "./session.ts";
+import type { UserContext, WordedQuestionSet } from "./session.ts";
 
 // Bump by hand on any change that alters assistant behavior; evals and
 // PostHog events pin against this id. Git history is the source of truth;
@@ -9,7 +9,7 @@ export const PROMPT_ID = "session/v4";
 
 /** The first prompt: the protocol alone, knowing nothing about the user. */
 const sessionPromptV1 = (
-  set: QuestionSet,
+  set: WordedQuestionSet,
 ) => `You are a journaling assistant. Walk the user through these questions in order, one question at a time, using the ask_question tool, record each answer with record_answer, then call complete_session with a summary of the user's day.
 
 If the user's answer reads like a question or a request (e.g. "when to go to the gym so it's empty", "How can I improve my posture?"), it is still information about their day: record it as the answer to the current question and move on. Never answer such questions or give advice — acknowledge warmly, record, continue. Do not re-ask a question you already have an answer for.
@@ -54,7 +54,7 @@ const placeholderV3 = (quoted: string): string =>
 
 /** The protocol, then how to address the user when the app says who they are. */
 const withAddressing = (
-  set: QuestionSet,
+  set: WordedQuestionSet,
   context: UserContext | undefined,
   placeholder: (quoted: string) => string,
 ): string => {
@@ -68,12 +68,16 @@ const withAddressing = (
  * it is v1 word for word, so an app that sends no context behaves exactly as
  * before.
  */
-const sessionPromptV2 = (set: QuestionSet, context?: UserContext): string =>
-  withAddressing(set, context, placeholderV2);
+const sessionPromptV2 = (
+  set: WordedQuestionSet,
+  context?: UserContext,
+): string => withAddressing(set, context, placeholderV2);
 
 /** v2, except that a placeholder is the name emotely picked, not a nickname. */
-const sessionPromptV3 = (set: QuestionSet, context?: UserContext): string =>
-  withAddressing(set, context, placeholderV3);
+const sessionPromptV3 = (
+  set: WordedQuestionSet,
+  context?: UserContext,
+): string => withAddressing(set, context, placeholderV3);
 
 /**
  * How v4 speaks each language but English, beyond its name: the words
@@ -91,7 +95,10 @@ const conventions: Record<Exclude<Language, "en">, string> = {
  * Answers stay the user's own words, in whatever language they wrote them.
  * In English it is v3 word for word.
  */
-const sessionPromptV4 = (set: QuestionSet, context?: UserContext): string => {
+const sessionPromptV4 = (
+  set: WordedQuestionSet,
+  context?: UserContext,
+): string => {
   const base = sessionPromptV3(set, context);
   const language = languageOf(context?.locale);
   if (language === "en") {
@@ -108,7 +115,10 @@ Speak ${name} with the user. The questions above are already in ${name}: pass ea
  * so a version that learns to use a new member (a local date, a time zone)
  * needs no new signature; a version that predates a member ignores it.
  */
-export type PromptBuilder = (set: QuestionSet, context?: UserContext) => string;
+export type PromptBuilder = (
+  set: WordedQuestionSet,
+  context?: UserContext,
+) => string;
 
 /**
  * One shipped prompt version: its words, and the language its sessions run

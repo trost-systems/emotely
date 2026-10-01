@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import type { QuestionSet } from "./session.ts";
+import type { WordedQuestionSet } from "./session.ts";
 import { PROMPT_ID, PROMPTS, resolvePrompt } from "./session-prompt.ts";
 
-const set: QuestionSet = {
+const set: WordedQuestionSet = {
   id: "s",
   name: "s",
   questions: [{ id: "q", text: "Q?", answer_type: "longtext" }],
@@ -148,7 +148,7 @@ describe("session/v4", () => {
   });
 
   it("asks in German and writes the entry in German for a German app", () => {
-    const german: QuestionSet = {
+    const german: WordedQuestionSet = {
       ...set,
       questions: [
         { id: "q", text: "Wie war dein Tag?", answer_type: "longtext" },

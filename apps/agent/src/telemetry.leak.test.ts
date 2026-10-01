@@ -14,7 +14,10 @@ const SENTINEL = "SENTINEL_JOURNAL_TEXT_9f4e";
 
 const bestQuestion = {
   id: "q-best",
-  text: "What was the best thing today?",
+  text: {
+    en: "What was the best thing today?",
+    de: "Was war heute das Beste?",
+  },
   answer_type: "longtext",
 } satisfies QuestionSet["questions"][number];
 const set: QuestionSet = {
@@ -35,7 +38,7 @@ describe("telemetry privacy", () => {
       {
         ask: {
           questionId: bestQuestion.id,
-          question: bestQuestion.text,
+          question: bestQuestion.text.en,
           answerType: bestQuestion.answer_type,
         },
       },
@@ -76,7 +79,7 @@ describe("telemetry privacy", () => {
       {
         ask: {
           questionId: bestQuestion.id,
-          question: bestQuestion.text,
+          question: bestQuestion.text.en,
           answerType: bestQuestion.answer_type,
         },
       },

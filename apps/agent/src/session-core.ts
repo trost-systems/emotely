@@ -16,7 +16,7 @@ import {
   tool,
 } from "ai";
 import type { TokenUsage } from "./cost.ts";
-import { inLanguage, type Translations } from "./language.ts";
+import { inLanguage, type Wording } from "./language.ts";
 import { resolvePrompt } from "./session-prompt.ts";
 import { PRIVACY_TELEMETRY } from "./telemetry.ts";
 import {
@@ -29,22 +29,36 @@ type ListAnswerType = Extract<AnswerType, "color" | "emoji" | "text_list">;
 type ScalarAnswerType = Exclude<AnswerType, ListAnswerType>;
 
 // Union on answer_type so min_answers only exists where the value is a list.
-// `text` is the reviewed English wording, `translations` the same question in
-// the other languages the companion speaks (#228); a version that speaks
-// the user's language shows the one it speaks, English where there is none.
-export type Question = {
-  id: string;
-  text: string;
-  translations?: Translations;
-} & (
+type AnswerShape =
   | { answer_type: ScalarAnswerType; min_answers?: never }
-  | { answer_type: ListAnswerType; min_answers?: number }
-);
+  | { answer_type: ListAnswerType; min_answers?: number };
 
+/**
+ * A question as authored (#228): its reviewed wording in every language the
+ * companion speaks. Every language is required, so a question missing one
+ * is a type error, never a silent English fallback.
+ */
+export type Question = { id: string; text: Wording } & AnswerShape;
+
+/**
+ * A question worded in the one language a session runs in: what the prompt
+ * lists, the tools check against and the client is shown. `inLanguage` is
+ * the only way from a [Question] to one.
+ */
+export type WordedQuestion = { id: string; text: string } & AnswerShape;
+
+/** A question set as authored, every question in every language. */
 export type QuestionSet = {
   id: string;
   name: string;
   questions: Question[];
+};
+
+/** A question set worded in one language (`inLanguage`). */
+export type WordedQuestionSet = {
+  id: string;
+  name: string;
+  questions: WordedQuestion[];
 };
 
 /**
@@ -90,7 +104,7 @@ const MAX_ROUNDS_PER_QUESTION = 6;
 const ROUND_SLACK = 20;
 
 function buildSessionTools(
-  questionSet: QuestionSet,
+  questionSet: WordedQuestionSet,
   answers: SessionResult["answers"],
   asked: Set<string>,
   onComplete: (summary: string) => void,
@@ -151,7 +165,7 @@ function addUsage(total: TokenUsage, step: LanguageModelUsage): void {
 }
 
 /** Generous round cap so a model that never completes cannot loop forever. */
-function roundGuard(questionSet: QuestionSet): { next: () => void } {
+function roundGuard(questionSet: WordedQuestionSet): { next: () => void } {
   const maxRounds =
     questionSet.questions.length * MAX_ROUNDS_PER_QUESTION + ROUND_SLACK;
   let rounds = 0;
@@ -250,7 +264,7 @@ export type AdvanceOptions = {
 function roundSettings(
   opts: AdvanceOptions,
   prompt: ReturnType<typeof resolvePrompt>,
-  questionSet: QuestionSet,
+  questionSet: WordedQuestionSet,
 ) {
   return {
     model: opts.model,

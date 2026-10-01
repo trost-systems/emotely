@@ -41,14 +41,18 @@ export const miniSet: QuestionSet = {
   questions: [
     {
       id: "q-learn",
-      text: "What did you learn today?",
-      translations: { de: "Was hast du heute gelernt?" },
+      text: {
+        en: "What did you learn today?",
+        de: "Was hast du heute gelernt?",
+      },
       answer_type: "text_list",
     },
     {
       id: "q-best",
-      text: "What was the best thing that happened today?",
-      translations: { de: "Was war das Schönste, das dir heute passiert ist?" },
+      text: {
+        en: "What was the best thing that happened today?",
+        de: "Was war das Beste, das dir heute passiert ist?",
+      },
       answer_type: "longtext",
     },
   ],

@@ -9,8 +9,16 @@ const set: QuestionSet = {
   id: "s",
   name: "s",
   questions: [
-    { id: "q-rate", text: "Rate your day?", answer_type: "rating" },
-    { id: "q-best", text: "Best thing?", answer_type: "longtext" },
+    {
+      id: "q-rate",
+      text: { en: "Rate your day?", de: "Wie war dein Tag?" },
+      answer_type: "rating",
+    },
+    {
+      id: "q-best",
+      text: { en: "Best thing?", de: "Das Beste?" },
+      answer_type: "longtext",
+    },
   ],
 };
 
@@ -104,17 +112,6 @@ describe("advanceSession", () => {
   });
 
   describe("in the app's language (#228)", () => {
-    const bilingual: QuestionSet = {
-      ...set,
-      questions: [
-        {
-          id: "q-rate",
-          text: "Rate your day?",
-          translations: { de: "Wie war dein Tag?" },
-          answer_type: "rating",
-        },
-      ],
-    };
     const firstAsk = (promptId?: string) => {
       const systems: string[] = [];
       const model = scriptedSessionModel([
@@ -136,7 +133,7 @@ describe("advanceSession", () => {
         return await inner(options);
       };
       return advanceSession({
-        questionSet: bilingual,
+        questionSet: set,
         model,
         messages: [],
         userContext: { locale: "de" },

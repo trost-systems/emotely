@@ -3,9 +3,9 @@ import type { JSONValue, LanguageModel, ModelMessage } from "ai";
 import { judgeSession } from "../src/judge.ts";
 import { inLanguage, languageNames, languageOf } from "../src/language.ts";
 import type {
-  QuestionSet,
   SessionClient,
   UserContext,
+  WordedQuestionSet,
 } from "../src/session.ts";
 import { runSession } from "../src/session.ts";
 import { miniSet, type Scenario } from "./scenarios.ts";
@@ -80,7 +80,7 @@ export const evalRuns = Number(process.env["EVAL_RUNS"] ?? "1");
 export const requiredPasses = Math.ceil((evalRuns * 2) / 3);
 
 /** Tells the judge what "complete" means for this session. */
-export function describeQuestionSet(set: QuestionSet): string {
+export function describeQuestionSet(set: WordedQuestionSet): string {
   return `The question set has exactly ${set.questions.length} question(s); the session is complete once each has an answer and complete_session was called:\n${set.questions.map((q, i) => `${i + 1}. ${q.id}: "${q.text}" (${q.answer_type})`).join("\n")}`;
 }
 
