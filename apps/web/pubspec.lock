@@ -205,10 +205,10 @@ packages:
     dependency: "direct dev"
     description:
       name: flutter_agent_lints
-      sha256: b5e596359390f6d9dc8879490818584c4f74c15152dc6671bcd48f8be61c287e
+      sha256: f77411935dc023da8ab89d752135e6cc10b1e56ede0142938ce948f2aabb592b
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.1"
+    version: "1.1.0"
   frontend_server_client:
     dependency: transitive
     description:
