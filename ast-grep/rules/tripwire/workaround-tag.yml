@@ -23,6 +23,7 @@ ignores:
   - "**/*.freezed.dart"
   - "**/*.options.dart"
   - "**/*.mocks.dart"
+  - "**/*.gen.dart"
 rule:
   kind: comment
   pattern: $C

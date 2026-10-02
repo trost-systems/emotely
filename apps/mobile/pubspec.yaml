@@ -75,7 +75,7 @@ melos:
       run: dart analyze --fatal-infos $(melos list --parsable $EMOTELY_SCOPE)
     test:
       description: The suite with the hard 100% coverage gate on hand-written code; packages without a test/ directory (analysis, testing) are not measured.
-      run: melos exec --fail-fast --concurrency=1 --dir-exists=test $EMOTELY_SCOPE -- dart pub global run very_good_cli:very_good test --coverage --min-coverage 100 --exclude-coverage "'**/*.{freezed,g,mocks}.dart'"
+      run: melos exec --fail-fast --concurrency=1 --dir-exists=test $EMOTELY_SCOPE -- dart pub global run very_good_cli:very_good test --coverage --min-coverage 100 --exclude-coverage "'**/*.{freezed,g,gen,mocks}.dart'"
     schema:generate:
       description: Typed Supabase tables for every repository (the supabase_schema package), generated from the running local database (`supabase db start` first, from the repo root).
       # supabase_typegen defaults to importing package:postgrest, which the

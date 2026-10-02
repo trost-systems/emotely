@@ -1,4 +1,5 @@
 import 'package:feature_auth/src/bloc/auth_bloc.dart';
+import 'package:feature_auth/src/gen/assets.gen.dart';
 import 'package:feature_auth/src/l10n/l10n.dart';
 import 'package:feature_auth/src/last_sign_in/last_sign_in_store.dart';
 import 'package:feature_auth/src/providers/provider_sign_in.dart';
@@ -22,22 +23,6 @@ class const ProviderButtons({
   static const googleKey = Key('sign_in_page.google');
   static const appleKey = Key('sign_in_page.apple');
 
-  Widget _button(BuildContext context, IdentityProvider provider, Key key) {
-    final tagged = lastUsed == provider.option;
-    final button = ProviderButton(
-      key: key,
-      provider: provider,
-      lastUsed: tagged,
-      onPressed: enabled
-          ? () => context.read<AuthBloc>().add(
-              AuthEvent.providerSelected(provider),
-            )
-          : null,
-    );
-    // The tag sits over the button's edge, the same way for both.
-    return tagged ? LastUsedTag(child: button) : button;
-  }
-
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -46,10 +31,45 @@ class const ProviderButtons({
       // Android has no native Apple sheet, and the rule that asks for
       // Apple wherever Google is offered is the App Store's.
       if (defaultTargetPlatform == TargetPlatform.iOS)
-        _button(context, IdentityProvider.apple, appleKey),
-      _button(context, IdentityProvider.google, googleKey),
+        _ProviderSlot(
+          provider: IdentityProvider.apple,
+          buttonKey: appleKey,
+          enabled: enabled,
+          lastUsed: lastUsed,
+        ),
+      _ProviderSlot(
+        provider: IdentityProvider.google,
+        buttonKey: googleKey,
+        enabled: enabled,
+        lastUsed: lastUsed,
+      ),
     ],
   );
+}
+
+/// One provider's button, wearing the "Last used" tag when it was the way
+/// in last time: the tag sits over the button's edge, the same way for both.
+class const _ProviderSlot({
+  required final IdentityProvider provider,
+  required final Key buttonKey,
+  required final bool enabled,
+  required final SignInOption? lastUsed,
+}) extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final tagged = lastUsed == provider.option;
+    final button = ProviderButton(
+      key: buttonKey,
+      provider: provider,
+      lastUsed: tagged,
+      onPressed: enabled
+          ? () => context.read<AuthBloc>().add(
+              AuthEvent.providerSelected(provider),
+            )
+          : null,
+    );
+    return tagged ? LastUsedTag(child: button) : button;
+  }
 }
 
 /// One provider's way in, drawn by us so that its title speaks the app's
@@ -58,9 +78,9 @@ class const ProviderButtons({
 /// - **Only the provider's own title**, localized: "Continue with Apple",
 ///   "Continue with Google", in the words Apple and Google use themselves.
 /// - **Only the provider's own logo**, leading: Google's "G" from its
-///   branding assets at its 20 points, never scaled or recoloured; Apple's
+///   branding assets at its 20 points, never scaled or recolored; Apple's
 ///   logo as `sign_in_with_apple` paints it for Apple's own button.
-/// - **White, with Google's grey outline, on either theme.** The "G" must
+/// - **White, with Google's gray outline, on either theme.** The "G" must
 ///   sit on white, and Apple allows black or white with logo and title in
 ///   the other; a black button may not sit on a dark background, a white
 ///   one may. Google's light theme is the one both allow.
@@ -89,16 +109,11 @@ class const ProviderButton({
   static const _gap = 12.0;
   static const _padding = EdgeInsets.symmetric(horizontal: 16, vertical: 8);
 
-  /// The title's colour: black with Apple's black logo, as Apple asks,
+  /// The title's color: black with Apple's black logo, as Apple asks,
   /// and Google's own near-black for its label.
   Color get _ink => switch (provider) {
     IdentityProvider.apple => const Color(0xFF000000),
     IdentityProvider.google => const Color(0xFF1F1F1F),
-  };
-
-  Widget get _logo => switch (provider) {
-    IdentityProvider.apple => _AppleLogo(color: _ink, size: _titleSize),
-    IdentityProvider.google => const _GoogleG(),
   };
 
   @override
@@ -118,7 +133,7 @@ class const ProviderButton({
           shape: const StadiumBorder(),
           side: const BorderSide(color: _outline),
           // The same while disabled: the fade above says so, and neither
-          // provider allows its colours to change.
+          // provider allows its colors to change.
           backgroundColor: _fill,
           disabledBackgroundColor: _fill,
           foregroundColor: _ink,
@@ -130,7 +145,7 @@ class const ProviderButton({
           mainAxisSize: MainAxisSize.min,
           spacing: _gap,
           children: [
-            _logo,
+            _Logo(provider: provider, color: _ink),
             Flexible(
               child: Text(
                 title,
@@ -147,6 +162,22 @@ class const ProviderButton({
   }
 }
 
+/// The provider's logo, leading its title, in the title's [color] where the
+/// provider allows one.
+class const _Logo({
+  required final IdentityProvider provider,
+  required final Color color,
+}) extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => switch (provider) {
+    IdentityProvider.apple => _AppleLogo(
+      color: color,
+      size: ProviderButton._titleSize,
+    ),
+    IdentityProvider.google => const _GoogleG(),
+  };
+}
+
 /// Google's standard "G", cropped pixel for pixel from the icon-only light
 /// button in Google's branding assets (the 20-point "G" of its 40-point
 /// square), 2.0x-4.0x beside it. A bitmap: the "G" is a conic gradient,
@@ -155,9 +186,7 @@ class const _GoogleG() extends StatelessWidget {
   static const size = 20.0;
 
   @override
-  Widget build(BuildContext context) => Image.asset(
-    'assets/google/g.png',
-    package: 'feature_auth',
+  Widget build(BuildContext context) => Assets.google.g.image(
     width: size,
     height: size,
     excludeFromSemantics: true,

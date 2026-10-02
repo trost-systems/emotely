@@ -1,3 +1,4 @@
+import 'package:feature_auth/src/gen/assets.gen.dart';
 import 'package:feature_auth/src/view/provider_buttons.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart'
@@ -11,9 +12,6 @@ import '../sign_in_robot.dart';
 
 /// Apple's button is offered on iOS alone.
 final iOS = TargetPlatformVariant.only(TargetPlatform.iOS);
-
-/// Google's "G", cropped pixel for pixel from its branding assets.
-const _googleG = AssetImage('assets/google/g.png', package: 'feature_auth');
 
 void main() {
   group(ProviderButton, () {
@@ -33,7 +31,9 @@ void main() {
     Finder googleG(Finder button) => within(
       button,
       find.byWidgetPredicate(
-        (widget) => widget is Image && widget.image == _googleG,
+        // Google's "G", cropped pixel for pixel from its branding assets.
+        (widget) =>
+            widget is Image && widget.image == Assets.google.g.provider(),
       ),
     );
 
@@ -45,7 +45,7 @@ void main() {
     );
 
     /// The label's style as painted: the button's text style with its
-    /// colour.
+    /// color.
     TextStyle labelStyle(WidgetTester tester, Finder button) => tester
         .widget<RichText>(within(button, find.byType(RichText)))
         .text
@@ -92,13 +92,13 @@ void main() {
         tester.getCenter(apple).dx,
         lessThan(tester.getTopLeft(find.text(strings.appleButton)).dx),
       );
-      // Logo and title the same black: Apple allows no other colours.
+      // Logo and title the same black: Apple allows no other colors.
       final painter = tester.widget<CustomPaint>(apple).painter!;
       expect((painter as AppleLogoPainter).color, const Color(0xFF000000));
     }, variant: iOS);
 
     for (final themeMode in [ThemeMode.light, ThemeMode.dark]) {
-      testWidgets('is white with Google’s grey outline on a ${themeMode.name} '
+      testWidgets('is white with Google’s gray outline on a ${themeMode.name} '
           'theme', (tester) async {
         final robot = robotFor(tester, themeMode: themeMode);
         await robot.launch();
