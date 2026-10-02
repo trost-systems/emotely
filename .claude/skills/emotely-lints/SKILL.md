@@ -9,8 +9,17 @@ description: How to add, change, enable or silence a rule in emotely's own Dart 
 `flutter_agent_lints` has. A rule lives here only when it needs **types**;
 a check that syntax alone decides is an ast-grep rule in `ast-grep/rules`
 ([ADR 0018](../../../docs/adr/0018-custom-checks-are-engine-rules-first.md)).
-Today it has one rule, `avoid_hardcoded_ui_text`
-([ADR 0020](../../../docs/adr/0020-localization-per-package.md)).
+Today it has two rules: `avoid_hardcoded_ui_text`
+([ADR 0020](../../../docs/adr/0020-localization-per-package.md)) and
+`avoid_returning_widgets` (a function, method or getter in `lib/` that
+returns a widget; overrides, closures and tests pass).
+
+Only production code is held to `avoid_returning_widgets`. A package
+with `flutter_test` or `test` under `dependencies` (not
+`dev_dependencies`) can never ship in the app, so the rule treats its
+`lib/` as test support and skips it, like `test/`: that is how
+`testing`'s `pageUnderTest` and friends stay functions. Never move a test
+framework into a production package's `dependencies` to silence it.
 
 ## Adding a rule
 

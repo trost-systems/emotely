@@ -16,6 +16,9 @@ dependencies:
   # together, and analyzer_testing with them.
   analysis_server_plugin: 0.3.23
   analyzer: 14.4.0
+  # Reads a package's pubspec (avoid_returning_widgets skips test-support
+  # packages); the version the analyzer already resolves, the latest.
+  yaml: 3.1.4
 
 dev_dependencies:
   analyzer_testing: 0.4.2
