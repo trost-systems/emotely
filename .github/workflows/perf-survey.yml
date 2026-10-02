@@ -25,6 +25,10 @@ on:
     # After the emulator budget (04:30), so the two never share a runner's
     # morning.
     - cron: "30 5 * * *"
+  # Proof for #242, reverted right after: a push to this branch runs the
+  # survey ad hoc on the virtual phone.
+  push:
+    branches: [claude/ftl-survey-242]
   workflow_dispatch:
     inputs:
       device:
@@ -74,7 +78,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - id: plan
         env:
-          DEVICE: ${{ inputs.device }}
+          DEVICE: ${{ inputs.device || (github.event_name == 'push' && 'medium-phone') || '' }}
         run: |
           set -euo pipefail
           if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
