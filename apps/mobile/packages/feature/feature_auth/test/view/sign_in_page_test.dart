@@ -527,7 +527,7 @@ void main() {
       await tester.tap(find.byKey(SignInPage.privacyNoticeKey));
       await robot.settle();
 
-      expect(launcher.launched, [privacyNoticeUrl]);
+      expect(launcher.launched, [privacyNoticeUrl(const Locale('de'))]);
     });
 
     testWidgets('renders nothing once signed in; the root swaps the screen', (

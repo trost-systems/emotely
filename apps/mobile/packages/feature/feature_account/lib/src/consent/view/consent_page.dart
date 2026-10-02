@@ -103,7 +103,8 @@ class _AskState() extends State<_Ask> {
         ),
         TextButton(
           key: ConsentView.noticeKey,
-          onPressed: () => unawaited(openPrivacyNotice()),
+          onPressed: () =>
+              unawaited(openPrivacyNotice(Localizations.localeOf(context))),
           child: Text(context.l10n.consentReadNoticeLink),
         ),
         // Full-bleed, like every list row: the whole width is the tap

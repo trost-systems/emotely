@@ -255,7 +255,7 @@ void main() {
 
       await robot.tap(robot.notice);
 
-      expect(launcher.launched, [privacyNoticeUrl]);
+      expect(launcher.launched, [privacyNoticeUrl(const Locale('de'))]);
     });
 
     testWidgets('meets accessibility guidelines with both on and both off', (

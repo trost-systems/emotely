@@ -196,7 +196,8 @@ class const _ChangeLater() extends StatelessWidget {
         ),
         TextButton(
           key: UsageAnalyticsSheet.noticeKey,
-          onPressed: () => unawaited(openPrivacyNotice()),
+          onPressed: () =>
+              unawaited(openPrivacyNotice(Localizations.localeOf(context))),
           child: Text(strings.usageAnalyticsNoticeLink),
         ),
       ],

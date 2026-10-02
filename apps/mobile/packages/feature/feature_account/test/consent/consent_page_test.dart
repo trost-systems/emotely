@@ -196,7 +196,7 @@ void main() {
 
       await robot.tap(robot.notice);
 
-      expect(launcher.launched, [privacyNoticeUrl]);
+      expect(launcher.launched, [privacyNoticeUrl(const Locale('de'))]);
     });
 
     testWidgets('the checkbox row spans the whole width', (tester) async {
