@@ -29,9 +29,15 @@
 #                                           in fastlane/metadata/android; no
 #                                           images, no release notes
 #
-# The metadata lanes are the one way a listing changes (edit the files, merge,
-# then run them): never on a merge, only through the store-listings workflow,
-# which a human starts or approves.
+# The metadata lanes are the one way a listing changes: edit the files, and
+# the store-listings workflow runs them when the change merges. ios metadata
+# skips, with a notice, while no App Store version can take a listing, and
+# app-release runs it again after every iOS build so a skipped listing
+# catches up.
+#
+# Every Play edit commits with ERROR_IF_IN_REVIEW (fastlane/lib/
+# play_review_guard.rb): a commit never cancels and resubmits what Google is
+# reviewing.
 #
 # Inputs, all environment variables (secrets of the `release` environment):
 #   APP_STORE_CONNECT_API_KEY_ID / _ISSUER_ID / _API_KEY_P8   the ASC API key
@@ -44,6 +50,9 @@
 #                                                             build to promote
 #                                                             (beta lanes);
 #                                                             newest if unset
+
+require_relative "lib/play_review_guard"
+require_relative "lib/app_store_listing"
 
 # The rebuild starts at 2.0.0 (ADR 0012): the legacy app got to 1.21.15.
 BUILD_NAME = "2.0.0"
@@ -279,15 +288,22 @@ platform :ios do
     )
   end
 
-  desc "No build: upload the App Store listing (fastlane/metadata) to the version in preparation"
+  desc "No build: upload the App Store listing (fastlane/metadata) to the version in preparation, or skip with a notice"
   lane :metadata do
     api_key = asc_api_key
 
-    # deliver writes to the version in preparation; without one there is
-    # nothing a listing can be written to (the version record is created by
-    # the ASC prep, see the release-app skill).
+    # deliver writes to the version in preparation. Without one, or while
+    # Apple reviews it, the lane skips with a notice and stays green: the
+    # listing goes up the next time it runs (app-release runs it after every
+    # iOS build). The version record comes from the ASC prep, see the
+    # release-app skill.
     version = asc_app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
-    UI.user_error!("App Store Connect has no version in preparation to write the listing to") if version.nil?
+    state = version && (version.app_version_state || version.app_store_state)
+    skip = AppStoreListing.skip_reason(version&.version_string, state)
+    if skip
+      AppStoreListing.notice(skip)
+      next
+    end
 
     # deliver sets phased release and a ratings reset to its defaults (both
     # off) whenever it uploads metadata, deleting either if it exists. A
