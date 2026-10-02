@@ -29,6 +29,9 @@ repository for data) or a navigator call (§ 5). Never an import.
 │                          packages, pinned for pub.dev ones (research the pin)
 ├─ build.yaml              only if it generates code — copy the block from
 │                          another package (see the freezed skill)
+├─ assets/…                only if it ships files; read through flutter_gen's
+│                          generated lib/src/gen/assets.gen.dart, never a
+│                          path in a string (apps/mobile/AGENTS.md, Assets)
 ├─ l10n.yaml               features and design_system (ADR 0020) — copy one
 │                          and rename the ARB files and the class
 ├─ l10n/<short>_en.arb     the English template, every message described

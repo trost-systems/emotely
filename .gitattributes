@@ -11,6 +11,8 @@
 *.g.dart linguist-generated
 *.freezed.dart linguist-generated
 *.mocks.dart linguist-generated
+# flutter_gen's typed asset accessors.
+*.gen.dart linguist-generated
 packages/contract/contract.schema.json linguist-generated
 # flutter gen-l10n's output. The ARB files beside it are the hand-written
 # copy, reviewed in full: never mark *.arb.

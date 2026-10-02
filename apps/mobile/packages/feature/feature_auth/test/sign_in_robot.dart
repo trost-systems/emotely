@@ -32,6 +32,7 @@ class SignInRobot(
   final SignInMode mode = SignInMode.signIn,
   final String? name,
   final Locale locale = const Locale('de'),
+  final ThemeMode themeMode = ThemeMode.light,
 }) {
   final analytics = AnalyticsSpy();
   late final navigator = FakeSignInNavigator(name: name);
@@ -111,7 +112,9 @@ class SignInRobot(
   }
 
   bool get canTapGoogle =>
-      tester.widget<GoogleSignInButton>(googleButton).onPressed != null;
+      tester.widget<ProviderButton>(googleButton).onPressed != null;
+  bool get canTapApple =>
+      tester.widget<ProviderButton>(appleButton).onPressed != null;
   bool get canSendCode =>
       tester.widget<FilledButton>(sendCode).onPressed != null;
   bool get canSubmitCode =>
@@ -146,7 +149,12 @@ class SignInRobot(
             : SignInPage(mode: mode),
       ),
     );
-    return pageUnderTest(root, localizations: localizations, locale: locale);
+    return pageUnderTest(
+      root,
+      localizations: localizations,
+      locale: locale,
+      themeMode: themeMode,
+    );
   }
 
   /// The feature's own strings, as the app composes them.

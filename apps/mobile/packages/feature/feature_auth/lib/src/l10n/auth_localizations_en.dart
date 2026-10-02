@@ -35,7 +35,7 @@ class AuthLocalizationsEn extends AuthLocalizations {
   String get appleButton => 'Continue with Apple';
 
   @override
-  String get googleButton => 'Sign in with Google';
+  String get googleButton => 'Continue with Google';
 
   @override
   String get lastUsedTag => 'Last used';
