@@ -83,7 +83,7 @@ screens:
       arrow, the tab bar still at the bottom. "Your entry" as a heading,
       the summary paragraph in full (the journal cuts it to two lines),
       then question headings each with an answer under it: bullet lists,
-      "N / 10" ratings, emoji, colour names. The body is the same widget a
+      "N / 10" ratings, emoji, color names. The body is the same widget a
       finished session ends on (SessionRoute, SessionCompleted); only the
       app bar and the tab bar tell the two apart. With both cropped away,
       reproduce here: it needs no model rounds.
@@ -111,13 +111,13 @@ screens:
     does: >-
       A journaling session with the deployed agent: one question at a time,
       each answered with the widget its type asks for (text list, long
-      text, rating, emoji, colour), until the agent files the entry and the
+      text, rating, emoji, color), until the agent files the entry and the
       screen shows it. Pushed over the tabs, so there is no tab bar.
     looks: >-
       App bar "Journaling session" with a back arrow and no tab bar.
       "Question N" in small type over the question in large type, then an
       input: numbered text fields, a big text box, a 1-10 slider, emoji or
-      colour slots, and a Submit button. Between rounds a spinner over
+      color slots, and a Submit button. Between rounds a spinner over
       "Thinking…". At the end, "Your entry" with the summary and answers.
     states:
       SessionBloc:
@@ -144,11 +144,11 @@ screens:
       emoji_input.slot.<n>: The n-th emoji slot; opens a picker without keys (tap --text).
       emoji_input.clear: Clear the emoji.
       emoji_input.submit: Submit the emoji.
-      color_input.slot.<n>: The n-th colour slot; opens a colour dialog.
-      color_input.select: Confirm the colour in the dialog.
+      color_input.slot.<n>: The n-th color slot; opens a color dialog.
+      color_input.select: Confirm the color in the dialog.
       color_input.cancel: Close the dialog.
-      color_input.clear: Clear the colours.
-      color_input.submit: Submit the colours.
+      color_input.clear: Clear the colors.
+      color_input.submit: Submit the colors.
       answer_length.note: The note under a long answer about its length.
 
   - route: MoreRoute
@@ -166,7 +166,7 @@ screens:
       App bar "More", the tab bar with More selected. On top a filled card:
       the name's initial in a circle, the name (or "Add your name") in
       large type, the sign-in address under it, and a chevron. Section
-      headings Privacy, About and Account in the primary colour over rows:
+      headings Privacy, About and Account in the primary color over rows:
       "Privacy settings" with "Journal: allowed · Usage analytics: on" (or
       off) under it, "Privacy notice" (an open-in-new icon), "Send
       feedback" with "Opens your mail app. Carries your app version and
