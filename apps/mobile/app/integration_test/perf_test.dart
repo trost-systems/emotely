@@ -1,35 +1,23 @@
-// The performance budget's measurement (#169): the three main paths in
-// profile mode, each traced into a timeline and each counted request by
-// request. Run through the driver, never `flutter test`, and only in
-// profile mode, which is what the numbers mean:
+// The performance budget's frames (#169): the three main paths in profile
+// mode, each traced into a timeline and each counted request by request.
+// Run through the driver, never `flutter test`, and only in profile mode,
+// which is what the numbers mean:
 //
 //   .claude/skills/run-app/scripts/perf.sh run
 //
 // The app is the production graph (`registerApp`) over one fake leaf: the
 // http client, answering in the process from a seeded, made-up journal.
-// Frames then measure the app and not the network, and the request counts
-// are exact. The latency of the real backend is measured apart from this,
-// against the deployed services (`perf.sh latency`).
+// Frames then measure the app and not the network. The paths live in
+// perf/perf_paths.dart, which the request-count widget test drives too: that
+// test gates every pull request on the counts, this run reports them
+// nightly beside the frames. The latency of the real backend is measured
+// apart from this, against the deployed services (`perf.sh latency`).
 
-import 'dart:convert';
-
-import 'package:analytics/analytics.dart';
-import 'package:design_system/design_system.dart';
-import 'package:emotely/app/app.dart';
-import 'package:emotely/app/dependencies.dart';
-import 'package:emotely/app/environment.dart';
-import 'package:feature_journal/feature_journal.dart';
-import 'package:feature_onboarding/feature_onboarding.dart';
-import 'package:feature_session/feature_session.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_it/get_it.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:material_ui/material_ui.dart';
-import 'package:posthog_flutter/posthog_flutter.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:testing/testing.dart';
 
 import 'perf/fake_backend.dart';
+import 'perf/perf_paths.dart';
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized()
@@ -41,149 +29,33 @@ void main() {
     tester,
   ) async {
     final backend = FakeBackend.seeded();
-    final paths = PerfPaths(tester, binding, backend);
+    final paths = PerfPaths(tester, backend);
     await paths.compose();
+
+    // Each path under a timeline trace reported by its name. Only the
+    // streams the frame summary reads: frames (Dart), the engine's build
+    // and raster (Embedder) and garbage collection (GC). Every stream
+    // overflows the ring buffer within a scroll, and an endless buffer
+    // runs the app out of memory.
+    Future<void> Function(Future<void> Function()) traced(String name) =>
+        (path) => binding.traceAction(
+          path,
+          streams: const ['Dart', 'Embedder', 'GC'],
+          reportKey: name,
+        );
 
     // Each path repeats its gesture until it draws several hundred frames,
     // even on the slow nightly emulator: "under 1% of frames" needs that
     // many to allow any at all, and a p90 over a few dozen frames moves
     // with every run.
-    await paths.measure('journal_scroll', paths.openJournalAndScroll);
-    await paths.measure('entry_open', paths.openEntries);
-    await paths.measure('session_round', paths.answerRounds);
+    for (final (name, path) in [
+      ('journal_scroll', paths.openJournalAndScroll),
+      ('entry_open', paths.openEntries),
+      ('session_round', paths.answerRounds),
+    ]) {
+      await paths.record(name, path, around: traced(name));
+    }
 
     binding.reportData!['requests'] = paths.requests;
   });
-}
-
-/// The three paths, and what each asked of the backend.
-class PerfPaths(
-  final WidgetTester tester,
-  final IntegrationTestWidgetsFlutterBinding binding,
-  final FakeBackend backend,
-) {
-  /// How often the journal is flung to its end and back.
-  static const scrollPasses = 1;
-
-  /// How many times an entry is opened and closed again.
-  static const entryOpenings = 12;
-
-  /// How many questions the session answers.
-  static const sessionRounds = 16;
-
-  /// Each path's requests as `service METHOD /path`, in order.
-  final requests = <String, List<String>>{};
-
-  /// The app as `main` composes it, over [backend]: signed in, and past
-  /// the first-launch usage-analytics sheet.
-  late EmotelyApp app;
-
-  /// Composes [app] as `main` does, signed in, over [backend].
-  Future<void> compose() async {
-    final supabase = SupabaseClient(
-      FakeBackend.supabaseUrl,
-      SupabaseStub.publishableKey,
-      httpClient: backend,
-      authOptions: const AuthClientOptions(
-        autoRefreshToken: false,
-        authFlowType: AuthFlowType.implicit,
-      ),
-    );
-    // A restored sign-in, as on every launch after the first.
-    await supabase.auth.recoverSession(jsonEncode(SupabaseStub.session()));
-    registerApp(
-      GetIt.I,
-      agentHttpClient: backend,
-      configHttpClient: backend,
-      supabase: supabase,
-      posthog: Posthog(),
-      // Without a POSTHOG_KEY define the gate sets nothing up, and
-      // analytics stay off as in a build without the key.
-      posthogConfig: PostHogConfig(posthogKey)..host = posthogHost,
-      appVersion: '1.0.0',
-      build: testBuildInfo,
-      agentUrl: FakeBackend.agentUrl,
-      configUrl: FakeBackend.configUrl,
-      passwordAccounts: const {},
-      google: googleClients,
-    );
-    // What `main` reads before the first frame. Usage analytics are
-    // allowed, as a tester would on the first-launch sheet, so the sheet
-    // never covers the journal and the analytics calls run as they do for
-    // most users (#204).
-    final gate = GetIt.I<PostHogGate>();
-    await gate.restore(account: supabase.auth.currentUser?.id);
-    await gate.allow();
-    final onboarding = GetIt.I<OnboardingStore>();
-    await onboarding.restore();
-    app = EmotelyApp(
-      screenViews: gate.screenObserver(),
-      onboarding: onboarding,
-    );
-  }
-
-  /// Runs [path] under a timeline trace reported as [name], and records the
-  /// requests it made.
-  Future<void> measure(String name, Future<void> Function() path) async {
-    final before = backend.requests.length;
-    // Only the streams the frame summary reads: frames (Dart), the engine's
-    // build and raster (Embedder) and garbage collection (GC). Every stream
-    // overflows the ring buffer within a scroll, and an endless buffer runs
-    // the app out of memory.
-    await binding.traceAction(
-      path,
-      streams: const ['Dart', 'Embedder', 'GC'],
-      reportKey: name,
-    );
-    requests[name] = backend.requests.sublist(before);
-  }
-
-  /// Launches onto the journal, then flings through all of it and back,
-  /// [scrollPasses] times.
-  Future<void> openJournalAndScroll() async {
-    await tester.pumpWidget(app);
-    await tester.pumpAndSettle();
-    expect(find.byKey(JournalView.entryKey(backend.firstId)), findsOneWidget);
-    final list = find.byType(Scrollable).last;
-    for (var pass = 0; pass < scrollPasses; pass++) {
-      for (final direction in [-1, 1]) {
-        for (var fling = 0; fling < 6; fling++) {
-          await tester.fling(list, Offset(0, direction * 600), 3000);
-          await tester.pumpAndSettle();
-        }
-      }
-    }
-  }
-
-  /// Opens the newest entry, waits until it reads back and returns to the
-  /// journal, [entryOpenings] times.
-  Future<void> openEntries() async {
-    for (var opening = 0; opening < entryOpenings; opening++) {
-      await tester.tap(find.byKey(JournalView.entryKey(backend.firstId)));
-      await tester.pumpAndSettle();
-      expect(find.byKey(EntryView.summaryKey), findsOneWidget);
-      await tester.pageBack();
-      await tester.pumpAndSettle();
-    }
-  }
-
-  /// Starts a session and answers [sessionRounds] questions, each round
-  /// ending on the agent's next one.
-  Future<void> answerRounds() async {
-    await tester.tap(find.byKey(JournalView.startKey));
-    await tester.pumpAndSettle();
-    for (var round = 1; round <= sessionRounds; round++) {
-      expect(find.text('How would you rate made-up day $round?'), findsOne);
-      await tapSliderAt(tester, find.byKey(RatingInput.sliderKey), 7);
-      // Under benchmarkLive a pump draws nothing; the submit button is
-      // enabled only once the frame after the tap has been built.
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(RatingInput.submitKey));
-      await tester.pumpAndSettle();
-    }
-    expect(
-      find.text('How would you rate made-up day ${sessionRounds + 1}?'),
-      findsOne,
-    );
-  }
 }
