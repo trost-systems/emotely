@@ -94,10 +94,15 @@ melos:
       # CI runner's four cores (GitHub's ubuntu-latest for a public
       # repository) and stay light beside other sessions on a laptop. Every
       # package writes only its own test/.test_optimizer.dart and
-      # coverage/lcov.info, and very_good passes --no-pub, so nothing is
-      # shared. --group-logs prints each package's output in one block once
-      # all have finished, the failed ones last, instead of interleaving it.
-      run: melos exec --fail-fast --concurrency=4 --group-logs --dir-exists=test $EMOTELY_SCOPE -- dart pub global run very_good_cli:very_good test --coverage --min-coverage 100 --exclude-coverage "'**/*.{freezed,g,mocks}.dart'"
+      # coverage/lcov.info, and very_good passes --no-pub. The one shared
+      # thing was mason's cache (~/.mason-cache), where very_good compiles
+      # its test optimizer on first use: parallel first uses race there and
+      # fail with a PathNotFoundException. MASON_CACHE gives each package
+      # its own, in the workspace's .dart_tool, so nothing is shared, not
+      # even between checkouts. --group-logs prints each package's output
+      # in one block once all have finished, the failed ones last, instead
+      # of interleaving it.
+      run: melos exec --fail-fast --concurrency=4 --group-logs --dir-exists=test $EMOTELY_SCOPE -- MASON_CACHE='$MELOS_ROOT_PATH/.dart_tool/mason-cache/$MELOS_PACKAGE_NAME' dart pub global run very_good_cli:very_good test --coverage --min-coverage 100 --exclude-coverage "'**/*.{freezed,g,mocks}.dart'"
     schema:generate:
       description: Typed Supabase tables for every repository (the supabase_schema package), generated from the running local database (`supabase db start` first, from the repo root).
       # supabase_typegen defaults to importing package:postgrest, which the
