@@ -1,13 +1,10 @@
-import 'package:design_system/design_system.dart';
-import 'package:emotely/app/app.dart';
 import 'package:feature_journal/feature_journal.dart';
-import 'package:feature_session/feature_session.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:testing/testing.dart';
 
 import '../perf/fake_backend.dart';
+import '../perf/perf_paths.dart';
 import 'frame_watch.dart';
 
 /// The screens of the feature map (`.claude/skills/run-app/references/
@@ -33,17 +30,17 @@ const surveyScreens = [
 /// walk reaches every screen the way the map says an agent does.
 Finder _key(String name) => find.byKey(Key(name));
 
-/// The survey's walk over [app], composed over [backend]: the launch, then
-/// each screen in [surveyScreens] that [run] is asked for, each under a
-/// frame watch and with the requests it made.
-class SurveyWalk(
-  final WidgetTester tester,
-  final FakeBackend backend,
-  final EmotelyApp app,
-) {
+/// The survey's walk over the app [paths] composed: the launch, then each
+/// screen in [surveyScreens] that [run] is asked for, each under a frame
+/// watch and with the requests it made. The entry and the session walk the
+/// performance budget's own paths (`perf/perf_paths.dart`), so a phone's
+/// numbers for them compare with the nightly emulator's.
+class SurveyWalk(final WidgetTester tester, final PerfPaths paths) {
   /// How often each walk repeats its gesture, so that every screen draws
   /// enough frames for a percentile to mean something.
   static const repeats = 6;
+
+  FakeBackend get backend => paths.backend;
 
   /// Walks the app and reports what it measured, as `survey.json` holds it:
   /// the launch, the display's refresh rate and each screen's frames and
@@ -75,7 +72,7 @@ class SurveyWalk(
 
   late final Map<String, Future<void> Function()> _walks = {
     'journal': _journal,
-    'entry': _entry,
+    'entry': paths.openEntries,
     'session': _session,
     'more': _more,
     'profile': _profile,
@@ -91,7 +88,7 @@ class SurveyWalk(
   /// the app's first widget to its first useful frame, inside the process.
   Future<int> _launch() async {
     final clock = Stopwatch()..start();
-    await tester.pumpWidget(app);
+    await tester.pumpWidget(paths.app);
     final newest = find.byKey(JournalView.entryKey(backend.firstId));
     while (newest.evaluate().isEmpty) {
       if (clock.elapsed > const Duration(seconds: 30)) {
@@ -104,7 +101,8 @@ class SurveyWalk(
     return startup;
   }
 
-  /// The journal: flung to its end and back.
+  /// The journal: flung to its end and back. The budget's journal path
+  /// launches the app as well; here the launch is measured on its own.
   Future<void> _journal() async {
     final list = find.byType(Scrollable).last;
     for (final direction in [-1, 1]) {
@@ -115,25 +113,9 @@ class SurveyWalk(
     }
   }
 
-  /// An entry: the newest opened and closed again.
-  Future<void> _entry() async {
-    for (var opening = 0; opening < repeats; opening++) {
-      await _tap(find.byKey(JournalView.entryKey(backend.firstId)));
-      expect(find.byKey(EntryView.summaryKey), findsOneWidget);
-      await _back();
-    }
-  }
-
-  /// A session: started, a round answered per repeat, then left.
+  /// A session: the budget's rounds, then left.
   Future<void> _session() async {
-    await _tap(find.byKey(JournalView.startKey));
-    for (var round = 0; round < repeats * 2; round++) {
-      await tapSliderAt(tester, find.byKey(RatingInput.sliderKey), 7);
-      // Under benchmarkLive a pump draws nothing; the submit button is
-      // enabled only once the frame after the tap has been built.
-      await tester.pumpAndSettle();
-      await _tap(find.byKey(RatingInput.submitKey));
-    }
+    await paths.answerRounds();
     await _back();
   }
 

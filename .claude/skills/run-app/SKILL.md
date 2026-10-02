@@ -33,7 +33,7 @@ paths: the journal scroll, opening an entry and a session round.
   `apps/mobile/app/test/perf/request_budget_test.dart`, in seconds.
 - **Nightly:** frames at 60 fps and the deployed backend's latency, on
   emulators. It never blocks; whatever fails files the `performance` issue.
-- **On a phone:** frames come from #256's device-farm survey.
+- **On a phone:** frames come from the performance survey below.
 
 `scripts/perf.sh run` is the nightly's profile run, for measuring frames
 locally on a fresh Android emulator. Measuring, reading a failure or

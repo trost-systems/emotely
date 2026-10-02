@@ -3,8 +3,10 @@
 # scripts/survey.sh` reads it; the scheduled workflow
 # (.github/workflows/perf-survey.yml) runs it on Firebase Test Lab; the
 # walk itself is integration_test/survey_test.dart. The performance budget
-# (perf_budget.yaml, #169) is a separate gate on an emulator; this is a
-# history of real phones, to pull up when making a screen faster.
+# (perf_budget.yaml, #169) holds three paths' request counts on every pull
+# request and runs them on emulators nightly; this is every screen's frames
+# on real phones, and their history, to pull up when making a screen
+# faster.
 #
 # Changing a number here is a reviewed decision: say why in the pull
 # request.

@@ -28,8 +28,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'environment.dart';
-import 'perf/compose.dart';
 import 'perf/fake_backend.dart';
+import 'perf/perf_paths.dart';
 import 'survey/device_directory.dart';
 import 'survey/survey_walk.dart';
 
@@ -42,9 +42,11 @@ void main() {
   testWidgets('the survey walks every screen of the feature map', (
     tester,
   ) async {
-    final backend = FakeBackend.seeded();
-    final app = await composeApp(backend);
-    final survey = await SurveyWalk(tester, backend, app).run({
+    // The budget's composition and paths (perf/perf_paths.dart), over its
+    // fake backend.
+    final paths = PerfPaths(tester, FakeBackend.seeded());
+    await paths.compose();
+    final survey = await SurveyWalk(tester, paths).run({
       for (final name in surveyOnly.split(','))
         if (name.trim().isNotEmpty) name.trim(),
     });

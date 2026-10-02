@@ -6,8 +6,10 @@ name: Performance survey
 # one issue per screen and metric, by severity. The walk, the devices and
 # the severity rules: apps/mobile/app/integration_test/survey_test.dart and
 # survey.yaml; the reference: .claude/skills/run-app/references/
-# performance-survey.md. The emulator budget that gates pull requests is a
-# separate workflow (nightly-perf.yml, #169).
+# performance-survey.md. The performance budget (#169) is the rest: every
+# pull request holds its request counts (a widget test in CI), and
+# nightly-perf.yml runs its three paths on emulators (frames, latency and
+# request counts, reported). Frames on real phones are this workflow's.
 #
 # Cost: none. The Firebase project emotely-ci is on the Spark plan with no
 # billing account: 5 physical and 10 virtual test runs a day, shared by

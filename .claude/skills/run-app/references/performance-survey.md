@@ -2,10 +2,13 @@
 
 `scripts/survey.sh` walks every screen of the feature map in profile mode on
 real phones in Firebase Test Lab, keeps each run's numbers in a history, and
-files findings as one issue per screen and metric, by severity (#242). The
-performance budget (`perf.sh`, [performance.md](performance.md)) is the
-emulator gate on three paths; this is the survey of the whole app on the
-phones users have, to pull up when making a screen faster.
+files findings as one issue per screen and metric, by severity (#242). It
+is the third of the three things in [performance.md](performance.md)'s
+"What runs where": every pull request holds the budget's request counts
+(a widget test), the nightly runs the budget's three paths on emulators
+(frames, latency and request counts, reported), and this measures frames
+on the phones users have, every screen, to pull up when making a screen
+faster.
 
 ```bash
 S=.claude/skills/run-app/scripts/survey.sh
