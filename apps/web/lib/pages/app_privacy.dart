@@ -38,7 +38,7 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         'This notice covers the emotely mobile app (listed on Google Play as '
         '"Reflect Therapy AI: emotely") for iOS and Android. The web site at '
         'getemotely.com and its waitlist have a separate notice. Last '
-        'updated 30 September 2026.',
+        'updated 2 October 2026.',
       ),
     ]),
 
