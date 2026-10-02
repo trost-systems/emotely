@@ -24,9 +24,9 @@ only on a fork PR for a missing key, that is expected and not yours to fix.
 
 ## `app` — `apps/mobile` (the Flutter workspace)
 
-The job is a matrix of three runners: `app (checks)` runs `melos run checks`
-(every gate but `test`), and `app (tests 1)` / `app (tests 2)` each run
-`melos run test` for every other package in scope; the step before it names
+The job is a matrix of four runners: `app (checks)` runs `melos run checks`
+(every gate but `test`), and `app (tests 1)` to `app (tests 3)` each run
+`melos run test` for every third package in scope; the step before it names
 the shard's packages. Read the failing part's log, then the package name, and
 reproduce from that package's directory. `codegen:check` is one build over
 the whole workspace and names each stale file as `package|path`. All of them
