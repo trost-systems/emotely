@@ -75,15 +75,20 @@ class const _Step(final OnboardingShowing state, {required final String? from})
     return PopScope(
       canPop: !state.canGoBack,
       onPopInvokedWithResult: (didPop, _) => didPop ? null : back(),
-      child: _view(context, bloc, back: back),
+      child: _StepView(state, from: from, back: back),
     );
   }
+}
 
-  Widget _view(
-    BuildContext context,
-    OnboardingBloc bloc, {
-    required VoidCallback back,
-  }) {
+/// The view of the step [state] is on.
+class const _StepView(
+  final OnboardingShowing state, {
+  required final String? from,
+  required final VoidCallback back,
+}) extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final bloc = context.read<OnboardingBloc>();
     final id = state.step.id;
     void forward() => bloc.add(OnboardingEvent.continued(id));
     final counted = state.step.showsProgress;

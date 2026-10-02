@@ -8,3 +8,5 @@ plugins:
     diagnostics:
       # A user-facing literal in any package's lib/ (ADR 0020).
       avoid_hardcoded_ui_text: error
+      # A function that returns a widget, where a widget class belongs.
+      avoid_returning_widgets: error
