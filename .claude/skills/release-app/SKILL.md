@@ -129,7 +129,8 @@ replacement disclaimed the app it was supposed to cover.
 
 - **Play Console → Policy → App content → Privacy policy.** Play keeps
   **one URL for the whole app**, not one per language, and no API sets it:
-  paste the English URL, save, and submit. Google fetches it, so it must be
+  the English URL, `privacy_policy_url` in `fastlane/console/play.yaml`,
+  set by the store-consoles skill. Google fetches it, so it must be
   reachable without signing in and must not redirect through anything that
   asks for consent.
 - **App Store Connect → App Privacy → Privacy Policy URL.** One **per
@@ -262,24 +263,14 @@ created on the hosted project through the Auth admin API on 2026-09-13.
 
 ### What the consoles say
 
-The Play Console holds text saved on 2026-09-13 for the build that opened
-on sign-in. **Replace it with the text below in the first store submission
-of the onboarding build (#204)**: that build opens on the usage-analytics
-question and Welcome, not on sign-in, and asks a reviewer account without a
-name for one, once.
-
-**Play Console → App content → App access → Sign-in details.** Entry name
-"Reviewer demo account", user name `google-play-review@getemotely.com`, the
-password above, and these instructions (the field allows 500 characters;
-this is 494):
-
-> Open the app, answer the analytics question either way, tap I have an
-> account, enter the user name above as the email and tap Send me a code.
-> This reviewer account gets a password step instead of a code: enter the
-> password above. If asked for a name, type any. The first session asks
-> consent to send the chat to an AI provider: tick the box, tap Start
-> journaling. Delete: More > Delete account > Delete account > Delete. It
-> really deletes the account; email peter@petertrost.com to recreate it.
+**Play Console → App content → App access → Sign-in details** has no API:
+its entry and instructions live in `apps/mobile/app/fastlane/console/`
+(`play.yaml`, `play_app_access_instructions.txt`), and the store-consoles
+skill puts them into the console. The console still holds text saved on
+2026-09-13 for the build that opened on sign-in; **replace it with the
+file's text in the first store submission of the onboarding build
+(#204)**, which opens on the usage-analytics question and Welcome and asks
+a reviewer account without a name for one, once.
 
 **App Store Connect → version → App Review Information** is no longer a
 console step: the repository holds it and the `ios metadata` lane sets it
@@ -382,10 +373,11 @@ aborted) and copy the text over by hand.
 `play-data-safety` workflow when it changes on `main`; see
 [references/data-declarations.md](references/data-declarations.md).
 
-**Still console steps**, which no lane touches: App Privacy
-([references/data-declarations.md](references/data-declarations.md)), Play's
-privacy policy URL, screenshots and graphics (#266), and Play's sign-in
-details ([What the consoles say](#what-the-consoles-say)).
+**Console steps**, which no lane can touch: Apple's App Privacy, Play's
+sign-in details, the IARC content rating, Play's category, privacy policy
+URL, contact details and countries. Their answers are in
+`apps/mobile/app/fastlane/console/`, and the store-consoles skill is how an
+agent puts them into the consoles. Screenshots and graphics: #266.
 
 ## Local tooling
 
