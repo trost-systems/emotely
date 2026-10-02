@@ -29,7 +29,8 @@ void main() {
     test('are all declared to iOS', () {
       // iOS hands Flutter only the languages in CFBundleLocalizations: a
       // locale missing there never reaches the app on an iPhone, however
-      // complete its ARB files are.
+      // complete its ARB files are. It is also the bundle's list of
+      // localizations, the one iOS offers as emotely's own language.
       final plist = File('ios/Runner/Info.plist').readAsStringSync();
       final declared = RegExp(
         r'<key>CFBundleLocalizations</key>\s*<array>(.*?)</array>',
@@ -40,6 +41,29 @@ void main() {
       expect(
         RegExp('<string>([^<]+)</string>')
             .allMatches(declared!)
+            .map((match) => match.group(1)),
+        unorderedEquals(supportedLocales.map((locale) => locale.languageCode)),
+      );
+    });
+
+    test('are all offered by Android as a per-app language', () {
+      // Android 13+ lists an app under Settings → Apps → Language only with
+      // an android:localeConfig; without one the app follows the system
+      // language alone, and a German speaker on an English phone cannot
+      // pick German for emotely.
+      final manifest = File('android/app/src/main/AndroidManifest.xml')
+          .readAsStringSync();
+      expect(
+        manifest,
+        contains('android:localeConfig="@xml/locale_config"'),
+        reason: 'the manifest does not point Android at locale_config.xml',
+      );
+
+      final config = File('android/app/src/main/res/xml/locale_config.xml')
+          .readAsStringSync();
+      expect(
+        RegExp('<locale android:name="([^"]+)"')
+            .allMatches(config)
             .map((match) => match.group(1)),
         unorderedEquals(supportedLocales.map((locale) => locale.languageCode)),
       );
