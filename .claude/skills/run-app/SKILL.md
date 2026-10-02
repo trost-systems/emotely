@@ -26,11 +26,18 @@ marionette. A new route needs its entry in the same pull request; CI's
 
 ## Performance budget
 
-`scripts/perf.sh run` measures the journal scroll, opening an entry and a
-session round in profile mode on a fresh Android emulator and judges them
-against `apps/mobile/app/integration_test/perf_budget.yaml`: frames at 60
-fps, request counts, and with `--latency` the deployed backend. The nightly
-runs the same. Measuring, reading a failure or changing the budget — read
+The budget is `apps/mobile/app/integration_test/perf_budget.yaml`, over three
+paths: the journal scroll, opening an entry and a session round.
+
+- **On every app pull request:** the request counts, through the widget test
+  `apps/mobile/app/test/perf/request_budget_test.dart`, in seconds.
+- **Nightly:** frames at 60 fps and the deployed backend's latency, on
+  emulators. It never blocks; whatever fails files the `performance` issue.
+- **On a phone:** frames come from #256's device-farm survey.
+
+`scripts/perf.sh run` is the nightly's profile run, for measuring frames
+locally on a fresh Android emulator. Measuring, reading a failure or
+changing the budget — read
 [references/performance.md](references/performance.md) first.
 
 ## Build-time configuration

@@ -1,8 +1,11 @@
 # The performance budget (#169): what the three main paths in
-# perf_test.dart may cost, and the measurements the limits come from.
-# `.claude/skills/run-app/scripts/perf.sh gate` judges a run against it; the
-# nightly workflow (.github/workflows/nightly-perf.yml) runs it on
-# `github-emulator`, and `perf.sh run` runs it here on `local-emulator`.
+# perf/perf_paths.dart may cost, and the measurements the limits come from.
+# Every app pull request holds the paths to `requests:` below through the
+# widget test test/perf/request_budget_test.dart, which reads this file.
+# `.claude/skills/run-app/scripts/perf.sh gate` judges a profile run against
+# all of it; the nightly workflow (.github/workflows/nightly-perf.yml) runs
+# it on `github-emulator`, and `perf.sh run` runs it here on
+# `local-emulator`.
 #
 # Changing a number here is a reviewed decision, like any other code: say
 # in the pull request what got slower or faster and why.
@@ -24,9 +27,10 @@ frames:
   min_frames: 100
 
 # Requests per path and service, against the in-process fake backend, so the
-# counts are exact. Any increase fails the run; a decrease passes and says
-# to lower the number here. `config` is the agent's /api/config, asked once
-# per launch.
+# counts are exact. The pull-request widget test wants them exactly: an
+# increase fails, and so does a decrease, until the number here is lowered
+# in the same pull request. (The profile run fails an increase and reports a
+# decrease.) `config` is the agent's /api/config, asked once per launch.
 requests:
   # Launch signed in onto the journal of 300 made-up entries, then fling to
   # its end and back.
@@ -40,7 +44,8 @@ requests:
   session_round:
     # Consent check, clear + create the session, 16 saved rounds, and the
     # profile before each of the 17 agent rounds: the app's UserContextSource
-    # reads the name afresh for every round's user_context (#210).
+    # reads the name afresh for every round's user_context (#210). #264
+    # reads it once per session, which brings this down to 20.
     supabase: 36
     agent: 17 # the first round, then one per answer
 
