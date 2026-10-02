@@ -1,4 +1,4 @@
-/// The journal feature: home. The entries so far, the way into the next
+/// The journal feature: home. All the entries so far, the way into the next
 /// session (behind the consent gate), and each entry read back. The app
 /// registers it with `registerJournal` and implements `JournalNavigator` —
 /// the session, the consent screen, the account screen and signing out all
