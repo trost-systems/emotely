@@ -89,20 +89,13 @@ melos:
       run: dart analyze --fatal-infos $(melos list --parsable $EMOTELY_SCOPE)
     test:
       description: The suite with the hard 100% coverage gate on hand-written code; packages without a test/ directory (analysis, testing) are not measured.
-      # Four packages at a time: each run is one optimized test bundle,
-      # mostly a single-threaded compile and tester start, so four use the
-      # CI runner's four cores (GitHub's ubuntu-latest for a public
-      # repository) and stay light beside other sessions on a laptop. Every
-      # package writes only its own test/.test_optimizer.dart and
-      # coverage/lcov.info, and very_good passes --no-pub. The one shared
-      # thing was mason's cache (~/.mason-cache), where very_good compiles
-      # its test optimizer on first use: parallel first uses race there and
-      # fail with a PathNotFoundException. MASON_CACHE gives each package
-      # its own, in the workspace's .dart_tool, so nothing is shared, not
-      # even between checkouts. --group-logs prints each package's output
-      # in one block once all have finished, the failed ones last, instead
-      # of interleaving it.
-      run: melos exec --fail-fast --concurrency=4 --group-logs --dir-exists=test $EMOTELY_SCOPE -- MASON_CACHE='$MELOS_ROOT_PATH/.dart_tool/mason-cache/$MELOS_PACKAGE_NAME' dart pub global run very_good_cli:very_good test --coverage --min-coverage 100 --exclude-coverage "'**/*.{freezed,g,mocks}.dart'"
+      # One package at a time, measured (#272): the tests are CPU-bound, and
+      # four at a time on CI's 4-core runner took 3m27s against 4m08s. CI
+      # spreads the packages over runners instead. Parallel runs also race
+      # on mason's shared cache (~/.mason-cache), where very_good compiles
+      # its test optimizer on first use (a PathNotFoundException in CI); a
+      # cache per package avoids it but compiles it again in each, ~9 s.
+      run: melos exec --fail-fast --concurrency=1 --dir-exists=test $EMOTELY_SCOPE -- dart pub global run very_good_cli:very_good test --coverage --min-coverage 100 --exclude-coverage "'**/*.{freezed,g,mocks}.dart'"
     schema:generate:
       description: Typed Supabase tables for every repository (the supabase_schema package), generated from the running local database (`supabase db start` first, from the repo root).
       # supabase_typegen defaults to importing package:postgrest, which the
@@ -119,6 +112,9 @@ melos:
       # again in each package, and there the bare glob would expand to the
       # app's own lib/l10n files.
       run: melos exec --fail-fast --dir-exists=lib $EMOTELY_SCOPE -- dart run cognitive_complexity --threshold 10 --fail-threshold 15 --max-function-lines 60 --max-file-lines 400 --exclude "'**/l10n/*_localizations*.dart'" '$MELOS_PACKAGE_PATH/lib'
+    checks:
+      description: Every gate but the tests, in the order CI runs them.
+      run: melos run codegen:check && melos run l10n:check && melos run format && melos run analyze && melos run complexity
     ci:
-      description: Everything the CI app job runs, in its order.
-      run: melos run codegen:check && melos run l10n:check && melos run format && melos run analyze && melos run complexity && melos run test
+      description: Everything the CI app job runs. CI runs the checks and the tests on separate runners, the tests split between them by package.
+      run: melos run checks && melos run test
