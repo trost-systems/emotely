@@ -56,7 +56,7 @@ dependency_overrides:
 melos:
   scripts:
     codegen:check:
-      description: Committed generated code (freezed, json_serializable, go_router_builder, mockito) must match its source, in every package.
+      description: Committed generated code (freezed, json_serializable, go_router_builder, mockito, flutter_gen) must match its source, in every package.
       # One build over the whole workspace (build_runner's --workspace), not
       # one per package: each build spends ~26 s on CI compiling the same
       # builders before it writes its 1-9 files, so eleven of them took
@@ -65,11 +65,23 @@ melos:
       # file in any package. It is skipped only when nothing in scope runs
       # build_runner; otherwise it checks every package, which costs no more
       # than checking one.
+      # flutter_gen_runner writes its files itself, past build_runner, so
+      # --only-check neither sees nor stops it: a stale assets.gen.dart is
+      # silently rewritten and the build passes. The working tree before
+      # and after the build is compared instead, and any file the build
+      # changed fails the check.
       run: |
-        if [ -n "$(melos list --parsable --depends-on=build_runner $EMOTELY_SCOPE)" ]; then
-          dart run build_runner build --workspace --only-check
-        else
+        if [ -z "$(melos list --parsable --depends-on=build_runner $EMOTELY_SCOPE)" ]; then
           echo "No package in scope runs build_runner."
+          exit 0
+        fi
+        snapshot() { { git status --porcelain --untracked-files=all -- .; git diff --binary -- .; } | git hash-object --stdin; }
+        before=$(snapshot)
+        dart run build_runner build --workspace --only-check
+        if [ "$(snapshot)" != "$before" ]; then
+          echo "The build rewrote files it should only have checked; commit what it wrote:"
+          git status --short -- .
+          exit 1
         fi
     l10n:check:
       description: Committed gen-l10n output must match the ARB files, and every locale must carry every message (ADR 0020).
