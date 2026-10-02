@@ -31,6 +31,7 @@ on:
       # A listing ships through store-listings.yml, not with a build.
       - '!apps/mobile/app/fastlane/metadata/**'
       - '!apps/mobile/app/fastlane/app_review/**'
+      - '!apps/mobile/app/fastlane/data_safety.csv'
       # The Dart contract is pinned against the emitted JSON Schema.
       - 'packages/contract/contract.schema.json'
       - '.github/workflows/app-release.yml'

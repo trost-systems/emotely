@@ -28,6 +28,9 @@
 #   bundle exec fastlane android metadata   no build: upload the Play listing
 #                                           in fastlane/metadata/android; no
 #                                           images, no release notes
+#   bundle exec fastlane android data_safety  no build: write Play's Data
+#                                           safety declaration from
+#                                           fastlane/data_safety.csv
 #
 # The metadata lanes are the one way a listing changes: edit the files, and
 # the store-listings workflow runs them when the change merges. ios metadata
@@ -57,6 +60,7 @@
 require_relative "lib/play_review_guard"
 require_relative "lib/app_store_listing"
 require_relative "lib/app_review_information"
+require_relative "lib/play_data_safety"
 
 # The rebuild starts at 2.0.0 (ADR 0012): the legacy app got to 1.21.15.
 BUILD_NAME = "2.0.0"
@@ -99,6 +103,10 @@ METADATA_DIR = File.join(FastlaneCore::FastlaneFolder.path, "metadata")
 # fastlane/lib/app_review_information.rb). Outside metadata/ because deliver
 # would read a review_information/ folder there itself.
 APP_REVIEW_DIR = File.join(FastlaneCore::FastlaneFolder.path, "app_review")
+
+# Play's Data safety declaration, as the Play Console exports it: the source
+# of truth for that form (see fastlane/lib/play_data_safety.rb).
+DATA_SAFETY_CSV = File.join(FastlaneCore::FastlaneFolder.path, "data_safety.csv")
 
 def flutter(*args)
   require "shellwords"
@@ -442,5 +450,23 @@ platform :android do
         metadata_path: File.join(METADATA_DIR, "android")
       )
     )
+  end
+
+  desc "No build: write the Data safety declaration (fastlane/data_safety.csv) to Play"
+  lane :data_safety do
+    skip = PlayDataSafety.skip_reason(DATA_SAFETY_CSV)
+    if skip
+      AppStoreListing.notice(skip, title: "Play Data safety not uploaded")
+      next
+    end
+
+    # supply's client only for its authorisation; the call itself is not an
+    # edit, so nothing here commits one.
+    play = Supply::Client.new(
+      service_account_json: StringIO.new(ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON")),
+      params: { timeout: 300 }
+    )
+    PlayDataSafety.upload(play.client, PACKAGE_NAME, DATA_SAFETY_CSV)
+    UI.success("Data safety declaration written from #{File.basename(DATA_SAFETY_CSV)}")
   end
 end

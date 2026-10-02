@@ -169,9 +169,11 @@ once no distributed build collects it without asking.
   step, no mailbox to watch, no service-role key. An address with no account
   is answered exactly like one that has, so the form cannot be used to find
   out who has an emotely account.
-- **Declaring it is a human step in the Play Console** and the only part of
-  this that an agent cannot do. **Play Console → Policy → App content →
-  Data safety → Data deletion**, and three answers change together:
+- **Declaring it is part of Play's Data safety declaration**, which lives in
+  `fastlane/data_safety.csv` once exported (see
+  [references/data-declarations.md](references/data-declarations.md)); until
+  then it is the form. **Play Console → Policy → App content → Data safety
+  → Data deletion**, and three answers change together:
   1. **"My app provides a way for users to request that their account be
      deleted"** → **yes**.
   2. **"My app provides a way for users to request that some or all of
@@ -376,7 +378,11 @@ scratch directory (spaceship's `appInfoLocalizations` and
 `appStoreVersionLocalizations`; supply's `Client#listings` in an edit that is
 aborted) and copy the text over by hand.
 
-**Still console steps**, which no lane touches: App Privacy and Data safety
+**Play Data safety** is `fastlane/data_safety.csv`, written by the
+`play-data-safety` workflow when it changes on `main`; see
+[references/data-declarations.md](references/data-declarations.md).
+
+**Still console steps**, which no lane touches: App Privacy
 ([references/data-declarations.md](references/data-declarations.md)), Play's
 privacy policy URL, screenshots and graphics (#266), and Play's sign-in
 details ([What the consoles say](#what-the-consoles-say)).
