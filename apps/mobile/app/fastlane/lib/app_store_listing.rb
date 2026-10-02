@@ -27,11 +27,11 @@ module AppStoreListing
 
   # Reports a skipped upload: a notice annotation on GitHub Actions, so the
   # run stays green but says so; plain text anywhere else.
-  def self.notice(message, out: $stdout, env: ENV)
+  def self.notice(message, title: "App Store listing not uploaded", out: $stdout, env: ENV)
     if env["GITHUB_ACTIONS"] == "true"
-      out.puts("::notice title=App Store listing not uploaded::#{message}")
+      out.puts("::notice title=#{title}::#{message}")
     else
-      out.puts("App Store listing not uploaded: #{message}")
+      out.puts("#{title}: #{message}")
     end
   end
 end

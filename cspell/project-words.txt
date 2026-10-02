@@ -2,3 +2,4 @@ emotely
 journaling
 PostHog
 Vercel
+Trost

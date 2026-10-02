@@ -30,6 +30,7 @@ on:
       - 'apps/mobile/**'
       # A listing ships through store-listings.yml, not with a build.
       - '!apps/mobile/app/fastlane/metadata/**'
+      - '!apps/mobile/app/fastlane/app_review/**'
       # The Dart contract is pinned against the emitted JSON Schema.
       - 'packages/contract/contract.schema.json'
       - '.github/workflows/app-release.yml'
@@ -108,6 +109,8 @@ jobs:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          APP_REVIEW_DEMO_PASSWORD: ${{ secrets.APP_REVIEW_DEMO_PASSWORD }}
+          APP_REVIEW_CONTACT_PHONE: ${{ secrets.APP_REVIEW_CONTACT_PHONE }}
 
   android-internal:
     if: github.event_name == 'push'

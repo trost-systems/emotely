@@ -39,6 +39,13 @@ class AppStoreListingTest < Minitest::Test
     assert_equal "::notice title=App Store listing not uploaded::skipped\n", out.string
   end
 
+  def test_a_notice_can_carry_its_own_title
+    out = StringIO.new
+    AppStoreListing.notice("no secret", title: "App Review information not updated", out: out, env: { "GITHUB_ACTIONS" => "true" })
+
+    assert_equal "::notice title=App Review information not updated::no secret\n", out.string
+  end
+
   def test_a_notice_is_plain_text_elsewhere
     out = StringIO.new
     AppStoreListing.notice("skipped", out: out, env: {})

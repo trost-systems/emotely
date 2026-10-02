@@ -32,6 +32,8 @@ Xcode, and a certificate exported by hand from someone's keychain.
 `APP_STORE_CONNECT_API_KEY_P8`, `MATCH_PASSWORD`, `MATCH_DEPLOY_KEY` (write
 deploy key of the certificates repo), `ANDROID_KEYSTORE_BASE64`,
 `ANDROID_KEY_PROPERTIES`, `PLAY_SERVICE_ACCOUNT_JSON`, `POSTHOG_KEY`.
+Since 2026-10 also `APP_REVIEW_DEMO_PASSWORD` and `APP_REVIEW_CONTACT_PHONE`,
+the parts of the App Review information that stay out of the repository.
 The human-readable copies live in the login keychain on the dev Mac
 (`emotely_*` items) — never in the repo, never in chat.
 
