@@ -131,16 +131,16 @@ abstract class AuthLocalizations {
   /// **'Privacy notice'**
   String get privacyNoticeButton;
 
-  /// Sign-in screen, iOS only: the label of Apple's own sign-in button. Use Apple's official wording for "Continue with Apple" in the target language.
+  /// Sign-in screen, iOS only: the title of the Sign in with Apple button, after Apple's logo. Apple allows only its own titles: use Apple's official translation of "Continue with Apple" in the target language, never a free one.
   ///
   /// In en, this message translates to:
   /// **'Continue with Apple'**
   String get appleButton;
 
-  /// Sign-in screen: what a screen reader announces for Google's sign-in button. The button itself is Google's image with its label baked in, in English; use Google's official wording for "Sign in with Google" in the target language.
+  /// Sign-in screen: the title of the Sign in with Google button, after Google's "G". Google allows only its own labels: use Google's official translation of "Continue with Google" in the target language, never a free one.
   ///
   /// In en, this message translates to:
-  /// **'Sign in with Google'**
+  /// **'Continue with Google'**
   String get googleButton;
 
   /// Sign-in screen: a small pill on the edge of the sign-in button the user used last on this phone (Apple, Google or the email code), to remind them which one they picked. Keep it very short.

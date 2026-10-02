@@ -22,6 +22,7 @@ ignores:
   - "**/*.freezed.dart"
   - "**/*.options.dart"
   - "**/*.mocks.dart"
+  - "**/*.gen.dart"
 utils:
   phrase:
     any:

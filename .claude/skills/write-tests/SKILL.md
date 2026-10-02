@@ -9,7 +9,7 @@ The philosophy: **drive tests through the UI with real blocs; mock the agent
 API at the http seam — never a bloc.** Error states are injected by making the
 mocked API return them. Coverage is a hard 100% CI gate, per package: run
 `melos run test` from `apps/mobile` (or `very_good test --coverage
---min-coverage 100 --exclude-coverage '**/*.{freezed,g,mocks}.dart'` inside
+--min-coverage 100 --exclude-coverage '**/*.{freezed,g,gen,mocks}.dart'` inside
 one package). `analysis` and `testing` have no tests and are not measured.
 
 Read the reference for the kind of test you are writing:

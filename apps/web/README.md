@@ -7,9 +7,13 @@ The landing page: a static [Jaspr](https://jaspr.site) site in Dart, one
 lib/
   main.server.dart        document shell, built once per route at build time
   main.client.dart        mounts the @client islands in the browser
-  app.dart                header, router (/, /privacy, /imprint), footer
-  pages/                  Home (the offer), Privacy, Imprint
-  components/             WaitlistForm (@client)
+  site_document.dart      the <head> every page shares
+  app.dart                the router: one shell per language, its pages
+  site_shell.dart         <html lang>, header and footer per language
+  site_locale.dart        English at /…, German at /de/…, and which page has which
+  pages/                  Home (the offer), Privacy, Imprint, …
+  pages/de/               their German translations
+  components/             the @client islands, each with a `lang`
   waitlist.dart           joinWaitlist(): the one HTTP call (ADR 0011)
   environment.dart        Supabase URL/key defaults (public by design)
 web/                      styles.css, favicon, robots.txt

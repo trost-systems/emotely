@@ -32,15 +32,15 @@ import 'package:emotely_web/components/waitlist_form.dart'
 ClientOptions get defaultClientOptions => ClientOptions(
   clients: {
     'confirm_waitlist': ClientLoader(
-      (p) => _confirm_waitlist.ConfirmWaitlist(),
+      (p) => _confirm_waitlist.ConfirmWaitlist(lang: p['lang'] as String),
       loader: _confirm_waitlist.loadLibrary,
     ),
     'delete_account_form': ClientLoader(
-      (p) => _delete_account_form.DeleteAccountForm(),
+      (p) => _delete_account_form.DeleteAccountForm(lang: p['lang'] as String),
       loader: _delete_account_form.loadLibrary,
     ),
     'waitlist_form': ClientLoader(
-      (p) => _waitlist_form.WaitlistForm(),
+      (p) => _waitlist_form.WaitlistForm(lang: p['lang'] as String),
       loader: _waitlist_form.loadLibrary,
     ),
   },

@@ -1,0 +1,45 @@
+id: asset-path-literal
+valid:
+  # The flutter_gen accessor: the path lives in the generated assets.gen.dart.
+  - |
+    Widget build(BuildContext context) => Assets.google.g.image(width: 20);
+  - |
+    final provider = Assets.google.g.provider();
+  # A path that is not a literal is someone else's to name; the rule looks
+  # for the string alone.
+  - |
+    Widget build(BuildContext context) => Image.asset(path);
+  - |
+    final data = rootBundle.loadString(Assets.config.path);
+  # Other constructors and other members of the bundle are not asset loads.
+  - |
+    final image = Image.network('https://example.com/a.png');
+  - |
+    final bundle = rootBundle.toString();
+  # A literal that is only a named argument is not the path.
+  - |
+    Widget build(BuildContext context) =>
+        Image.asset(Assets.google.g.path, package: 'feature_auth');
+invalid:
+  - |
+    Widget build(BuildContext context) =>
+        Image.asset('assets/google/g.png', package: 'feature_auth');
+  - |
+    final image = AssetImage('assets/google/g.png', package: 'feature_auth');
+  - |
+    const image = AssetImage('assets/google/g.png');
+  - |
+    final image = const AssetImage('assets/google/g.png');
+  - |
+    final image = new AssetImage('assets/google/g.png');
+  - |
+    final image = ExactAssetImage('assets/google/g.png');
+  - |
+    Future<String> read() => rootBundle.loadString('assets/config.json');
+  - |
+    Future<ByteData> read() async => await rootBundle.load('assets/a.bin');
+  - |
+    final data = rootBundle.loadStructuredData('assets/a.json', parse);
+  # An interpolated path is a path in a string all the same.
+  - |
+    Widget build(BuildContext context) => Image.asset('assets/$name.png');

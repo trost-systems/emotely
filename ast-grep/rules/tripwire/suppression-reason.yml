@@ -53,6 +53,7 @@ ignores:
   - "**/*.freezed.dart"
   - "**/*.options.dart"
   - "**/*.mocks.dart"
+  - "**/*.gen.dart"
 utils:
   directive:
     kind: comment

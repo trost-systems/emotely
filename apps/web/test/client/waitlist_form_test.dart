@@ -186,4 +186,59 @@ void main() {
       },
     );
   });
+
+  group('WaitlistForm in German', () {
+    setUp(() => visit('/de'));
+
+    testClient('asks, refuses and thanks in German', (tester) async {
+      final seen = <http.Request>[];
+      await withApi(seen: seen, () async {
+        tester.pumpComponent(const WaitlistForm(lang: 'de'));
+
+        expect(find.text('Frühen Zugang sichern'), findsOneComponent);
+        expect(find.textContaining('schreib an'), findsOneComponent);
+
+        await tester.input(
+          find.byKey(const Key('email')),
+          value: 'keine Adresse',
+        );
+        await tester.click(find.byKey(const Key('join')));
+        await pumpEventQueue();
+
+        expect(seen, isEmpty);
+        expect(
+          find.textContaining('nicht nach einer E-Mail-Adresse'),
+          findsOneComponent,
+        );
+
+        await tester.input(
+          find.byKey(const Key('email')),
+          value: 'frieda@example.com',
+        );
+        await tester.click(find.byKey(const Key('join')));
+        await pumpEventQueue();
+
+        expect(seen, hasLength(1));
+        expect(
+          find.textContaining('Schau in dein Postfach'),
+          findsOneComponent,
+        );
+      });
+    });
+
+    testClient('says a refusal in German', (tester) async {
+      final seen = <http.Request>[];
+      await withApi(seen: seen, status: 429, () async {
+        tester.pumpComponent(const WaitlistForm(lang: 'de'));
+        await tester.input(
+          find.byKey(const Key('email')),
+          value: 'gerd@example.com',
+        );
+        await tester.click(find.byKey(const Key('join')));
+        await pumpEventQueue();
+
+        expect(find.textContaining('zu viele Anmeldungen'), findsOneComponent);
+      });
+    });
+  });
 }

@@ -180,7 +180,7 @@ void main() {
 
       await robot.tap(robot.notice);
 
-      expect(launcher.launched, [privacyNoticeUrl]);
+      expect(launcher.launched, [privacyNoticeUrl(const Locale('de'))]);
       expect(robot.sheet, findsOneWidget);
     });
 

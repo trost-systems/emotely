@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:emotely_web/analytics.dart';
 import 'package:emotely_web/delete_account.dart';
 import 'package:emotely_web/environment.dart';
+import 'package:emotely_web/site_locale.dart';
 import 'package:emotely_web/waitlist.dart' show looksLikeEmail;
 import 'package:http/http.dart' as http;
 import 'package:jaspr/dom.dart';
@@ -31,11 +32,129 @@ import 'package:jaspr/jaspr.dart';
 // ignore_for_file: unnecessary_type_name_in_constructor
 @client
 class DeleteAccountForm extends StatefulComponent {
-  const DeleteAccountForm({super.key});
+  const DeleteAccountForm({this.lang = 'en', super.key});
+
+  /// The code of the [SiteLocale] the form speaks.
+  final String lang;
 
   @override
   State<DeleteAccountForm> createState() => _DeleteAccountFormState();
 }
+
+/// Everything the form says, in one language.
+class _Words {
+  const _Words({
+    required this.invalid,
+    required this.tooMany,
+    required this.failed,
+    required this.codeShape,
+    required this.tickFirst,
+    required this.badCode,
+    required this.doneTitle,
+    required this.doneBody,
+    required this.addressLabel,
+    required this.placeholder,
+    required this.sendingCode,
+    required this.sendCode,
+    required this.codeIntro,
+    required this.codeLabel,
+    required this.understood,
+    required this.deleting,
+    required this.delete,
+    required this.startOver,
+  });
+
+  final String invalid;
+  final String tooMany;
+  final String failed;
+  final String codeShape;
+  final String tickFirst;
+  final String badCode;
+  final String doneTitle;
+  final String doneBody;
+  final String addressLabel;
+  final String placeholder;
+  final String sendingCode;
+  final String sendCode;
+  final String codeIntro;
+  final String codeLabel;
+  final String understood;
+  final String deleting;
+  final String delete;
+  final String startOver;
+}
+
+const _english = _Words(
+  invalid: "That doesn't look like an email address.",
+  tooMany:
+      'Too many requests from your network right now. Try again in an hour.',
+  failed: 'Something went wrong. Try again in a moment.',
+  codeShape: 'The code is six digits.',
+  tickFirst: 'Tick the box first: this cannot be undone once it runs.',
+  badCode:
+      'That code did not match, or it is older than ten minutes. Check the '
+      'newest email and try again.',
+  doneTitle: 'Your account is gone',
+  doneBody:
+      'The account and everything in it — every entry, every session, the '
+      'address itself — was deleted just now. Nothing is kept, so there is '
+      'nothing left to undo and nothing to sign in to. If you come back one '
+      'day, you start fresh.',
+  addressLabel: 'The email address of the account',
+  placeholder: 'you@example.com',
+  sendingCode: 'Sending the code…',
+  sendCode: 'Send me a code',
+  // Conditional on purpose: saying "we sent you a code" would tell a
+  // stranger that this address has an emotely account.
+  codeIntro:
+      'If that address has an account, a six-digit code is on its way to '
+      'it. Type the code below, confirm that you mean it, and the account is '
+      'deleted.',
+  codeLabel: 'The six-digit code',
+  understood:
+      ' I understand this deletes my account and everything in it, and that '
+      'it cannot be undone.',
+  deleting: 'Deleting…',
+  delete: 'Delete my account for good',
+  startOver: 'Start over with a different address',
+);
+
+const _german = _Words(
+  invalid: 'Das sieht nicht nach einer E-Mail-Adresse aus.',
+  tooMany:
+      'Gerade kommen zu viele Anfragen aus deinem Netzwerk. Versuch es in '
+      'einer Stunde noch einmal.',
+  failed: 'Etwas ist schiefgegangen. Versuch es gleich noch einmal.',
+  codeShape: 'Der Code hat sechs Ziffern.',
+  tickFirst:
+      'Setz zuerst das Häkchen: Sobald es läuft, lässt es sich nicht '
+      'rückgängig machen.',
+  badCode:
+      'Dieser Code passt nicht, oder er ist älter als zehn Minuten. Nimm den '
+      'aus der neuesten E-Mail und versuch es noch einmal.',
+  doneTitle: 'Dein Konto ist gelöscht',
+  doneBody:
+      'Das Konto und alles darin – jeder Eintrag, jede Session, die Adresse '
+      'selbst – wurde eben gelöscht. Nichts wird aufbewahrt, es gibt also '
+      'nichts rückgängig zu machen und nichts, womit du dich anmelden '
+      'könntest. Kommst du eines Tages zurück, fängst du neu an.',
+  addressLabel: 'Die E-Mail-Adresse des Kontos',
+  placeholder: 'du@example.com',
+  sendingCode: 'Der Code wird gesendet …',
+  sendCode: 'Schick mir einen Code',
+  // Conditional on purpose, as in English.
+  codeIntro:
+      'Wenn zu dieser Adresse ein Konto gehört, ist ein sechsstelliger Code '
+      'dorthin unterwegs. Gib den Code unten ein, bestätige, dass du es '
+      'ernst meinst, und das Konto wird gelöscht.',
+  codeLabel: 'Der sechsstellige Code',
+  understood:
+      ' Ich verstehe, dass damit mein Konto und alles darin gelöscht wird '
+      'und dass sich das nicht rückgängig machen lässt.',
+  deleting: 'Wird gelöscht …',
+  delete: 'Mein Konto endgültig löschen',
+  startOver: 'Mit einer anderen Adresse neu beginnen',
+);
 
 enum _Step { address, code, done }
 
@@ -49,6 +168,11 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
   _Step _step = .address;
   var _busy = false;
   String? _message;
+
+  _Words get _words => switch (SiteLocale.values.byName(component.lang)) {
+    .en => _english,
+    .de => _german,
+  };
 
   /// Back to the start: a mistyped address, or a code that went stale
   /// (GoTrue expires them after ten minutes) needs a fresh one.
@@ -69,7 +193,7 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
     }
     final email = _email.trim();
     if (!looksLikeEmail(email)) {
-      setState(() => _message = "That doesn't look like an email address.");
+      setState(() => _message = _words.invalid);
       return;
     }
     setState(() {
@@ -94,11 +218,9 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
           case .sent:
             _step = .code;
           case .tooMany:
-            _message =
-                'Too many requests from your network right now. '
-                'Try again in an hour.';
+            _message = _words.tooMany;
           case .failed:
-            _message = 'Something went wrong. Try again in a moment.';
+            _message = _words.failed;
         }
       });
     } finally {
@@ -111,14 +233,11 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
     // code should not be refused for how it travelled.
     final code = normaliseCode(_code);
     if (!looksLikeCode(code)) {
-      setState(() => _message = 'The code is six digits.');
+      setState(() => _message = _words.codeShape);
       return;
     }
     if (!_understood) {
-      setState(
-        () => _message =
-            'Tick the box first: this cannot be undone once it runs.',
-      );
+      setState(() => _message = _words.tickFirst);
       return;
     }
     setState(() {
@@ -141,11 +260,9 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
           case .deleted:
             _step = .done;
           case .badCode:
-            _message =
-                'That code did not match, or it is older than ten '
-                'minutes. Check the newest email and try again.';
+            _message = _words.badCode;
           case .failed:
-            _message = 'Something went wrong. Try again in a moment.';
+            _message = _words.failed;
         }
       });
     } finally {
@@ -155,22 +272,15 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
 
   @override
   Component build(BuildContext context) => switch (_step) {
-    .address => _addressStep(),
-    .code => _codeStep(),
-    .done => const div(classes: 'delete-account delete-account-done', [
-      h2([.text('Your account is gone')]),
-      p([
-        .text(
-          'The account and everything in it — every entry, every session, '
-          'the address itself — was deleted just now. Nothing is kept, so '
-          'there is nothing left to undo and nothing to sign in to. If you '
-          'come back one day, you start fresh.',
-        ),
-      ]),
+    .address => _addressStep(_words),
+    .code => _codeStep(_words),
+    .done => div(classes: 'delete-account delete-account-done', [
+      h2([.text(_words.doneTitle)]),
+      p([.text(_words.doneBody)]),
     ]),
   };
 
-  Component _addressStep() => form(
+  Component _addressStep(_Words words) => form(
     classes: 'delete-account',
     noValidate: true,
     events: {
@@ -180,9 +290,7 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
       },
     },
     [
-      const label(htmlFor: 'delete-email', [
-        .text('The email address of the account'),
-      ]),
+      label(htmlFor: 'delete-email', [.text(words.addressLabel)]),
       input<String>(
         key: const Key('email'),
         id: 'delete-email',
@@ -190,8 +298,8 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
         name: 'email',
         value: _email,
         onInput: (value) => _email = value,
-        attributes: const {
-          'placeholder': 'you@example.com',
+        attributes: {
+          'placeholder': words.placeholder,
           'autocomplete': 'email',
           'inputmode': 'email',
         },
@@ -214,7 +322,7 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
         type: .submit,
         classes: 'cta',
         disabled: _busy,
-        [.text(_busy ? 'Sending the code…' : 'Send me a code')],
+        [.text(_busy ? words.sendingCode : words.sendCode)],
       ),
       if (_message case final message?) _alert(message),
     ],
@@ -229,7 +337,7 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
     [.text(message)],
   );
 
-  Component _codeStep() => form(
+  Component _codeStep(_Words words) => form(
     classes: 'delete-account',
     noValidate: true,
     events: {
@@ -239,16 +347,8 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
       },
     },
     [
-      // Conditional on purpose: saying "we sent you a code" would tell a
-      // stranger that this address has an emotely account.
-      const p([
-        .text(
-          'If that address has an account, a six-digit code is on its way '
-          'to it. Type the code below, confirm that you mean it, and the '
-          'account is deleted.',
-        ),
-      ]),
-      const label(htmlFor: 'delete-code', [.text('The six-digit code')]),
+      p([.text(words.codeIntro)]),
+      label(htmlFor: 'delete-code', [.text(words.codeLabel)]),
       input<String>(
         key: const Key('code'),
         id: 'delete-code',
@@ -276,17 +376,14 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
           checked: _understood,
           onInput: (value) => setState(() => _understood = value),
         ),
-        const .text(
-          ' I understand this deletes my account and everything in it, '
-          'and that it cannot be undone.',
-        ),
+        .text(words.understood),
       ]),
       button(
         key: const Key('delete'),
         type: .submit,
         classes: 'cta delete-account-confirm',
         disabled: _busy,
-        [.text(_busy ? 'Deleting…' : 'Delete my account for good')],
+        [.text(_busy ? words.deleting : words.delete)],
       ),
       if (_message case final message?) _alert(message),
       p(classes: 'delete-account-restart', [
@@ -295,7 +392,7 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
           type: .button,
           classes: 'linklike',
           onClick: _startOver,
-          const [.text('Start over with a different address')],
+          [.text(words.startOver)],
         ),
       ]),
     ],

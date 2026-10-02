@@ -33,6 +33,9 @@ dependencies:
 dev_dependencies:
   analysis: any
   build_runner: 2.16.1
+  # Typed accessors for the package's assets (lib/src/gen/assets.gen.dart),
+  # never a path in a string: build_runner writes them with the rest.
+  flutter_gen_runner: 5.15.0
   flutter_test:
     sdk: flutter
   freezed: 4.0.1
@@ -44,7 +47,20 @@ flutter:
   # gen-l10n: the feature's own strings, from l10n/ (l10n.yaml, ADR 0020).
   generate: true
 
-  # Google's own sign-in button (the "G" may not be redrawn), from its
-  # branding assets; 2.0x-4.0x variants sit in subdirectories.
+  # Google's standard "G" (it may not be redrawn or recolored), cropped
+  # from its branding assets; 2.0x-4.0x variants sit in subdirectories.
   assets:
     - assets/google/
+
+# flutter_gen_runner: the assets above as typed accessors. The package
+# parameter makes `Assets.google.g.image()` load from this package wherever
+# the app shows it. Assets only: no fonts or colors are declared here.
+flutter_gen:
+  output: lib/src/gen/
+  assets:
+    outputs:
+      package_parameter_enabled: true
+  fonts:
+    enabled: false
+  colors:
+    enabled: false

@@ -189,7 +189,7 @@ void main() {
       await robot.tap(robot.haveAccount);
       await robot.tap(robot.signInNotice);
 
-      expect(launcher.launched, [privacyNoticeUrl]);
+      expect(launcher.launched, [privacyNoticeUrl(const Locale('en'))]);
     });
 
     testWidgets('the More tab links the notice and the imprint', (
@@ -203,7 +203,10 @@ void main() {
       await robot.tap(robot.moreNotice);
       await robot.tap(robot.moreImprint);
 
-      expect(launcher.launched, [privacyNoticeUrl, imprintUrl]);
+      expect(launcher.launched, [
+        privacyNoticeUrl(const Locale('en')),
+        imprintUrl(const Locale('en')),
+      ]);
     });
 
     testWidgets('meets accessibility guidelines', (tester) async {

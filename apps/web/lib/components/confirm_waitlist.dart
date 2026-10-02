@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:emotely_web/analytics.dart';
 import 'package:emotely_web/environment.dart';
+import 'package:emotely_web/site_locale.dart';
 import 'package:emotely_web/waitlist.dart';
 import 'package:http/http.dart' as http;
 import 'package:jaspr/dom.dart';
@@ -23,7 +24,10 @@ import 'package:universal_web/web.dart' as web;
 // ignore_for_file: unnecessary_type_name_in_constructor
 @client
 class ConfirmWaitlist extends StatefulComponent {
-  const ConfirmWaitlist({super.key});
+  const ConfirmWaitlist({this.lang = 'en', super.key});
+
+  /// The code of the [SiteLocale] the island speaks.
+  final String lang;
 
   @override
   State<ConfirmWaitlist> createState() => _ConfirmWaitlistState();
@@ -73,34 +77,71 @@ class _ConfirmWaitlistState extends State<ConfirmWaitlist> {
   }
 
   @override
-  Component build(BuildContext context) => switch (_phase) {
-    .checking => const div(classes: 'confirm', [
-      h1([.text('One moment')]),
-      p([.text('Checking your link…')]),
-    ]),
-    .confirmed => const div(classes: 'confirm', [
-      h1([.text('Confirmed. Your spot is held.')]),
-      p([
-        .text(
-          'That was the last step. You will hear from hello@getemotely.com '
-          'when early access opens for you, and from no one else.',
-        ),
-      ]),
-    ]),
-    .unknown => const div(classes: 'confirm', [
-      h1([.text('This link is no longer valid')]),
-      p([
-        .text(
-          'It was used already, is older than a week, or did not survive '
-          'the trip into your mail app in one piece. ',
-        ),
-        a(href: '/', [.text('Sign up again')]),
-        .text(' and a fresh one is on its way.'),
-      ]),
-    ]),
-    .failed => const div(classes: 'confirm', [
-      h1([.text('Something went wrong')]),
-      p([.text('Reload this page to try again.')]),
-    ]),
-  };
+  Component build(BuildContext context) =>
+      switch (SiteLocale.values.byName(component.lang)) {
+        .en => _english(_phase),
+        .de => _german(_phase),
+      };
 }
+
+Component _english(_Phase phase) => switch (phase) {
+  .checking => const div(classes: 'confirm', [
+    h1([.text('One moment')]),
+    p([.text('Checking your link…')]),
+  ]),
+  .confirmed => const div(classes: 'confirm', [
+    h1([.text('Confirmed. Your spot is held.')]),
+    p([
+      .text(
+        'That was the last step. You will hear from hello@getemotely.com '
+        'when early access opens for you, and from no one else.',
+      ),
+    ]),
+  ]),
+  .unknown => const div(classes: 'confirm', [
+    h1([.text('This link is no longer valid')]),
+    p([
+      .text(
+        'It was used already, is older than a week, or did not survive '
+        'the trip into your mail app in one piece. ',
+      ),
+      a(href: '/', [.text('Sign up again')]),
+      .text(' and a fresh one is on its way.'),
+    ]),
+  ]),
+  .failed => const div(classes: 'confirm', [
+    h1([.text('Something went wrong')]),
+    p([.text('Reload this page to try again.')]),
+  ]),
+};
+
+Component _german(_Phase phase) => switch (phase) {
+  .checking => const div(classes: 'confirm', [
+    h1([.text('Einen Moment')]),
+    p([.text('Dein Link wird geprüft …')]),
+  ]),
+  .confirmed => const div(classes: 'confirm', [
+    h1([.text('Bestätigt. Dein Platz ist reserviert.')]),
+    p([
+      .text(
+        'Das war der letzte Schritt. Du hörst von hello@getemotely.com, '
+        'sobald der frühe Zugang für dich startet, und von niemandem sonst.',
+      ),
+    ]),
+  ]),
+  .unknown => const div(classes: 'confirm', [
+    h1([.text('Dieser Link ist nicht mehr gültig')]),
+    p([
+      .text(
+        'Er wurde schon benutzt, ist älter als eine Woche oder ist auf dem '
+        'Weg in deine Mail-App nicht heil angekommen. ',
+      ),
+      a(href: '/de', [.text('Trag dich noch einmal ein')]),
+      .text(', und ein neuer ist unterwegs.'),
+    ]),
+  ]),
+  .failed => const div(classes: 'confirm', [
+    h1([.text('Etwas ist schiefgegangen')]),
+    p([.text('Lade diese Seite neu, um es noch einmal zu versuchen.')]),
+  ]),
+};

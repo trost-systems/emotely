@@ -153,7 +153,7 @@ class const _PrivacyNoticeRow() extends StatelessWidget {
     key: MoreView.privacyNoticeKey,
     title: Text(context.l10n.morePrivacyNoticeRow),
     trailing: const Icon(Icons.open_in_new),
-    onTap: () => unawaited(openPrivacyNotice()),
+    onTap: () => unawaited(openPrivacyNotice(Localizations.localeOf(context))),
   );
 }
 
@@ -164,7 +164,7 @@ class const _ImprintRow() extends StatelessWidget {
     key: MoreView.imprintKey,
     title: Text(context.l10n.moreImprintRow),
     trailing: const Icon(Icons.open_in_new),
-    onTap: () => unawaited(openImprint()),
+    onTap: () => unawaited(openImprint(Localizations.localeOf(context))),
   );
 }
 

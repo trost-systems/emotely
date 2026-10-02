@@ -35,7 +35,7 @@ class AuthLocalizationsDe extends AuthLocalizations {
   String get appleButton => 'Mit Apple fortfahren';
 
   @override
-  String get googleButton => 'Mit Google anmelden';
+  String get googleButton => 'Weiter mit Google';
 
   @override
   String get lastUsedTag => 'Zuletzt genutzt';

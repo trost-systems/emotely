@@ -1,0 +1,81 @@
+# An asset's path written as a string in hand-written Dart (#217): a typo or
+# a moved file is then found only at run time, as a blank image or a thrown
+# load. Every package that ships assets generates typed accessors with
+# flutter_gen (`flutter_gen_runner` under build_runner, the package's
+# `flutter_gen:` block in its pubspec), so the path is spelled once, in the
+# generated `lib/src/gen/assets.gen.dart`, and a missing file fails the build.
+#
+# Flagged: `Image.asset`, `AssetImage` and `ExactAssetImage` (called, `const`
+# or `new`) and `rootBundle.load*` whose positional argument is a string
+# literal, interpolated or not. A path from a variable or an accessor
+# passes: the rule reads syntax, not where a value came from.
+#
+# Checked first (ADR 0018), and why none covers it:
+# - The Dart analyzer's `asset_does_not_exist` and its siblings (errors in
+#   flutter_agent_lints 1.0.1) check the pubspec's asset list, not the code
+#   that names an asset.
+# - No SDK lint in flutter_agent_lints 1.0.1 looks at asset paths.
+# - emotely's `avoid_hardcoded_ui_text` exempts asset paths on purpose: they
+#   are not words a user reads.
+# - biome and shellcheck do not read Dart.
+id: asset-path-literal
+language: dart
+severity: error
+files:
+  - apps/mobile/**/*.dart
+# Generated code answers to its generator: assets.gen.dart is where the
+# paths belong.
+ignores:
+  - "**/*.gen.dart"
+  - "**/*.g.dart"
+  - "**/*.freezed.dart"
+  - "**/*.mocks.dart"
+utils:
+  # A string literal among the positional arguments; a named argument wraps
+  # its value in `named_argument`, so `package: 'x'` does not count.
+  literal-path:
+    kind: arguments
+    has:
+      kind: string_literal
+  image-type:
+    regex: '\A(?:AssetImage|ExactAssetImage)\z'
+rule:
+  any:
+    # Image.asset('…') and rootBundle.load…('…').
+    - kind: call_expression
+      all:
+        - has:
+            field: function
+            kind: member_expression
+            any:
+              - all:
+                  - has: { field: object, regex: '\AImage\z' }
+                  - has: { field: property, regex: '\Aasset\z' }
+              - all:
+                  - has: { field: object, regex: '\ArootBundle\z' }
+                  - has: { field: property, regex: '\Aload' }
+        - has:
+            field: arguments
+            matches: literal-path
+    # AssetImage('…'), in a const context or not.
+    - kind: call_expression
+      all:
+        - has:
+            field: function
+            kind: identifier
+            matches: image-type
+        - has:
+            field: arguments
+            matches: literal-path
+    # const AssetImage('…') and new AssetImage('…').
+    - any:
+        - kind: const_object_expression
+        - kind: new_expression
+      all:
+        - has:
+            field: type
+            matches: image-type
+        - has:
+            field: arguments
+            matches: literal-path
+message: 'asset path in a string: use the package''s flutter_gen accessor (Assets.…, lib/src/gen/assets.gen.dart)'

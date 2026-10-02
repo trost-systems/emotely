@@ -392,7 +392,10 @@ void main() {
       await robot.tap(robot.notice);
       await robot.tap(robot.imprint);
 
-      expect(launcher.launched, [privacyNoticeUrl, imprintUrl]);
+      expect(launcher.launched, [
+        privacyNoticeUrl(const Locale('de')),
+        imprintUrl(const Locale('de')),
+      ]);
     });
 
     testWidgets('opens a prefilled feedback mail', (tester) async {

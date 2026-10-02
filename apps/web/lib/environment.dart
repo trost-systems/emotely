@@ -30,3 +30,6 @@ const repositoryUrl = 'https://github.com/trost-systems/emotely';
 
 /// The support and sender address (a Google Group behind the domain).
 const contactEmail = 'hello@getemotely.com';
+
+/// The site's own origin, for the absolute URLs `hreflang` alternates need.
+const siteUrl = 'https://getemotely.com';

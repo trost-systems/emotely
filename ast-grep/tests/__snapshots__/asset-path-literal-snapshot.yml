@@ -1,0 +1,233 @@
+id: asset-path-literal
+snapshots:
+  ? |
+    Future<ByteData> read() async => await rootBundle.load('assets/a.bin');
+  : labels:
+    - source: rootBundle.load('assets/a.bin')
+      style: primary
+      start: 39
+      end: 70
+    - source: rootBundle
+      style: secondary
+      start: 39
+      end: 49
+    - source: load
+      style: secondary
+      start: 50
+      end: 54
+    - source: rootBundle.load
+      style: secondary
+      start: 39
+      end: 54
+    - source: '''assets/a.bin'''
+      style: secondary
+      start: 55
+      end: 69
+    - source: ('assets/a.bin')
+      style: secondary
+      start: 54
+      end: 70
+  ? |
+    Future<String> read() => rootBundle.loadString('assets/config.json');
+  : labels:
+    - source: rootBundle.loadString('assets/config.json')
+      style: primary
+      start: 25
+      end: 68
+    - source: rootBundle
+      style: secondary
+      start: 25
+      end: 35
+    - source: loadString
+      style: secondary
+      start: 36
+      end: 46
+    - source: rootBundle.loadString
+      style: secondary
+      start: 25
+      end: 46
+    - source: '''assets/config.json'''
+      style: secondary
+      start: 47
+      end: 67
+    - source: ('assets/config.json')
+      style: secondary
+      start: 46
+      end: 68
+  ? |
+    Widget build(BuildContext context) =>
+        Image.asset('assets/google/g.png', package: 'feature_auth');
+  : labels:
+    - source: 'Image.asset(''assets/google/g.png'', package: ''feature_auth'')'
+      style: primary
+      start: 42
+      end: 101
+    - source: Image
+      style: secondary
+      start: 42
+      end: 47
+    - source: asset
+      style: secondary
+      start: 48
+      end: 53
+    - source: Image.asset
+      style: secondary
+      start: 42
+      end: 53
+    - source: '''assets/google/g.png'''
+      style: secondary
+      start: 54
+      end: 75
+    - source: '(''assets/google/g.png'', package: ''feature_auth'')'
+      style: secondary
+      start: 53
+      end: 101
+  ? |
+    Widget build(BuildContext context) => Image.asset('assets/$name.png');
+  : labels:
+    - source: Image.asset('assets/$name.png')
+      style: primary
+      start: 38
+      end: 69
+    - source: Image
+      style: secondary
+      start: 38
+      end: 43
+    - source: asset
+      style: secondary
+      start: 44
+      end: 49
+    - source: Image.asset
+      style: secondary
+      start: 38
+      end: 49
+    - source: '''assets/$name.png'''
+      style: secondary
+      start: 50
+      end: 68
+    - source: ('assets/$name.png')
+      style: secondary
+      start: 49
+      end: 69
+  ? |
+    const image = AssetImage('assets/google/g.png');
+  : labels:
+    - source: AssetImage('assets/google/g.png')
+      style: primary
+      start: 14
+      end: 47
+    - source: AssetImage
+      style: secondary
+      start: 14
+      end: 24
+    - source: '''assets/google/g.png'''
+      style: secondary
+      start: 25
+      end: 46
+    - source: ('assets/google/g.png')
+      style: secondary
+      start: 24
+      end: 47
+  ? |
+    final data = rootBundle.loadStructuredData('assets/a.json', parse);
+  : labels:
+    - source: rootBundle.loadStructuredData('assets/a.json', parse)
+      style: primary
+      start: 13
+      end: 66
+    - source: rootBundle
+      style: secondary
+      start: 13
+      end: 23
+    - source: loadStructuredData
+      style: secondary
+      start: 24
+      end: 42
+    - source: rootBundle.loadStructuredData
+      style: secondary
+      start: 13
+      end: 42
+    - source: '''assets/a.json'''
+      style: secondary
+      start: 43
+      end: 58
+    - source: ('assets/a.json', parse)
+      style: secondary
+      start: 42
+      end: 66
+  ? |
+    final image = AssetImage('assets/google/g.png', package: 'feature_auth');
+  : labels:
+    - source: 'AssetImage(''assets/google/g.png'', package: ''feature_auth'')'
+      style: primary
+      start: 14
+      end: 72
+    - source: AssetImage
+      style: secondary
+      start: 14
+      end: 24
+    - source: '''assets/google/g.png'''
+      style: secondary
+      start: 25
+      end: 46
+    - source: '(''assets/google/g.png'', package: ''feature_auth'')'
+      style: secondary
+      start: 24
+      end: 72
+  ? |
+    final image = ExactAssetImage('assets/google/g.png');
+  : labels:
+    - source: ExactAssetImage('assets/google/g.png')
+      style: primary
+      start: 14
+      end: 52
+    - source: ExactAssetImage
+      style: secondary
+      start: 14
+      end: 29
+    - source: '''assets/google/g.png'''
+      style: secondary
+      start: 30
+      end: 51
+    - source: ('assets/google/g.png')
+      style: secondary
+      start: 29
+      end: 52
+  ? |
+    final image = const AssetImage('assets/google/g.png');
+  : labels:
+    - source: const AssetImage('assets/google/g.png')
+      style: primary
+      start: 14
+      end: 53
+    - source: AssetImage
+      style: secondary
+      start: 20
+      end: 30
+    - source: '''assets/google/g.png'''
+      style: secondary
+      start: 31
+      end: 52
+    - source: ('assets/google/g.png')
+      style: secondary
+      start: 30
+      end: 53
+  ? |
+    final image = new AssetImage('assets/google/g.png');
+  : labels:
+    - source: new AssetImage('assets/google/g.png')
+      style: primary
+      start: 14
+      end: 51
+    - source: AssetImage
+      style: secondary
+      start: 18
+      end: 28
+    - source: '''assets/google/g.png'''
+      style: secondary
+      start: 29
+      end: 50
+    - source: ('assets/google/g.png')
+      style: secondary
+      start: 28
+      end: 51

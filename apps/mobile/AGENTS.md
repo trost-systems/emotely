@@ -41,3 +41,15 @@ those parts through the package's builder hooks with `material_ui` widgets,
 which find the `Material` the screen or sheet already has — the emoji
 picker's search in `feature_session` (`emoji_search.dart`) is the pattern —
 and drive every part a user can open in a widget test.
+
+## Assets
+
+A file a package ships under `assets/` is read through its flutter_gen
+accessor (`Assets.google.g.image()`), never by a path in a string: the
+`asset-path-literal` ast-grep rule fails on `Image.asset`, `AssetImage` or
+`rootBundle.load*` with a string literal. Such a package pins
+`flutter_gen_runner` as a dev dependency, configures it in a `flutter_gen:`
+block in its pubspec (`output: lib/src/gen/`,
+`package_parameter_enabled: true`, `feature_auth` is the pattern) and has a
+`build.yaml`, so `melos run codegen:check` keeps the committed
+`assets.gen.dart` in step.

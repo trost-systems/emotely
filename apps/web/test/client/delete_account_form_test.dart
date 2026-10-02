@@ -351,4 +351,90 @@ void main() {
       });
     });
   });
+
+  group('DeleteAccountForm in German', () {
+    testClient('walks the same steps in German', (tester) async {
+      final seen = <http.Request>[];
+      await withApi(seen: seen, () async {
+        tester.pumpComponent(const DeleteAccountForm(lang: 'de'));
+
+        expect(find.text('Schick mir einen Code'), findsOneComponent);
+
+        await tester.input(find.byKey(const Key('email')), value: 'nein');
+        await tester.click(find.byKey(const Key('send-code')));
+        await pumpEventQueue();
+
+        expect(seen, isEmpty);
+        expect(
+          find.textContaining('nicht nach einer E-Mail-Adresse'),
+          findsOneComponent,
+        );
+
+        await tester.input(
+          find.byKey(const Key('email')),
+          value: 'alice@example.com',
+        );
+        await tester.click(find.byKey(const Key('send-code')));
+        await pumpEventQueue();
+
+        // Conditional, as in English: no enumeration oracle in any language.
+        expect(
+          find.textContaining('Wenn zu dieser Adresse ein Konto gehört'),
+          findsOneComponent,
+        );
+
+        await tester.input(find.byKey(const Key('code')), value: '123456');
+        await tester.click(find.byKey(const Key('delete')));
+        await pumpEventQueue();
+
+        expect(
+          find.textContaining('Setz zuerst das Häkchen'),
+          findsOneComponent,
+        );
+
+        await tester.input(find.byKey(const Key('understood')), checked: true);
+        await tester.click(find.byKey(const Key('delete')));
+        await pumpEventQueue();
+
+        expect(seen, hasLength(3));
+        expect(find.text('Dein Konto ist gelöscht'), findsOneComponent);
+      });
+    });
+
+    testClient('says a wrong code in German', (tester) async {
+      final seen = <http.Request>[];
+      await withApi(
+        seen: seen,
+        handler: (request) async => switch (request.url.path) {
+          '/auth/v1/verify' => http.Response('{}', 403),
+          _ => http.Response('{}', 200),
+        },
+        () async {
+          tester.pumpComponent(const DeleteAccountForm(lang: 'de'));
+          await tester.input(
+            find.byKey(const Key('email')),
+            value: 'alice@example.com',
+          );
+          await tester.click(find.byKey(const Key('send-code')));
+          await pumpEventQueue();
+          await tester.input(find.byKey(const Key('code')), value: '654321');
+          await tester.input(
+            find.byKey(const Key('understood')),
+            checked: true,
+          );
+          await tester.click(find.byKey(const Key('delete')));
+          await pumpEventQueue();
+
+          expect(
+            find.textContaining('Dieser Code passt nicht'),
+            findsOneComponent,
+          );
+          expect(
+            find.text('Mit einer anderen Adresse neu beginnen'),
+            findsOneComponent,
+          );
+        },
+      );
+    });
+  });
 }
