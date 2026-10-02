@@ -77,12 +77,14 @@ melos:
         fi
         snapshot() { { git status --porcelain --untracked-files=all -- .; git diff --binary -- .; } | git hash-object --stdin; }
         before=$(snapshot)
-        dart run build_runner build --workspace --only-check
+        status=0
+        dart run build_runner build --workspace --only-check || status=$?
         if [ "$(snapshot)" != "$before" ]; then
           echo "The build rewrote files it should only have checked; commit what it wrote:"
           git status --short -- .
-          exit 1
+          status=1
         fi
+        exit "$status"
     l10n:check:
       description: Committed gen-l10n output must match the ARB files, and every locale must carry every message (ADR 0020).
       # From each package directory; the script lives with the repo's other
