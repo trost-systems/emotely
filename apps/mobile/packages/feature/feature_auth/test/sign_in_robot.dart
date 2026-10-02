@@ -31,6 +31,7 @@ class SignInRobot(
   final Set<String> passwordAccounts = const {},
   final SignInMode mode = SignInMode.signIn,
   final String? name,
+  final Locale locale = const Locale('de'),
 }) {
   final analytics = AnalyticsSpy();
   late final navigator = FakeSignInNavigator(name: name);
@@ -145,7 +146,7 @@ class SignInRobot(
             : SignInPage(mode: mode),
       ),
     );
-    return pageUnderTest(root, localizations: localizations);
+    return pageUnderTest(root, localizations: localizations, locale: locale);
   }
 
   /// The feature's own strings, as the app composes them.

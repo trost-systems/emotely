@@ -49,7 +49,22 @@ class SupabaseStub() {
         request: request,
       );
     });
+    // Every sign-in through the screen may keep the app's language on the
+    // account (the sign-in mail's language), so a test that is not about
+    // it needs no round for it: GoTrue merges `data` into the signed-in
+    // user's metadata and answers with the user as it now stands.
+    always(updateUserEndpoint, () async {
+      final user = supabase.auth.currentUser!;
+      final data = (requests.last.body! as Map<String, dynamic>)['data'];
+      return _json({
+        ...user.toJson(),
+        'user_metadata': {...user.userMetadata, ...?data as Map?},
+      }, 200);
+    });
   }
+
+  /// `updateUser`: an email change, or the account's metadata.
+  static const updateUserEndpoint = 'PUT /auth/v1/user';
 
   Future<http.Response> _serve(String method, Uri uri, Object? raw) {
     final request = RecordedRequest(
@@ -192,11 +207,13 @@ class SupabaseStub() {
 
   /// A session as Supabase Auth returns it after a verified code; the
   /// account's [provider] is recorded in `app_metadata` the way Supabase
-  /// records the provider an account was created with.
+  /// records the provider an account was created with, and [userMetadata]
+  /// is what the account keeps about itself (`user_metadata`).
   static Map<String, Object?> session({
     String sub = userId,
     String email = SupabaseStub.email,
     String? provider,
+    Map<String, Object?> userMetadata = const {},
   }) => {
     'access_token': jwt(sub: sub),
     'token_type': 'bearer',
@@ -214,7 +231,7 @@ class SupabaseStub() {
           'providers': [provider],
         },
       },
-      'user_metadata': <String, Object?>{},
+      'user_metadata': userMetadata,
     },
   };
 
@@ -241,14 +258,21 @@ AuthRound codeSent() =>
     () async => _json(const {}, 200);
 
 /// Supabase accepted the code (or a provider's token) and granted a session
-/// for an account of [provider], with sign-in address [email].
+/// for an account of [provider], with sign-in address [email] and
+/// [userMetadata].
 AuthRound sessionGranted({
   String sub = SupabaseStub.userId,
   String email = SupabaseStub.email,
   String? provider,
+  Map<String, Object?> userMetadata = const {},
 }) =>
     () async => _json(
-      SupabaseStub.session(sub: sub, email: email, provider: provider),
+      SupabaseStub.session(
+        sub: sub,
+        email: email,
+        provider: provider,
+        userMetadata: userMetadata,
+      ),
       200,
     );
 

@@ -50,6 +50,7 @@ void main() {
         trace,
         provider: SignInMethod.google,
       );
+      await reporter.mailLanguageSaveFailed(unreachable, trace);
       await reporter.accountDeletionFailed(saveRefused, trace);
       await reporter.configLoadFailed(unreachable, trace);
       await reporter.storeLaunchFailed(unreachable, trace);
@@ -104,6 +105,7 @@ void main() {
           ),
           {'step': 'sign_in_provider', 'provider': 'google'},
         ),
+        captured(unreachable, {'step': 'mail_language_save'}),
         captured(
           withheld(PostgrestApiException, code: '42501', statusCode: 403),
           {'step': 'account_deletion'},

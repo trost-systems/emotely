@@ -38,7 +38,7 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         'This notice covers the emotely mobile app (listed on Google Play as '
         '"Reflect Therapy AI: emotely") for iOS and Android. The web site at '
         'getemotely.com and its waitlist have a separate notice. Last '
-        'updated 27 September 2026.',
+        'updated 30 September 2026.',
       ),
     ]),
 
@@ -127,6 +127,14 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         'password. The provider learns that you signed in to emotely — as a '
         'controller in its own right, under its own privacy policy — and '
         'nothing about your journal.',
+      ),
+    ]),
+    // #229: the sign-in mail template reads user_metadata.app_locale.
+    p([
+      .text(
+        'With the sign-in records, Supabase Auth also keeps the language the '
+        'app is shown in (English or German), so that your sign-in code '
+        'mails come in that language.',
       ),
     ]),
     p([

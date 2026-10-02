@@ -240,8 +240,14 @@ otp_expiry = 600
 # once the project sends through its own SMTP, which the hosted project does
 # (see [remotes.production] at the end of this file); locally the template
 # renders into Inbucket.
+#
+# Body and subject are Go templates the auth server renders per mail, with
+# the account's user_metadata as `.Data`: German when the app kept "de" as
+# its `app_locale` (#229), English otherwise, including for an account that
+# keeps no language at all. The CLI passes this file's strings through as
+# they are, so the subject needs no escaping.
 [auth.email.template.magic_link]
-subject = "Your emotely sign-in code"
+subject = '{{ if eq .Data.app_locale "de" }}Dein Anmeldecode für emotely{{ else }}Your emotely sign-in code{{ end }}'
 content_path = "./supabase/templates/sign_in_code.html"
 
 # SMTP is configured for the hosted project only, under [remotes.production]
