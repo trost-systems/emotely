@@ -121,5 +121,3 @@ class AssetGenImageAnimation {
   final Duration duration;
   final int frames;
 }
-
-// Proof for #272: a stale flutter_gen file. Reverted in the next commit.
