@@ -10,7 +10,7 @@ on:
     branches: [main]
 
 # Supersede in-flight runs for the same ref; ci-ok stays pending on cancellation.
-# Never on main: each push diffs only its own commits, so a cancelled (or, in a
+# Never on main: each push diffs only its own commits, so a canceled (or, in a
 # shared group, a replaced pending) run would skip that push's supabase-deploy
 # for good, and the merge queue lands pushes back to back. Each push to main
 # gets its own group; supabase-deploy serializes itself below.
@@ -288,12 +288,19 @@ jobs:
       - run: pnpm exec bash scripts/ast-grep.sh --format github
       - run: pnpm exec bash scripts/feature-map.test.sh
       - run: pnpm exec bash scripts/feature-map.sh
+      - run: pnpm exec bash scripts/spell.test.sh
       # The copy spell check (ADR 0020): the app's ARB messages and the
       # agent's question wordings, English and German, and the words
-      # CONTEXT.md says to avoid. Offline, under a
-      # second; every pull request, since copy can change anywhere.
+      # CONTEXT.md says to avoid. Then US English everywhere we write:
+      # British spellings fail in code, docs, scripts, config and the English
+      # ARB files. Offline, about two seconds; every pull request, since
+      # words can change anywhere. Both run, so one push shows every finding.
       - run: |
-          pnpm spell --issue-template '::error file=$filename,line=$row,col=$col::$message: $text'
+          template='::error file=$filename,line=$row,col=$col::$message: $text'
+          status=0
+          pnpm spell:copy --issue-template "$template" || status=1
+          pnpm spell:us-english --issue-template "$template" || status=1
+          exit "$status"
 
   # The schema gate: migrations apply to a fresh Postgres, and the pgTAP suite
   # proves row-level security holds (ADR 0010). Only the database container

@@ -12,7 +12,9 @@
     "typecheck": "tsc --build",
     "ast-grep:check": "bash scripts/ast-grep.sh test && bash scripts/ast-grep.test.sh && bash scripts/ast-grep.sh",
     "feature-map": "bash scripts/feature-map.test.sh && bash scripts/feature-map.sh",
-    "spell": "cspell lint --no-progress --no-summary --no-cache"
+    "spell": "pnpm run spell:copy && pnpm run spell:us-english",
+    "spell:copy": "cspell lint --no-progress --no-summary --no-cache",
+    "spell:us-english": "cspell lint --no-progress --no-summary --no-cache --no-config-search --config cspell.us-english.yaml"
   },
   "devDependencies": {
     "@ast-grep/cli": "0.45.3",
