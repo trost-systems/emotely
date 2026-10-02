@@ -10,7 +10,7 @@ import 'package:jaspr/server.dart';
 
 /// PostHog, cookieless (ADR 0004): nothing is stored in the browser, no
 /// person profiles, no autocapture, no replay, no surveys. The library is
-/// loaded deferred from the EU asset host and initialised once the document
+/// loaded deferred from the EU asset host and initialized once the document
 /// is ready; `lib/analytics.dart` is the only caller afterwards.
 const _posthogInit =
     "window.addEventListener('DOMContentLoaded',function(){"

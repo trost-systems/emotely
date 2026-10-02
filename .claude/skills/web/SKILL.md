@@ -22,7 +22,7 @@ derives `<html lang>`, the `hreflang` alternates and the language switch
 from the table, and `site_test.dart` checks each row renders, lists itself
 and its pair, and keeps the original's sections. An island takes its
 language as `lang` (a `SiteLocale` code), because `@client` parameters
-must be serialisable.
+must be serializable.
 
 Everything below is agent-executable; run from `apps/web`.
 
