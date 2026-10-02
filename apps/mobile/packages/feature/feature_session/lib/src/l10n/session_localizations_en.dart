@@ -115,5 +115,8 @@ class SessionLocalizationsEn extends SessionLocalizations {
   String get emojiSearchHint => 'Smile, heart, …';
 
   @override
+  String get emojiSearchBackTooltip => 'Back to all emoji';
+
+  @override
   String get emojiNoRecents => 'No recent emoji';
 }

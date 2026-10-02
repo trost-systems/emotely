@@ -147,11 +147,65 @@ void main() {
       // are worded by the session too.
       final config = tester.widget<EmojiPicker>(picker).config;
       expect(config.locale, german);
-      expect(config.searchViewConfig.hintText, strings.emojiSearchHint);
       expect(
         (config.emojiViewConfig.noRecents as Text).data,
         strings.emojiNoRecents,
       );
+    });
+
+    /// The picker's search, opened from the sheet of the first slot.
+    final search = find.bySubtype<SearchView>();
+
+    Future<void> openSearch(WidgetTester tester) async {
+      await openSlot(tester, 0);
+      await tester.tap(find.byIcon(Icons.search));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+      'search finds an emoji by a word in the app language, to pick',
+      (tester) async {
+        final submitted = await pumpTestWidget(tester);
+        await openSearch(tester);
+
+        expect(
+          find.descendant(
+            of: search,
+            matching: find.text(tester.strings.emojiSearchHint),
+          ),
+          findsOneWidget,
+        );
+
+        // German, as the app pumps: only the German name of 🦋 matches it,
+        // the English "butterfly" would not.
+        await tester.enterText(find.byType(EditableText), 'Schmetterling');
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.descendant(of: search, matching: find.text('🦋')),
+        );
+        await tester.pumpAndSettle();
+
+        expect(picker, findsNothing);
+        await tapSubmit(tester, EmojiInput.submitKey);
+        expect(submitted.single, const Answer.emoji(['🦋']));
+      },
+      // The picker taps its emoji through Material buttons on Android and
+      // Cupertino ones on iOS; search holds on both.
+      variant: const TargetPlatformVariant({
+        TargetPlatform.android,
+        TargetPlatform.iOS,
+      }),
+    );
+
+    testWidgets('leaving search shows every emoji again', (tester) async {
+      await pumpTestWidget(tester);
+      await openSearch(tester);
+
+      await tester.tap(find.byTooltip(tester.strings.emojiSearchBackTooltip));
+      await tester.pumpAndSettle();
+
+      expect(search, findsNothing);
+      expect(find.text('😊'), findsOneWidget);
     });
 
     testWidgets('meets accessibility guidelines', (tester) async {
@@ -161,6 +215,19 @@ void main() {
           localizations: sessionLocalizations,
         ),
         prepare: (tester) => pick(tester, 0, '😀'),
+      );
+    });
+
+    testWidgets('search meets accessibility guidelines', (tester) async {
+      await tester.expectMeetsAccessibilityGuidelines(
+        appWrapper(
+          const EmojiInput(onSubmit: ignoreAnswer),
+          localizations: sessionLocalizations,
+        ),
+        prepare: (tester) async {
+          await openSearch(tester);
+          await tester.enterText(find.byType(EditableText), 'Schmetterling');
+        },
       );
     });
   });

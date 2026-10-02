@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:contract/contract.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:feature_session/src/l10n/l10n.dart';
+import 'package:feature_session/src/widgets/emoji_search.dart';
 import 'package:feature_session/src/widgets/submit_button.dart';
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform;
@@ -209,10 +210,11 @@ class const _EmojiSheet({required final bool canClear})
         color: scheme.error,
         semanticLabel: strings.emojiClearLabel,
       ),
+      // Search is ours: the picker's own fails without a legacy Material.
       searchViewConfig: SearchViewConfig(
         backgroundColor: background,
         buttonIconColor: scheme.primary,
-        hintText: strings.emojiSearchHint,
+        customSearchView: EmojiSearch.new,
       ),
     );
   }
