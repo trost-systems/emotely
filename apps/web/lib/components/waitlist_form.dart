@@ -12,8 +12,8 @@ import 'package:universal_web/web.dart' as web;
 
 /// The one interactive island on the site: an address in, a thank-you out.
 ///
-/// `@client` components take only serialisable parameters, so the HTTP
-/// client is not injected; `http.Client()` honours `http.runWithClient`,
+/// `@client` components take only serializable parameters, so the HTTP
+/// client is not injected; `http.Client()` honors `http.runWithClient`,
 /// which is how tests put a fake behind it. For the same reason the
 /// language comes in as [lang], a [SiteLocale]'s code.
 //

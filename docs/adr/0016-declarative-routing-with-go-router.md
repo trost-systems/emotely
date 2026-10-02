@@ -83,7 +83,7 @@ arguments, and tab stacks with independent histories — are exactly what the
    `?from=`; signed in, sign-in leads there — a deep link opened while
    signed out, or the screen the user was on when the session ended under
    them — or to the journal when there was nowhere in particular. Only a
-   location of this app's that is not sign-in is honoured. Besides the
+   location of this app's that is not sign-in is honored. Besides the
    pure tests, the router is tested for real: a deep link delivered the way
    the platform delivers it (`handlePushRoute`), then a sign-in through the
    screen. It reads `AuthBloc.state` when it runs, not a value captured

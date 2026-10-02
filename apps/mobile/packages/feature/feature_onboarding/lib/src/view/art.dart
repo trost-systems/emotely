@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 /// Welcome's picture: a sun coming up over three lines of a page, drawn in
-/// the theme's own colours so it follows light and dark. Decoration only;
+/// the theme's own colors so it follows light and dark. Decoration only;
 /// assistive technology skips it.
 class const SunriseArt({super.key}) extends StatelessWidget {
   static const size = Size(200, 160);
@@ -19,7 +19,7 @@ class const _SunrisePainter(final ColorScheme colors) extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final horizon = size.height * 0.7;
-    final centre = Offset(size.width / 2, horizon);
+    final center = Offset(size.width / 2, horizon);
     canvas
       ..save()
       ..clipRect(Rect.fromLTRB(0, 0, size.width, horizon));
@@ -28,7 +28,7 @@ class const _SunrisePainter(final ColorScheme colors) extends CustomPainter {
       (46.0, colors.primary.withValues(alpha: 0.55)),
       (22.0, colors.primary),
     ]) {
-      canvas.drawCircle(centre, radius, Paint()..color = color);
+      canvas.drawCircle(center, radius, Paint()..color = color);
     }
     canvas.restore();
     final line = Paint()

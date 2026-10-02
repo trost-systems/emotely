@@ -103,7 +103,7 @@ class ProviderSignIn({required final GoogleClientIds google}) {
   }
 
   /// A fresh nonce per attempt, and no name: the app has no use for one, so
-  /// it asks for the address alone (data minimisation).
+  /// it asks for the address alone (data minimization).
   Future<ProviderToken?> _apple() async {
     final nonce = _rawNonce();
     try {

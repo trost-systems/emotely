@@ -46,7 +46,7 @@ touches only `apps/web` legitimately shows `agent`, `app` and `supabase` as
 skipped — **skipped is not failed**, and `ci-ok` is green precisely because it
 treats them as fine.
 
-The checks from outside `ci.yml` worth recognising are the **Vercel** preview
+The checks from outside `ci.yml` worth recognizing are the **Vercel** preview
 deployments (`emotely-agent`, `emotely-web`, each skipped by its
 `vercel-ignore.sh` when that app is untouched).
 
@@ -263,7 +263,7 @@ people is not: `main` squash-merges, so the branch's internal history collapses
 to a single commit and the merge commits never reach it.
 
 Before a first review has landed, either is harmless — but merging is still the
-default, so there is one rule rather than a judgement call about how "reviewed"
+default, so there is one rule rather than a judgment call about how "reviewed"
 a PR is.
 
 **The one exception is a real secret in the history.** There, rewriting is the

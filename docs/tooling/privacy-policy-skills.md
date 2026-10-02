@@ -15,7 +15,7 @@ They do different jobs and the split matters — one drafts, one catches drift.
 | Kind | Skill (`~/.claude/skills/privacy-policy`) | Plugin (`privacy-legal@claude-for-legal`) |
 | Source | [lawve-ai/awesome-legal-skills](https://github.com/lawve-ai/awesome-legal-skills) (691★) | [anthropics/claude-for-legal](https://github.com/anthropics/claude-for-legal) (9.4k★, first-party) |
 | Author | Stephane Boghossian | Anthropic |
-| Licence | **AGPL-3.0** | See upstream repo |
+| License | **AGPL-3.0** | See upstream repo |
 | Job | **Draft** a policy from intake | **Review** a policy against practice |
 | Invoke | `/privacy-policy` | `/privacy-legal:<skill>` |
 
@@ -100,7 +100,7 @@ claude "/privacy-legal:policy-monitor we now request zero-data-retention on ever
 ```
 
 Two things no general-purpose skill will get right here, so they stay a human
-judgement:
+judgment:
 
 - **Journal entries are special-category data.** Emotional and mental-health
   content plausibly engages Art. 9 GDPR. Both skills correctly escalate

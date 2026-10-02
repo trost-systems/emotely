@@ -251,14 +251,14 @@ void main() {
     });
   });
 
-  group('normaliseCode', () {
+  group('normalizeCode', () {
     test('drops the spaces a paste from a mail app brings along', () {
-      expect(normaliseCode('12 34 56'), '123456');
-      expect(normaliseCode('  123456 '), '123456');
-      expect(normaliseCode('123 456'), '123456');
+      expect(normalizeCode('12 34 56'), '123456');
+      expect(normalizeCode('  123456 '), '123456');
+      expect(normalizeCode('123 456'), '123456');
     });
     test('leaves anything else to the shape check', () {
-      expect(normaliseCode('12345a'), '12345a');
+      expect(normalizeCode('12345a'), '12345a');
     });
   });
 
@@ -271,7 +271,7 @@ void main() {
       expect(looksLikeCode('1234567'), isFalse);
       expect(looksLikeCode('12345a'), isFalse);
       expect(looksLikeCode(''), isFalse);
-      // Spaces are stripped by normaliseCode before this check sees them.
+      // Spaces are stripped by normalizeCode before this check sees them.
       expect(looksLikeCode('12 34 56'), isFalse);
     });
   });

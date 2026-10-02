@@ -79,7 +79,7 @@ void main() {
     test('keeps the invisible characters names and emoji are made of', () {
       // ZWNJ (U+200C) spells Persian and Indic names, ZWJ (U+200D) builds
       // emoji, tag characters build subdivision flags, and a right-to-left
-      // mark only affects its own neighbour.
+      // mark only affects its own neighbor.
       const persian = 'مهران\u200cپور';
       const family = '👨\u200d👩\u200d👧';
       const england =

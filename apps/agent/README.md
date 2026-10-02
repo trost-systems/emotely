@@ -79,7 +79,7 @@ names each provider that was dropped and why.
 `EMOTELY_MODEL` is a Vercel environment variable, so changing it bypasses both
 the benchmark and CI — there is no deploy-time guard yet (follow-up to
 [issue #98](https://github.com/trost-systems/emotely/issues/98)). When a rejection
-does happen, the runbook below says how to recognise and recover from it.
+does happen, the runbook below says how to recognize and recover from it.
 
 ## Runbook: every session is failing
 
@@ -122,7 +122,7 @@ separates the two cases the gateway has:
 measured — or to restore the plan. Do **not** recover by dropping the privacy
 options: they are load-bearing for the privacy notice
 ([ADR 0005](../../docs/adr/0005-journal-content-privacy-mode.md)), and failing
-closed is the intended behaviour.
+closed is the intended behavior.
 
 **Why the alarm exists.** Before this, a gateway rejection surfaced as an
 unhandled 500 and the only alarm was the nightly `live-smoke` job, so a total

@@ -1,5 +1,5 @@
 /**
- * Reads back whether the gateway actually honoured the privacy filters that
+ * Reads back whether the gateway actually honored the privacy filters that
  * `session-core.ts` sends on every round, and how much routing headroom the
  * model has left once non-qualifying providers are filtered out.
  *
@@ -116,7 +116,7 @@ export function qualificationFromMetadata(
 /**
  * Classify a thrown error as a privacy-filter rejection, or `undefined` if it
  * is something else. Returning `undefined` matters: a 503 or a malformed tool
- * call is an infrastructure blip the benchmark retries, and mislabelling one as
+ * call is an infrastructure blip the benchmark retries, and mislabeling one as
  * a privacy failure would quietly disqualify a perfectly good model.
  */
 export function qualificationFromError(

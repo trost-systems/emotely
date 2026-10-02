@@ -61,7 +61,7 @@ void main() {
       expect(await store.read(), isNull);
     });
 
-    test('reads a value it does not recognise as no choice', () async {
+    test('reads a value it does not recognize as no choice', () async {
       // Something another build wrote, or a corrupted value: asking again
       // is the only answer that cannot count someone who never agreed.
       for (final value in [

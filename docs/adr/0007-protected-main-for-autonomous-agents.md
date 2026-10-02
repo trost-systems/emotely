@@ -25,11 +25,11 @@ pushes with rollback deliver neither atomicity nor pre-merge verification.
 
 - **Squash-merge only.** Merge commits and rebase-merge are disabled, so one PR is
   always one revertable commit. That property is what makes rollback still work as
-  the second line of defence.
+  the second line of defense.
 - **`ci-ok` is the only required check.** Path filtering means the agent or app job
   may legitimately not run, and a required check that never reports blocks a PR
   forever. `ci-ok` always runs and inspects its dependencies: green when every job
-  succeeded *or was skipped*, red when any failed or was cancelled. It must never
+  succeeded *or was skipped*, red when any failed or was canceled. It must never
   be a bare `echo ok` — that reports success unconditionally and is worse than no
   gate, because it manufactures confidence.
 - **Enforced for admins.** Not because a human commit is dangerous, but because a

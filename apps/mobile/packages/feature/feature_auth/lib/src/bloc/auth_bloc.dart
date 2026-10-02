@@ -81,8 +81,8 @@ class AuthBloc({
           identity: SignInIdentity.ofUser(session.user),
         );
 
-  /// Whether [email] is one of [_passwordAccounts], normalised the way
-  /// [isReviewAccount] normalises.
+  /// Whether [email] is one of [_passwordAccounts], normalized the way
+  /// [isReviewAccount] normalizes.
   bool _isPasswordAccount(String email) => _passwordAccounts
       .map((account) => account.trim().toLowerCase())
       .contains(email.trim().toLowerCase());

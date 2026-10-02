@@ -125,7 +125,7 @@ void main() {
         expect(redirect(signedIn: true, location: signIn()), afterSignIn());
       });
 
-      test('honours only a location of this app that leads nowhere back', () {
+      test('honors only a location of this app that leads nowhere back', () {
         for (final from in [
           'https://example.com/x',
           'entries/e-1',
@@ -181,7 +181,7 @@ void main() {
       createdAt: DateTime.utc(2026, 9, 7, 20),
     );
 
-    testWidgets('honours a deep link opened while signed out once the user '
+    testWidgets('honors a deep link opened while signed out once the user '
         'signs in', (tester) async {
       final supabase = SupabaseStub()
         ..script(otp: [codeSent()], verify: [sessionGranted()])

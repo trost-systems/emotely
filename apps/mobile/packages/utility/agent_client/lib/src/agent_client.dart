@@ -28,7 +28,7 @@ class const AgentClient({
 
   /// Advances the session: no transcript starts one, a transcript plus the
   /// [answer] to its pending question continues it. Every request names the
-  /// [appVersion] so the server can gate behaviour per version, and carries
+  /// [appVersion] so the server can gate behavior per version, and carries
   /// the signed-in user's token from [accessToken]; without one the server
   /// refuses the round (ADR 0010).
   ///

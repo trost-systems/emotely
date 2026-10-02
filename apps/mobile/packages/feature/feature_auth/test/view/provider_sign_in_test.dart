@@ -316,7 +316,7 @@ void main() {
       expect(body['provider'], 'apple');
       expect(body['id_token'], idToken);
       final request = apple.requests.single;
-      // No name: the app has no use for one (data minimisation).
+      // No name: the app has no use for one (data minimization).
       expect(request.scopes, [AppleIDAuthorizationScopes.email]);
       expect(request.nonce, _hashed(body['nonce'] as String));
       expect(robot.home, findsOneWidget);

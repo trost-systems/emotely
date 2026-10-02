@@ -147,7 +147,7 @@ void main() {
         ]);
       });
 
-      testWidgets('stays on when the question is cancelled', (tester) async {
+      testWidgets('stays on when the question is canceled', (tester) async {
         final robot = robotWith(tester);
         await robot.launch();
 

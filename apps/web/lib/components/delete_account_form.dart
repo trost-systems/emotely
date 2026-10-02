@@ -230,8 +230,8 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
 
   Future<void> _delete() async {
     // Pasting from a mail app brings spaces along ("12 34 56"); a correct
-    // code should not be refused for how it travelled.
-    final code = normaliseCode(_code);
+    // code should not be refused for how it traveled.
+    final code = normalizeCode(_code);
     if (!looksLikeCode(code)) {
       setState(() => _message = _words.codeShape);
       return;

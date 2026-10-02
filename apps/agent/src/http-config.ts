@@ -54,7 +54,7 @@ export function createConfigHandler(config: {
   minAppVersion: string;
   /**
    * Where the force-update screen sends a caller whose platform we do not
-   * recognise (or that did not say). The releases page until the store
+   * recognize (or that did not say). The releases page until the store
    * listings exist (#9).
    */
   storeUrl: string;
@@ -95,7 +95,7 @@ export function createConfigHandler(config: {
     if (request.method !== "GET" && request.method !== "HEAD") {
       return Promise.resolve(getOnly());
     }
-    // The app names its own platform; anything unrecognised gets the neutral
+    // The app names its own platform; anything unrecognized gets the neutral
     // link rather than an error. Someone blocked by the version gate cannot
     // install a build that would send a better parameter, so a request we
     // cannot classify must still answer with somewhere to go.

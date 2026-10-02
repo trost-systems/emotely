@@ -22,7 +22,7 @@ the user by it. Both consoles declare it, as changed on 2026-09-27:
 - ASC **Contact Info → Name**: Linked, **App Functionality and Product
   Personalization**, no tracking (published).
 - Play **Data safety → Personal info → Name**: collected, not shared,
-  optional, **App functionality, Personalisation, Account management**
+  optional, **App functionality, Personalization, Account management**
   (sent for review).
 
 The picture link is a URL on Google's servers, not a photo the app holds, and
@@ -33,7 +33,7 @@ shared):
 
 | Data type | Required? | Purposes |
 | --- | --- | --- |
-| Name | optional | App functionality, Personalisation, Account management |
+| Name | optional | App functionality, Personalization, Account management |
 | Email address | required | App functionality, Account management |
 | User IDs | required | App functionality, Analytics, Account management |
 | App interactions | required | Analytics |
@@ -78,7 +78,7 @@ App interactions, Crash logs, Diagnostics and Device or other IDs
 
 - **Name**: still collected, still **optional**, still not shared. Purposes
   become **App functionality, Personalization, Account management**. The
-  app asks for it and greets the user by it (personalisation, app
+  app asks for it and greets the user by it (personalization, app
   functionality); Supabase still stores the name Google sends with a Google
   sign-in, which is account management. The app no longer takes a name from
   Google or Apple, but Google's still arrives, so the type stays declared.
@@ -123,7 +123,7 @@ So the analytics types stay declared exactly as they are.
   Personalization as "Customizing what the user sees, such as a list of
   recommended products, posts, or suggestions". The name changes what the
   user sees — the journal's greeting and how the companion addresses them —
-  and the notice calls it the personalised service the user asked for, so
+  and the notice calls it the personalized service the user asked for, so
   both consoles and the notice tell the same story. App Functionality stays
   for the account record of a Google sign-in.
 - **Identifiers (user id, device id), Usage Data and Diagnostics**:

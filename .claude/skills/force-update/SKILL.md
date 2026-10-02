@@ -62,7 +62,7 @@ hour.
 
 `store_url` is per platform: the app sends `?platform=ios|android` and the
 server answers with that store's listing, falling back to a neutral link for
-anything it does not recognise. They are server-side on purpose — **the only
+anything it does not recognize. They are server-side on purpose — **the only
 people who ever follow that link are the ones who cannot install a build
 carrying a corrected one.**
 

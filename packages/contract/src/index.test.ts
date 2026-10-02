@@ -204,7 +204,7 @@ describe("advance_session request", () => {
   it("keeps the invisible characters names and emoji are made of", () => {
     // ZWNJ spells Persian and Indic names, ZWJ builds emoji, tag characters
     // build subdivision flags, and a right-to-left mark only settles its
-    // neighbours: the profile's check and Dart's DisplayName allow them too.
+    // neighbors: the profile's check and Dart's DisplayName allow them too.
     const zwnj = String.fromCodePoint(0x20_0c);
     const zwj = String.fromCodePoint(0x20_0d);
     const rlm = String.fromCodePoint(0x20_0f);

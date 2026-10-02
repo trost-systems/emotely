@@ -104,7 +104,7 @@ abstract class DesignSystemLocalizations {
     Locale('de'),
   ];
 
-  /// Heading above a finished journal entry, wherever one is shown: at the end of a session and when reading it back from the journal. The entry below it is the user's own, summarised.
+  /// Heading above a finished journal entry, wherever one is shown: at the end of a session and when reading it back from the journal. The entry below it is the user's own, summarized.
   ///
   /// In en, this message translates to:
   /// **'Your entry'**
