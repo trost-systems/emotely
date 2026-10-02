@@ -8,3 +8,6 @@ import 'package:get_it/get_it.dart';
 /// The address and the label need no registration: they are constants.
 void registerFeedbackLink(GetIt getIt, {required BuildInfo build}) =>
     getIt.registerSingleton<BuildInfo>(build);
+
+/// Proof for #272: code no test reaches. Reverted in the next commit.
+int uncoveredForProof(int value) => value + 1;
