@@ -150,6 +150,7 @@ test is: **would it make sense in a project that isn't emotely?**
 | Home | Engine and scope | Today |
 |---|---|---|
 | `ast-grep/rules/tripwire` | ast-grep, syntax only. General: holds unchanged in any project with agents writing code. A later general concern gets its own directory beside it. | The comment tripwire: workaround tags and phrases, suppressions without a reason, in Dart, TypeScript and shell. |
+| `ast-grep/rules/feature-map` (added 2026-09-29, #168) | ast-grep, syntax only. General: it reads go_router_builder's annotations and names no emotely path; which files it reads and what the matches are compared with live in `scripts/feature-map.sh`. | `typed-go-route`, an extraction rule (`severity: off`, see below): every typed route, for the run-app skill's feature map. |
 | `ast-grep/rules/architecture` | ast-grep, syntax only. Emotely-specific: the rule names emotely's paths, packages or ADRs, and means nothing elsewhere. | `no-from-environment` (ADR 0015): a define is read only in its app's environment file. |
 | `tools/emotely_lints` (added 2026-09-29, #233) | The Dart analyzer plugin, for a rule that needs types. It loads from the `apps/mobile` workspace's options only, so it reaches the Flutter packages and nothing else. | `avoid_hardcoded_ui_text` (ADR 0020). |
 
@@ -197,11 +198,24 @@ is one file plus its test, and nothing else changes:
    comment saying why the rule exists, which existing rules fall short, and
    whether it is general or emotely-specific, and a `message` that names
    the fix, not only the fault.
-4. Record the snapshots with `pnpm exec ast-grep test --update-all` and
-   read them: they are the rule's expected findings.
+4. Record the snapshots with `pnpm exec ast-grep test --include-off
+   --update-all` and read them: they are the rule's expected findings.
 5. If the rule has `files` or `ignores`, test them in
    `scripts/ast-grep.test.sh`, the only place a finding has a path.
-6. `pnpm ast-grep:check` runs all three steps of CI's `ast-grep` job.
+6. `pnpm ast-grep:check` runs the three ast-grep steps of CI's `ast-grep`
+   job: the rule tests, the script's tests and the scan.
+
+**An extraction rule** feeds a script instead of failing the scan: it is
+`severity: off`, so the scan skips it, and its script switches it on by id
+(`ast-grep scan --filter '^<rule-id>$' --info=<rule-id>`), as
+`scripts/feature-map.sh` does with `typed-go-route` (added 2026-09-29,
+#168). Plain `ast-grep test` skips an off rule's tests and prints the same
+"Configuration not found" as for a rule that is gone, so
+`scripts/ast-grep.sh test` passes `--include-off`: an off rule's tests run,
+and a test whose off rule was renamed still fails as an orphan. The script
+and its own tests run in CI's `ast-grep` job after the three steps above,
+and locally as `pnpm feature-map`; that stays out of `pnpm ast-grep:check`
+because it needs yq, which nothing else in the gate does.
 
 ### What `no-from-environment` leaves to existing tools
 

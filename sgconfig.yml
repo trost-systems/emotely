@@ -3,7 +3,10 @@
 # ast-grep/tests (run it as `scripts/ast-grep.sh test`, which also fails a
 # test whose rule is gone); `scripts/ast-grep.sh` scans every file git
 # tracks. Both run in CI's ast-grep job. A new rule is one file in a directory under
-# ast-grep/rules plus its test; nothing here changes (ADR 0018).
+# ast-grep/rules plus its test; nothing here changes (ADR 0018). Rules with
+# `severity: off` extract rather than lint: the scan skips them, a script
+# switches one on by id (`scripts/feature-map.sh`), and `scripts/ast-grep.sh
+# test` still runs their tests (`--include-off`).
 ruleDirs:
   - ast-grep/rules
 testConfigs:

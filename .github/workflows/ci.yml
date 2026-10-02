@@ -270,6 +270,10 @@ jobs:
   # check shares its Node setup and runs last. Rules that need types are not
   # here: they are the analyzer plugin's (tools/emotely_lints), which the app
   # job runs and the lints job tests.
+  # The same job keeps the run-app skill's feature map honest: every typed
+  # route the Flutter workspace declares (the ast-grep rule `typed-go-route`,
+  # off in the scan above; `ast-grep.sh test` still runs its tests) has its
+  # entry, and every entry a route. Runners ship jq and yq.
   ast-grep:
     runs-on: ubuntu-latest
     steps:
@@ -282,6 +286,8 @@ jobs:
       - run: pnpm exec bash scripts/ast-grep.sh test
       - run: pnpm exec bash scripts/ast-grep.test.sh
       - run: pnpm exec bash scripts/ast-grep.sh --format github
+      - run: pnpm exec bash scripts/feature-map.test.sh
+      - run: pnpm exec bash scripts/feature-map.sh
       # The copy spell check (ADR 0020): the app's ARB messages, English and
       # German, and the words CONTEXT.md says to avoid. Offline, under a
       # second; every pull request, since copy can change anywhere.

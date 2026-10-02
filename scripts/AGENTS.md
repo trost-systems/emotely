@@ -19,10 +19,20 @@ on purpose: `dart` is the standalone SDK `apps/web` is pinned to, and
 
 `release-status.sh` records one store channel's version and build in the README badges' `status.json`.
 
+`feature-map.sh` fails when a typed route in the Flutter workspace's tracked
+library code and the entries of
+`.claude/skills/run-app/references/feature-map.yaml` disagree, or when an
+entry lacks a field. The routes come from the ast-grep rule `typed-go-route`,
+which is `severity: off` so the ast-grep scan skips it. `pnpm feature-map`
+runs the script after its own tests (`feature-map.test.sh`), and so does
+CI's `ast-grep` job, after the steps of `pnpm ast-grep:check`. It stays out
+of `ast-grep:check` because it needs yq, which nothing else there does.
+
 `ast-grep.sh` runs every ast-grep rule over every file git tracks, so an
 untracked scratch file never fails it, and fails a bare `ast-grep-ignore`
-(`no-suppress-all`). `ast-grep.sh test` runs the rule tests and, unlike
-`ast-grep test`, fails a test whose rule id no rule has. `pnpm
+(`no-suppress-all`). `ast-grep.sh test` runs the rule tests, those of
+`severity: off` rules included, and, unlike `ast-grep test`, fails a test
+whose rule id no rule has. `pnpm
 ast-grep:check` runs the rule tests, the script's own tests
 (`ast-grep.test.sh`) and the scan, all three of which CI's `ast-grep` job
 runs. A rule's `files` and `ignores` are tested only in

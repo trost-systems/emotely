@@ -6,6 +6,9 @@
 #     The rule tests (`ast-grep test`), failing on a test whose rule id no
 #     rule has: ast-grep itself only prints "Configuration not found" and
 #     passes, so a renamed or deleted rule would silently lose its tests.
+#     Rules with `severity: off` are tested too (`--include-off`): they
+#     extract rather than lint (scripts/feature-map.sh switches one on by
+#     id), and without it ast-grep skips their tests with that same message.
 #
 #   pnpm exec bash scripts/ast-grep.sh [scan arguments]
 #     Every rule in ast-grep/rules — the comment tripwire, the architecture
@@ -23,7 +26,7 @@ cd "$(git rev-parse --show-toplevel)"
 if [[ "${1:-}" == test ]]; then
   shift
   status=0
-  output="$(ast-grep test --color never "$@" 2>&1)" || status=$?
+  output="$(ast-grep test --include-off --color never "$@" 2>&1)" || status=$?
   printf '%s\n' "${output}"
   orphans="$(sed -n 's/^Configuration not found! //p' <<<"${output}")"
   if [[ -n "${orphans}" ]]; then

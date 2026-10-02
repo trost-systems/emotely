@@ -1,0 +1,484 @@
+# The feature map: every screen of apps/mobile/app, how to reach it from the
+# signed-in journal, what it does and what drives it. Use it to turn a vague
+# report ("this screen looks wrong", a cropped screenshot) into a screen you
+# can reach: find the entry by `looks`, then follow `reach` with marionette
+# after `run-app.sh up` (references/verification.md). It is knowledge, not a
+# script: nothing runs it. Scripted journeys belong in patrol (#38).
+#
+# One entry per typed route (ADR 0016), under `screens`:
+#   route    the GoRouteData class the feature declares in lib/src/routes.dart
+#   package  the package that declares it
+#   path     its full location
+#   reach    from the signed-in journal, where `up` leaves you, in order.
+#            There are no deep links: the app registers no URL scheme, so
+#            every screen is reached by tapping keys.
+#   does     what the screen is for
+#   looks    what tells it apart in a screenshot, even a cropped one. Quoted
+#            text is the English copy (the `_en.arb` files), what a simulator
+#            shows by default (en_US), and what the walk behind this map used.
+#            A German phone shows the `_de.arb` wording instead
+#            (`run-app.sh up --locale de_DE`); the layout and keys are the same.
+#   states   per bloc, each state and what the screen shows in it
+#   keys     the widget keys that drive it (`--key` in marionette). The app
+#            sets no semantics identifiers; keys are the handles.
+#
+# CI keeps it honest: scripts/feature-map.sh fails when a package declares a
+# route the map does not list, when an entry names a route that no longer
+# exists or moved, and when an entry lacks one of the fields above. Adding
+# a route means adding its entry here in the same pull request.
+screens:
+  - route: JournalRoute
+    package: feature_journal
+    path: /
+    reach:
+      - "`run-app.sh up` ends here."
+      - From anywhere under the tabs, tap app_shell.journal; a tap on the
+        tab already shown returns it to its first screen.
+    does: >-
+      Home, the Journal tab: the user greeted by name, the entries so far,
+      newest first, and the way into the next session (start one, or
+      continue or discard the unfinished one). Starting asks the server for
+      consent first and pushes the consent screen when it does not stand.
+      Straight after sign-up it starts the first session by itself.
+    looks: >-
+      No app bar. At the top today's full date in small grey type over
+      "Good morning", "Good afternoon" or "Good evening" and the name in
+      large type. A tab bar at the bottom with Journal (selected, a book
+      icon) and More. Under the greeting a full-width "Start a session"
+      button, or "You have an unfinished session." with Continue and
+      "Discard it". Below, a list of dates (month, day, year) with a
+      two-line summary each, or "No entries yet. Your first session writes
+      the first one."
+    states:
+      JournalBloc:
+        JournalLoading: A spinner.
+        JournalReady: >-
+          The greeting (with the name when the profile has one), the
+          session card and the entries (or the empty text).
+        JournalFailure: '"Could not load your journal." and Try again.'
+    keys:
+      journal_greeting.title: The greeting, with the name.
+      journal_view.start: Start a session (no unfinished one).
+      journal_view.continue: Continue the unfinished session.
+      journal_view.discard: Discard the unfinished session.
+      journal_view.empty: The empty-journal text.
+      journal_view.entry.<id>: One entry row; opens EntryRoute.
+      journal_view.retry: Try again after a failed read.
+      app_shell.journal: The Journal tab.
+      app_shell.more: The More tab.
+
+  - route: EntryRoute
+    package: feature_journal
+    path: /entries/:id
+    reach:
+      - Run get-interactive-elements on the journal and tap the first key
+        that starts with journal_view.entry. (the newest entry). Without
+        an entry, finish a session first (SessionRoute) with made-up
+        answers.
+    does: >-
+      One filed entry, read back by its id: the agent's summary, then
+      every question with the answer recorded for it. Read-only.
+    looks: >-
+      App bar titled with the entry's date (month, day, year) and a back
+      arrow, the tab bar still at the bottom. "Your entry" as a heading,
+      the summary paragraph in full (the journal cuts it to two lines),
+      then question headings each with an answer under it: bullet lists,
+      "N / 10" ratings, emoji, colour names. The body is the same widget a
+      finished session ends on (SessionRoute, SessionCompleted); only the
+      app bar and the tab bar tell the two apart. With both cropped away,
+      reproduce here: it needs no model rounds.
+    states:
+      EntryBloc:
+        EntryLoading: App bar "Entry" and a spinner.
+        EntryReady: The date as the title and the entry.
+        EntryFailure: 'App bar "Entry", "Could not load this entry." and Try again.'
+    keys:
+      entry_view.summary: The summary paragraph.
+      entry_page.retry: Try again after a failed read.
+
+  - route: SessionRoute
+    package: feature_session
+    path: /session
+    reach:
+      - Tap journal_view.start, or journal_view.continue for the
+        unfinished session (?resume=<id>).
+      - Only while the smoke account's consent is missing or out of date,
+        ConsentRoute comes first; agree there and the session follows.
+      - Poll get-interactive-elements until session_view.question shows
+        (a model round takes a few seconds).
+      - Leave with press-back-button, then tap journal_view.discard on the
+        journal, so no open session is left behind.
+    does: >-
+      A journaling session with the deployed agent: one question at a time,
+      each answered with the widget its type asks for (text list, long
+      text, rating, emoji, colour), until the agent files the entry and the
+      screen shows it. Pushed over the tabs, so there is no tab bar.
+    looks: >-
+      App bar "Journaling session" with a back arrow and no tab bar.
+      "Question N" in small type over the question in large type, then an
+      input: numbered text fields, a big text box, a 1-10 slider, emoji or
+      colour slots, and a Submit button. Between rounds a spinner over
+      "Thinking…". At the end, "Your entry" with the summary and answers.
+    states:
+      SessionBloc:
+        SessionInitial: '"Thinking…" and a spinner.'
+        SessionLoading: '"Thinking…" and a spinner.'
+        SessionAwaitingAnswer: '"Question N", the question and its input.'
+        SessionCompleted: >-
+          The filed entry, the same body as EntryRoute; here under
+          "Journaling session" and with no tab bar.
+        SessionFailure: >-
+          The reason in words ("Could not reach emotely." and five others) and Try again, or Start over when the session
+          cannot continue.
+    keys:
+      session_view.question: The question text.
+      session_view.retry: Try again after a failed round.
+      session_view.start_over: Start a fresh session when this one cannot continue.
+      text_list_input.field.<n>: The n-th item of a text-list answer, from 0.
+      text_list_input.submit: Submit the list.
+      longtext_input.field: The long-text answer.
+      longtext_input.submit: Submit it.
+      rating_input.slider: The 1-10 slider; a tap on it sets 5.
+      rating_input.value: The number shown beside it.
+      rating_input.submit: Submit the rating.
+      emoji_input.slot.<n>: The n-th emoji slot; opens a picker without keys (tap --text).
+      emoji_input.clear: Clear the emoji.
+      emoji_input.submit: Submit the emoji.
+      color_input.slot.<n>: The n-th colour slot; opens a colour dialog.
+      color_input.select: Confirm the colour in the dialog.
+      color_input.cancel: Close the dialog.
+      color_input.clear: Clear the colours.
+      color_input.submit: Submit the colours.
+      answer_length.note: The note under a long answer about its length.
+
+  - route: MoreRoute
+    package: feature_account
+    path: /more
+    reach:
+      - Tap app_shell.more.
+    does: >-
+      The More tab: everything that is not the journal. The profile card on
+      top opens the Profile screen, where signing out lives. Then sections:
+      Privacy (Privacy settings; the privacy notice, in the browser), About
+      (the feedback mail, in the mail app; the imprint, in the browser) and
+      Account, where deleting it sits alone at the bottom.
+    looks: >-
+      App bar "More", the tab bar with More selected. On top a filled card:
+      the name's initial in a circle, the name (or "Add your name") in
+      large type, the sign-in address under it, and a chevron. Section
+      headings Privacy, About and Account in the primary colour over rows:
+      "Privacy settings" with "Journal: allowed · Usage analytics: on" (or
+      off) under it, "Privacy notice" (an open-in-new icon), "Send
+      feedback" with "Opens your mail app. Carries your app version and
+      device, nothing from your journal." (a mail icon), "Imprint", and
+      last a red "Delete account" with "Removes your account and every
+      entry."
+    states:
+      ProfileBloc:
+        ProfileStatus.loading: The card reads "Your profile".
+        ProfileStatus.ready: The card shows the name, or "Add your name".
+        ProfileStatus.loadFailed: The card reads "Your profile".
+      ConsentBloc:
+        ConsentKnown: '"Journal: allowed" or "Journal: off" under Privacy settings.'
+        ConsentWithdrawFailure: '"Journal: allowed".'
+        ConsentWriteFailure: '"Journal: off".'
+        ConsentUnknown: No journal part in the Privacy settings line.
+        ConsentBusy: No journal part in the Privacy settings line.
+        ConsentFailure: No journal part in the Privacy settings line.
+      UsageAnalyticsBloc:
+        allowed: '"Usage analytics: on".'
+        denied: '"Usage analytics: off".'
+        undecided: '"Usage analytics: off".'
+        unknown: No usage-analytics part in the line.
+      AccountBloc:
+        AccountIdle: Nothing to show; the bloc only composes the feedback mail here.
+    keys:
+      more_view.profile: The profile card; opens ProfileRoute.
+      more_view.privacy_settings: Opens PrivacySettingsRoute.
+      more_view.privacy_notice: Opens the privacy notice in the browser.
+      more_view.feedback: Opens the feedback mail.
+      more_view.imprint: Opens the imprint in the browser.
+      more_view.account: Delete account; opens AccountRoute.
+
+  - route: ProfileRoute
+    package: feature_account
+    path: /more/profile
+    reach:
+      - Tap app_shell.more.
+      - Tap more_view.profile.
+    does: >-
+      Who the user is to emotely: the name it greets them by, edited in
+      place and saved when the field is left, and the account they sign in
+      with, read-only. Signing out is at the foot. Deleting the account is
+      not here; it is under More.
+    looks: >-
+      App bar "Profile" with a back arrow, the tab bar still at the bottom.
+      A large initial in a circle, a "Name" field with a character counter
+      and "How emotely greets you." under it (or "<name> · a nickname I
+      picked – tell me yours" while the name is the placeholder emotely
+      picked), "Signed in as" over a card with the address and a line
+      saying how the account signs in, and "Sign out" with a logout icon
+      at the bottom, above a divider. A "Saved" snack bar after a change.
+    states:
+      ProfileBloc:
+        ProfileStatus.loading: A spinner in place of the field.
+        ProfileStatus.ready: The field with the name, or empty with "What should I call you?".
+        ProfileStatus.loadFailed: '"I couldn’t load your name." in red and Try again.'
+    keys:
+      profile_view.avatar: The initial.
+      profile_view.name: The name field; it saves when it loses focus.
+      profile_view.placeholder: The nickname line, while the name is the placeholder.
+      profile_view.retry: Try again after a failed read.
+      profile_view.email: The sign-in address.
+      profile_view.method: How the account signs in.
+      profile_view.sign_out: >-
+        Signs out; the app lands on Welcome (OnboardingRoute), with the
+        usage-analytics sheet over it.
+
+  - route: AccountRoute
+    package: feature_account
+    path: /more/account
+    reach:
+      - Tap app_shell.more.
+      - Tap more_view.account (Delete account, the last row).
+    does: >-
+      Deleting the account: what it means, and a button that deletes it
+      after a confirmation dialog. Never confirm on the smoke account.
+    looks: >-
+      App bar "Account" with a back arrow, the tab bar still at the bottom.
+      One paragraph, "Deleting your account also deletes every journal
+      entry you wrote. There is no way back.", and an outlined red "Delete
+      account" button. The dialog asks "Delete your account and every
+      entry?" with Cancel and a red Delete.
+    states:
+      AccountBloc:
+        AccountIdle: The paragraph and Delete account.
+        AccountDeleting: A spinner; back is blocked.
+        AccountDeleted: A spinner while the screen pops itself; the app lands on Welcome.
+        AccountFailure: The failure in red, Try again and Sign out.
+    keys:
+      account_view.delete: Opens the confirmation dialog.
+      account_view.cancel: Closes the dialog; safe.
+      account_view.confirm: Deletes the account. Never on the smoke account.
+      account_view.retry: Try the deletion again after a failure.
+      account_view.sign_out: Signs out after a failed deletion.
+
+  - route: PrivacySettingsRoute
+    package: feature_account
+    path: /more/privacy
+    reach:
+      - Tap app_shell.more.
+      - Tap more_view.privacy_settings.
+    does: >-
+      The two consents the app holds, one card and one switch each. Journal
+      sessions is the explicit consent a session needs: turning it off asks
+      first, then withdraws; turning it on opens ConsentRoute, since that
+      consent needs its wording read. Usage analytics flips both ways at
+      once.
+    looks: >-
+      App bar "Privacy settings" with a back arrow, the tab bar still at
+      the bottom. Two filled cards, each a large label with a switch:
+      "Journal sessions" ("Your answers go to a language model to guide
+      each session. …" and, while on, "Given <day> <Mon> <year>. Turning
+      this off stops new sessions; your entries stay.") and "Usage
+      analytics" ("Taps, screens and crash reports, …", "Stored with
+      PostHog in the EU."). Under them a "Read the privacy notice" link.
+      Turning journal sessions off shows a dialog "Turn off journal
+      sessions?" with Cancel and "Turn off".
+    states:
+      ConsentBloc:
+        ConsentUnknown: A thin progress bar under the journal card; the switch is disabled.
+        ConsentKnown: The switch as consent stands, with the date it was given while on.
+        ConsentBusy: The switch on and disabled.
+        ConsentWithdrawFailure: The switch on, and the withdrawal's failure in red.
+        ConsentWriteFailure: The switch off.
+        ConsentFailure: The failure in red and "Check again"; the switch is disabled.
+      UsageAnalyticsBloc:
+        allowed: The usage-analytics switch on.
+        denied: The switch off.
+        undecided: The switch off.
+        unknown: The switch disabled.
+    keys:
+      privacy_settings.journal: The journal-sessions switch.
+      privacy_settings.journal_retry: Check again after a failed read.
+      privacy_settings.confirm: Turn off, in the dialog; withdraws consent.
+      privacy_settings.cancel: Cancel, in the dialog; safe.
+      privacy_settings.usage_analytics: The usage-analytics switch.
+      privacy_settings.notice: Opens the privacy notice in the browser.
+
+  - route: ConsentRoute
+    package: feature_account
+    path: /consent
+    reach:
+      - Tap app_shell.more, then more_view.privacy_settings.
+      - While consent stands, tap privacy_settings.journal, then
+        privacy_settings.confirm, and wait for the switch to turn off
+        (this withdraws the smoke account's consent; give it again below).
+      - Tap privacy_settings.journal again.
+      - To leave consent as you found it, scroll-to and tap
+        consent_view.checkbox, then consent_view.agree. The screen pops
+        back to Privacy settings.
+    does: >-
+      Asks for the explicit consent a session needs (Art. 9 (2) (a) GDPR):
+      what is sent where, an unticked box, agree or decline. Pushed over
+      the tabs; pops with the outcome. Also where the journal sends a user
+      whose consent does not stand when they start a session.
+    looks: >-
+      App bar "Before emotely sends your writing" with a back arrow and no
+      tab bar. Three paragraphs, each opening in bold (the last is
+      "Sensitive, and yours to take back."), a "Read the full privacy
+      notice" link, a checkbox "I consent to my journal entries being sent
+      to a model provider as described above.", a "Start journaling" button
+      (dimmed until ticked) and "Not now".
+    states:
+      ConsentBloc:
+        ConsentUnknown: A spinner.
+        ConsentBusy: A spinner; back is blocked.
+        ConsentKnown: The question (granted pops the screen at once).
+        ConsentWithdrawFailure: The question.
+        ConsentFailure: The read failed, in red; Try again and Back.
+        ConsentWriteFailure: '"Could not record your consent.", in red; Try again and "Not now".'
+    keys:
+      consent_view.checkbox: The consent box; scroll to it first.
+      consent_view.agree: Start journaling; records consent once ticked.
+      consent_view.decline: Not now (Back after a failed read).
+      consent_view.notice: Opens the privacy notice in the browser.
+      consent_view.retry: Try again after a failed read or write.
+
+  - route: OnboardingRoute
+    package: feature_onboarding
+    path: /welcome
+    reach:
+      - Tap app_shell.more, more_view.profile, then profile_view.sign_out.
+        The app lands here, on Welcome, with the usage-analytics sheet over
+        it; answer it with usage_analytics_sheet.allow. Visit it last, with
+        SignInRoute, since the way back in is `run-app.sh down` and `up`
+        again, which signs in with the smoke password without printing it.
+      - The steps are bloc state on this one route. From Welcome,
+        onboarding.welcome.get_started, onboarding.value.continue, the name
+        (onboarding.name.field, then .continue or .skip), and the hello
+        step (onboarding.hello.start, or onboarding.skipped.start after a
+        skip), which goes on to sign-up (SignInRoute).
+    does: >-
+      Onboarding, before sign-up: what emotely is, what a few minutes gets
+      you, the name to be greeted by (optional; a skip gets a placeholder
+      nickname) and a hello, then sign-up. The router keeps a signed-out
+      user here until every step is done; "I have an account" on Welcome
+      goes to sign-in at any time. The device remembers the step reached,
+      and a sign-out forgets it. After a sign-in into an account without a
+      name, it asks for the name once (?phase=after-sign-in).
+    looks: >-
+      No app bar and no tab bar; a row of dots at the top (one wide dot for
+      the step), a back arrow from the second step on, art in the middle
+      and full-width buttons at the bottom. Welcome: "Welcome to emotely",
+      "A few guided minutes a day to notice how you feel – and why.", "Get
+      started" and "I have an account". Then "Here is what a few minutes
+      gets you" with three promises; "Before we start – what should I call
+      you?" with a "Your name" field, Continue and "Skip for now"; and
+      "Nice to meet you, <name>." or "Fine, stay mysterious." with "Start
+      my first reflection".
+    states:
+      OnboardingBloc:
+        OnboardingLoading: A blank screen while the account is looked at.
+        OnboardingShowing: The step, with its dots and back arrow.
+        OnboardingSaving: A spinner while the name is saved to the new account.
+        OnboardingSaveFailed: '"I could not save your name just now. …" and Try again.'
+        OnboardingFinished: A blank screen; the router moves on.
+    keys:
+      onboarding.welcome.get_started: Get started.
+      onboarding.welcome.have_account: I have an account; opens SignInRoute.
+      onboarding.value.continue: Continue past the promises.
+      onboarding.name.field: The name field.
+      onboarding.name.continue: Continue with the name typed.
+      onboarding.name.skip: Skip for now; emotely picks a nickname.
+      onboarding.hello.start: Start my first reflection; on to sign-up.
+      onboarding.skipped.start: The same after a skip.
+      onboarding.skipped.tell_you: Actually, I'll tell you; back to the name.
+      onboarding.back: The back arrow.
+      onboarding.waiting: The blank screen.
+      onboarding.saving: The spinner while the name is saved.
+      onboarding.retry: Try again after a failed save.
+
+  - route: SignInRoute
+    package: feature_auth
+    path: /sign-in
+    reach:
+      - Reach Welcome (OnboardingRoute) by signing out, then tap
+        onboarding.welcome.have_account. Visit it last, since the way back
+        in is `run-app.sh down` and `up` again, which signs in with the
+        smoke password without printing it.
+    does: >-
+      Where a signed-out user signs in ("I have an account" on Welcome) or
+      creates the account (the last step of onboarding): email, then the
+      six-digit code Supabase mails (or a password, for the review accounts
+      and a debug build's smoke account), or Google and Apple in one step.
+      From sign-in an email code never creates an account. Back returns to
+      Welcome from sign-in, and to the hello step from sign-up. The router
+      carries where the user was going (?from=) past it.
+    looks: >-
+      A back arrow and no title in the app bar, no tab bar. "Welcome back"
+      in large type when signing in; "Almost there, <name>" and "Create
+      your account so your reflections stay safe – and with you on any
+      phone." when signing up. Then "Sign in with Google" and "Continue
+      with Apple", the one used last tagged "Last used", "or with your
+      email", an "Email address" field, "Send me a code" (dimmed until the
+      address looks plausible), and "Privacy notice" at the bottom. After
+      it: a Code (or Password) field, Sign in and "Use a different email".
+    states:
+      LastSignInBloc:
+        "none": No "Last used" tag; nobody has signed in on this device yet.
+        "a SignInOption": The "Last used" tag on that way in.
+      AuthBloc:
+        AuthSignedOut: The email step, with the last error if any.
+        AuthRequestingCode: The email step, busy.
+        AuthSigningInWith: The email step, busy while Google or Apple answers.
+        AuthCodeSent: The code step.
+        AuthVerifying: The code step, busy.
+        AuthPasswordRequired: The password step.
+        AuthCheckingPassword: The password step, busy.
+        AuthSignedIn: Nothing; the router leaves for the journal.
+    keys:
+      sign_in_page.email: The email field.
+      sign_in_page.send_code: Send me a code.
+      sign_in_page.code: The six-digit code field.
+      sign_in_page.sign_in: Sign in with the code.
+      sign_in_page.password: The password field (review and smoke accounts).
+      sign_in_page.password_sign_in: Sign in with the password.
+      sign_in_page.change_email: Back to the email step.
+      sign_in_page.error: The error text under a field.
+      sign_in_page.google: Sign in with Google.
+      sign_in_page.apple: Sign in with Apple (iOS).
+      sign_in_page.privacy_notice: Opens the privacy notice in the browser.
+      sign_in_page.back: The back arrow.
+      sign_in_page.heading: '"Welcome back", or "Almost there, <name>".'
+
+# Screens that are not routes, so the check does not see them. The shell's
+# tab bar is on every screen under JournalRoute and MoreRoute.
+elsewhere:
+  - name: The usage-analytics sheet (feature_account, UsageAnalyticsPrompt)
+    looks: >-
+      A sheet from the bottom over a dimmed screen that cannot be touched:
+      "May I count how you use the app?", why, what is counted ("Taps,
+      screens and crash reports, stored with PostHog in the EU") and what
+      never is ("Never your answers, entries or name"), "Don’t allow" and
+      "Allow" side by side, and the privacy notice. It comes before
+      anything else on a fresh install, and again after every sign-out;
+      it cannot be dismissed without an answer. `run-app.sh up` answers it
+      (`--analytics allow` or `deny`).
+    keys:
+      usage_analytics_sheet: The sheet.
+      usage_analytics_sheet.allow: Allow.
+      usage_analytics_sheet.deny: Don’t allow.
+      usage_analytics_sheet.notice: Opens the privacy notice in the browser.
+  - name: ConfigGate (apps/mobile/app/lib/config)
+    looks: >-
+      Covers everything, before sign-in too: a spinner while the server
+      says whether this build may run; "This version of emotely is no
+      longer supported. Please update to <version> or newer to continue."
+      with Update; or a failure in red with Try again.
+    keys:
+      config_gate.checking: The spinner.
+      config_gate.update_required: The update text.
+      config_gate.update: Opens the store.
+      config_gate.failure: The failure text.
+      config_gate.retry: Asks the server again.

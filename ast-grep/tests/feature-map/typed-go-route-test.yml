@@ -1,0 +1,33 @@
+id: typed-go-route
+# An extraction rule, not a lint: `invalid` lists what it finds (every typed
+# route a feature declares, nested ones included), `valid` what it must not.
+valid:
+  # The generated side of a route, and the app's untyped shell.
+  - |
+    RouteBase get $journalRoute => GoRouteData.$route(path: '/', factory: $JournalRoute._fromState);
+  - |
+    final shell = StatefulShellRoute.indexedStack(branches: []);
+  # A typed shell route has no location of its own.
+  - |
+    @TypedStatefulShellRoute<AppShellRoute>(branches: [])
+    class const AppShellRoute() extends StatefulShellRouteData {}
+invalid:
+  - |
+    @TypedGoRoute<SignInRoute>(path: '/sign-in', name: 'signIn')
+    @immutable
+    class const SignInRoute() extends GoRouteData with $SignInRoute {}
+  # The annotation and each route nested under it.
+  - |
+    @TypedGoRoute<JournalRoute>(
+      path: '/',
+      name: 'journal',
+      routes: [TypedGoRoute<EntryRoute>(path: 'entries/:id', name: 'entry')],
+    )
+    class const JournalRoute() extends GoRouteData with $JournalRoute {}
+  # The path first or last, a name or none.
+  - |
+    @TypedGoRoute<MoreRoute>(name: 'more', path: '/more')
+    class const MoreRoute() extends GoRouteData with $MoreRoute {}
+  - |
+    @TypedRelativeGoRoute<DetailsRoute>(path: 'details')
+    class const DetailsRoute() extends RelativeGoRouteData with $DetailsRoute {}
