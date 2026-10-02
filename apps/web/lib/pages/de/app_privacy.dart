@@ -32,7 +32,7 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
         'Diese Datenschutzerklärung gilt für die emotely-App für iOS und '
         'Android (bei Google Play als „Reflect Therapy AI: emotely“ '
         'gelistet). Für die Website getemotely.com und ihre Warteliste gibt '
-        'es eine eigene Datenschutzerklärung. Zuletzt aktualisiert am 27. '
+        'es eine eigene Datenschutzerklärung. Zuletzt aktualisiert am 30. '
         'September 2026.',
       ),
     ]),
@@ -126,6 +126,13 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
         'Anbieter erfährt, dass du dich bei emotely angemeldet hast – als '
         'eigenständiger Verantwortlicher, nach seiner eigenen '
         'Datenschutzerklärung – und nichts über dein Tagebuch.',
+      ),
+    ]),
+    p([
+      .text(
+        'Mit den Anmeldedaten speichert Supabase Auth außerdem die Sprache, '
+        'in der die App angezeigt wird (Englisch oder Deutsch), damit deine '
+        'E-Mails mit dem Anmeldecode in dieser Sprache kommen.',
       ),
     ]),
     p([

@@ -820,6 +820,17 @@ void main() {
       );
     });
 
+    testComponents('says the account keeps the language of the sign-in mail', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(
+        find.textContaining('die Sprache, in der die App angezeigt wird'),
+        findsComponents,
+      );
+    });
+
     testComponents('says the app asks what to call you, and where it goes', (
       tester,
     ) {
@@ -901,7 +912,7 @@ void main() {
       tester.pumpComponent(const AppPrivacyDe());
 
       expect(
-        find.textContaining('Zuletzt aktualisiert am 27. September 2026'),
+        find.textContaining('Zuletzt aktualisiert am 30. September 2026'),
         findsOneComponent,
       );
     });
