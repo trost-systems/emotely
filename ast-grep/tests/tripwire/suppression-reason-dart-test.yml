@@ -63,7 +63,67 @@ valid:
       // coverage:ignore-line
       old();
     }
+  # ast-grep's own suppression silences any rule of this gate, so it wants
+  # a reason too: after the rule ids, or on the comment line above.
+  - |
+    void f() {}
+    // ast-grep-ignore: no-from-environment -- the harness replays a recorded define
+    const a = String.fromEnvironment('A');
+  - |
+    void f() {}
+    // ast-grep-ignore: no-from-environment, other-rule because the harness replays it
+    const a = String.fromEnvironment('A');
+  - |
+    void f() {}
+    // The harness replays a recorded define here.
+    // ast-grep-ignore: no-from-environment
+    const a = String.fromEnvironment('A');
+  # Mentioned mid-comment, it suppresses nothing, so it is not one.
+  - |
+    void f() {}
+    // Never write ast-grep-ignore: no-from-environment here.
+    const a = 1;
 invalid:
+  # ast-grep's own suppression without a reason, bare or with rule ids.
+  - |
+    void f() {}
+    // ast-grep-ignore
+    const a = String.fromEnvironment('A');
+  - |
+    void f() {}
+    // ast-grep-ignore: no-from-environment
+    const a = String.fromEnvironment('A');
+  - |
+    void f() {}
+    /// ast-grep-ignore: no-from-environment
+    const a = String.fromEnvironment('A');
+  - |
+    void f() {}
+    const a = String.fromEnvironment('A'); // ast-grep-ignore: no-from-environment
+  # ast-grep skips punctuation before the directive, so this rule does too.
+  - |
+    void f() {}
+    // - ast-grep-ignore: no-from-environment
+    const a = String.fromEnvironment('A');
+  - |
+    void f() {}
+    // ...ast-grep-ignore: no-from-environment
+    const a = String.fromEnvironment('A');
+  # Rule ids are not words, however many there are.
+  - |
+    void f() {}
+    // ast-grep-ignore: no-from-environment, workaround-tag-dart, workaround-phrase-dart, suppression-reason-dart
+    const a = String.fromEnvironment('A');
+  - |
+    void f() {}
+    // ast-grep-ignore: no-from-environment -- needed
+    const a = String.fromEnvironment('A');
+  # Another tool's suppression above is its own reason, not this one's.
+  - |
+    void f() {}
+    // coverage:ignore-line the value is only read on device
+    // ast-grep-ignore: no-from-environment
+    const a = String.fromEnvironment('A');
   # A bare directive.
   - |
     void f() {

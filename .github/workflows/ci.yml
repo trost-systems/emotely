@@ -255,14 +255,22 @@ jobs:
       - run: bash scripts/l10n-check.test.sh
       - run: bash .claude/skills/run-app/scripts/run-app.test.sh
 
-  # The comment tripwire (ast-grep rules, ADR 0018): hand-written Dart,
-  # TypeScript and shell must not announce a workaround (TODO, FIXME, HACK,
-  # XXX, "workaround", "for now", "temporary") or suppress a diagnostic
-  # without a reason; deferred work goes into an issue. It checks only what
-  # the Dart analyzer and biome do not already fail. It installs only the
+  # The ast-grep gate (ADR 0018): every rule under ast-grep/rules, over every
+  # tracked file. The comment tripwire (ast-grep/rules/tripwire): hand-written
+  # Dart, TypeScript and shell must not announce a workaround (TODO, FIXME,
+  # HACK, XXX, "workaround", "for now", "temporary") or suppress a diagnostic
+  # without a reason; deferred work goes into an issue. The architecture
+  # rules (ast-grep/rules/architecture): ADR 0015's boundaries, such as
+  # defines read only in an app's environment file. Each checks only what
+  # the Dart analyzer and biome do not already fail. `ast-grep.sh test` also
+  # fails a rule test whose rule is gone, and the scan fails an ast-grep
+  # suppression comment that names no rule (`no-suppress-all`). It installs only the
   # root package, whose ast-grep is a prebuilt binary, and reads every tracked
-  # source in well under a second, so it has no paths filter.
-  tripwire:
+  # source in well under a second, so it has no paths filter. The copy spell
+  # check shares its Node setup and runs last. Rules that need types are not
+  # here: they are the analyzer plugin's (tools/emotely_lints), which the app
+  # job runs and the lints job tests.
+  ast-grep:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -271,9 +279,9 @@ jobs:
         with:
           node-version-file: .nvmrc
       - run: pnpm install --frozen-lockfile --filter emotely
-      - run: pnpm exec ast-grep test
-      - run: pnpm exec bash scripts/tripwire.test.sh
-      - run: pnpm exec bash scripts/tripwire.sh --format github
+      - run: pnpm exec bash scripts/ast-grep.sh test
+      - run: pnpm exec bash scripts/ast-grep.test.sh
+      - run: pnpm exec bash scripts/ast-grep.sh --format github
       # The copy spell check (ADR 0020): the app's ARB messages, English and
       # German, and the words CONTEXT.md says to avoid. Offline, under a
       # second; every pull request, since copy can change anywhere.
@@ -356,7 +364,7 @@ jobs:
 
   # The single required check. Green only if every job succeeded or was skipped.
   ci-ok:
-    needs: [changes, agent, app, lints, scripts, supabase, tripwire, web]
+    needs: [changes, agent, app, ast-grep, lints, scripts, supabase, web]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:

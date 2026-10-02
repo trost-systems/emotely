@@ -81,6 +81,60 @@ snapshots:
       end: 53
   ? |
     void f() {}
+    // - ast-grep-ignore: no-from-environment
+    const a = String.fromEnvironment('A');
+  : labels:
+    - source: '// - ast-grep-ignore: no-from-environment'
+      style: primary
+      start: 12
+      end: 53
+  ? |
+    void f() {}
+    // ...ast-grep-ignore: no-from-environment
+    const a = String.fromEnvironment('A');
+  : labels:
+    - source: '// ...ast-grep-ignore: no-from-environment'
+      style: primary
+      start: 12
+      end: 54
+  ? |
+    void f() {}
+    // ast-grep-ignore
+    const a = String.fromEnvironment('A');
+  : labels:
+    - source: // ast-grep-ignore
+      style: primary
+      start: 12
+      end: 30
+  ? |
+    void f() {}
+    // ast-grep-ignore: no-from-environment
+    const a = String.fromEnvironment('A');
+  : labels:
+    - source: '// ast-grep-ignore: no-from-environment'
+      style: primary
+      start: 12
+      end: 51
+  ? |
+    void f() {}
+    // ast-grep-ignore: no-from-environment -- needed
+    const a = String.fromEnvironment('A');
+  : labels:
+    - source: '// ast-grep-ignore: no-from-environment -- needed'
+      style: primary
+      start: 12
+      end: 61
+  ? |
+    void f() {}
+    // ast-grep-ignore: no-from-environment, workaround-tag-dart, workaround-phrase-dart, suppression-reason-dart
+    const a = String.fromEnvironment('A');
+  : labels:
+    - source: '// ast-grep-ignore: no-from-environment, workaround-tag-dart, workaround-phrase-dart, suppression-reason-dart'
+      style: primary
+      start: 12
+      end: 121
+  ? |
+    void f() {}
     // coverage:ignore-line
     // A reason below does not count away from the first line.
   : labels:
@@ -88,6 +142,33 @@ snapshots:
       style: primary
       start: 12
       end: 35
+  ? |
+    void f() {}
+    // coverage:ignore-line the value is only read on device
+    // ast-grep-ignore: no-from-environment
+    const a = String.fromEnvironment('A');
+  : labels:
+    - source: '// ast-grep-ignore: no-from-environment'
+      style: primary
+      start: 69
+      end: 108
+  ? |
+    void f() {}
+    /// ast-grep-ignore: no-from-environment
+    const a = String.fromEnvironment('A');
+  : labels:
+    - source: '/// ast-grep-ignore: no-from-environment'
+      style: primary
+      start: 12
+      end: 52
+  ? |
+    void f() {}
+    const a = String.fromEnvironment('A'); // ast-grep-ignore: no-from-environment
+  : labels:
+    - source: '// ast-grep-ignore: no-from-environment'
+      style: primary
+      start: 51
+      end: 90
   ? |
     void g() {}
     // cognitive_complexity:ignore

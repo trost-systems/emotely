@@ -1,0 +1,61 @@
+id: no-from-environment-web
+snapshots:
+  ? |
+    const debug = bool.fromEnvironment('DEBUG');
+  : labels:
+    - source: bool.fromEnvironment
+      style: primary
+      start: 14
+      end: 34
+    - source: fromEnvironment
+      style: secondary
+      start: 19
+      end: 34
+    - source: bool
+      style: secondary
+      start: 14
+      end: 18
+  ? |
+    const key = String.fromEnvironment('POSTHOG_KEY');
+  : labels:
+    - source: String.fromEnvironment
+      style: primary
+      start: 12
+      end: 34
+    - source: fromEnvironment
+      style: secondary
+      start: 19
+      end: 34
+    - source: String
+      style: secondary
+      start: 12
+      end: 18
+  ? |
+    const port = core.int.fromEnvironment('PORT');
+  : labels:
+    - source: core.int.fromEnvironment
+      style: primary
+      start: 13
+      end: 37
+    - source: fromEnvironment
+      style: secondary
+      start: 22
+      end: 37
+    - source: core.int
+      style: secondary
+      start: 13
+      end: 21
+  ? |
+    final c = new String.fromEnvironment('C');
+  : labels:
+    - source: new String.fromEnvironment('C')
+      style: primary
+      start: 10
+      end: 41
+  ? |
+    final url = Uri.parse(const String.fromEnvironment('EMOTELY_SUPABASE_URL'));
+  : labels:
+    - source: const String.fromEnvironment('EMOTELY_SUPABASE_URL')
+      style: primary
+      start: 22
+      end: 74

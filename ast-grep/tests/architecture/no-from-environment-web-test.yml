@@ -1,0 +1,23 @@
+id: no-from-environment-web
+# The matcher is the same as no-from-environment's; these cases pin that the
+# copy stays in step. Which files each document reads is tested through the
+# gate script (scripts/ast-grep.test.sh), since a case here has no path.
+valid:
+  - |
+    import 'environment.dart' show posthogKey;
+
+    final enabled = posthogKey.isNotEmpty;
+  - |
+    /// The key comes from [String.fromEnvironment] in environment.dart.
+    final a = Config.fromEnvironment(values);
+invalid:
+  - |
+    const key = String.fromEnvironment('POSTHOG_KEY');
+  - |
+    final url = Uri.parse(const String.fromEnvironment('EMOTELY_SUPABASE_URL'));
+  - |
+    const debug = bool.fromEnvironment('DEBUG');
+  - |
+    const port = core.int.fromEnvironment('PORT');
+  - |
+    final c = new String.fromEnvironment('C');

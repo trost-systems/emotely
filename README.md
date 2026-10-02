@@ -74,8 +74,9 @@ emotely/
 │  └─ web/        Jaspr (Dart) · getemotely.com landing page + waitlist · static, deploys to Vercel
 ├─ packages/
 │  └─ contract/   the tool-call schema — single source of truth for both sides
-├─ ast-grep/     custom checks as ast-grep rules + their tests (ADR 0018) · the CI tripwire:
-│                no workaround comments, no suppression without a reason
+├─ ast-grep/     custom checks as ast-grep rules + their tests (ADR 0018) · the tripwire:
+│                no workaround comments, no suppression without a reason · the
+│                architecture rules: defines read only in an app's environment file
 ├─ supabase/     Postgres schema + RLS tests (pgTAP) + auth config · deploys on merge
 └─ README.md
 ```
