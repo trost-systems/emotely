@@ -20,7 +20,7 @@ void main() {
 
     test('point at getemotely.com', () {
       for (final locale in const [Locale('en'), Locale('de')]) {
-        expect(Uri.parse(privacyNoticeUrl(locale)).host, 'proof-272.invalid');
+        expect(Uri.parse(privacyNoticeUrl(locale)).host, 'getemotely.com');
         expect(Uri.parse(imprintUrl(locale)).host, 'getemotely.com');
       }
     });

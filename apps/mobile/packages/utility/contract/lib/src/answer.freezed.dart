@@ -627,4 +627,3 @@ as List<String>,
 }
 
 // dart format on
-// Proof for #272: a stale generated file. Reverted in the next commit.
