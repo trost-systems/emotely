@@ -8,12 +8,12 @@ import { PROMPT_ID } from "./session-prompt.ts";
 
 const qRate = {
   id: "q-rate",
-  text: "How would you rate your day?",
+  text: { en: "How would you rate your day?", de: "Wie war dein Tag?" },
   answer_type: "rating",
 } satisfies QuestionSet["questions"][number];
 const qGrateful = {
   id: "q-grateful",
-  text: "What are you grateful for?",
+  text: { en: "What are you grateful for?", de: "Wofür bist du dankbar?" },
   answer_type: "text_list",
   min_answers: 3,
 } satisfies QuestionSet["questions"][number];
@@ -64,7 +64,7 @@ const ask = (id: string, q: QuestionSet["questions"][number]): MockContent => ({
   toolName: "ask_question",
   input: JSON.stringify({
     question_id: q.id,
-    question: q.text,
+    question: q.text.en,
     answer_type: q.answer_type,
   }),
 });

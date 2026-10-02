@@ -1,13 +1,17 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json
 # The copy spell check (ADR 0020, `pnpm spell`, CI's tripwire job): every
-# message a user reads in the app's ARB files, in its own language, and the
-# words CONTEXT.md says to avoid. Keys, descriptions and placeholder examples
+# message a user reads in the app's ARB files, in its own language, the
+# question wordings the agent's question set shows them, and the words
+# CONTEXT.md says to avoid. Keys, descriptions and placeholder examples
 # are not copy and are not checked.
 version: "0.2"
 # Short copy words matter too ("teh"); the default is 4.
 minWordLength: 3
 files:
   - "apps/mobile/**/l10n/*.arb"
+  # The questions a user reads word for word (#228): the agent's question
+  # set, each wording under its language key (overrides below).
+  - "apps/agent/src/default-question-set.ts"
 import:
   - "@cspell/dict-de-de/cspell-ext.json"
 dictionaryDefinitions:
@@ -40,6 +44,9 @@ patterns:
     pattern: /\{\s*\w+\s*(?:,\s*(?:plural|select|selectordinal|number|date|time)\s*,?)?\s*(?=[{},])/g
   - name: icu-selector
     pattern: /(?<=[{},]\s*)(?:=\d+|\w+)\s*(?=\{)/g
+  # A question's wording in the agent's question set, per language.
+  - name: question-text
+    pattern: '/(?<=\b(?:en|de): ")[^"]*/g'
   - name: json-escape
     pattern: /\\[nrtbf"\\\/]|\\u[0-9a-fA-F]{4}/g
 includeRegExpList: [arb-message-value]
@@ -63,3 +70,15 @@ overrides:
       - "sitzungen->Sessions"
       - "datenschutzhinweis->Datenschutzerklärung"
       - "datenschutzhinweise->Datenschutzerklärung"
+  # The question set holds both languages in one file: only the wordings are
+  # copy (`en: "…"`, `de: "…"` inside each `text`), checked against both
+  # languages and the words to avoid in each.
+  - filename: "apps/agent/src/default-question-set.ts"
+    language: en-US,de
+    dictionaries: [de-words]
+    includeRegExpList: [question-text]
+    flagWords:
+      - "assistant->emotely"
+      - "colour->color"
+      - "assistent->emotely"
+      - "sitzung->Session"

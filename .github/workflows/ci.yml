@@ -288,8 +288,9 @@ jobs:
       - run: pnpm exec bash scripts/ast-grep.sh --format github
       - run: pnpm exec bash scripts/feature-map.test.sh
       - run: pnpm exec bash scripts/feature-map.sh
-      # The copy spell check (ADR 0020): the app's ARB messages, English and
-      # German, and the words CONTEXT.md says to avoid. Offline, under a
+      # The copy spell check (ADR 0020): the app's ARB messages and the
+      # agent's question wordings, English and German, and the words
+      # CONTEXT.md says to avoid. Offline, under a
       # second; every pull request, since copy can change anywhere.
       - run: |
           pnpm spell --issue-template '::error file=$filename,line=$row,col=$col::$message: $text'

@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:agent_client/agent_client.dart';
 import 'package:contract/contract.dart';
+import 'package:emotely/app/localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:profile_repository/profile_repository.dart';
 
@@ -157,6 +158,7 @@ void main() {
           userContext: const UserContext(
             displayName: 'Pebble',
             nameIsPlaceholder: true,
+            locale: Locale('de'),
           ),
         );
         final posted = stub.lastRequest;
@@ -173,11 +175,31 @@ void main() {
             object(request)['user_context'] as Map<String, dynamic>;
         expect(
           object(contextSchema).keys,
-          containsAll(['display_name', 'name_is_placeholder']),
+          containsAll(['display_name', 'name_is_placeholder', 'locale']),
         );
         expect(object(contextSchema).keys, containsAll(userContext.keys));
       },
     );
+
+    test('the agent reads the locale of every language the app ships', () {
+      // A tag the agent cannot read is dropped, and the companion falls
+      // back to English: a new locale must be one it can read.
+      final request = schema['advance_session_request'] as Map<String, dynamic>;
+      final userContext =
+          object(request)['user_context'] as Map<String, dynamic>;
+      final locale = object(userContext)['locale'] as Map<String, dynamic>;
+      final pattern = RegExp(locale['pattern']! as String);
+
+      for (final shipped in supportedLocales) {
+        final encoded = UserContext(locale: shipped).toJson()['locale'];
+        expect(encoded, isA<String>(), reason: '$shipped');
+        expect(
+          pattern.hasMatch(encoded! as String),
+          isTrue,
+          reason: '$shipped',
+        );
+      }
+    });
 
     const question = AskQuestion(
       questionId: 'q',

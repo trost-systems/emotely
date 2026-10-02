@@ -1,10 +1,11 @@
 import process from "node:process";
 import type { JSONValue, LanguageModel, ModelMessage } from "ai";
 import { judgeSession } from "../src/judge.ts";
+import { inLanguage, languageNames, languageOf } from "../src/language.ts";
 import type {
-  QuestionSet,
   SessionClient,
   UserContext,
+  WordedQuestionSet,
 } from "../src/session.ts";
 import { runSession } from "../src/session.ts";
 import { miniSet, type Scenario } from "./scenarios.ts";
@@ -25,15 +26,21 @@ export const modelUnderTest =
 export const judgeModel =
   process.env["EMOTELY_JUDGE_MODEL"] ?? "alibaba/qwen3.7-plus";
 
-/** Scripted user: answers each question from a canned map and remembers what was asked. */
+/**
+ * Scripted user: answers each question from a canned map and remembers what
+ * was asked, and the wording it was shown for each question id.
+ */
 export function scriptedClient(
   answers: Record<string, JSONValue>,
-): SessionClient & { asked: Set<string> } {
+): SessionClient & { asked: Set<string>; shown: Map<string, string> } {
   const asked = new Set<string>();
+  const shown = new Map<string, string>();
   return {
     asked,
+    shown,
     askQuestion: async (input) => {
       asked.add(input.question_id);
+      shown.set(input.question_id, input.question);
       const answer = answers[input.question_id];
       if (answer === undefined) {
         throw new Error(`fixture has no answer for ${input.question_id}`);
@@ -73,19 +80,25 @@ export const evalRuns = Number(process.env["EVAL_RUNS"] ?? "1");
 export const requiredPasses = Math.ceil((evalRuns * 2) / 3);
 
 /** Tells the judge what "complete" means for this session. */
-export function describeQuestionSet(set: QuestionSet): string {
+export function describeQuestionSet(set: WordedQuestionSet): string {
   return `The question set has exactly ${set.questions.length} question(s); the session is complete once each has an answer and complete_session was called:\n${set.questions.map((q, i) => `${i + 1}. ${q.id}: "${q.text}" (${q.answer_type})`).join("\n")}`;
 }
 
 /** Tells the judge what the assistant was told about the user, if anything. */
 export function describeUserContext(context: UserContext | undefined): string {
+  const language =
+    context?.locale === undefined
+      ? ""
+      : ` The user's app is in ${languageNames[languageOf(context.locale)]}, and the assistant was told so.`;
   const name = context?.displayName;
   if (name === undefined) {
-    return "The assistant was told nothing about the user, not even a name.";
+    return language === ""
+      ? "The assistant was told nothing about the user, not even a name."
+      : `The assistant was told no name for the user.${language}`;
   }
   return context?.nameIsPlaceholder === true
-    ? `The user preferred not to share a name, so emotely picked the playful stand-in name "${name}" for them; the assistant was told so.`
-    : `The assistant was told the user's name: "${name}".`;
+    ? `The user preferred not to share a name, so emotely picked the playful stand-in name "${name}" for them; the assistant was told so.${language}`
+    : `The assistant was told the user's name: "${name}".${language}`;
 }
 
 /** One scenario run; returns null on pass, a failure description otherwise. */
@@ -123,7 +136,10 @@ export async function runScenarioOnce(
     transcript: formatTranscript(result.messages),
     rubrics: scenario.rubrics,
     context: [
-      describeQuestionSet(miniSet),
+      // The wording the session ran in, so the judge knows what it saw.
+      describeQuestionSet(
+        inLanguage(miniSet, languageOf(scenario.userContext?.locale)),
+      ),
       describeUserContext(scenario.userContext),
     ].join("\n"),
   });

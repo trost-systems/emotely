@@ -119,7 +119,7 @@ abstract class AccountLocalizations {
   /// Consent screen, first point, after its lead: what is sent, to whom, and the third-country transfer with its safeguard (EDPB 05/2020 para 64 (vi)). Part of the versioned wording of the explicit consent under Art. 9 (2) (a) GDPR: changing it means bumping consentVersion. The recipients must match the privacy notice at getemotely.com/app-privacy: same recipients, same order, same names. 'Vercel AI Gateway' is a product name and stays as is.
   ///
   /// In en, this message translates to:
-  /// **'Each answer goes to our server and on to a language model provider through the Vercel AI Gateway, together with the name you chose or emotely picked for you, so emotely can ask the next question, address you by name and write your entry. The provider may be outside the EU; where it is, the transfer rests on the EU’s standard contractual clauses.'**
+  /// **'Each answer goes to our server and on to a language model provider through the Vercel AI Gateway, together with the name you chose or emotely picked for you and the language the app is set to, so emotely can ask the next question in your language, address you by name and write your entry. The provider may be outside the EU; where it is, the transfer rests on the EU’s standard contractual clauses.'**
   String get consentSendingBody;
 
   /// Consent screen, second of three points: its bold lead, followed by consentRetentionBody. Part of the versioned wording of the explicit consent under Art. 9 (2) (a) GDPR: changing it means bumping consentVersion.

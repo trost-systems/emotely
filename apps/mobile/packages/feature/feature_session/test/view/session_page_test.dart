@@ -30,7 +30,11 @@ void main() {
       expect(robot.thinking, findsOneWidget);
       expect(find.text(tester.strings.thinkingLabel), findsOneWidget);
       expect(agent.requests, hasLength(1));
-      expect(agent.lastRequest, {'app_version': AgentStub.appVersion});
+      // Nothing is known about the user but the language on screen.
+      expect(agent.lastRequest, {
+        'app_version': AgentStub.appVersion,
+        'user_context': {'name_is_placeholder': false, 'locale': 'de'},
+      });
       // The round runs as the signed-in user (ADR 0010).
       expect(
         agent.lastHeaders['authorization'],
@@ -65,6 +69,7 @@ void main() {
       expect(agent.lastRequest['user_context'], {
         'display_name': 'Pebble',
         'name_is_placeholder': true,
+        'locale': 'de',
       });
 
       // Renamed mid-session: the agent keeps nothing, so the next round
@@ -75,8 +80,37 @@ void main() {
       expect(agent.lastRequest['user_context'], {
         'display_name': 'Maya',
         'name_is_placeholder': false,
+        'locale': 'de',
       });
       expect(robot.userContext.asked, 2);
+    });
+
+    testWidgets('tells the agent the language the screen is in (#228)', (
+      tester,
+    ) async {
+      final agent = AgentStub()
+        ..script([
+          awaiting(toolCallId: 'c1', question: SessionRobot.rate),
+          awaiting(toolCallId: 'c2', question: SessionRobot.best),
+        ]);
+      final robot = SessionRobot(tester, agent, locale: const Locale('en'))
+        ..userContext.context = const UserContext(displayName: 'Maya');
+      await robot.launch();
+      await robot.settle();
+
+      expect(
+        (agent.lastRequest['user_context']! as Map<String, dynamic>)['locale'],
+        'en',
+      );
+
+      // Every round, so the companion never falls back to English mid-way.
+      await robot.answerRating(7);
+
+      expect(agent.lastRequest['user_context'], {
+        'display_name': 'Maya',
+        'name_is_placeholder': false,
+        'locale': 'en',
+      });
     });
 
     testWidgets('walks a whole session and shows the entry', (tester) async {

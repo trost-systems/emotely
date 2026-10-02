@@ -32,8 +32,8 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
         'Diese Datenschutzerklärung gilt für die emotely-App für iOS und '
         'Android (bei Google Play als „Reflect Therapy AI: emotely“ '
         'gelistet). Für die Website getemotely.com und ihre Warteliste gibt '
-        'es eine eigene Datenschutzerklärung. Zuletzt aktualisiert am 30. '
-        'September 2026.',
+        'es eine eigene Datenschutzerklärung. Zuletzt aktualisiert am 2. '
+        'Oktober 2026.',
       ),
     ]),
 
@@ -267,7 +267,9 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
         'Das ist der Teil, der dein Handy verlässt. Jede Runde einer Session '
         'schickt dem emotely-Agenten – einem kleinen Server von uns – das '
         'bisherige Transkript, den Namen, mit dem die App dich anspricht '
-        '(deinen oder den Platzhalter), die App-Version, dein Anmelde-Token '
+        '(deinen oder den Platzhalter), die Sprache, auf die die App '
+        'eingestellt ist (damit die Fragen und dein Eintrag in dieser Sprache '
+        'kommen), die App-Version, dein Anmelde-Token '
         'und eine Signatur, die belegt, dass der Server dieses Transkript '
         'selbst erzeugt hat. Der Agent fügt die Anweisungen für emotely '
         'hinzu und übergibt das Gespräch über das ',
@@ -276,8 +278,9 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
       .text(
         ' an ein Sprachmodell; das Gateway reicht es an den Anbieter weiter, '
         'der das Modell gerade bereitstellt. Das Gateway und der Anbieter '
-        'erhalten das Gespräch, die Anweisungen und den Namen, mit dem die '
-        'App dich anspricht – keine E-Mail-Adresse und kein Anmelde-Token. '
+        'erhalten das Gespräch, die Anweisungen, den Namen, mit dem die App '
+        'dich anspricht, und die Sprache der App – keine E-Mail-Adresse und '
+        'kein Anmelde-Token. '
         'Die Antwort kommt auf demselben Weg zurück und wird zur nächsten '
         'Frage oder zu deinem Eintrag.',
       ),

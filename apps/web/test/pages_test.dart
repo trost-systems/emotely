@@ -392,6 +392,23 @@ void main() {
       },
     );
 
+    testComponents('says the language the app shows goes to the model', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacy());
+
+      // #228: the companion asks and writes in the app's language, so the
+      // locale rides along with each round and reaches the provider too.
+      expect(
+        find.textContaining('the language the app is set to'),
+        findsComponents,
+      );
+      expect(
+        find.textContaining('the name the app calls you and its language'),
+        findsComponents,
+      );
+    });
+
     testComponents('describes analytics by kind, never by event name', (
       tester,
     ) {
@@ -438,7 +455,7 @@ void main() {
       tester.pumpComponent(const AppPrivacy());
 
       expect(
-        find.textContaining('Last updated 30 September 2026'),
+        find.textContaining('Last updated 2 October 2026'),
         findsOneComponent,
       );
     });
@@ -867,6 +884,23 @@ void main() {
       },
     );
 
+    testComponents('says the language the app shows goes to the model', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      // #228, as in English: the app's language rides along with each
+      // round and reaches the provider too.
+      expect(
+        find.textContaining('die Sprache, auf die die App eingestellt ist'),
+        findsComponents,
+      );
+      expect(
+        find.textContaining('dich anspricht, und die Sprache der App'),
+        findsComponents,
+      );
+    });
+
     testComponents('describes analytics by kind, never by event name', (
       tester,
     ) {
@@ -916,7 +950,7 @@ void main() {
       tester.pumpComponent(const AppPrivacyDe());
 
       expect(
-        find.textContaining('Zuletzt aktualisiert am 30. September 2026'),
+        find.textContaining('Zuletzt aktualisiert am 2. Oktober 2026'),
         findsOneComponent,
       );
     });

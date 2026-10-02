@@ -22,7 +22,12 @@ mixin _$UserContext {
 /// (`runes.length`) after `trim()`, with no control characters, or the
 /// agent ignores the whole context.
 @JsonKey(includeIfNull: false) String? get displayName;/// True when `displayName` is that placeholder, not a real name.
- bool get nameIsPlaceholder;
+ bool get nameIsPlaceholder;/// The locale the app shows, as it resolved it against the ones it
+/// ships — never the device's own list — so the companion asks and
+/// writes the entry in the language on screen (#228). A language tag
+/// on the wire; omitted when there is none, and the agent speaks
+/// English.
+@JsonKey(includeIfNull: false)@LanguageTagConverter() Locale? get locale;
 /// Create a copy of UserContext
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -36,14 +41,14 @@ $UserContextCopyWith<UserContext> get copyWith => _$UserContextCopyWithImpl<User
 @override
 bool operator ==(Object other) {
   final _this = this as UserContext;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserContext&&(identical(other.displayName, _this.displayName) || other.displayName == _this.displayName)&&(identical(other.nameIsPlaceholder, _this.nameIsPlaceholder) || other.nameIsPlaceholder == _this.nameIsPlaceholder));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserContext&&(identical(other.displayName, _this.displayName) || other.displayName == _this.displayName)&&(identical(other.nameIsPlaceholder, _this.nameIsPlaceholder) || other.nameIsPlaceholder == _this.nameIsPlaceholder)&&(identical(other.locale, _this.locale) || other.locale == _this.locale));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as UserContext;
-  return Object.hash(runtimeType,_this.displayName,_this.nameIsPlaceholder);
+  return Object.hash(runtimeType,_this.displayName,_this.nameIsPlaceholder,_this.locale);
 }
 
 
@@ -55,7 +60,7 @@ abstract mixin class $UserContextCopyWith<$Res>  {
   factory $UserContextCopyWith(UserContext value, $Res Function(UserContext) _then) = _$UserContextCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(includeIfNull: false) String? displayName, bool nameIsPlaceholder
+@JsonKey(includeIfNull: false) String? displayName, bool nameIsPlaceholder,@JsonKey(includeIfNull: false)@LanguageTagConverter() Locale? locale
 });
 
 
@@ -72,11 +77,12 @@ class _$UserContextCopyWithImpl<$Res>
 
 /// Create a copy of UserContext
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? displayName = freezed,Object? nameIsPlaceholder = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? displayName = freezed,Object? nameIsPlaceholder = null,Object? locale = freezed,}) {
   return _then(UserContext(
 displayName: freezed == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String?,nameIsPlaceholder: null == nameIsPlaceholder ? _self.nameIsPlaceholder : nameIsPlaceholder // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,locale: freezed == locale ? _self.locale : locale // ignore: cast_nullable_to_non_nullable
+as Locale?,
   ));
 }
 
@@ -161,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeIfNull: false)  String? displayName,  bool nameIsPlaceholder)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeIfNull: false)  String? displayName,  bool nameIsPlaceholder, @JsonKey(includeIfNull: false)@LanguageTagConverter()  Locale? locale)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserContext() when $default != null:
-return $default(_that.displayName,_that.nameIsPlaceholder);case _:
+return $default(_that.displayName,_that.nameIsPlaceholder,_that.locale);case _:
   return orElse();
 
 }
@@ -182,10 +188,10 @@ return $default(_that.displayName,_that.nameIsPlaceholder);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeIfNull: false)  String? displayName,  bool nameIsPlaceholder)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeIfNull: false)  String? displayName,  bool nameIsPlaceholder, @JsonKey(includeIfNull: false)@LanguageTagConverter()  Locale? locale)  $default,) {final _that = this;
 switch (_that) {
 case _UserContext():
-return $default(_that.displayName,_that.nameIsPlaceholder);case _:
+return $default(_that.displayName,_that.nameIsPlaceholder,_that.locale);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +208,10 @@ return $default(_that.displayName,_that.nameIsPlaceholder);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeIfNull: false)  String? displayName,  bool nameIsPlaceholder)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeIfNull: false)  String? displayName,  bool nameIsPlaceholder, @JsonKey(includeIfNull: false)@LanguageTagConverter()  Locale? locale)?  $default,) {final _that = this;
 switch (_that) {
 case _UserContext() when $default != null:
-return $default(_that.displayName,_that.nameIsPlaceholder);case _:
+return $default(_that.displayName,_that.nameIsPlaceholder,_that.locale);case _:
   return null;
 
 }
@@ -217,7 +223,7 @@ return $default(_that.displayName,_that.nameIsPlaceholder);case _:
 @JsonSerializable()
 
 class _UserContext implements UserContext {
-  const _UserContext({@JsonKey(includeIfNull: false) this.displayName, this.nameIsPlaceholder = false});
+  const _UserContext({@JsonKey(includeIfNull: false) this.displayName, this.nameIsPlaceholder = false, @JsonKey(includeIfNull: false)@LanguageTagConverter() this.locale});
   factory _UserContext.fromJson(Map<String, dynamic> json) => _$UserContextFromJson(json);
 
 /// What the user wants to be called: the name they typed, or the
@@ -228,6 +234,12 @@ class _UserContext implements UserContext {
 @override@JsonKey(includeIfNull: false) final  String? displayName;
 /// True when `displayName` is that placeholder, not a real name.
 @override@JsonKey() final  bool nameIsPlaceholder;
+/// The locale the app shows, as it resolved it against the ones it
+/// ships — never the device's own list — so the companion asks and
+/// writes the entry in the language on screen (#228). A language tag
+/// on the wire; omitted when there is none, and the agent speaks
+/// English.
+@override@JsonKey(includeIfNull: false)@LanguageTagConverter() final  Locale? locale;
 
 /// Create a copy of UserContext
 /// with the given fields replaced by the non-null parameter values.
@@ -242,13 +254,13 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserContext&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.nameIsPlaceholder, nameIsPlaceholder) || other.nameIsPlaceholder == nameIsPlaceholder));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserContext&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.nameIsPlaceholder, nameIsPlaceholder) || other.nameIsPlaceholder == nameIsPlaceholder)&&(identical(other.locale, locale) || other.locale == locale));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,displayName,nameIsPlaceholder);
+    return Object.hash(runtimeType,displayName,nameIsPlaceholder,locale);
 }
 
 
@@ -260,7 +272,7 @@ abstract mixin class _$UserContextCopyWith<$Res> implements $UserContextCopyWith
   factory _$UserContextCopyWith(_UserContext value, $Res Function(_UserContext) _then) = __$UserContextCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(includeIfNull: false) String? displayName, bool nameIsPlaceholder
+@JsonKey(includeIfNull: false) String? displayName, bool nameIsPlaceholder,@JsonKey(includeIfNull: false)@LanguageTagConverter() Locale? locale
 });
 
 
@@ -277,11 +289,12 @@ class __$UserContextCopyWithImpl<$Res>
 
 /// Create a copy of UserContext
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? displayName = freezed,Object? nameIsPlaceholder = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? displayName = freezed,Object? nameIsPlaceholder = null,Object? locale = freezed,}) {
   return _then(_UserContext(
 displayName: freezed == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String?,nameIsPlaceholder: null == nameIsPlaceholder ? _self.nameIsPlaceholder : nameIsPlaceholder // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,locale: freezed == locale ? _self.locale : locale // ignore: cast_nullable_to_non_nullable
+as Locale?,
   ));
 }
 

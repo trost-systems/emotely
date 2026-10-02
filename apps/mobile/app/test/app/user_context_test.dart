@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:contract/contract.dart';
 import 'package:emotely/app/user_context.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -61,6 +63,47 @@ void main() {
       expect(robot.agent.lastRequest['user_context'], {
         'display_name': 'Peter',
         'name_is_placeholder': false,
+        'locale': 'en',
+      });
+    });
+
+    group('tells the companion the language the app resolved (#228)', () {
+      Future<Object?> sentLocale(
+        WidgetTester tester,
+        List<Locale> device,
+      ) async {
+        tester.platformDispatcher.localesTestValue = device;
+        addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+        final supabase = SupabaseStub()
+          ..always(consentRead, consentStands())
+          ..always(profileRead, rows([profileRow(displayName: 'Peter')]));
+        final agent = AgentStub()
+          ..script([awaiting(toolCallId: 'c1', question: rateQuestion)]);
+        final robot = ConsentRobot(tester, supabase: supabase, agent: agent);
+        await robot.launch();
+
+        await robot.startSession();
+
+        return (robot.agent.lastRequest['user_context']!
+            as Map<String, dynamic>)['locale'];
+      }
+
+      testWidgets('German, not the regional variant of the device', (
+        tester,
+      ) async {
+        expect(
+          await sentLocale(tester, const [Locale('de', 'AT'), Locale('en')]),
+          'de',
+        );
+      });
+
+      testWidgets('English on a device in a language the app does not ship', (
+        tester,
+      ) async {
+        expect(
+          await sentLocale(tester, const [Locale('fr', 'FR'), Locale('it')]),
+          'en',
+        );
       });
     });
 

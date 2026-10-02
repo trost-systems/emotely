@@ -79,12 +79,18 @@ export const maxAnswerLength = 4096;
 // emoji fit. Emitted under `limits` for the app to cap its name field with.
 export const maxDisplayNameLength = 40;
 
+// A BCP 47 language tag as Flutter's `Locale.toLanguageTag()` writes it: a
+// language, then an optional script and an optional region ("de", "de-AT",
+// "zh-Hant-TW", "es-419"). No variants or extensions: the app never has one.
+const languageTag =
+  /^[A-Za-z]{2,3}(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|\d{3}))?$/;
+
 // Who the session is for, beyond the signed-in user id: what the companion may
 // know about the person it talks to (#204). Every member is optional so the
-// object grows without breaking anyone — `local_date`, `time_zone` and
-// `locale` are expected next, each added here as one more optional key.
-// Personal data goes to the model provider, so a new member is also a change
-// to the journal consent wording (`consent_text.dart`).
+// object grows without breaking anyone — `local_date` and `time_zone` are
+// expected next, each added here as one more optional key. What reaches the
+// model provider is listed in the app-privacy notice, and personal data among
+// it is named by the journal consent wording (`consent_text.dart`).
 export const userContext = z.object({
   // What the user wants to be called: the name they typed, or the playful
   // placeholder emotely picked when they preferred not to give one. Any
@@ -105,6 +111,14 @@ export const userContext = z.object({
     .optional(),
   // True when `display_name` is that placeholder rather than a real name.
   name_is_placeholder: z.boolean().optional(),
+  // The language the app shows (#228): the locale it resolved from the
+  // device's preferences against the ones it ships, not the device's own
+  // list, so the companion speaks what the screen does. Today that is a
+  // bare language ("en", "de"), since the app ships no regional variant;
+  // the agent reads the language subtag and speaks English for any it does
+  // not know. One it cannot read is dropped on its own, not with the whole
+  // context: the round runs in English and still knows the user's name.
+  locale: z.string().regex(languageTag).optional().catch(undefined),
 });
 export type UserContextWire = z.infer<typeof userContext>;
 

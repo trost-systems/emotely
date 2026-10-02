@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import type { QuestionSet } from "./session.ts";
+import type { WordedQuestionSet } from "./session.ts";
 import { PROMPT_ID, PROMPTS, resolvePrompt } from "./session-prompt.ts";
 
-const set: QuestionSet = {
+const set: WordedQuestionSet = {
   id: "s",
   name: "s",
   questions: [{ id: "q", text: "Q?", answer_type: "longtext" }],
@@ -12,12 +12,14 @@ const set: QuestionSet = {
 const v1 = resolvePrompt("session/v1").build;
 const v2 = resolvePrompt("session/v2").build;
 const v3 = resolvePrompt("session/v3").build;
+const v4 = resolvePrompt("session/v4").build;
 
 describe("resolvePrompt", () => {
   it("returns the requested version when the registry ships it", () => {
+    const english = () => "en" as const;
     const fake = {
-      "session/v1": () => "prompt one",
-      "session/v2": () => "prompt two",
+      "session/v1": { build: () => "prompt one", language: english },
+      "session/v2": { build: () => "prompt two", language: english },
     };
     const resolved = resolvePrompt("session/v2", fake);
     assert.equal(resolved.id, "session/v2");
@@ -39,11 +41,31 @@ describe("resolvePrompt", () => {
     assert.ok(PROMPT_ID in PROMPTS);
   });
 
-  it("serves session/v3, which names a placeholder as emotely's pick, by default", () => {
-    assert.equal(PROMPT_ID, "session/v3");
+  it("serves session/v4, which speaks the user's language, by default", () => {
+    assert.equal(PROMPT_ID, "session/v4");
     // Older versions keep shipping so a flag payload naming one still runs it.
     assert.equal(resolvePrompt("session/v1").id, "session/v1");
     assert.equal(resolvePrompt("session/v2").id, "session/v2");
+    assert.equal(resolvePrompt("session/v3").id, "session/v3");
+  });
+
+  it("runs every version before v4 in English, whatever the app's locale", () => {
+    // PostHog events and eval baselines are pinned to a version: an older
+    // one must not start speaking German because the app now says it can.
+    for (const id of ["session/v1", "session/v2", "session/v3"]) {
+      const { language } = resolvePrompt(id);
+      assert.equal(language({ locale: "de" }), "en", id);
+    }
+  });
+
+  it("runs v4 in the app's language, English for any it does not speak", () => {
+    const { language } = resolvePrompt("session/v4");
+
+    assert.equal(language({ locale: "de" }), "de");
+    assert.equal(language({ locale: "de-AT" }), "de");
+    assert.equal(language({ locale: "fr" }), "en");
+    assert.equal(language({}), "en");
+    assert.equal(language(undefined), "en");
   });
 });
 
@@ -105,5 +127,60 @@ describe("session/v3", () => {
     assert.match(prompt, /preferred not to share/);
     assert.match(prompt, /profile/);
     assert.match(prompt, /[Nn]ever ask/);
+  });
+});
+
+describe("session/v4", () => {
+  const maya = { displayName: "Maya", nameIsPlaceholder: false };
+  const pebble = { displayName: "Pebble", nameIsPlaceholder: true };
+
+  it("is v3 word for word in English: nothing changes for an English app", () => {
+    for (const context of [undefined, {}, maya, pebble]) {
+      assert.equal(v4(set, context), v3(set, context));
+      for (const locale of ["en", "en-GB", "fr"]) {
+        assert.equal(
+          v4(set, { ...context, locale }),
+          v3(set, context),
+          `${JSON.stringify(context)} ${locale}`,
+        );
+      }
+    }
+  });
+
+  it("asks in German and writes the entry in German for a German app", () => {
+    const german: WordedQuestionSet = {
+      ...set,
+      questions: [
+        { id: "q", text: "Wie war dein Tag?", answer_type: "longtext" },
+      ],
+    };
+    const prompt = v4(german, { locale: "de" });
+
+    assert.ok(prompt.startsWith(v3(german)), "v3's protocol comes first");
+    assert.match(prompt, /q: Wie war dein Tag\?/);
+    assert.match(prompt, /Speak German/);
+    assert.match(prompt, /exactly as written/);
+    assert.match(prompt, /summary for complete_session in German/);
+    // What the user wrote is theirs: recorded as given, never translated.
+    assert.match(prompt, /never translate/i);
+  });
+
+  it("speaks German as CONTEXT.md does", () => {
+    const prompt = v4(set, { locale: "de" });
+
+    assert.match(prompt, /"du"/);
+    assert.match(prompt, /"Sie"/);
+    assert.match(prompt, /"die Session"/);
+    assert.match(prompt, /"Sitzung"/);
+    assert.match(prompt, /"der Eintrag"/);
+    assert.match(prompt, /emotely, in lower case/);
+    assert.match(prompt, /"Assistent"/);
+  });
+
+  it("still addresses the user by name, before saying which language", () => {
+    const prompt = v4(set, { ...maya, locale: "de" });
+
+    assert.ok(prompt.startsWith(v3(set, maya)));
+    assert.match(prompt, /Speak German/);
   });
 });

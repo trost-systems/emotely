@@ -126,10 +126,10 @@ return restarted(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String? resume)?  started,TResult Function( Answer answer)?  answered,TResult Function()?  retried,TResult Function()?  restarted,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( Locale locale,  String? resume)?  started,TResult Function( Answer answer)?  answered,TResult Function()?  retried,TResult Function()?  restarted,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case SessionStarted() when started != null:
-return started(_that.resume);case SessionAnswered() when answered != null:
+return started(_that.locale,_that.resume);case SessionAnswered() when answered != null:
 return answered(_that.answer);case SessionRetried() when retried != null:
 return retried();case SessionRestarted() when restarted != null:
 return restarted();case _:
@@ -150,10 +150,10 @@ return restarted();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String? resume)  started,required TResult Function( Answer answer)  answered,required TResult Function()  retried,required TResult Function()  restarted,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( Locale locale,  String? resume)  started,required TResult Function( Answer answer)  answered,required TResult Function()  retried,required TResult Function()  restarted,}) {final _that = this;
 switch (_that) {
 case SessionStarted():
-return started(_that.resume);case SessionAnswered():
+return started(_that.locale,_that.resume);case SessionAnswered():
 return answered(_that.answer);case SessionRetried():
 return retried();case SessionRestarted():
 return restarted();}
@@ -170,10 +170,10 @@ return restarted();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String? resume)?  started,TResult? Function( Answer answer)?  answered,TResult? Function()?  retried,TResult? Function()?  restarted,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( Locale locale,  String? resume)?  started,TResult? Function( Answer answer)?  answered,TResult? Function()?  retried,TResult? Function()?  restarted,}) {final _that = this;
 switch (_that) {
 case SessionStarted() when started != null:
-return started(_that.resume);case SessionAnswered() when answered != null:
+return started(_that.locale,_that.resume);case SessionAnswered() when answered != null:
 return answered(_that.answer);case SessionRetried() when retried != null:
 return retried();case SessionRestarted() when restarted != null:
 return restarted();case _:
@@ -188,9 +188,10 @@ return restarted();case _:
 
 
 class SessionStarted implements SessionEvent {
-  const SessionStarted({this.resume});
+  const SessionStarted({required this.locale, this.resume});
   
 
+ final  Locale locale;
  final  String? resume;
 
 /// Create a copy of SessionEvent
@@ -203,18 +204,18 @@ $SessionStartedCopyWith<SessionStarted> get copyWith => _$SessionStartedCopyWith
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionStarted&&(identical(other.resume, resume) || other.resume == resume));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SessionStarted&&(identical(other.locale, locale) || other.locale == locale)&&(identical(other.resume, resume) || other.resume == resume));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,resume);
+    return Object.hash(runtimeType,locale,resume);
 }
 
 @override
 String toString() {
-    return 'SessionEvent.started(resume: $resume)';
+    return 'SessionEvent.started(locale: $locale, resume: $resume)';
 }
 
 
@@ -225,7 +226,7 @@ abstract mixin class $SessionStartedCopyWith<$Res> implements $SessionEventCopyW
   factory $SessionStartedCopyWith(SessionStarted value, $Res Function(SessionStarted) _then) = _$SessionStartedCopyWithImpl;
 @useResult
 $Res call({
- String? resume
+ Locale locale, String? resume
 });
 
 
@@ -242,9 +243,10 @@ class _$SessionStartedCopyWithImpl<$Res>
 
 /// Create a copy of SessionEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? resume = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? locale = null,Object? resume = freezed,}) {
   return _then(SessionStarted(
-resume: freezed == resume ? _self.resume : resume // ignore: cast_nullable_to_non_nullable
+locale: null == locale ? _self.locale : locale // ignore: cast_nullable_to_non_nullable
+as Locale,resume: freezed == resume ? _self.resume : resume // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

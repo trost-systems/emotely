@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:contract/contract.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -24,14 +26,28 @@ void main() {
       });
     });
 
-    test('leaves out a name it does not have', () {
+    test('leaves out a name and a locale it does not have', () {
       expect(const UserContext().toJson(), {'name_is_placeholder': false});
+    });
+
+    test('encodes the locale the app shows as a language tag', () {
+      const context = UserContext(
+        displayName: 'Maya',
+        locale: Locale('de', 'AT'),
+      );
+
+      expect(context.toJson(), {
+        'display_name': 'Maya',
+        'name_is_placeholder': false,
+        'locale': 'de-AT',
+      });
     });
 
     test('decodes what it encodes', () {
       const context = UserContext(
         displayName: 'Pebble',
         nameIsPlaceholder: true,
+        locale: Locale('de'),
       );
 
       expect(UserContext.fromJson(context.toJson()), context);

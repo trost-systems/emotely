@@ -16,6 +16,7 @@ import {
   tool,
 } from "ai";
 import type { TokenUsage } from "./cost.ts";
+import { inLanguage, type Wording } from "./language.ts";
 import { resolvePrompt } from "./session-prompt.ts";
 import { PRIVACY_TELEMETRY } from "./telemetry.ts";
 import {
@@ -28,28 +29,54 @@ type ListAnswerType = Extract<AnswerType, "color" | "emoji" | "text_list">;
 type ScalarAnswerType = Exclude<AnswerType, ListAnswerType>;
 
 // Union on answer_type so min_answers only exists where the value is a list.
-export type Question = { id: string; text: string } & (
+type AnswerShape =
   | { answer_type: ScalarAnswerType; min_answers?: never }
-  | { answer_type: ListAnswerType; min_answers?: number }
-);
+  | { answer_type: ListAnswerType; min_answers?: number };
 
+/**
+ * A question as authored (#228): its reviewed wording in every language the
+ * companion speaks. Every language is required, so a question missing one
+ * is a type error, never a silent English fallback.
+ */
+export type Question = { id: string; text: Wording } & AnswerShape;
+
+/**
+ * A question worded in the one language a session runs in: what the prompt
+ * lists, the tools check against and the client is shown. `inLanguage` is
+ * the only way from a [Question] to one.
+ */
+export type WordedQuestion = { id: string; text: string } & AnswerShape;
+
+/** A question set as authored, every question in every language. */
 export type QuestionSet = {
   id: string;
   name: string;
   questions: Question[];
 };
 
+/** A question set worded in one language (`inLanguage`). */
+export type WordedQuestionSet = {
+  id: string;
+  name: string;
+  questions: WordedQuestion[];
+};
+
 /**
  * What the companion may know about the person it talks to (#204), camelCase
  * here and `user_context` on the wire. Every member is optional: an app that
- * knows nothing sends nothing, and later members (a local date, a time zone,
- * a locale) arrive as more optional keys.
+ * knows nothing sends nothing, and later members (a local date, a time zone)
+ * arrive as more optional keys.
  */
 export type UserContext = {
   /** The name the user chose, or the placeholder emotely picked for them. */
   displayName?: string;
   /** True when [displayName] is that placeholder, not a real name. */
   nameIsPlaceholder?: boolean;
+  /**
+   * The BCP 47 locale the app shows (#228), which a prompt version that
+   * speaks the user's language answers in (`languageOf`); absent = English.
+   */
+  locale?: string;
 };
 
 export type SessionClient = {
@@ -77,7 +104,7 @@ const MAX_ROUNDS_PER_QUESTION = 6;
 const ROUND_SLACK = 20;
 
 function buildSessionTools(
-  questionSet: QuestionSet,
+  questionSet: WordedQuestionSet,
   answers: SessionResult["answers"],
   asked: Set<string>,
   onComplete: (summary: string) => void,
@@ -138,7 +165,7 @@ function addUsage(total: TokenUsage, step: LanguageModelUsage): void {
 }
 
 /** Generous round cap so a model that never completes cannot loop forever. */
-function roundGuard(questionSet: QuestionSet): { next: () => void } {
+function roundGuard(questionSet: WordedQuestionSet): { next: () => void } {
   const maxRounds =
     questionSet.questions.length * MAX_ROUNDS_PER_QUESTION + ROUND_SLACK;
   let rounds = 0;
@@ -237,6 +264,7 @@ export type AdvanceOptions = {
 function roundSettings(
   opts: AdvanceOptions,
   prompt: ReturnType<typeof resolvePrompt>,
+  questionSet: WordedQuestionSet,
 ) {
   return {
     model: opts.model,
@@ -244,7 +272,7 @@ function roundSettings(
     // the request, never in the transcript: the transcript is signed and
     // stored by the app, and a name typed into it would outlive a rename.
     // `recordInputs: false` keeps the instructions out of telemetry too.
-    instructions: prompt.build(opts.questionSet, opts.userContext),
+    instructions: prompt.build(questionSet, opts.userContext),
     stopWhen: isStepCount(1),
     maxOutputTokens: MAX_OUTPUT_TOKENS_PER_ROUND,
     providerOptions: SESSION_PROVIDER_OPTIONS,
@@ -300,8 +328,14 @@ function withAnswer(
 export async function advanceSession(
   opts: AdvanceOptions,
 ): Promise<AdvanceResult> {
-  const { questionSet } = opts;
   const prompt = resolvePrompt(opts.promptId);
+  // The version decides the language, so one pinned before v4 stays English
+  // for a German app: the model is handed, and the client shown, the set's
+  // reviewed wording in the language the session runs in.
+  const questionSet = inLanguage(
+    opts.questionSet,
+    prompt.language(opts.userContext),
+  );
   const { answers, asked, pending } = replayTranscript(opts.messages);
   const roundLatenciesMs: number[] = [];
   const usage = emptyUsage();
@@ -324,7 +358,7 @@ export async function advanceSession(
     guard.next();
     const startedAt = performance.now();
     const result = await generateText({
-      ...roundSettings(opts, prompt),
+      ...roundSettings(opts, prompt, questionSet),
       tools,
       messages,
     });

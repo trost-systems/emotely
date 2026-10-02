@@ -91,8 +91,12 @@ void main() {
       expect(robot.consent, findsNothing);
       expect(robot.session, findsOneWidget);
       expect(robot.supabase.to(consentGrant), isEmpty);
-      // The user has no profile yet, so the round says nothing about them.
-      expect(robot.agent.lastRequest, {'app_version': AgentStub.appVersion});
+      // The user has no profile yet, so the round says nothing about them
+      // but the language the app shows.
+      expect(robot.agent.lastRequest, {
+        'app_version': AgentStub.appVersion,
+        'user_context': {'name_is_placeholder': false, 'locale': 'en'},
+      });
     });
 
     testWidgets(

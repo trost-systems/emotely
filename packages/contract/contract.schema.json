@@ -199,6 +199,10 @@
           },
           "name_is_placeholder": {
             "type": "boolean"
+          },
+          "locale": {
+            "type": "string",
+            "pattern": "^[A-Za-z]{2,3}(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|\\d{3}))?$"
           }
         }
       }

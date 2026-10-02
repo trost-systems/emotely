@@ -37,7 +37,7 @@ import 'package:feature_account/src/l10n/account_localizations.dart';
 /// needless churn when it does not — so a typo fix, or a faithful new
 /// translation, is worth a moment's thought about whether the meaning moved
 /// (see ADR 0014).
-const consentVersion = '2026-09-29';
+const consentVersion = '2026-10-02';
 
 /// One point of the consent: a lead the eye can catch, then the sentence or
 /// two behind it.
@@ -63,7 +63,7 @@ List<ConsentPoint> consentPoints(AccountLocalizations strings) => [
 /// shows them, in the language of [strings]. This is what [consentVersion]
 /// names, and what the version test hashes across every locale: if any of
 /// it changes, the version must change too, because a record naming
-/// `2026-09-29` has to mean one particular text per language and not
+/// `2026-10-02` has to mean one particular text per language and not
 /// whatever the ARB files happen to say today.
 ///
 /// Deliberately only the *decision* strings — the title, the three points,
