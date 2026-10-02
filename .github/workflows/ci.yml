@@ -147,6 +147,17 @@ jobs:
             exit 1
           fi
       - run: flutter pub get
+      # build_runner's compiled builders (an AOT snapshot of the build
+      # script), ~26 s to compile on every run otherwise. Only the builders
+      # are cached, never generated output or build state: build_runner
+      # recompiles the snapshot whenever the MD5 of any of its inputs
+      # changes, and codegen:check compares freshly built output with what
+      # is committed on every run.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: apps/mobile/.dart_tool/build/entrypoint
+          key: build-runner-${{ runner.os }}-${{ hashFiles('apps/mobile/app/.fvmrc', 'apps/mobile/pubspec.lock', 'apps/mobile/**/build.yaml') }}
+          restore-keys: build-runner-${{ runner.os }}-
       - run: dart pub global activate melos 8.7.0
       # 1.5.0 is the first release whose coverage works inside a workspace
       # member (very_good_cli #1683); older ones crash on the missing local

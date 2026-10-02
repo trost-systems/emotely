@@ -48,15 +48,29 @@ dependency_overrides:
       path: packages/analytica
       ref: 103ba839d3d8e4e53853fad600cbde341b153192
 
-# `melos run <script>`. Every gate runs per package, in that package's
-# directory. EMOTELY_SCOPE narrows a run to the packages that changed plus
-# their dependents (CI sets it on pull requests, e.g.
-# `--diff=origin/main...HEAD --include-dependents`); unset, every package runs.
+# `melos run <script>`. Every gate but codegen:check and analyze runs per
+# package, in that package's directory. EMOTELY_SCOPE narrows a run to the
+# packages that changed plus their dependents (CI sets it on pull requests,
+# e.g. `--diff=origin/main...HEAD --include-dependents`); unset, every
+# package runs.
 melos:
   scripts:
     codegen:check:
-      description: Committed generated code (freezed, json_serializable, mockito) must match its source.
-      run: melos exec --fail-fast --concurrency=1 --file-exists=build.yaml $EMOTELY_SCOPE -- dart run build_runner build --only-check
+      description: Committed generated code (freezed, json_serializable, go_router_builder, mockito) must match its source, in every package.
+      # One build over the whole workspace (build_runner's --workspace), not
+      # one per package: each build spends ~26 s on CI compiling the same
+      # builders before it writes its 1-9 files, so eleven of them took
+      # 6m46s and one takes well under a minute. Each package's build.yaml
+      # still applies, and --only-check fails on any stale, missing or extra
+      # file in any package. It is skipped only when nothing in scope runs
+      # build_runner; otherwise it checks every package, which costs no more
+      # than checking one.
+      run: |
+        if [ -n "$(melos list --parsable --depends-on=build_runner $EMOTELY_SCOPE)" ]; then
+          dart run build_runner build --workspace --only-check
+        else
+          echo "No package in scope runs build_runner."
+        fi
     l10n:check:
       description: Committed gen-l10n output must match the ARB files, and every locale must carry every message (ADR 0020).
       # From each package directory; the script lives with the repo's other
@@ -75,7 +89,15 @@ melos:
       run: dart analyze --fatal-infos $(melos list --parsable $EMOTELY_SCOPE)
     test:
       description: The suite with the hard 100% coverage gate on hand-written code; packages without a test/ directory (analysis, testing) are not measured.
-      run: melos exec --fail-fast --concurrency=1 --dir-exists=test $EMOTELY_SCOPE -- dart pub global run very_good_cli:very_good test --coverage --min-coverage 100 --exclude-coverage "'**/*.{freezed,g,mocks}.dart'"
+      # Four packages at a time: each run is one optimized test bundle,
+      # mostly a single-threaded compile and tester start, so four use the
+      # CI runner's four cores (GitHub's ubuntu-latest for a public
+      # repository) and stay light beside other sessions on a laptop. Every
+      # package writes only its own test/.test_optimizer.dart and
+      # coverage/lcov.info, and very_good passes --no-pub, so nothing is
+      # shared. --group-logs prints each package's output in one block once
+      # all have finished, the failed ones last, instead of interleaving it.
+      run: melos exec --fail-fast --concurrency=4 --group-logs --dir-exists=test $EMOTELY_SCOPE -- dart pub global run very_good_cli:very_good test --coverage --min-coverage 100 --exclude-coverage "'**/*.{freezed,g,mocks}.dart'"
     schema:generate:
       description: Typed Supabase tables for every repository (the supabase_schema package), generated from the running local database (`supabase db start` first, from the repo root).
       # supabase_typegen defaults to importing package:postgrest, which the
