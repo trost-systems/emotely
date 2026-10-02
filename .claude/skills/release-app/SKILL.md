@@ -108,14 +108,16 @@ refused by design. Check with
 
 Both stores have a field for it. Play's is a **human step in the console**;
 App Store Connect's is part of the listing, kept in the repository (see
-[Store listings](#store-listings-english-and-german)). The value is the same
-in every place:
+[Store listings](#store-listings-english-and-german)). The notice exists in
+English and German:
 
 ```
-https://getemotely.com/app-privacy
+https://getemotely.com/app-privacy       English
+https://getemotely.com/de/app-privacy    German
 ```
 
-That is the **app's** notice (`apps/web/lib/pages/app_privacy.dart`), not
+That is the **app's** notice (`apps/web/lib/pages/app_privacy.dart`, German
+in `apps/web/lib/pages/de/app_privacy.dart`), not
 `/privacy`, which covers the web site and the waitlist and says so in its
 first sentence. Pointing a store at `/privacy` is what got the 2026-09-13
 Play update rejected — *"Invalid Privacy policy — URL provided
@@ -123,15 +125,17 @@ https://emotely.de/app-privacy/ does not link to a valid privacy policy
 page"* — first because the legacy domain was dead, and then because the
 replacement disclaimed the app it was supposed to cover.
 
-- **Play Console → Policy → App content → Privacy policy.** Paste the URL,
-  save, and submit. Google fetches it, so it must be reachable without
-  signing in and must not redirect through anything that asks for consent.
+- **Play Console → Policy → App content → Privacy policy.** Play keeps
+  **one URL for the whole app**, not one per language, and no API sets it:
+  paste the English URL, save, and submit. Google fetches it, so it must be
+  reachable without signing in and must not redirect through anything that
+  asks for consent.
 - **App Store Connect → App Privacy → Privacy Policy URL.** One **per
   locale** — English and German both, since the listing carries both; ASC
   keeps one URL per localization and an empty one blocks submission. They
   are `fastlane/metadata/{en-US,de-DE}/privacy_url.txt`, uploaded with the
-  rest of the listing. When a German notice exists, the German file points
-  at it.
+  rest of the listing: each locale points at the notice in its own
+  language. A new locale gets its own translation of the notice first.
 
 **The ASC data declarations must keep agreeing with the page.** App Store
 Connect asks separately *which* data types are collected, and a reviewer
