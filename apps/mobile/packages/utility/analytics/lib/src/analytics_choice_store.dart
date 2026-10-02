@@ -47,7 +47,7 @@ class const AnalyticsChoiceStore({
 
   /// The stored choice and whose it is, or `null` when none is stored.
   ///
-  /// A value this build does not recognise counts as none: asking again is
+  /// A value this build does not recognize counts as none: asking again is
   /// the only answer that cannot count someone who never agreed. That
   /// includes what the #204 builds wrote, the choice alone: it may be the
   /// answer of someone whose session ended while the app was closed, and

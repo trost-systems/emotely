@@ -338,7 +338,7 @@ abstract class AccountLocalizations {
   /// **'Imprint'**
   String get moreImprintRow;
 
-  /// More tab row, in the error colour, that opens the account deletion screen.
+  /// More tab row, in the error color, that opens the account deletion screen.
   ///
   /// In en, this message translates to:
   /// **'Delete account'**
@@ -578,7 +578,7 @@ abstract class AccountLocalizations {
   /// **'Deleting your account also deletes every journal entry you wrote. There is no way back.'**
   String get accountConsequenceMessage;
 
-  /// Account screen button, in the error colour, that asks for confirmation before deleting the account.
+  /// Account screen button, in the error color, that asks for confirmation before deleting the account.
   ///
   /// In en, this message translates to:
   /// **'Delete account'**
@@ -596,7 +596,7 @@ abstract class AccountLocalizations {
   /// **'Cancel'**
   String get accountCancelButton;
 
-  /// Account screen confirmation dialog button, in the error colour, that deletes the account and every entry for good.
+  /// Account screen confirmation dialog button, in the error color, that deletes the account and every entry for good.
   ///
   /// In en, this message translates to:
   /// **'Delete'**

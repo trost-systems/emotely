@@ -36,7 +36,7 @@ void main() {
       expect(await store.read(), isNull);
     });
 
-    test('reads a value it does not recognise as no method', () async {
+    test('reads a value it does not recognize as no method', () async {
       // A method a later build offered, since removed: no tag beats a tag
       // on the wrong button.
       final store = storeWith({LastSignInStore.key: 'passkey'});

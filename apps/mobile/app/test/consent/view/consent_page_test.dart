@@ -440,7 +440,7 @@ void main() {
         prepare: (tester) async {
           await robot.settle();
           await robot.startSession();
-          // The box reachable and labelled, the button and the link too.
+          // The box reachable and labeled, the button and the link too.
           await tester.ensureVisible(robot.checkbox);
           await robot.settle();
         },

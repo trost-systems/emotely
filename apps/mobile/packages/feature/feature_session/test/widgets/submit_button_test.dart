@@ -23,7 +23,7 @@ void main() {
         localizations: sessionLocalizations,
       );
 
-      // A driver that knows only the key taps the centre of what it names.
+      // A driver that knows only the key taps the center of what it names.
       await tester.tapAt(tester.getCenter(find.byKey(key)));
 
       expect(tester.widget(find.byKey(key)), isA<FilledButton>());

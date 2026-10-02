@@ -57,7 +57,7 @@ abstract class SignInIdentity with _$SignInIdentity {
 extension SignInIdentityX on SignInIdentity {
   /// Whether [SignInIdentity.email] is an address Apple made up for this
   /// app ("Hide My Email"): it forwards to the user, but they never chose
-  /// it and would not recognise it, so the screens say "Hidden by Apple"
+  /// it and would not recognize it, so the screens say "Hidden by Apple"
   /// instead of showing it.
   bool get hiddenByApple =>
       email?.toLowerCase().endsWith('@privaterelay.appleid.com') ?? false;

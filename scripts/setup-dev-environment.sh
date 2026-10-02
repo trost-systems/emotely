@@ -673,7 +673,7 @@ if [ "$VERIFY" -eq 1 ]; then
     SKIPPED+=("feature map (needs yq)")
   fi
 
-  info "spell: the app's copy, English and German, and the words CONTEXT.md avoids"
+  info "spell: the app's copy, English and German, the words CONTEXT.md avoids, and US English everywhere"
   (cd "$REPO_ROOT" && pnpm spell)
 
   info "agent: lint, typecheck, tests, contract tripwire"

@@ -140,7 +140,7 @@ type-checks and is silently ignored, and a round that comes back without these
 confirmations is a round with no privacy filtering at all.
 
 **The measured picture, all twelve candidates, 2026-09-15.** The feared outcome
-did not materialise: every candidate *serves* under both flags, including
+did not materialize: every candidate *serves* under both flags, including
 `nvidia/nemotron-3.5-lightning`, the #1-ranked model from benchmark #30. So
 promoting it would not have failed 100% of sessions.
 

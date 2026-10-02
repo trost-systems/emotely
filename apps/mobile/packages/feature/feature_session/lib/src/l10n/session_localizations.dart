@@ -194,7 +194,7 @@ abstract class SessionLocalizations {
   /// **'{count, plural, one{{count} character left} other{{count} characters left}}'**
   String answerLengthLeft(int count);
 
-  /// Session screen: note in error colour under an answer that is over the length limit; the Submit button stays disabled until it is shortened.
+  /// Session screen: note in error color under an answer that is over the length limit; the Submit button stays disabled until it is shortened.
   ///
   /// In en, this message translates to:
   /// **'{count, plural, one{{count} character too many. Shorten your answer to submit it.} other{{count} characters too many. Shorten your answer to submit it.}}'**

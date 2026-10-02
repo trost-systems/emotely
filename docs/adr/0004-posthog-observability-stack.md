@@ -53,7 +53,7 @@ Two surveys exist as drafts, each with its trigger:
   most every 7 days.
 
 `third_entry_written` exists because PostHog's survey targeting does not
-accept a behavioural cohort as a trigger: the milestone has to *be* an
+accept a behavioral cohort as a trigger: the milestone has to *be* an
 event. The app captures it exactly once, when the count of filed entries
 reaches three, read after the entry is persisted and after
 `session_completed` — so a survey popping on either trigger can never
@@ -138,7 +138,7 @@ exists before Allow. Auto-init is already off in `Info.plist` and
 - On first launch, as a sheet over Welcome: "May I count how you use the
   app?". It comes before anything else because tracking would otherwise
   start on Welcome.
-- **Don't allow** and **Allow** have equal weight: same size, colour and
+- **Don't allow** and **Allow** have equal weight: same size, color and
   type (DSK Rn. 134–137). Nothing is preselected, and carrying on without
   answering is not consent (Rn. 45; CJEU C-673/17 *Planet49*).
 - It can be withdrawn at any time with a switch in Privacy settings, which

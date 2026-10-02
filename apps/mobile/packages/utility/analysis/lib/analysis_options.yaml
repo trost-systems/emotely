@@ -11,10 +11,10 @@
 # diagnostics (flutter/flutter#187999).
 #
 # plugins.yaml adds emotely's own rules (tools/emotely_lints). It is a file
-# of its own because the analyzer only honours `plugins:` from the
+# of its own because the analyzer only honors `plugins:` from the
 # workspace root's options (apps/mobile/analysis_options.yaml), and warns
 # about it in any other file named analysis_options.yaml; reached through an
-# include it is honoured and silent.
+# include it is honored and silent.
 include:
   - package:flutter_agent_lints/experimental.yaml
   - plugins.yaml

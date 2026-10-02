@@ -189,7 +189,7 @@ class const _FeedbackRow() extends StatelessWidget {
 }
 
 /// The account screen, on the feature's own route (ADR 0016), in the error
-/// colour: what it leads to cannot be undone.
+/// color: what it leads to cannot be undone.
 class const _AccountRow() extends StatelessWidget {
   @override
   Widget build(BuildContext context) {

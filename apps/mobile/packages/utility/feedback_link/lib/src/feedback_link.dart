@@ -3,7 +3,7 @@ import 'dart:io' show Platform;
 import 'package:url_launcher/url_launcher.dart';
 
 /// Where feedback from inside the app goes. The same address the site and
-/// the notices name, so a reply comes from somewhere the user recognises.
+/// the notices name, so a reply comes from somewhere the user recognizes.
 const feedbackAddress = 'hello@getemotely.com';
 
 /// What the app knows about itself, for the footer of a feedback mail:

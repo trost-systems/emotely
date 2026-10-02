@@ -55,7 +55,7 @@ Usage: run-app.sh <command>
   status           Print the session, instance, device and bundle.
   record start     Start recording the app to <bundle>/video[-N].webm.
   record stop [--speed N]
-                   Stop and finalise the recording, and write the copy to
+                   Stop and finalize the recording, and write the copy to
                    post: <bundle>/post/video-Nx.mp4 (H.264, N times faster,
                    default $DEFAULT_SPEED).
   collect [--speed N]
@@ -599,7 +599,7 @@ record_stop() {
     log "not recording"
     return
   fi
-  # The recorder finalises the file on SIGINT. `marionette` is a pub wrapper
+  # The recorder finalizes the file on SIGINT. `marionette` is a pub wrapper
   # script that does not exec, so the signal goes to its child, the Dart VM;
   # the wrapper then exits with it.
   pkill -INT -P "$pid" 2>/dev/null || kill -INT "$pid" 2>/dev/null

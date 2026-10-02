@@ -22,7 +22,7 @@ class const LastSignInStore({
   static const key = 'last_sign_in';
 
   /// The way in last used, or `null` when none is kept. A value this build
-  /// does not recognise counts as none: no tag beats a tag on the wrong
+  /// does not recognize counts as none: no tag beats a tag on the wrong
   /// button.
   Future<SignInOption?> read() async {
     final stored = await preferences.getString(key);

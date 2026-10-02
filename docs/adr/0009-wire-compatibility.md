@@ -113,7 +113,7 @@ here on.
 The force-update screen sends users to the `store_url` the config response
 names. The app sends `?platform=ios|android` and the server answers with that
 store's listing, falling back to a neutral link for anything it does not
-recognise — so a request it cannot classify still gets somewhere to go. The
+recognize — so a request it cannot classify still gets somewhere to go. The
 links moved off the app's dart-defines deliberately: the only people who ever
 follow one are the ones who cannot install a build carrying a corrected one,
 so they have to be fixable without a release (`EMOTELY_STORE_URL`,
@@ -170,7 +170,7 @@ which is exactly what rules 1 and 4 guarantee it can do.
   Session ids, user ids and entry ids arrive as new optional keys; the
   anonymous flow keeps working until the minimum version says otherwise.
 - **The nightly live smoke** exercises production with the current contract
-  and would catch a server that stopped honouring an older shape only if it
+  and would catch a server that stopped honoring an older shape only if it
   sent one. It does not; cross-version coverage comes from rule 1 and the
   contract pins, not from the smoke.
 - **Reviewers check one thing on wire PRs**: is every change additive, and if

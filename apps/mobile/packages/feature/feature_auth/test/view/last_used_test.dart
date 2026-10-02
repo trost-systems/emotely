@@ -22,7 +22,7 @@ void main() {
           agent: AgentStub(),
         );
 
-    /// Whether a screen reader finds a button labelled [label] that it can
+    /// Whether a screen reader finds a button labeled [label] that it can
     /// press: the tag's words are part of the button's own label.
     bool announced(WidgetTester tester, String label) => find.semantics
         .byPredicate((node) {

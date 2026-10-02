@@ -34,7 +34,7 @@ dev_dependencies:
       url: https://github.com/kevmoo/analytica.dart
       path: packages/dedupe
       ref: 103ba839d3d8e4e53853fad600cbde341b153192
-  # melos reads the workspace list above; it only recognises the workspace
+  # melos reads the workspace list above; it only recognizes the workspace
   # when it is declared here, and its configuration lives in the `melos` key.
   melos: 8.7.0
 

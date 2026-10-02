@@ -91,7 +91,7 @@ is nothing for it to trigger yet. Tracked in #144.
 ## What we rejected
 
 - **Xcode cloud-managed signing** (`-allowProvisioningUpdates` with the API
-  key) needs fewer secrets but hides the certificate inside Xcode's behaviour,
+  key) needs fewer secrets but hides the certificate inside Xcode's behavior,
   and Flutter's `build ipa` does not pass the authentication flags through.
   match keeps the material inspectable and portable to any machine.
 - **Exporting the existing distribution certificate** from the dev keychain

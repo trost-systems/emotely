@@ -74,7 +74,7 @@
   },
   "answerLengthOver": "{count, plural, one{{count} character too many. Shorten your answer to submit it.} other{{count} characters too many. Shorten your answer to submit it.}}",
   "@answerLengthOver": {
-    "description": "Session screen: note in error colour under an answer that is over the length limit; the Submit button stays disabled until it is shortened.",
+    "description": "Session screen: note in error color under an answer that is over the length limit; the Submit button stays disabled until it is shortened.",
     "placeholders": {
       "count": {
         "type": "int",

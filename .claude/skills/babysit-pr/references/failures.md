@@ -18,8 +18,8 @@ The contract tripwire is a **regenerate-and-commit**, not a fix: the schema is
 emitted from zod and committed, and CI fails when the two drift. Run the
 generator and commit its output — never hand-edit the JSON to match.
 
-A failing eval is a real signal about model behaviour, not a flake to re-run.
-Judged behaviour evals run nightly; the CI one is deterministic. If it fails
+A failing eval is a real signal about model behavior, not a flake to re-run.
+Judged behavior evals run nightly; the CI one is deterministic. If it fails
 only on a fork PR for a missing key, that is expected and not yours to fix.
 
 ## `app` — `apps/mobile` (the Flutter workspace)

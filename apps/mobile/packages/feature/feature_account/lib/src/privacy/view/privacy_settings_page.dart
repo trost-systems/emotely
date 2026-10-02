@@ -103,7 +103,7 @@ class const _PrivacyCard({
   }
 }
 
-/// A card's note in the small print, or in the error colour when it
+/// A card's note in the small print, or in the error color when it
 /// reports something that did not work.
 class const _Note(final String text, {final bool failed = false})
     extends StatelessWidget {

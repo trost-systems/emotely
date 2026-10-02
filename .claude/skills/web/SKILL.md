@@ -22,7 +22,7 @@ derives `<html lang>`, the `hreflang` alternates and the language switch
 from the table, and `site_test.dart` checks each row renders, lists itself
 and its pair, and keeps the original's sections. An island takes its
 language as `lang` (a `SiteLocale` code), because `@client` parameters
-must be serialisable.
+must be serializable.
 
 Everything below is agent-executable; run from `apps/web`.
 
@@ -63,7 +63,7 @@ which cannot read primary constructors; the per-file ignore in
 ## Fonts and icons
 
 `web/fonts/` holds the site's two faces as latin `woff2` subsets next to
-their SIL OFL licences: Baskervville (every word, the app's text face too)
+their SIL OFL licenses: Baskervville (every word, the app's text face too)
 and Sacramento (the wordmark, as in the legacy logo). They are served from
 the site on purpose — a `fonts.googleapis.com` link would hand visitor IPs
 to Google (LG München I, 3 O 17493/20) and contradict the privacy page. To
@@ -80,8 +80,8 @@ render the SVG with `qlmanage -t -s 1024`, then `magick` for the ICO
 
 ## Testing the island
 
-`@client` components only take serialisable parameters, so the HTTP client
-is not injected. The form calls `http.Client()`, which honours
+`@client` components only take serializable parameters, so the HTTP client
+is not injected. The form calls `http.Client()`, which honors
 `http.runWithClient`; tests wrap pump + interaction in it with a
 `MockClient` (`package:http/testing.dart`). Drive the DOM with
 `tester.input(find.byKey(...), value: ...)` and `tester.click(...)`, then

@@ -175,7 +175,7 @@ void main() {
       expect(resets, 1);
     });
 
-    testWidgets('cancelling the confirmation deletes nothing', (tester) async {
+    testWidgets('canceling the confirmation deletes nothing', (tester) async {
       final robot = robotWith(tester);
       await robot.launch();
       await robot.askToDelete();

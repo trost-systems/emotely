@@ -15,7 +15,7 @@ project alike.
   issues tokens for it; the app passes it as `serverClientId`), then the iOS
   client (the audience of iOS tokens). The two Android clients (Play App Signing SHA-1, and the
   maintainer's local debug key) are not audiences; they only let Google
-  recognise the calling app. A new signing key (Play key upgrade, a CI debug
+  recognize the calling app. A new signing key (Play key upgrade, a CI debug
   keystore) needs its own Android client there, or Google sign-in fails on
   that build with a `canceled` error the plugin cannot tell apart from the
   user dismissing the sheet.

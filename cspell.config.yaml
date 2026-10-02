@@ -3,7 +3,8 @@
 # message a user reads in the app's ARB files, in its own language, the
 # question wordings the agent's question set shows them, and the words
 # CONTEXT.md says to avoid. Keys, descriptions and placeholder examples
-# are not copy and are not checked.
+# are not copy and are not checked here. British spellings, in the copy and
+# everywhere else we write, are cspell.us-english.yaml's.
 version: "0.2"
 # Short copy words matter too ("teh"); the default is 4.
 minWordLength: 3
@@ -59,8 +60,6 @@ overrides:
     flagWords:
       - "assistant->emotely"
       - "assistants->emotely"
-      - "colour->color"
-      - "colours->colors"
   - filename: "**/l10n/*_de.arb"
     language: de
     dictionaries: [de-words]
@@ -79,6 +78,5 @@ overrides:
     includeRegExpList: [question-text]
     flagWords:
       - "assistant->emotely"
-      - "colour->color"
       - "assistent->emotely"
       - "sitzung->Session"

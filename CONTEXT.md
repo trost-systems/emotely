@@ -11,6 +11,12 @@ every language; the single words among those are `flagWords` in
 `cspell.config.yaml`, which the copy spell check (`pnpm spell`, CI's
 tripwire job) fails on.
 
+English is US English everywhere we write, not only in copy: code
+comments and strings, docs, ADRs, skills, scripts, config ("color",
+"behavior", "canceled", "recognize"). `pnpm spell` fails on a British
+spelling anywhere; `cspell.us-english.yaml` lists them, and a new one
+goes there.
+
 Keeping it: add a term here before the first copy that needs it, with its
 German form. Change a term here first, then every surface that uses it, in
 one pull request. A new word to avoid goes into `cspell.config.yaml`
@@ -143,7 +149,7 @@ Ambiguous by default; always qualify:
 
 A check that must pass *before* a change lands. Distinct from a **rollback**,
 which is a correction *after*. The CI gate is a precondition; rollback is the
-second line of defence. See [ADR 0007](docs/adr/0007-protected-main-for-autonomous-agents.md).
+second line of defense. See [ADR 0007](docs/adr/0007-protected-main-for-autonomous-agents.md).
 
 ## Evals
 

@@ -6,7 +6,7 @@ import 'package:material_ui/material_ui.dart';
 ///
 /// [buttonKey] names the button itself, not the full-width row that aligns
 /// it: a driver that knows only the key (a test, the verification CLI) taps
-/// the centre of what the key names, and the row's centre is empty space.
+/// the center of what the key names, and the row's center is empty space.
 class const SubmitButton({
   required final VoidCallback? onPressed,
   required final Key buttonKey,

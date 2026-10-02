@@ -64,7 +64,7 @@ For bloc:
   failed loop, until someone writes a skill for it.
 - **bloc barely changes, which helps agents.** A small, stable API that
   appears all over training data is the easiest case for an agent. Felix
-  does favour deterministic tooling: "linters are deterministic and
+  does favor deterministic tooling: "linters are deterministic and
   reliable". `bloc_lint` fits our deny-by-default lint rules.
 - **Our architecture assumes bloc.** [ADR 0015](0015-lego-package-layering.md)
   relies on:
@@ -72,14 +72,14 @@ For bloc:
   - Blocs as factories;
   - widgets touching the container only to create their bloc and resolve
     their navigator;
-  - side effects modelled as bloc events.
+  - side effects modeled as bloc events.
 
   Riverpod would replace get_it, the registration functions and the
   `add-package` skill, not just seven classes. The real cost of a move is
   rewriting ADR 0015.
 - **Explicit event classes suit agents and review.** Every state change is
   a named event that can be logged and tested. Riverpod's provider graph
-  has more implicit behaviour, such as auto-dispose timing and retry on by
+  has more implicit behavior, such as auto-dispose timing and retry on by
   default. Agents get that wrong in code that compiles and passes review.
 - **Code generation is not a deciding factor.** Riverpod pushes
   `riverpod_generator`, but we already run build_runner for freezed.

@@ -1,4 +1,4 @@
-/// The site's PostHog seam. The snippet in `main.server.dart` initialises
+/// The site's PostHog seam. The snippet in `main.server.dart` initializes
 /// `window.posthog` cookieless (ADR 0004); `track` is the only caller
 /// afterwards. Events carry a source tag and a reason, never an address.
 ///

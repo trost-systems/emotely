@@ -163,5 +163,5 @@ them. The commands above are the recovery procedure.
   version number and a public store link, both already visible in this
   repository. It signs nothing, reads no database, and calls no model, so the
   abuse it can support is bandwidth against a cached static body — the rule
-  above and the edge cache are the whole defence, and they are proportionate
+  above and the edge cache are the whole defense, and they are proportionate
   to it.

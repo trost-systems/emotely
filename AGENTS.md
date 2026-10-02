@@ -23,7 +23,7 @@ the strongest layer that can hold it, not only in the code at hand:
 4. **Human review only** — last resort; the PR says why nothing stronger fits.
 
 A kind of mistake ends as a change in the same PR or a linked follow-up issue
-labelled `enhancement`, never as an acknowledgement alone. A correction made
+labeled `enhancement`, never as an acknowledgement alone. A correction made
 twice was held too low: move it up a layer. A one-off needs only its fix.
 
 ## Conventions

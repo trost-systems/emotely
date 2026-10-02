@@ -78,7 +78,7 @@ void main() {
       expect(isSubmitEnabled(tester, ColorInput.submitKey), isTrue);
     });
 
-    testWidgets('cancelling the picker leaves the slot empty', (tester) async {
+    testWidgets('canceling the picker leaves the slot empty', (tester) async {
       await pumpTestWidget(tester);
       await openSlot(tester, 0);
       await choose(tester, Colors.red);

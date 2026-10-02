@@ -30,7 +30,7 @@ class const ConfigClient({
 
   /// What this build calls itself, so the server can pick the right store
   /// listing. Defaults to [currentPlatform]; anything the server does not
-  /// recognise gets a neutral link rather than none.
+  /// recognize gets a neutral link rather than none.
   final String? platform,
 }) {
   /// Shorter than a session round: this runs before the first frame the user

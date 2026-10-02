@@ -149,7 +149,7 @@ void main() {
       );
     });
 
-    testWidgets('names deletion in the error colour', (tester) async {
+    testWidgets('names deletion in the error color', (tester) async {
       final robot = robotWith(tester);
       await robot.launch();
 

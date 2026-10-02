@@ -59,7 +59,7 @@ final class const DisplayName._(final String value) {
   /// embeddings, overrides and isolates. The other invisible format
   /// characters (Cf) stay allowed: ZWJ builds emoji, ZWNJ spells Persian and
   /// Indic names, tag characters build subdivision flags, and a
-  /// left-to-right or right-to-left mark affects only its neighbours.
+  /// left-to-right or right-to-left mark affects only its neighbors.
   static bool _isLayout(int rune) =>
       rune == 0x2028 ||
       rune == 0x2029 ||

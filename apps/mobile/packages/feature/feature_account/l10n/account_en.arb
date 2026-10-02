@@ -158,7 +158,7 @@
   },
   "moreDeleteAccountRow": "Delete account",
   "@moreDeleteAccountRow": {
-    "description": "More tab row, in the error colour, that opens the account deletion screen."
+    "description": "More tab row, in the error color, that opens the account deletion screen."
   },
   "moreDeleteAccountExplanation": "Removes your account and every entry.",
   "@moreDeleteAccountExplanation": {
@@ -331,7 +331,7 @@
   },
   "accountDeleteButton": "Delete account",
   "@accountDeleteButton": {
-    "description": "Account screen button, in the error colour, that asks for confirmation before deleting the account."
+    "description": "Account screen button, in the error color, that asks for confirmation before deleting the account."
   },
   "accountConfirmationMessage": "Delete your account and every entry?",
   "@accountConfirmationMessage": {
@@ -343,7 +343,7 @@
   },
   "accountConfirmDeleteButton": "Delete",
   "@accountConfirmDeleteButton": {
-    "description": "Account screen confirmation dialog button, in the error colour, that deletes the account and every entry for good."
+    "description": "Account screen confirmation dialog button, in the error color, that deletes the account and every entry for good."
   },
   "accountFailureMessage": "Could not delete your account. Check your connection and try again.",
   "@accountFailureMessage": {

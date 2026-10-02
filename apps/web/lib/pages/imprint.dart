@@ -25,7 +25,7 @@ class const Imprint({super.key}) extends StatelessComponent {
     p([.text('Responsible for content: Peter Trost, address as above.')]),
     h2([.text('Source code')]),
     p([
-      .text('emotely is open source under the MIT licence: '),
+      .text('emotely is open source under the MIT license: '),
       a(href: repositoryUrl, [.text(repositoryUrl)]),
     ]),
   ]);

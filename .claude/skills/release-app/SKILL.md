@@ -126,7 +126,7 @@ replacement disclaimed the app it was supposed to cover.
   signing in and must not redirect through anything that asks for consent.
 - **App Store Connect → App Privacy → Privacy Policy URL.** Set it **per
   locale** — English and German both, since the listing carries both; ASC
-  keeps one URL per localisation and an empty one blocks submission. The
+  keeps one URL per localization and an empty one blocks submission. The
   page itself is English-only for now, which is allowed, but if a German
   translation is ever added the German locale must point at it.
 

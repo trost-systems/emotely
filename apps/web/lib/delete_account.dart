@@ -47,7 +47,7 @@ final _codeShape = RegExp(r'^\d{6}$');
 /// and through a clipboard — "12 34 56", a stray newline, the non-breaking
 /// space some clients insert — so a correct code is not refused for how it
 /// was pasted. Anything else is left alone for [looksLikeCode] to judge.
-String normaliseCode(String value) => value.replaceAll(_spaces, '');
+String normalizeCode(String value) => value.replaceAll(_spaces, '');
 
 final _spaces = RegExp(r'\s+', unicode: true);
 

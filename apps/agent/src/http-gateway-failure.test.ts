@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { createAdvanceSessionHandler } from "./http-advance-session.ts";
 
-// The endpoint's behaviour when the model round itself is refused upstream
+// The endpoint's behavior when the model round itself is refused upstream
 // (issue #99). Kept apart from http-advance-session.test.ts, which covers the
 // request-validation ladder in front of the model call.
 

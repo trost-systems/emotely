@@ -2,7 +2,7 @@
 # Keeps the feature map honest (issue 168): every typed route a package of
 # the Flutter workspace declares has an entry in the run-app skill's feature
 # map, at the same location, and every entry names a route that still
-# exists and says everything an agent needs to reach and recognise it.
+# exists and says everything an agent needs to reach and recognize it.
 #
 # The routes come from the ast-grep rule `typed-go-route` (ADR 0018; it is
 # off in scripts/ast-grep.sh's scan and switched on here), read over the tracked,

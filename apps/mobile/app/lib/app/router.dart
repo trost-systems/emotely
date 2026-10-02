@@ -21,7 +21,7 @@ import 'package:go_router/go_router.dart';
 ///
 /// Where the user was going — a deep link, or the screen they were on when
 /// the session ended under them — travels along as `from` and is where
-/// they land once in. Only a location of this app's is honoured: anything
+/// they land once in. Only a location of this app's is honored: anything
 /// that does not start with `/`, or that would lead back to sign-in or
 /// onboarding, is dropped.
 ///

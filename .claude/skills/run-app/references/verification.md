@@ -39,7 +39,7 @@ own reference (`marionette help-ai`).
    `get-interactive-elements` lists what is on screen with its keys. Match by
    **key** first (`--key journal_view.start`), by visible `--text` only where a
    widget has none, and never by coordinates: a widget the task needs gets a
-   `Key('<screen>.<thing>')` like its neighbours. Marionette taps the centre
+   `Key('<screen>.<thing>')` like its neighbors. Marionette taps the center
    of what a key names, so the key belongs on the tappable widget itself (see
    `SubmitButton.buttonKey`), never on a full-width row around it. A model
    round takes a few seconds: poll `get-interactive-elements` until the next
@@ -99,7 +99,7 @@ $S down
 ```
 
 The other kinds: `longtext_input.field` then `longtext_input.submit`;
-`tap --key rating_input.slider` (its centre is a 5) then
+`tap --key rating_input.slider` (its center is a 5) then
 `rating_input.submit`; `emoji_input.slot.0`, `tap --text 😊` (the
 third-party picker has no keys) then `emoji_input.submit`;
 `color_input.slot.0`, `color_input.select` then `color_input.submit`.
@@ -178,7 +178,7 @@ Several agent sessions on one machine can each run the CLI:
 
 ## How it fits together
 
-`main.dart` initialises `MarionetteBinding` only under `kDebugMode`, so
+`main.dart` initializes `MarionetteBinding` only under `kDebugMode`, so
 profile and release builds never contain it. The debug build carries
 `SMOKE_EMAIL`, which makes the sign-in screen ask that one account for a
 password instead of a code; that workaround goes with email + password

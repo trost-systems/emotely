@@ -135,7 +135,7 @@ Checked before moving, against Vercel's docs of 2026-08/09:
   gateway processes a request, and the providers serving the current model
   are mostly US-hosted, so **the gateway and provider legs can still leave the
   EU**; the notice keeps that transfer and its safeguard.
-- **Neighbours.** Supabase (the JWKS the agent verifies against, decision 2)
+- **Neighbors.** Supabase (the JWKS the agent verifies against, decision 2)
   and PostHog EU (ADR 0004) are both in Frankfurt, so those calls become
   local. The transatlantic hop moves from phone→agent to agent→provider;
   per-round latency should be roughly unchanged and is watched after the

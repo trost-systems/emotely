@@ -158,7 +158,7 @@ class const _EmojiSheet({required final bool canClear})
     );
   }
 
-  /// The picker in this screen's colours and language: search on top,
+  /// The picker in this screen's colors and language: search on top,
   /// categories below, and the clear button only when there is an emoji to
   /// clear. The locale picks the emoji names search matches against, so a
   /// German hint finds German words.

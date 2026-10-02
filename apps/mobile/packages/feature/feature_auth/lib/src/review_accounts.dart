@@ -17,7 +17,7 @@ bool isReviewAccount(String email) =>
 /// The domain every internal address sits on.
 const internalDomain = '@getemotely.com';
 
-/// Whether [email] is one of the founder's own accounts, normalised the same
+/// Whether [email] is one of the founder's own accounts, normalized the same
 /// way as [isReviewAccount].
 ///
 /// The rule is the domain, not a list: `getemotely.com` is a Google Workspace

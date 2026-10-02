@@ -165,7 +165,7 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         'Supabase database in Frankfurt, with a note of whether you chose it '
         'or the app did. The app uses it to greet you, and the assistant '
         'uses it to address you (see the conversation, below). Change it '
-        'any time in Profile, from the More tab. Basis: the personalised '
+        'any time in Profile, from the More tab. Basis: the personalized '
         'service you asked for (Art. 6 (1) (b) GDPR). Kept until you delete '
         'the account.',
       ),
@@ -651,7 +651,7 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         'version is in the public repository, so what changed and when is a '
         'matter of record. Anything that materially changes what happens to '
         'your journal will be told to you in the app or by email before it '
-        'takes effect. emotely is open source under the MIT licence: you '
+        'takes effect. emotely is open source under the MIT license: you '
         'never have to take our word for any of this — ',
       ),
       a(href: repositoryUrl, [.text('read the code')]),
