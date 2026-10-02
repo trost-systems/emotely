@@ -41,7 +41,13 @@ void main() {
     // as CONTEXT.md names it. The same data goes to the same recipient, but
     // a consent names one text, and nobody had consented yet, so the
     // version moved with it rather than the digest alone.
-    const wordingDigest = '4fdda4d8';
+    //
+    // 2026-10-02: version and digest. The app's language is now named among
+    // what goes with each answer (#228) — one more piece of data to the
+    // model provider, the same kind of change as the name on 2026-09-26, so
+    // the meaning moved. Only the test account had consented, so re-asking
+    // cost nothing.
+    const wordingDigest = 'af1cbd03';
 
     /// A stable 32-bit FNV-1a over the wording. Not a security hash and it
     /// does not need to be: it only has to change when the text does, and
@@ -122,6 +128,7 @@ void main() {
       'en': [
         'the name you chose',
         'emotely picked for you',
+        'the language the app is set to',
         'training',
         'outside the EU',
         'standard contractual clauses',
@@ -129,6 +136,7 @@ void main() {
       'de': [
         'Namen, den du gewählt hast',
         'den emotely für dich ausgesucht hat',
+        'der Sprache, auf die die App eingestellt ist',
         'trainieren',
         'außerhalb der EU',
         'Standardvertragsklauseln',

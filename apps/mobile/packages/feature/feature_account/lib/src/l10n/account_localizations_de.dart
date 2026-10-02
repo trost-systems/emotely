@@ -22,7 +22,7 @@ class AccountLocalizationsDe extends AccountLocalizations {
 
   @override
   String get consentSendingBody =>
-      'Jede Antwort geht an unseren Server und von dort über das Vercel AI Gateway an einen Anbieter von Sprachmodellen, zusammen mit dem Namen, den du gewählt hast oder den emotely für dich ausgesucht hat, damit emotely die nächste Frage stellen, dich mit deinem Namen ansprechen und deinen Eintrag schreiben kann. Der Anbieter kann außerhalb der EU sitzen; in diesem Fall stützt sich die Übermittlung auf die Standardvertragsklauseln der EU.';
+      'Jede Antwort geht an unseren Server und von dort über das Vercel AI Gateway an einen Anbieter von Sprachmodellen, zusammen mit dem Namen, den du gewählt hast oder den emotely für dich ausgesucht hat, und der Sprache, auf die die App eingestellt ist, damit emotely dir die nächste Frage in deiner Sprache stellen, dich mit deinem Namen ansprechen und deinen Eintrag schreiben kann. Der Anbieter kann außerhalb der EU sitzen; in diesem Fall stützt sich die Übermittlung auf die Standardvertragsklauseln der EU.';
 
   @override
   String get consentRetentionLead =>

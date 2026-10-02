@@ -2,7 +2,7 @@
   "@@locale": "de",
   "consentTitle": "Bevor emotely sendet, was du schreibst",
   "consentSendingLead": "Deine Antworten werden an ein KI-Modell gesendet.",
-  "consentSendingBody": "Jede Antwort geht an unseren Server und von dort über das Vercel AI Gateway an einen Anbieter von Sprachmodellen, zusammen mit dem Namen, den du gewählt hast oder den emotely für dich ausgesucht hat, damit emotely die nächste Frage stellen, dich mit deinem Namen ansprechen und deinen Eintrag schreiben kann. Der Anbieter kann außerhalb der EU sitzen; in diesem Fall stützt sich die Übermittlung auf die Standardvertragsklauseln der EU.",
+  "consentSendingBody": "Jede Antwort geht an unseren Server und von dort über das Vercel AI Gateway an einen Anbieter von Sprachmodellen, zusammen mit dem Namen, den du gewählt hast oder den emotely für dich ausgesucht hat, und der Sprache, auf die die App eingestellt ist, damit emotely dir die nächste Frage in deiner Sprache stellen, dich mit deinem Namen ansprechen und deinen Eintrag schreiben kann. Der Anbieter kann außerhalb der EU sitzen; in diesem Fall stützt sich die Übermittlung auf die Standardvertragsklauseln der EU.",
   "consentRetentionLead": "Nie für Training genutzt, nie aufbewahrt.",
   "consentRetentionBody": "Jede Anfrage geht nur an Anbieter, denen vertraglich untersagt ist, mit dem, was du schreibst, zu trainieren und es nach ihrer Antwort aufzubewahren. Deine Einträge selbst werden in Frankfurt gespeichert und nirgendwo sonst.",
   "consentWithdrawalLead": "Sensibel – und jederzeit widerrufbar.",
