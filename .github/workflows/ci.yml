@@ -205,9 +205,9 @@ jobs:
       - run: dart analyze --fatal-infos
       - run: dart test
       - run: dart test -p chrome test/client
-      # --sitemap-exclude matches scripts/vercel-build.sh: /beta is unlisted
+      # --sitemap-exclude matches scripts/vercel-build.sh: /beta and /de/beta are unlisted
       # and must not reach sitemap.xml.
-      - run: jaspr build --sitemap-domain https://getemotely.com --sitemap-exclude '^/beta$'
+      - run: jaspr build --sitemap-domain https://getemotely.com --sitemap-exclude '^(/de)?/beta$'
       - run: git diff --exit-code -- lib
 
   # emotely's analyzer plugin (tools/emotely_lints, ADR 0020): its own gates.

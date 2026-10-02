@@ -7,6 +7,7 @@ import 'dart:js_interop_unsafe';
 import 'package:emotely_web/components/confirm_waitlist.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_test/client_test.dart';
 import 'package:universal_web/web.dart' as web;
 
@@ -95,6 +96,53 @@ void main() {
         await pumpEventQueue();
 
         expect(find.textContaining('Something went wrong'), findsOneComponent);
+      });
+    });
+  });
+
+  group('ConfirmWaitlist in German', () {
+    testClient('confirms in German', (tester) async {
+      final seen = <http.Request>[];
+      visit('/de/confirm?t=$token');
+      await withApi(seen: seen, () async {
+        tester.pumpComponent(const ConfirmWaitlist(lang: 'de'));
+        await pumpEventQueue();
+
+        expect(seen, hasLength(1));
+        expect(find.textContaining('Bestätigt'), findsOneComponent);
+      });
+    });
+
+    testClient('sends an invalid link back to the German sign-up', (
+      tester,
+    ) async {
+      final seen = <http.Request>[];
+      visit('/de/confirm');
+      await withApi(seen: seen, () async {
+        tester.pumpComponent(const ConfirmWaitlist(lang: 'de'));
+        await pumpEventQueue();
+
+        expect(seen, isEmpty);
+        expect(find.textContaining('nicht mehr gültig'), findsOneComponent);
+        expect(
+          find.byComponentPredicate(
+            (component) =>
+                component is DomComponent &&
+                component.attributes?['href'] == '/de',
+          ),
+          findsOneComponent,
+        );
+      });
+    });
+
+    testClient('asks for a reload in German', (tester) async {
+      final seen = <http.Request>[];
+      visit('/de/confirm?t=$token');
+      await withApi(seen: seen, status: 503, reply: '', () async {
+        tester.pumpComponent(const ConfirmWaitlist(lang: 'de'));
+        await pumpEventQueue();
+
+        expect(find.textContaining('Lade diese Seite neu'), findsOneComponent);
       });
     });
   });

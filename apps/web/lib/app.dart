@@ -3,6 +3,10 @@ import 'package:emotely_web/pages/app_privacy.dart';
 import 'package:emotely_web/pages/beta.dart';
 import 'package:emotely_web/pages/confirm.dart';
 import 'package:emotely_web/pages/de/app_privacy.dart';
+import 'package:emotely_web/pages/de/beta.dart';
+import 'package:emotely_web/pages/de/confirm.dart';
+import 'package:emotely_web/pages/de/delete_account.dart';
+import 'package:emotely_web/pages/de/home.dart';
 import 'package:emotely_web/pages/de/imprint.dart';
 import 'package:emotely_web/pages/delete_account.dart';
 import 'package:emotely_web/pages/home.dart';
@@ -22,7 +26,8 @@ class const App({super.key}) extends StatelessComponent {
   Component build(BuildContext context) => Router(
     routes: [
       ShellRoute(
-        builder: (_, _, child) => SiteShell(locale: .en, child: child),
+        builder: (_, state, child) =>
+            SiteShell(locale: .en, path: _pathOf(state), child: child),
         routes: [
           Route(
             path: '/',
@@ -70,8 +75,19 @@ class const App({super.key}) extends StatelessComponent {
       // Every path here is listed in `germanPaths`; a test renders each
       // entry of that table, so one without its route fails.
       ShellRoute(
-        builder: (_, _, child) => SiteShell(locale: .de, child: child),
+        builder: (_, state, child) =>
+            SiteShell(locale: .de, path: _pathOf(state), child: child),
         routes: [
+          Route(
+            path: '/de',
+            title: 'emotely — ein Tagebuch, das fragt, zuhört und schreibt',
+            builder: (_, _) => const HomeDe(),
+          ),
+          Route(
+            path: '/de/confirm',
+            title: 'Bestätige deine Adresse — emotely',
+            builder: (_, _) => const ConfirmDe(),
+          ),
           // Where the app's German consent and privacy screens link (#229).
           Route(
             path: '/de/app-privacy',
@@ -79,12 +95,29 @@ class const App({super.key}) extends StatelessComponent {
             builder: (_, _) => const AppPrivacyDe(),
           ),
           Route(
+            path: '/de/delete-account',
+            title: 'Dein Konto löschen — emotely',
+            builder: (_, _) => const DeleteAccountDe(),
+          ),
+          Route(
             path: '/de/imprint',
             title: 'Impressum — emotely',
             builder: (_, _) => const ImprintDe(),
+          ),
+          // Unlisted, like /beta: `--sitemap-exclude` keeps it out of
+          // sitemap.xml, and only the English beta page links here.
+          Route(
+            path: germanBetaPath,
+            title: 'emotely-Beta',
+            builder: (_, _) => const BetaDe(),
           ),
         ],
       ),
     ],
   );
 }
+
+/// The path of the route a shell frames, without its query: `/confirm`
+/// for `/confirm?t=…`.
+String _pathOf(RouteState state) =>
+    state.fullpath ?? Uri.parse(state.location).path;

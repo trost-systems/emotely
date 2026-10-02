@@ -13,6 +13,17 @@ CSS in `web/styles.css`. No Node anywhere in this app. The site's copy
 uses [`CONTEXT.md`](../../../CONTEXT.md)'s terms, like every surface a user
 reads.
 
+The site speaks English at `/…` and German at `/de/…`, by path only — no
+redirect, nothing read from the browser. `germanPaths` in
+`lib/site_locale.dart` is the one table of translated pages: a German page
+is a route in the German `ShellRoute` of `lib/app.dart`, a row in that
+table, and a page under `lib/pages/de/`. The shell (`lib/site_shell.dart`)
+derives `<html lang>`, the `hreflang` alternates and the language switch
+from the table, and `site_test.dart` checks each row renders, lists itself
+and its pair, and keeps the original's sections. An island takes its
+language as `lang` (a `SiteLocale` code), because `@client` parameters
+must be serialisable.
+
 Everything below is agent-executable; run from `apps/web`.
 
 ## Run
