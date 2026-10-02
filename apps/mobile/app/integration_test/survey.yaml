@@ -77,7 +77,10 @@ devices:
 # screen and metric (build p90, raster p90, missed frames), whatever the
 # device; its title starts with the worst severity any device showed, and
 # a later run updates it (a comment, and the title when the severity
-# changes) instead of filing another.
+# changes) instead of filing another; the fix's pull request closes it,
+# never a run. The rules below, the minimum drift, the baseline, the frame
+# minimum, virtual devices on build p90 alone and 120 Hz as a measured
+# 110 Hz or more were decided on 2026-10-02 (#256).
 severity:
   # critical: below the 60 fps floor on any device: a p90 over floor_ms,
   # or max_missed_percent of the frames or more over it.

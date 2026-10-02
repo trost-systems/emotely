@@ -27,17 +27,19 @@ $S history --device galaxy-s24 --days 90 --json | jq -s 'map(.build_ms.p90)'
   uses the emotely one by itself and refuses to run without it.
 - **In CI, sign-in is keyless**: Workload Identity Federation (pool
   `github`, provider `emotely`) into `ftl-runner@emotely-ci.iam.gserviceaccount.com`,
-  which holds Test Lab admin and analytics viewer only. The repository
-  variables are `FTL_PROJECT_ID`, `FTL_WORKLOAD_IDENTITY_PROVIDER` and
-  `FTL_SERVICE_ACCOUNT`.
+  which holds Test Lab admin, analytics viewer and **Editor** on the
+  project. The repository variables are `FTL_PROJECT_ID`,
+  `FTL_WORKLOAD_IDENTITY_PROVIDER` and `FTL_SERVICE_ACCOUNT`.
 - The results land in the project's default bucket
   (`gs://test-lab-da5r8r2b0t3mw-ii9dsjb3i5fn4/survey/<run>/`): the device
   log, the test result, and `survey.json`. gcloud uploads the build there
-  and `survey.sh` reads the results back, so the runner needs object
-  create and read on that bucket (`roles/storage.objectCreator` and
-  `roles/storage.objectViewer`, on the bucket only). Without them the
-  keyless sign-in works and the upload fails with 403 on
-  `storage.objects.create`.
+  and `survey.sh` reads the results back, so the runner needs to write and
+  read that bucket. Test Lab owns it, so a grant on the bucket alone is not
+  possible; Editor on the project is what Firebase's CI guide asks for
+  (decided 2026-10-02). It is safe here because the project holds nothing
+  but Test Lab, has no billing account, and only this repository can sign
+  in as the runner. Without it the keyless sign-in works and the upload
+  fails with 403 on `storage.objects.create`.
 
 ## The device matrix and the quota
 
@@ -84,6 +86,8 @@ from the device log (`survey.sh from-log`) when Test Lab pulled nothing.
 Every run's records, one JSON object per line, in `survey.jsonl` on the
 branch **`perf-survey`** (written by the workflow through the API, with the
 same `vercel.json` files as the `status` branch so that it deploys nothing).
+Like `status`, it is append-only: the ruleset "perf-survey branch:
+append-only" refuses deleting it and pushing anything but a fast-forward.
 A record is one screen of one run on one device:
 
 ```json
@@ -97,11 +101,14 @@ A record is one screen of one run on one device:
 
 `survey.sh history` narrows it (`--device` matches key, model, name or
 `<model>:<version>`, any part, any case; `--screen`; `--days`, 30 by
-default) and prints a table, or the records with `--json`. Without
-`gh`: `gh api -H 'Accept: application/vnd.github.raw+json'
+default) and prints a table, or the records with `--json`. Without the
+script: `gh api -H 'Accept: application/vnd.github.raw+json'
 'repos/trost-systems/emotely/contents/survey.jsonl?ref=perf-survey' | jq -s …`.
 
 ## Severity
+
+The rules below were decided on 2026-10-02 (#256), the additions to the
+issue's proposal included.
 
 `survey.sh classify` judges a run against `survey.yaml`'s rules and each
 device's **trailing baseline**: the median of that device's last 7 nightly

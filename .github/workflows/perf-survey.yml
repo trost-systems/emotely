@@ -15,7 +15,10 @@ name: Performance survey
 # (survey.yaml's `nightly`), leaving 3 for ad-hoc runs.
 #
 # Sign-in is keyless (Workload Identity Federation): the service account
-# ftl-runner holds Test Lab admin and analytics viewer, nothing else.
+# ftl-runner holds Test Lab admin, analytics viewer and Editor on the
+# project: it uploads to and reads Test Lab's own results bucket, which
+# cannot be granted on its own. The project holds nothing but Test Lab and
+# has no billing, and only this repository can sign in as the runner.
 
 on:
   schedule:
