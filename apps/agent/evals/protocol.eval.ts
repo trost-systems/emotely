@@ -107,7 +107,7 @@ describe(`protocol eval — ${modelUnderTest}`, () => {
     for (const q of inLanguage(defaultQuestionSet, "de").questions) {
       assert.equal(run.client.shown.get(q.id), q.text, q.id);
     }
-    // The entry is German. A machine check, not a judgement of its German:
+    // The entry is German. A machine check, not a judgment of its German:
     // an English summary has none of these words.
     assert.match(
       run.result.summary,
