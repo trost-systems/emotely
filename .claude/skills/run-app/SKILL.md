@@ -85,6 +85,7 @@ All configuration is `--dart-define`s, read in one place: `lib/app/environment.d
 | `EMOTELY_SUPABASE_PUBLISHABLE_KEY` | the hosted project's key | Supabase publishable key; public, acts only under the signed-in user |
 | `SMOKE_EMAIL` | none | debug builds only: the one address asked for a password (the CLI sets it); the live integration test signs in with it too |
 | `SMOKE_PASSWORD` | none | integration_test only: the smoke user's password |
+| `EMOTELY_DEBUG_BANNER` | `true` | debug builds only: `false` hides Flutter's DEBUG banner (the CLI sets it, so screenshots look like the installed app) |
 
 Every secret lives in `apps/agent/.env.local` and is read **blind** — never
 printed, never pasted into a message:

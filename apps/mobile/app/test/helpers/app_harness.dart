@@ -27,6 +27,7 @@ Widget appUnderTest({
   required SupabaseStub supabase,
   required AnalyticsSpy analytics,
   ConfigStub? config,
+  bool debugBanner = true,
 }) {
   // `PosthogObserver`, mounted so surveys can find a context, calls the
   // native SDK directly on every route change rather than through the
@@ -76,7 +77,11 @@ Widget appUnderTest({
   unawaited(gate.restore(account: supabase.supabase.auth.currentUser?.id));
   final onboarding = GetIt.I<OnboardingStore>();
   unawaited(onboarding.restore());
-  return EmotelyApp(screenViews: gate.screenObserver(), onboarding: onboarding);
+  return EmotelyApp(
+    screenViews: gate.screenObserver(),
+    onboarding: onboarding,
+    debugBanner: debugBanner,
+  );
 }
 
 /// A deep link arriving while the app runs: the platform's `pushRoute`

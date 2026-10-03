@@ -336,12 +336,19 @@ claim() {
   log "session $SESSION"
 }
 
+# app_defines <smoke email> <PostHog key>: the debug build's defines. The
+# DEBUG banner is off, so screenshots, which go public as evidence, look
+# like the app people install.
+app_defines() {
+  jq -n --arg email "$1" --arg key "$2" \
+    '{SMOKE_EMAIL: $email, POSTHOG_KEY: $key, EMOTELY_DEBUG_BANNER: "false"}'
+}
+
 # The smoke user's id: proves the credentials before a two-minute build,
 # and is how `collect` tells this session's PostHog events apart.
 check_credentials() {
   step "credentials"
-  jq -n --arg email "$SMOKE_EMAIL" --arg key "$(env_value POSTHOG_KEY)" \
-    '{SMOKE_EMAIL: $email, POSTHOG_KEY: $key}' >"$PRIVATE_DIR/defines.json"
+  app_defines "$SMOKE_EMAIL" "$(env_value POSTHOG_KEY)" >"$PRIVATE_DIR/defines.json"
   jq -n --arg email "$SMOKE_EMAIL" --arg password "$SMOKE_PASSWORD" \
     '{email: $email, password: $password}' >"$PRIVATE_DIR/grant.json"
   printf 'header = "apikey: %s"\n' "$SUPABASE_PUBLISHABLE_KEY" >"$PRIVATE_DIR/supabase.curl"

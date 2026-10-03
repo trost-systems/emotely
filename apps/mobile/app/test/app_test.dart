@@ -6,6 +6,7 @@ import 'package:feature_auth/feature_auth.dart';
 import 'package:feature_journal/feature_journal.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart' show MaterialApp;
 
 import 'helpers/helpers.dart';
 
@@ -89,6 +90,48 @@ void main() {
 
       expect(find.byType(JournalPage), findsOneWidget);
       expect(find.byType(EntryPage), findsNothing);
+    });
+
+    testWidgets('shows the debug banner unless told otherwise', (tester) async {
+      await tester.pumpWidget(
+        appUnderTest(
+          agent: AgentStub(),
+          supabase: SupabaseStub(),
+          analytics: AnalyticsSpy(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.widget<MaterialApp>(find.byType(MaterialApp)),
+        isA<MaterialApp>().having(
+          (app) => app.debugShowCheckedModeBanner,
+          'debugShowCheckedModeBanner',
+          isTrue,
+        ),
+      );
+    });
+
+    testWidgets('hides the debug banner for screenshots that look like the '
+        'installed app', (tester) async {
+      await tester.pumpWidget(
+        appUnderTest(
+          agent: AgentStub(),
+          supabase: SupabaseStub(),
+          analytics: AnalyticsSpy(),
+          debugBanner: false,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.widget<MaterialApp>(find.byType(MaterialApp)),
+        isA<MaterialApp>().having(
+          (app) => app.debugShowCheckedModeBanner,
+          'debugShowCheckedModeBanner',
+          isFalse,
+        ),
+      );
     });
 
     testWidgets('keeps the journal tab and the More tab side by side', (

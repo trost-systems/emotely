@@ -117,6 +117,7 @@ class LiveSessionRobot(final WidgetTester tester) {
       EmotelyApp(
         screenViews: gate.screenObserver(),
         onboarding: GetIt.I<OnboardingStore>(),
+        debugBanner: debugBanner,
       ),
     );
     await tester.pumpAndSettle();

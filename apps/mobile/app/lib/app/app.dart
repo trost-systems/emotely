@@ -28,9 +28,12 @@ import 'package:posthog_flutter/posthog_flutter.dart';
 ///   shared between apps would do.
 /// - [onboarding], the device's onboarding progress the redirect asks
 ///   about, restored before it is handed in.
+/// - [debugBanner], whether a debug build shows Flutter's DEBUG banner;
+///   `environment.dart` says when it is off.
 class const EmotelyApp({
   required final NavigatorObserver screenViews,
   required final OnboardingStore onboarding,
+  required final bool debugBanner,
   super.key,
 }) extends StatelessWidget {
   @override
@@ -44,7 +47,11 @@ class const EmotelyApp({
         create: (_) => GetIt.I<ConfigBloc>()..add(const ConfigEvent.loaded()),
       ),
     ],
-    child: _Router(screenViews: screenViews, onboarding: onboarding),
+    child: _Router(
+      screenViews: screenViews,
+      onboarding: onboarding,
+      debugBanner: debugBanner,
+    ),
   );
 }
 
@@ -54,6 +61,7 @@ class const EmotelyApp({
 class const _Router({
   required final NavigatorObserver screenViews,
   required final OnboardingStore onboarding,
+  required final bool debugBanner,
 }) extends StatefulWidget {
   @override
   State<_Router> createState() => _RouterState();
@@ -84,6 +92,7 @@ class _RouterState() extends State<_Router> {
     theme: lightTheme,
     darkTheme: darkTheme,
     routerConfig: _router,
+    debugShowCheckedModeBanner: widget.debugBanner,
     // PostHog draws a popover survey into the navigator's own context, which
     // it reaches through `PosthogObserver`; without the observer it finds no
     // context and logs that it cannot show the survey, and without the
