@@ -18,8 +18,13 @@
 #                                           Beta App Review and hand it to the
 #                                           external `Beta` group
 #   bundle exec fastlane android internal   build the AAB and upload it to the
-#                                           Play `internal` track
-#   bundle exec fastlane android beta       no build: promote the `internal`
+#                                           Play `internal` track; deferred,
+#                                           green, while something is in
+#                                           Google's review
+#   bundle exec fastlane android catch_up   no build: upload a deferred AAB
+#                                           (CATCH_UP_AAB) to `internal` if
+#                                           the track has nothing as new
+#   bundle exec fastlane android beta      no build: promote the `internal`
 #                                           release to the closed `alpha` track
 #   bundle exec fastlane ios metadata       no build: upload the App Store
 #                                           listing in fastlane/metadata to the
@@ -40,7 +45,10 @@
 #
 # Every Play edit commits with ERROR_IF_IN_REVIEW (fastlane/lib/
 # play_review_guard.rb): a commit never cancels and resubmits what Google is
-# reviewing.
+# reviewing. While something is in review, `android internal` ends green with
+# a notice instead of failing, app-release keeps the AAB as an artifact, and
+# the play-internal-catch-up workflow runs `android catch_up` with it every
+# hour until Play accepts the commit. Every other Play lane still fails.
 #
 # Inputs, all environment variables (secrets of the `release` environment):
 #   APP_STORE_CONNECT_API_KEY_ID / _ISSUER_ID / _API_KEY_P8   the ASC API key
@@ -51,7 +59,12 @@
 #   PLAY_SERVICE_ACCOUNT_JSON                                 Play upload account
 #   POSTHOG_KEY                                               analytics token
 #   BUILD_NUMBER                                              monotonic build id
-#                                                             (internal lanes)
+#                                                             (internal lanes,
+#                                                             and the deferred
+#                                                             build's in
+#                                                             android catch_up)
+#   CATCH_UP_AAB                                              the deferred AAB
+#                                                             (android catch_up)
 #   PROMOTE_BUILD_NUMBER                                      optional: the
 #                                                             build to promote
 #                                                             (beta lanes);
@@ -59,6 +72,7 @@
 
 require_relative "lib/store_paths"
 require_relative "lib/play_review_guard"
+require_relative "lib/play_internal_track"
 require_relative "lib/app_store_listing"
 require_relative "lib/app_review_information"
 require_relative "lib/play_data_safety"
@@ -80,10 +94,16 @@ end
 # step outputs `version` and `build`; app-release.yml's `status` job turns them
 # into the README badges. A no-op outside GitHub Actions.
 def report_shipped(version:, build:)
+  step_outputs(version: version, build: build)
+end
+
+# Writes `name=value` step outputs for the workflow step running the lane. A
+# no-op outside GitHub Actions.
+def step_outputs(**values)
   outputs = ENV.fetch("GITHUB_OUTPUT", "")
   return if outputs.empty?
 
-  File.open(outputs, "a") { |file| file.puts("version=#{version}", "build=#{build}") }
+  File.open(outputs, "a") { |file| values.each { |name, value| file.puts("#{name}=#{value}") } }
 end
 
 def dart_defines
@@ -393,7 +413,33 @@ platform :android do
     }
   end
 
-  desc "Build the release App Bundle and upload it to the Play internal track"
+  def play_client
+    Supply::Client.new(
+      service_account_json: StringIO.new(ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON")),
+      params: { timeout: 300 }
+    )
+  end
+
+  # Uploads the App Bundle at `aab` to the internal track: instant dogfood,
+  # no Google review of the build. Returns true, or false when Play refused
+  # the commit because something else of the app is in Google's review (the
+  # commit would submit it all; see fastlane/lib/play_review_guard.rb). Then
+  # nothing was published, a notice says so and the run stays green; every
+  # other refusal fails the lane.
+  def upload_internal(aab, then_what:)
+    upload_to_play_store(**play_store_defaults, track: "internal", aab: aab)
+    true
+  rescue PlayReviewGuard::ChangesInReview => e
+    AppStoreListing.notice(
+      "Build #{build_number} is not on the internal track yet: Play refused the commit because " \
+      "something of the app is in Google's review, and no upload cancels a review. #{then_what} " \
+      "Google said: #{e.google_message}",
+      title: "Play internal upload deferred"
+    )
+    false
+  end
+
+  desc "Build the release App Bundle and upload it to the Play internal track, or defer it while something is in review"
   lane :internal do
     flutter(
       "build", "appbundle", "--release",
@@ -401,13 +447,35 @@ platform :android do
       *dart_defines
     )
 
-    # Instant dogfood, no Google review.
-    upload_to_play_store(
-      **play_store_defaults,
-      track: "internal",
-      aab: File.join(APP_DIR, "build/app/outputs/bundle/release/app-release.aab")
-    )
-    report_shipped(version: BUILD_NAME, build: build_number)
+    aab = File.join(APP_DIR, "build/app/outputs/bundle/release/app-release.aab")
+    if upload_internal(aab, then_what: "app-release keeps the App Bundle, and play-internal-catch-up uploads it within the hour after Google has finished.")
+      report_shipped(version: BUILD_NAME, build: build_number)
+    else
+      # app-release keeps the AAB as an artifact for play-internal-catch-up.
+      step_outputs(deferred: true)
+    end
+  end
+
+  desc "No build: upload a deferred App Bundle (CATCH_UP_AAB, build BUILD_NUMBER) to the internal track if the track has nothing as new"
+  lane :catch_up do
+    aab = ENV.fetch("CATCH_UP_AAB") { UI.user_error!("CATCH_UP_AAB is not set") }
+
+    # applications.tracks.releases.list: read-only, outside any edit.
+    releases = play_client.list_track_release_summaries(PACKAGE_NAME, "internal")
+    skip = PlayInternalTrack.skip_reason(PlayInternalTrack.newest_version_code(releases), build_number)
+    if skip
+      AppStoreListing.notice(skip, title: "Play internal is current")
+      # Settled: the workflow drops the deferred App Bundles.
+      step_outputs(settled: true)
+      next
+    end
+
+    if upload_internal(aab, then_what: "play-internal-catch-up tries again in an hour.")
+      UI.success("Build #{build_number} caught up on the internal track")
+      step_outputs(settled: true)
+    else
+      step_outputs(settled: false)
+    end
   end
 
   desc "No build: promote the internal release (or PROMOTE_BUILD_NUMBER) to the closed alpha track"
@@ -457,11 +525,7 @@ platform :android do
 
     # supply's client only for its authorization; the call itself is not an
     # edit, so nothing here commits one.
-    play = Supply::Client.new(
-      service_account_json: StringIO.new(ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON")),
-      params: { timeout: 300 }
-    )
-    PlayDataSafety.upload(play.client, PACKAGE_NAME, DATA_SAFETY_CSV)
+    PlayDataSafety.upload(play_client.client, PACKAGE_NAME, DATA_SAFETY_CSV)
     UI.success("Data safety declaration written from #{File.basename(DATA_SAFETY_CSV)}")
   end
 end
