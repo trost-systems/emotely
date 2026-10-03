@@ -33,6 +33,22 @@ class ConsoleAnswersTest < Minitest::Test
     end
   end
 
+  def test_app_privacy_details_use_only_ids_app_store_connect_knows
+    require "json"
+    require "spaceship"
+    api = Spaceship::ConnectAPI
+    usages = JSON.parse(File.read(File.join(DIR, "app_privacy_details.json")))
+
+    refute_empty usages
+    usages.each do |usage|
+      assert_includes api::AppDataUsageCategory::ID.constants.map(&:to_s), usage.fetch("category")
+      usage.fetch("purposes").each { |purpose| assert_includes api::AppDataUsagePurpose::ID.constants.map(&:to_s), purpose }
+      usage.fetch("data_protections").each do |protection|
+        assert_includes api::AppDataUsageDataProtection::ID.constants.map(&:to_s), protection
+      end
+    end
+  end
+
   def test_no_password_is_kept_with_the_answers
     Dir.glob(File.join(DIR, "*")).each do |file|
       refute_match(/password\s*[:=]/i, File.read(file), "#{File.basename(file)} looks like it holds a password")

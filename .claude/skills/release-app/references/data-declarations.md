@@ -16,7 +16,7 @@ when they and the CSV disagree, the CSV is what Play has.
 
 App Store Connect's App Privacy has no API for an API key and stays a form.
 Its answers belong in `apps/mobile/app/fastlane/console/app_privacy_details.json`
-(not yet created), and the store-consoles skill is how an agent puts them
+(read from the console on 2026-10-03), and the store-consoles skill is how an agent puts them
 into the console. **App Store Connect needs Peter signed in** in that
 Chrome profile: a signed-out session is his to sign in to, never the
 agent's. Play Console stays signed in.

@@ -62,10 +62,9 @@ and Peter's iCloud Passwords.
   (`category`, `purposes`, `data_protections` per data type). What each
   answer means and why: the release-app skill's
   `references/data-declarations.md`.
-- **Not yet in the repository.** The first run creates it: with Peter signed
-  in, read **App Store Connect → App Privacy** and write every data type,
-  its purposes and its linkage into the JSON; Peter reviews it in the pull
-  request. Until then the console is the truth.
+- Read from App Store Connect on 2026-10-03 (eight data types, all linked,
+  none used for tracking). `fastlane/test` checks every id is one App Store
+  Connect knows.
 - **Console**: App Store Connect → App Privacy → Edit, per data type.
   Alternatively Peter runs, in his own terminal (it asks for his Apple ID
   and 2FA, which no agent enters):
