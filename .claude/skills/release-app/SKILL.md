@@ -40,7 +40,18 @@ gh run watch
 Without `build_number`, iOS takes the newest processed build of the version
 and Android the internal track's completed release; they are the same build
 only if both internal jobs of that merge succeeded, so pin the number when
-in doubt. iOS does nothing if `Beta` already has that build, so a rerun is
+in doubt.
+
+**The beta notes** are what a tester reads about the build, the same for
+every build: `fastlane/metadata/android/{en-US,de-DE}/changelogs/default.txt`
+(`fastlane/lib/beta_notes.rb`). `android beta` writes them onto the promoted
+`alpha` release in the promotion's own edit (`fastlane/lib/play_beta.rb` has
+supply's source behind it); a release without notes of its own showed
+testers the legacy production app's shutdown note (#317). TestFlight's
+"What to Test" is the English one. Changing them is a pull request: the
+next promotion uploads them; neither app-release nor store-listings runs for
+them. Check after a promotion in **Play Console → Closed testing - Alpha → the
+release → Release notes**: both languages, with the files' text. iOS does nothing if `Beta` already has that build, so a rerun is
 safe and does not re-notify. The only reason to open a console is to change
 who is in a group.
 
@@ -310,7 +321,10 @@ source of truth from then on:
   `marketing_url`; `copyright.txt` and `primary_category.txt` apply to both.
 - **Play** (supply's layout): `android/{en-US,de-DE}/` holds `title`,
   `short_description`, `full_description`. **No final newline**: supply
-  uploads the file as it is.
+  uploads the file as it is. `changelogs/default.txt` beside them is the
+  beta notes (see [Two stages](#two-stages-internal-on-every-merge-beta-on-demand)),
+  not listing text: the `metadata` lane skips it, and every language folder
+  here needs one, since supply writes an empty note for a folder without.
 
 A file that is absent leaves that field in the console alone, so add one only
 to take a field over. Copy follows [`CONTEXT.md`](../../../CONTEXT.md), in
