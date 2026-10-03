@@ -26,7 +26,7 @@ $S history --device galaxy-s24 --days 90 --json | jq -s 'map(.build_ms.p90)'
   in the project, scheduled or ad hoc. One device of one run is one test
   run, whether it passes or not.
 - **Locally, gcloud for emotely always runs as `CLOUDSDK_CONFIG=$HOME/.config/emotely/gcloud`.**
-  The default configuration belongs to another organisation; `survey.sh`
+  The default configuration belongs to another organization; `survey.sh`
   uses the emotely one by itself and refuses to run without it.
 - **In CI, sign-in is keyless**: Workload Identity Federation (pool
   `github`, provider `emotely`) into `ftl-runner@emotely-ci.iam.gserviceaccount.com`,

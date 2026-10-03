@@ -95,7 +95,7 @@ device_entry() {
 # --- gcloud -----------------------------------------------------------------------
 
 # gcloud for emotely only ever runs with its own configuration: on a
-# maintainer's machine the default one belongs to another organisation. In
+# maintainer's machine the default one belongs to another organization. In
 # CI, google-github-actions/auth signs in keylessly instead.
 gcloud_emotely() {
   if [[ -z "${CLOUDSDK_CONFIG:-}" && -z "${GITHUB_ACTIONS:-}" ]]; then

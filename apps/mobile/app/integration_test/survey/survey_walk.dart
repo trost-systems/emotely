@@ -141,7 +141,7 @@ class SurveyWalk(final WidgetTester tester, final PerfPaths paths) {
     }
   });
 
-  /// The account screen: opened, its deletion asked for and cancelled.
+  /// The account screen: opened, its deletion asked for and canceled.
   Future<void> _account() => _onMore(() async {
     for (var visit = 0; visit < repeats; visit++) {
       await _tapVisible(_key('more_view.account'));
