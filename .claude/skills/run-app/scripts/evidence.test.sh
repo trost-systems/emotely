@@ -193,6 +193,52 @@ test_every_screen_of_the_feature_map_is_reachable_from_a_diff() {
     fail "every package in the feature map lives where the mapping looks: not ${unreachable}"
 }
 
+# --- a smoke address fit to publish ----------------------------------------------
+
+test_a_reserved_documentation_domain_is_publishable() {
+  local address
+  for address in smoke@example.com smoke@example.net smoke@example.org Smoke@EXAMPLE.COM \
+    smoke@mail.example.com smoke@emotely.test smoke@anything.example; do
+    publishable_address "${address}" '' || fail "${address} is on a reserved domain, fit to publish"
+  done
+}
+
+test_a_real_domain_is_not_publishable() {
+  local address
+  for address in someone@gmail.com someone@getemotely.com smoke@example.com.evil.io \
+    smoke@notexample.com smoke@test.com smoke@example.co; do
+    if publishable_address "${address}" ''; then
+      fail "${address} is a real domain, not fit to publish"
+    fi
+  done
+}
+
+test_a_listed_public_domain_is_publishable() {
+  publishable_address smoke@getemotely.com ' example.net , GetEmotely.com ' ||
+    fail "a domain in EVIDENCE_PUBLIC_DOMAINS is fit to publish"
+  if publishable_address smoke@mail.getemotely.com 'getemotely.com'; then
+    fail "a subdomain of a listed domain is not the listed domain"
+  fi
+}
+
+test_up_and_post_refuse_a_personal_smoke_address_and_name_the_fix() {
+  local env="${work}/personal.env" err
+  printf 'SMOKE_EMAIL=me@gmail.com\nSMOKE_PASSWORD=made-up\nSMOKE_EMAIL_DOMAINS=gmail.com\n' >"${env}"
+  if err="$(ENV_FILE="${env}" require_publishable 2>&1)"; then
+    fail "refuses a smoke address that is not fit to publish"
+  fi
+  [[ "${err}" == *EVIDENCE_PUBLIC_DOMAINS* && "${err}" == *example.com* ]] ||
+    fail "the refusal names the fix: got ${err}"
+  [[ "${err}" != *me@gmail.com* ]] || fail "the refusal does not print the address: got ${err}"
+}
+
+test_up_and_post_accept_a_listed_public_alias() {
+  local env="${work}/alias.env"
+  printf 'SMOKE_EMAIL=smoke@getemotely.com\nSMOKE_PASSWORD=made-up\nSMOKE_EMAIL_DOMAINS=getemotely.com\nEVIDENCE_PUBLIC_DOMAINS=getemotely.com\n' >"${env}"
+  (ENV_FILE="${env}" require_publishable) 2>/dev/null ||
+    fail "accepts a smoke address on a domain in EVIDENCE_PUBLIC_DOMAINS"
+}
+
 # --- the smoke account's lock -----------------------------------------------------
 
 printf 'SMOKE_EMAIL=smoke@example.com\nSMOKE_PASSWORD=made-up\nSMOKE_EMAIL_DOMAINS=example.com\n' >"${work}/smoke.env"

@@ -153,12 +153,22 @@ the smoke address, password and user id from every text file in the
 bundle. What you type is yours to keep clean: made-up content only, and say
 so. Never sign in as anyone else on a driven app.
 
+A screenshot is not text: it shows the real app, and with it the smoke
+address (More and Profile), the account's name and its journal entries.
+Posted, all of that is public, so the account's profile and journal hold
+made-up content only, and the address must be one that is fine to publish.
+`evidence.sh` refuses to run otherwise ([pr-evidence.md](pr-evidence.md),
+"Privacy").
+
 **Your own smoke account.** Contributors bring their own: an address whose
 inbox you, and the agents you run, can read, so a flow that sends mail can
 be verified end to end. Put `SMOKE_EMAIL`, `SMOKE_PASSWORD` and
 `SMOKE_EMAIL_DOMAINS` (its domain, comma-separated if more than one) in
 `apps/agent/.env.local`. Inside emotely that is an address on
-`getemotely.com`. Reading the inbox from the CLI is #186.
+`getemotely.com`. Reading the inbox from the CLI is #186. For pull request
+evidence the address also has to be publishable: on a documentation domain
+such as example.com, or on a domain you list in `EVIDENCE_PUBLIC_DOMAINS`
+for a dedicated public alias, never your personal address.
 
 ## Parallel sessions
 

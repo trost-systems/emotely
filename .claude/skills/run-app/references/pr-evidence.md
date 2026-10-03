@@ -61,17 +61,29 @@ does the driving with the same commands it uses to verify any change.
 
 ## Privacy
 
-Attachments on this public repository are public (ADR 0005).
+Attachments on this public repository are public (ADR 0005), and the
+screenshots show the real app, every screen, nothing blacked out. So
+everything the smoke account shows is published: its address (More and
+Profile show it), its name and its journal entries. All of it must be made
+up.
 
+- **A publishable address, or no evidence.** `up` and `post` refuse unless
+  the smoke address is on a domain reserved for documentation, which has no
+  real inbox (example.com, example.net, example.org and their subdomains,
+  or a `.test` or `.example` domain; RFC 2606), or on a domain listed in
+  `EVIDENCE_PUBLIC_DOMAINS` (comma-separated, in `apps/agent/.env.local`)
+  for a dedicated public alias. Your personal address as smoke account gets
+  a refusal that names this fix.
 - Each side runs through `run-app.sh up`, which signs in as the smoke
-  account and refuses any other address.
+  account and refuses any other address. Its build hides the DEBUG banner,
+  so the screenshots look like the installed app.
 - `post` uploads only the plan's screenshots and the video of a side that
   `evidence.sh up` and `down` handled, nothing else in the bundle.
 - It uploads by paths relative to the bundle, so no local path (your user
   name) reaches the body or its public edit history.
-- What you type is made-up content. More and Profile show the smoke
-  account's sign-in address: run-app scrubs it from text, but not from a
-  picture.
+- What you type is made-up content, and so is what the account already
+  holds. Text logs in the bundle stay scrubbed of the address, password and
+  user id as before; only the pictures show the address.
 
 ## How the upload works
 

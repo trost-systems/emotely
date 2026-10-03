@@ -10,9 +10,12 @@
 # (no flow runner): between `up` and `down` the agent drives each planned
 # screen with marionette and saves its screenshot under the planned name.
 #
-# Privacy (ADR 0005): the repository and its attachments are public. Each
-# side runs through run-app.sh, which signs in as the smoke account and
-# nobody else; this script uploads only the planned screenshots and the
+# Privacy (ADR 0005): the repository and its attachments are public, and
+# the screenshots show the real app, the smoke address included, so the
+# smoke address must be publishable (a documentation domain, or one listed
+# in EVIDENCE_PUBLIC_DOMAINS) or `up` and `post` refuse. Each side runs
+# through run-app.sh, which signs in as the smoke account and nobody else;
+# this script uploads only the planned screenshots and the
 # video of a side it brought up and down itself, by relative path, so no
 # local path reaches the body or its edit history. What the agent types is
 # made-up content.
@@ -78,6 +81,11 @@ Usage: evidence.sh <command>
                    the state; the bundle stays.
   help             This text.
 
+The screenshots are public and show the smoke address, so up and post
+refuse a smoke address that is not publishable: on example.com, .net or
+.org, a .test or .example domain, or a domain listed in
+EVIDENCE_PUBLIC_DOMAINS (comma-separated) in apps/agent/.env.local.
+
 Between up and down, drive with marionette (run-app.sh help), made-up
 content only, and save each planned screen as
   marionette -i <instance> take-screenshots --output <bundle>/<NN>-<screen>.png
@@ -129,6 +137,33 @@ mark_side() {
   esac
 }
 side_state() { sed -n 's/^state=//p' "$1/$2/.evidence" 2>/dev/null | tail -1; }
+
+# --- a smoke address fit to publish ----------------------------------------------
+
+# publishable_address <address> <comma-separated public domains>: whether
+# the address may appear in a public screenshot. Reserved for documentation
+# (RFC 2606, RFC 6761): example.com, .net, .org and their subdomains, and
+# the .test and .example top-level domains, which have no real inbox; or a
+# domain listed exactly, for a dedicated public alias.
+publishable_address() {
+  local domain
+  domain="$(printf '%s' "${1##*@}" | tr '[:upper:]' '[:lower:]')"
+  case "$domain" in
+    example.com | example.net | example.org | *.example.com | *.example.net | *.example.org | *.test | *.example)
+      return 0
+      ;;
+  esac
+  smoke_domain_allowed "$1" "$2"
+}
+
+# The smoke address and everything the account shows (its name, its
+# entries) appear in public screenshots, so the account must be one that is
+# fine to publish. Never prints the address.
+require_publishable() {
+  read_smoke_account
+  publishable_address "$SMOKE_EMAIL" "$(env_value EVIDENCE_PUBLIC_DOMAINS)" ||
+    die "the smoke address (on ${SMOKE_EMAIL##*@}) would be published in the screenshots: More and Profile show it. Use a smoke account on a domain reserved for documentation (example.com, example.net, example.org, a .test or .example domain), or list a dedicated public alias's domain in EVIDENCE_PUBLIC_DOMAINS (comma-separated) in $ENV_FILE. Never your personal address."
+}
 
 # --- the plan -------------------------------------------------------------------
 
@@ -297,6 +332,7 @@ evidence_up() {
   STEP="up"
   require_side "$side"
   require_plan
+  require_publishable
   [[ "$(side_state "$DIR" "$side")" != up ]] || die "$side is already up: evidence.sh down $side first"
   if [[ "$side" == head && "$(side_state "$DIR" base)" == up ]]; then
     die "base is still up: evidence.sh down base first (one smoke account, one session)"
@@ -509,6 +545,7 @@ evidence_post() {
     render_section "$DIR/plan.json" "$(jq -c 'map({(.label): .path}) | add // {}' <<<"$files")" "$meta"
     return
   fi
+  require_publishable
 
   PR="${pr:-$(ev_get PR)}"
   PR="${PR:-$(gh pr view --json number -q .number 2>/dev/null || true)}"
