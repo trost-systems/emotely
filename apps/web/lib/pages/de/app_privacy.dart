@@ -32,7 +32,7 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
         'Diese Datenschutzerklärung gilt für die emotely-App für iOS und '
         'Android (bei Google Play als „Reflect Therapy AI: emotely“ '
         'gelistet). Für die Website getemotely.com und ihre Warteliste gibt '
-        'es eine eigene Datenschutzerklärung. Zuletzt aktualisiert am 2. '
+        'es eine eigene Datenschutzerklärung. Zuletzt aktualisiert am 3. '
         'Oktober 2026.',
       ),
     ]),
@@ -538,6 +538,21 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
       .text(
         ', die dir einen Code schickt und das Konto löscht, sobald du ihn '
         'eingibst.',
+      ),
+    ]),
+    // #193: App Store Guideline 5.1.1(v) asks for the Apple grant to be
+    // revoked; the legacy app disconnected Google the same way.
+    p([
+      .text(
+        'Meldet sich das Konto mit Apple an, bittet die App Apple beim '
+        'Löschen in der App um einen neuen Einmalcode, und unser Server '
+        'schickt diesen Code direkt an Apple zurück, damit Apple den Zugriff '
+        'von emotely auf deinen Apple Account entfernt; davon wird nichts '
+        'gespeichert. Meldet es sich mit Google an, bittet die App Google '
+        'direkt, emotely von deinem Google-Konto zu trennen. Klappt eins '
+        'davon nicht – oder löschst du über die Löschseite –, wird das Konto '
+        'trotzdem gelöscht, und du kannst emotely selbst in den '
+        'Einstellungen dieses Kontos entfernen.',
       ),
     ]),
     p([

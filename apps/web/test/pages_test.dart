@@ -491,7 +491,23 @@ void main() {
       tester.pumpComponent(const AppPrivacy());
 
       expect(
-        find.textContaining('Last updated 2 October 2026'),
+        find.textContaining('Last updated 3 October 2026'),
+        findsOneComponent,
+      );
+    });
+
+    testComponents('says how deletion disconnects Apple and Google', (tester) {
+      tester.pumpComponent(const AppPrivacy());
+
+      // #193: the app asks Apple for a one-time code that the agent sends
+      // straight back to Apple; Google is disconnected from the device.
+      expect(find.textContaining('fresh one-time code'), findsOneComponent);
+      expect(
+        find.textContaining('nothing from it is stored'),
+        findsOneComponent,
+      );
+      expect(
+        find.textContaining('disconnect emotely from your Google account'),
         findsOneComponent,
       );
     });
@@ -986,7 +1002,21 @@ void main() {
       tester.pumpComponent(const AppPrivacyDe());
 
       expect(
-        find.textContaining('Zuletzt aktualisiert am 2. Oktober 2026'),
+        find.textContaining('Zuletzt aktualisiert am 3. Oktober 2026'),
+        findsOneComponent,
+      );
+    });
+
+    testComponents('says how deletion disconnects Apple and Google', (tester) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.textContaining('neuen Einmalcode'), findsOneComponent);
+      expect(
+        find.textContaining('davon wird nichts gespeichert'),
+        findsOneComponent,
+      );
+      expect(
+        find.textContaining('emotely von deinem Google-Konto zu trennen'),
         findsOneComponent,
       );
     });
