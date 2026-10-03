@@ -55,26 +55,60 @@ class AuthLocalizationsDe extends AuthLocalizations {
   String get emailHint => 'du@example.com';
 
   @override
-  String get sendCodeButton => 'Schick mir einen Code';
+  String get passwordLabel => 'Passwort';
 
   @override
-  String codeSentMessage(String email) {
-    return 'Wir haben dir einen Code an $email geschickt.';
+  String get newPasswordLabel => 'Neues Passwort';
+
+  @override
+  String passwordRule(int count) {
+    return 'Mindestens $count Zeichen';
+  }
+
+  @override
+  String get showPassword => 'Passwort anzeigen';
+
+  @override
+  String get hidePassword => 'Passwort verbergen';
+
+  @override
+  String get signInButton => 'Anmelden';
+
+  @override
+  String get createAccountButton => 'Konto anlegen';
+
+  @override
+  String get forgotPasswordButton => 'Passwort vergessen?';
+
+  @override
+  String confirmationSentMessage(String email) {
+    return 'Wir haben dir einen Code an $email geschickt. Gib ihn ein, um deine Adresse zu bestätigen und dein Konto zu öffnen.';
+  }
+
+  @override
+  String resetSentMessage(String email) {
+    return 'Wenn zu $email ein Konto gehört, haben wir dorthin einen Code geschickt. Gib den Code ein und wähle ein neues Passwort.';
   }
 
   @override
   String get codeLabel => 'Code';
 
   @override
-  String passwordPrompt(String email) {
-    return 'Gib das Passwort für $email ein.';
+  String get confirmButton => 'Bestätigen';
+
+  @override
+  String get savePasswordButton => 'Passwort speichern';
+
+  @override
+  String get resendCodeButton => 'Neuen Code senden';
+
+  @override
+  String get codeResentMessage => 'Ein neuer Code ist unterwegs.';
+
+  @override
+  String newPasswordPrompt(String email) {
+    return 'Wähle ein neues Passwort für $email.';
   }
-
-  @override
-  String get passwordLabel => 'Passwort';
-
-  @override
-  String get signInButton => 'Anmelden';
 
   @override
   String get changeEmailButton => 'Andere E-Mail-Adresse nutzen';
@@ -89,22 +123,32 @@ class AuthLocalizationsDe extends AuthLocalizations {
 
   @override
   String get couldNotSendMessage =>
-      'An diese Adresse konnte kein Code gehen. Prüfe sie und versuch es noch einmal.';
+      'An diese Adresse konnte keine Mail gehen. Prüfe sie und versuch es noch einmal.';
 
   @override
   String get wrongCodeMessage =>
-      'Dieser Code ist falsch oder abgelaufen. Fordere bei Bedarf einen neuen an.';
+      'Dieser Code ist falsch oder abgelaufen. Lass dir bei Bedarf einen neuen senden.';
 
   @override
-  String get wrongPasswordMessage => 'Dieses Passwort wurde nicht angenommen.';
+  String get wrongPasswordMessage =>
+      'E-Mail-Adresse und Passwort passen zu keinem Konto. Prüfe beides oder setze dein Passwort zurück.';
+
+  @override
+  String weakPasswordMessage(int count) {
+    return 'Dieses Passwort ist zu kurz. Nimm mindestens $count Zeichen.';
+  }
+
+  @override
+  String get accountExistsMessage =>
+      'Zu dieser E-Mail-Adresse gibt es schon ein Konto. Gib sein Passwort ein oder setze es zurück.';
+
+  @override
+  String get passwordNotSavedMessage =>
+      'Dein neues Passwort konnte nicht gespeichert werden. Versuch es noch einmal.';
 
   @override
   String get unreachableMessage =>
       'Der Anmeldedienst ist gerade nicht erreichbar.';
-
-  @override
-  String get noAccountMessage =>
-      'Diese E-Mail-Adresse kenne ich noch nicht – tippe auf „Los geht’s“, um zu beginnen.';
 
   @override
   String get providerFailedMessage =>

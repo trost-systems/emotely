@@ -67,14 +67,6 @@ const turnstileSiteKey = String.fromEnvironment(
 /// lists, and the widget lists the site's domain.
 const turnstileOrigin = 'https://getemotely.com/';
 
-/// The smoke account (`--dart-define=SMOKE_EMAIL=…`), in a debug build only:
-/// the verification CLI (the run-app skill) signs in as it through the
-/// sign-in screen, and it has no mailbox to read a code from, so a debug
-/// build asks it for its password the way it asks the store review
-/// accounts. Outside debug the define is never read, so no profile or
-/// release build can carry it.
-const smokeEmail = kDebugMode ? String.fromEnvironment('SMOKE_EMAIL') : '';
-
 /// Whether a debug build shows Flutter's DEBUG banner
 /// (`--dart-define=EMOTELY_DEBUG_BANNER=false` turns it off). The
 /// verification CLI (the run-app skill) turns it off, so screenshots posted
@@ -84,10 +76,6 @@ const smokeEmail = kDebugMode ? String.fromEnvironment('SMOKE_EMAIL') : '';
 const debugBanner =
     kDebugMode &&
     bool.fromEnvironment('EMOTELY_DEBUG_BANNER', defaultValue: true);
-
-/// The accounts beyond the review accounts that sign in with a password:
-/// the smoke account when a debug build names one, otherwise none.
-const passwordAccounts = {if (smokeEmail != '') smokeEmail};
 
 /// The app's Google OAuth clients (Google Cloud project `emotely-sign-in`),
 /// for Sign in with Google (#51). Public identifiers, and deliberately not

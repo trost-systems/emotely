@@ -26,7 +26,7 @@ void main() {
 
       await getIt<PostHogGate>().restore(account: null);
       await getIt<SessionAnalytics>().sessionStarted();
-      await getIt<AuthAnalytics>().signedIn(SignInMethod.code);
+      await getIt<AuthAnalytics>().signedIn(SignInMethod.password);
       await getIt<JournalAnalytics>().entryOpened();
       await getIt<ConsentAnalytics>().consentDeclined();
       await getIt<OnboardingAnalytics>().started(stepCount: 4);
@@ -37,7 +37,7 @@ void main() {
 
       expect(spy.events, [
         event('session_started'),
-        event('signed_in', {'method': 'code'}),
+        event('signed_in', {'method': 'password'}),
         event('entry_opened'),
         event('consent_declined', {'version': 'v1'}),
         event('onboarding_started', {

@@ -94,13 +94,13 @@ class FakeBackend(
         // The name the journal greets by and a session hands the agent.
         ('GET', '/rest/v1/profiles') => (200, [profileRow(displayName: 'Sam')]),
         // Withdrawing and giving consent again, and signing out and asking
-        // for a code: the survey's walk (survey_test.dart) reaches every
-        // screen, and these are how it gets to the last two.
+        // for a reset code: the survey's walk (survey_test.dart) reaches
+        // every screen, and these are how it gets to the last two.
         ('GET', '/rest/v1/consent_events') => (200, const <Object?>[]),
         ('POST', '/rest/v1/rpc/withdraw_consent') => _consentNow(false),
         ('POST', '/rest/v1/rpc/record_consent') => _consentNow(true),
         ('POST', '/auth/v1/logout') => (204, null),
-        ('POST', '/auth/v1/otp') => (200, const <String, Object?>{}),
+        ('POST', '/auth/v1/recover') => (200, const <String, Object?>{}),
         (final method, final path) => throw StateError(
           'fake backend: nothing answers $method $path',
         ),

@@ -8,28 +8,32 @@ void main() {
       final spy = AnalyticsSpy();
       final analytics = spy.authAnalytics;
 
-      await analytics.codeRequested();
-      await analytics.codeRequestFailed();
-      await analytics.codeRejected();
+      await analytics.signUpRequested();
+      await analytics.signUpFailed();
+      await analytics.confirmationCodeRejected();
+      await analytics.passwordResetRequested();
+      await analytics.passwordResetFailed();
+      await analytics.resetCodeRejected();
       await analytics.passwordFailed();
       await analytics.identify(userId: 'user-1', internal: false);
       await analytics.providerCanceled(SignInMethod.google);
       await analytics.providerFailed(SignInMethod.apple);
-      await analytics.signedIn(SignInMethod.code);
       await analytics.signedIn(SignInMethod.password);
       await analytics.signedIn(SignInMethod.google);
       await analytics.signedIn(SignInMethod.apple);
 
       expect(spy.identified, ['user-1']);
       expect(spy.events, [
-        event('sign_in_code_requested'),
-        event('sign_in_code_request_failed'),
-        event('sign_in_code_rejected'),
+        event('sign_up_requested'),
+        event('sign_up_failed'),
+        event('sign_up_code_rejected'),
+        event('password_reset_requested'),
+        event('password_reset_failed'),
+        event('password_reset_code_rejected'),
         event('sign_in_password_failed'),
         // Which way, never who: the provider's name is the one property.
         event('sign_in_provider_canceled', {'provider': 'google'}),
         event('sign_in_provider_failed', {'provider': 'apple'}),
-        event('signed_in', {'method': 'code'}),
         event('signed_in', {'method': 'password'}),
         event('signed_in', {'method': 'google'}),
         event('signed_in', {'method': 'apple'}),

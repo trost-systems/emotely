@@ -42,9 +42,11 @@ void main() {
       await reporter.sessionSaveFailed(saveRefused, trace, sessionId: 's-1');
       await reporter.sessionSaveFailed(saveRefused, trace);
       await reporter.entrySaveFailed(saveRefused, trace, sessionId: 's-1');
-      await reporter.codeRequestFailed(noCode, trace);
+      await reporter.signUpFailed(noCode, trace);
+      await reporter.codeSendFailed(noCode, trace);
       await reporter.codeVerifyFailed(wrongCode, trace);
       await reporter.passwordSignInFailed(wrongPassword, trace);
+      await reporter.passwordSaveFailed(unreachable, trace);
       await reporter.providerSignInFailed(
         wrongPassword,
         trace,
@@ -83,11 +85,19 @@ void main() {
             code: 'over_email_send_rate_limit',
             statusCode: 429,
           ),
-          {'step': 'sign_in_code_request'},
+          {'step': 'sign_up'},
+        ),
+        captured(
+          withheld(
+            AuthApiException,
+            code: 'over_email_send_rate_limit',
+            statusCode: 429,
+          ),
+          {'step': 'auth_code_send'},
         ),
         captured(
           withheld(AuthApiException, code: 'otp_expired', statusCode: 403),
-          {'step': 'sign_in_code_verify'},
+          {'step': 'auth_code_verify'},
         ),
         captured(
           withheld(
@@ -97,6 +107,7 @@ void main() {
           ),
           {'step': 'sign_in_password'},
         ),
+        captured(unreachable, {'step': 'password_save'}),
         captured(
           withheld(
             AuthApiException,

@@ -16,6 +16,7 @@ export 'src/human_check_stub.dart';
 export 'src/identity_providers.dart';
 export 'src/journal_rows.dart';
 export 'src/mocks.dart';
+export 'src/password_rounds.dart';
 export 'src/profile_rows.dart';
 export 'src/pump_app.dart';
 export 'src/questions.dart';

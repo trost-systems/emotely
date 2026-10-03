@@ -1,5 +1,6 @@
 import 'package:feature_auth/src/bloc/auth_bloc.dart';
 import 'package:feature_auth/src/l10n/l10n.dart';
+import 'package:feature_auth/src/view/password_field.dart';
 import 'package:feature_auth/src/view/sign_in_page.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -24,8 +25,12 @@ class const SignInError(final SignInProblem? problem, {super.key})
         SignInProblem.couldNotSend => strings.couldNotSendMessage,
         SignInProblem.wrongCode => strings.wrongCodeMessage,
         SignInProblem.wrongPassword => strings.wrongPasswordMessage,
+        SignInProblem.weakPassword => strings.weakPasswordMessage(
+          minimumPasswordLength,
+        ),
+        SignInProblem.accountExists => strings.accountExistsMessage,
+        SignInProblem.passwordNotSaved => strings.passwordNotSavedMessage,
         SignInProblem.unreachable => strings.unreachableMessage,
-        SignInProblem.noAccount => strings.noAccountMessage,
         SignInProblem.providerFailed => strings.providerFailedMessage,
         SignInProblem.humanCheckFailed => strings.humanCheckFailedMessage,
       };

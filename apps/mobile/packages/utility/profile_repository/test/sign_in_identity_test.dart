@@ -38,12 +38,11 @@ void main() {
         SignInIdentity.ofUser(_user(provider: 'apple')).method,
         SignInVia.apple,
       );
-      // An email code, or a review account's password: both are the email
-      // provider to Supabase, and a code is what everyone but a reviewer
-      // uses.
+      // An email and its password, or an account made with a sign-in code
+      // before #187: both are the email provider to Supabase.
       expect(
         SignInIdentity.ofUser(_user(provider: 'email')).method,
-        SignInVia.emailCode,
+        SignInVia.email,
       );
     });
 

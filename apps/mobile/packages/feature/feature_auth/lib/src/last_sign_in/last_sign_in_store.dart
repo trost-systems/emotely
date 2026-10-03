@@ -1,12 +1,15 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// A way in the sign-in screen offers, as the "Last used" tag names it
-/// (#204): a button, not a protocol. A review account's password starts
-/// at the email field too, so it counts as [emailCode].
+/// (#204): a button, not a protocol.
 enum SignInOption(final String wire) {
   apple('apple'),
   google('google'),
-  emailCode('email_code'),
+
+  /// The email and password. Kept as `email_code`, its name from when the
+  /// email field mailed a sign-in code (before #187): a phone that kept it
+  /// then still tags the email field, which is still that way in.
+  email('email_code'),
 }
 
 /// The way in last used on this phone, for the sign-in screen to tag

@@ -419,42 +419,50 @@ screens:
         smoke password without printing it.
     does: >-
       Where a signed-out user signs in ("I have an account" on Welcome) or
-      creates the account (the last step of onboarding): email, then the
-      six-digit code Supabase mails (or a password, for the review accounts
-      and a debug build's smoke account), or Google and Apple in one step.
-      From sign-in an email code never creates an account. Back returns to
-      Welcome from sign-in, and to the hello step from sign-up. The router
-      carries where the user was going (?from=) past it.
+      creates the account (the last step of onboarding), with an email and
+      a password, or Google and Apple in one step. A new account opens once
+      the six-digit code mailed to it is typed in; "Forgot password?" mails
+      a code that, with a new password beside it, signs the account in.
+      From sign-in nothing creates an account. Back returns to Welcome from
+      sign-in, and to the hello step from sign-up. The router carries where
+      the user was going (?from=) past it.
     looks: >-
       A back arrow and no title in the app bar, no tab bar. "Welcome back"
       in large type when signing in; "Almost there, <name>" and "Create
       your account so your reflections stay safe – and with you on any
       phone." when signing up. Then "Sign in with Google" and "Continue
       with Apple", the one used last tagged "Last used", "or with your
-      email", an "Email address" field, "Send me a code" (dimmed until the
-      address looks plausible), and "Privacy notice" at the bottom. After
-      it: a Code (or Password) field, Sign in and "Use a different email".
+      email", an "Email address" and a "Password" field (with "At least 10
+      characters" under it when signing up), "Sign in" or "Create account"
+      (dimmed until both are filled in), "Forgot password?", and "Privacy
+      notice" at the bottom. A code step instead: what was mailed where, a
+      Code field (and a "New password" one for a reset), "Confirm" or "Save
+      password", "Send a new code" and "Use a different email".
     states:
       LastSignInBloc:
         "none": No "Last used" tag; nobody has signed in on this device yet.
         "a SignInOption": The "Last used" tag on that way in.
       AuthBloc:
-        AuthSignedOut: The email step, with the last error if any.
-        AuthRequestingCode: The email step, busy.
-        AuthSigningInWith: The email step, busy while Google or Apple answers.
-        AuthCodeSent: The code step.
-        AuthVerifying: The code step, busy.
-        AuthPasswordRequired: The password step.
-        AuthCheckingPassword: The password step, busy.
+        AuthSignedOut: The email and password, with the last error if any.
+        AuthChecking: The email and password, busy.
+        AuthSigningInWith: The email and password, busy while Google or Apple answers.
+        AuthCodeSent: The code step, confirming a new account or resetting a password.
+        AuthCheckingCode: The code step, busy.
+        AuthNewPasswordRequired: Only a new password, when the reset's first one could not be saved.
+        AuthSavingPassword: The new password, busy.
         AuthSignedIn: Nothing; the router leaves for the journal.
     keys:
       sign_in_page.email: The email field.
-      sign_in_page.send_code: Send me a code.
+      sign_in_page.password: The password field.
+      sign_in_page.submit: Sign in, or Create account.
+      sign_in_page.forgot_password: Forgot password? (mails a reset code).
       sign_in_page.code: The six-digit code field.
-      sign_in_page.sign_in: Sign in with the code.
-      sign_in_page.password: The password field (review and smoke accounts).
-      sign_in_page.password_sign_in: Sign in with the password.
-      sign_in_page.change_email: Back to the email step.
+      sign_in_page.confirm: Confirm the new account's code.
+      sign_in_page.new_password: The new password field of a reset.
+      sign_in_page.save_password: Save the new password and sign in.
+      sign_in_page.resend_code: Send a new code.
+      sign_in_page.code_resent: '"A new code is on its way."'
+      sign_in_page.change_email: Back to the email and password.
       sign_in_page.error: The error text under a field.
       sign_in_page.google: Sign in with Google.
       sign_in_page.apple: Sign in with Apple (iOS).
