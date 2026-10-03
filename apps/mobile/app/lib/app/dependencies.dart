@@ -23,7 +23,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// registers into [getIt] here, in dependency order, and nowhere else. The
 /// parameters are the leaves — the http clients, Supabase, the PostHog
 /// instance and config (used by the gate alone, once allowed, #204), the
-/// human check's token source (Turnstile in a hidden web view, #94) — and
+/// human check's token source (Turnstile in a web view, #94) — and
 /// the app's build-time values; a test passes scripted leaves only, so it
 /// exercises the production graph with fake edges.
 ///

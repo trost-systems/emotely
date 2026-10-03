@@ -86,6 +86,7 @@ class PerfPaths(final WidgetTester tester, final FakeBackend backend) {
       screenViews: gate.screenObserver(),
       onboarding: onboarding,
       debugBanner: debugBanner,
+      turnstile: HumanCheckStub.idleTurnstile,
     );
     // What the restored sign-in sets off before the first frame (the
     // usage-analytics record checks its consent) belongs to the launch, not

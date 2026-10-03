@@ -1,13 +1,14 @@
+/// @docImport 'package:human_check/src/turnstile.dart';
+library;
+
 /// Where a token comes from: one Cloudflare Turnstile challenge per call,
 /// answering its single-use token, or null when the challenge gave none.
 ///
 /// It may also throw: an [Exception] counts as a failed check, and a
 /// source that knows more throws [HumanCheckFailed] with its own cause.
-/// The app wires it to Turnstile's hidden web view
-/// (`apps/mobile/app/lib/app/turnstile.dart`); tests
-/// hand in a scripted one (`HumanCheckStub` in `testing`). It is the leaf,
-/// like the http clients and the Supabase client: nothing behind it can
-/// run under `flutter test`.
+/// The app wires it to [TurnstileChallenges.token], whose web view
+/// `TurnstileHost` shows; feature and app tests hand in a scripted one
+/// (`HumanCheckStub` in `testing`), so no test of theirs needs a web view.
 typedef HumanCheckToken = Future<String?> Function();
 
 /// The human check gave no token: the challenge failed, timed out, or

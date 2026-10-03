@@ -35,11 +35,6 @@ dependencies:
   # constraint is written here; `any` says exactly that.
   agent_client: any
   analytics: any
-  # The human check's leaf (#94): Cloudflare Turnstile in a headless web
-  # view (flutter_inappwebview), for the token Supabase Auth demands before
-  # it mails a code or checks a password. Pinned exactly: the next release
-  # may swap the web view for a fork, which deserves its own review.
-  cloudflare_turnstile: 3.8.1
   consent_repository: any
   contract: any
   # Cupertino Icons font for iOS-style icons.

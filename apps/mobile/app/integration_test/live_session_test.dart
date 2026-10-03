@@ -16,7 +16,6 @@ import 'package:design_system/design_system.dart';
 import 'package:emotely/app/app.dart';
 import 'package:emotely/app/dependencies.dart';
 import 'package:emotely/app/environment.dart';
-import 'package:emotely/app/turnstile.dart';
 import 'package:feature_account/feature_account.dart';
 import 'package:feature_journal/feature_journal.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
@@ -25,6 +24,7 @@ import 'package:feedback_link/feedback_link.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:human_check/human_check.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -82,11 +82,21 @@ class LiveSessionRobot(final WidgetTester tester) {
       ),
     );
     // The password grant needs a human check like any other (#94): a real
-    // one, from the same hidden web view the app uses on this device.
+    // one, from the same web view the app shows on this device, hosted
+    // here until the app itself is up.
+    final turnstile = TurnstileChallenges(
+      siteKey: turnstileSiteKey,
+      origin: Uri.parse(turnstileOrigin),
+    );
+    await tester.pumpWidget(
+      TurnstileHost(challenges: turnstile, child: const SizedBox.expand()),
+    );
+    final captchaToken = turnstile.token();
+    await tester.pumpAndSettle();
     await supabase.client.auth.signInWithPassword(
       email: smokeEmail,
       password: smokePassword,
-      captchaToken: await turnstileToken(),
+      captchaToken: await captchaToken,
     );
     final posthog = Posthog();
     // The real startup gate against the real endpoint: if the deployed config
@@ -112,7 +122,7 @@ class LiveSessionRobot(final WidgetTester tester) {
       // Signed in above, not through the screen.
       passwordAccounts: const {},
       google: googleClients,
-      humanCheckToken: turnstileToken,
+      humanCheckToken: turnstile.token,
     );
     // The smoke account has allowed usage analytics, as a tester would on
     // the first-launch sheet: the run reports to PostHog like one (#204).
@@ -123,6 +133,7 @@ class LiveSessionRobot(final WidgetTester tester) {
         screenViews: gate.screenObserver(),
         onboarding: GetIt.I<OnboardingStore>(),
         debugBanner: debugBanner,
+        turnstile: turnstile,
       ),
     );
     await tester.pumpAndSettle();

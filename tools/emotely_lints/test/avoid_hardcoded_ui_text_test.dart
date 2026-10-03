@@ -141,20 +141,6 @@ Widget f() => const Logo(
 ''');
   }
 
-  Future<void> test_siteKeyGivenToAWidget() async {
-    // Cloudflare Turnstile's widget takes its public site key as a String
-    // (#94); Cloudflare's test keys read like words to the letter check.
-    await assertNoDiagnostics('''
-import 'package:flutter/widgets.dart';
-class Challenge extends StatelessWidget {
-  const Challenge({required this.siteKey});
-  final String siteKey;
-  Widget build(BuildContext context) => const SizedBox();
-}
-Widget f() => const Challenge(siteKey: '1x00000000000000000000AA');
-''');
-  }
-
   Future<void> test_urlGivenToAWidget() async {
     await assertNoDiagnostics('''
 import 'package:flutter/widgets.dart';

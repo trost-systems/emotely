@@ -78,8 +78,9 @@ emotely-orange seed), not in hand-rolled widgets.
   `integration_test/environment.dart`, which must never reach `lib/`.
 - Tests compose with the same `registerApp` and replace only the leaves:
   the two http clients, the Supabase client, the PostHog instance, the
-  preferences store and the human check's token source, Cloudflare
-  Turnstile's hidden web view in `lib/app/turnstile.dart`
+  preferences store and the human check's token source, which `main`
+  wires to Cloudflare Turnstile's web view (`TurnstileChallenges`, shown by
+  the `TurnstileHost` over the navigator) and tests to `HumanCheckStub`
   (`test/helpers/app_harness.dart`). `getIt.reset()`
   runs in teardown; `allowReassignment` stays off so a double registration
   fails loudly.

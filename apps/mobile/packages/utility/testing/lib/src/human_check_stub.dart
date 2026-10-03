@@ -1,3 +1,5 @@
+import 'package:human_check/human_check.dart';
+
 /// Stands in for Cloudflare Turnstile's hidden web view, the one leaf of
 /// the human check (`package:human_check`): hands out numbered tokens, or
 /// none at all once [fails] is set, and counts how many it handed out.
@@ -6,6 +8,13 @@
 /// host, so the app's token source is replaced here the way the http
 /// clients are.
 class HumanCheckStub() {
+  /// Challenges for the app to host, which no test ever asks: [token]
+  /// answers in their place.
+  static final idleTurnstile = TurnstileChallenges(
+    siteKey: 'test-site-key',
+    origin: Uri.parse('https://getemotely.test/'),
+  );
+
   /// The token the next check hands out is `turnstile-token-<issued + 1>`.
   var issued = 0;
 

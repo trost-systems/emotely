@@ -83,6 +83,7 @@ Widget appUnderTest({
     screenViews: gate.screenObserver(),
     onboarding: onboarding,
     debugBanner: debugBanner,
+    turnstile: HumanCheckStub.idleTurnstile,
   );
 }
 

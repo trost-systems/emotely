@@ -10,3 +10,4 @@ library;
 
 export 'src/human_check.dart';
 export 'src/register.dart';
+export 'src/turnstile.dart';
