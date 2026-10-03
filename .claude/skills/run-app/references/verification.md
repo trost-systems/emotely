@@ -106,6 +106,20 @@ third-party picker has no keys) then `emoji_input.submit`;
 Discard what you open: the nightly live smoke starts a new session and fails
 on an unfinished one.
 
+## The on-screen keyboard
+
+Marionette's screenshot is Flutter's own picture: it never shows the iOS
+keyboard, so a screen with the keyboard open looks as if it were closed.
+To show it, take the screenshot with
+`xcrun simctl io <device> screenshot <bundle>/NN-<name>.png` instead, under
+the name the plan prints. Type with taps on the keyboard's keys (the
+simulator tool's `tap`) or with marionette's `enter-text`. The simulator
+tool's `text` sends hardware key presses, and after them iOS hides the
+on-screen keyboard for the rest of that simulator's life; only `down` and
+a fresh `up` bring it back. The first time a fresh simulator's keyboard
+opens, it covers itself with a "slide to type" card: tap its Continue, and
+check with a screenshot that it went, before you type.
+
 ## The copies to post
 
 `collect` leaves the originals in the bundle and writes copies sized for
