@@ -21,6 +21,7 @@ files:
   - "apps/mobile/app/fastlane/**/*.rb"
   - "apps/mobile/app/fastlane/metadata/**/en-US/**/*.txt"
   - "apps/mobile/app/fastlane/metadata/en-US/*.txt"
+  - "apps/mobile/app/fastlane/app_review/*.txt"
 useGitignore: true
 ignorePaths:
   # Generated: build_runner, freezed, mockito, gen-l10n (from the English
