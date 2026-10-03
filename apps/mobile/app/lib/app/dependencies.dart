@@ -22,7 +22,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// The one composition root (ADR 0015): every utility and every feature
 /// registers into [getIt] here, in dependency order, and nowhere else. The
 /// parameters are the leaves — the http clients, Supabase, the PostHog
-/// instance and config (used by the gate alone, once allowed, #204) — and
+/// instance and config (used by the gate alone, once allowed, #204), the
+/// human check's token source (Turnstile in a hidden web view, #94) — and
 /// the app's build-time values; a test passes scripted leaves only, so it
 /// exercises the production graph with fake edges.
 ///
@@ -31,9 +32,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// as long as the session bloc that asks it. Nothing is lazy: a dependency
 /// that cannot be built fails the launch, not the first screen that needs
 /// it.
-///
-/// [humanCheckToken] is the leaf behind the human check (#94): Cloudflare
-/// Turnstile in a hidden web view in a build, a scripted stub in a test.
 ///
 /// [passwordAccounts] are the addresses beyond the store review accounts
 /// that sign in with a password: the smoke account in a debug build the
@@ -54,17 +52,12 @@ void registerApp(
   required HumanCheckToken humanCheckToken,
 }) {
   getIt.registerSingleton(supabase);
-  registerAgentClient(
+  _registerAgent(
     getIt,
-    agentHttpClient: agentHttpClient,
-    configHttpClient: configHttpClient,
-    agentUrl: agentUrl,
-    configUrl: configUrl,
+    supabase,
+    clients: (agent: agentHttpClient, config: configHttpClient),
+    urls: (agent: agentUrl, config: configUrl),
     appVersion: appVersion,
-    // The token the app holds on every round, refreshed when the agent says
-    // it lapsed; a refresh that cannot happen signs the user out.
-    accessToken: () => supabase.auth.currentSession?.accessToken,
-    refreshAccessToken: supabase.auth.refreshSession,
   );
   registerAnalytics(
     getIt,
@@ -84,6 +77,26 @@ void registerApp(
   _registerSeams(getIt);
   registerAccount(getIt);
 }
+
+/// The agent's two endpoints, with the token the app holds on every round,
+/// refreshed when the agent says it lapsed; a refresh that cannot happen
+/// signs the user out.
+void _registerAgent(
+  GetIt getIt,
+  SupabaseClient supabase, {
+  required ({http.Client agent, http.Client config}) clients,
+  required ({Uri agent, Uri config}) urls,
+  required String appVersion,
+}) => registerAgentClient(
+  getIt,
+  agentHttpClient: clients.agent,
+  configHttpClient: clients.config,
+  agentUrl: urls.agent,
+  configUrl: urls.config,
+  appVersion: appVersion,
+  accessToken: () => supabase.auth.currentSession?.accessToken,
+  refreshAccessToken: supabase.auth.refreshSession,
+);
 
 /// The user's records on the server: the journal, the profile, and the
 /// consent record with the wordings the app currently asks consent for.

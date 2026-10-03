@@ -10,6 +10,7 @@ import 'package:human_check/human_check.dart';
 import 'package:journal_repository/journal_repository.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:profile_repository/profile_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 import 'package:testing/src/agent_stub.dart';
 import 'package:testing/src/analytics_spy.dart';
 import 'package:testing/src/config_stub.dart';
@@ -89,15 +90,25 @@ void registerUtilitiesUnderTest(
       account: supabase.supabase.auth.currentUser?.id,
     ),
   );
-  registerJournalRepository(getIt, supabase: supabase.supabase);
-  registerProfileRepository(getIt, supabase: supabase.supabase);
-  registerConsentRepository(
-    getIt,
-    supabase: supabase.supabase,
-    version: consentVersion,
-    usageAnalyticsVersion: testUsageAnalyticsVersion,
-  );
+  _registerRecords(getIt, supabase.supabase, consentVersion: consentVersion);
   registerFeedbackLink(getIt, build: build);
   // A check that always passes unless the test hands in one it scripts.
   registerHumanCheck(getIt, token: (humanCheck ?? HumanCheckStub()).token);
+}
+
+/// The repositories over the scripted Supabase, as the app's own
+/// `_registerRecords` registers them.
+void _registerRecords(
+  GetIt getIt,
+  SupabaseClient supabase, {
+  required String consentVersion,
+}) {
+  registerJournalRepository(getIt, supabase: supabase);
+  registerProfileRepository(getIt, supabase: supabase);
+  registerConsentRepository(
+    getIt,
+    supabase: supabase,
+    version: consentVersion,
+    usageAnalyticsVersion: testUsageAnalyticsVersion,
+  );
 }
