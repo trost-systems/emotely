@@ -310,4 +310,18 @@ class AccountLocalizationsDe extends AccountLocalizations {
 
   @override
   String get accountSignOutButton => 'Abmelden';
+
+  @override
+  String get accountConfirmationAppleNote =>
+      'Apple fragt dich danach noch einmal, damit emotely sich von deinem Apple Account trennen kann.';
+
+  @override
+  String accountDeletedStillLinked(String provider) {
+    String _temp0 = intl.Intl.selectLogic(provider, {
+      'apple': 'Dein Konto ist gelöscht. emotely steht womöglich noch in deinem Apple Account unter „Mit Apple anmelden“. Dort kannst du es entfernen.',
+      'google': 'Dein Konto ist gelöscht. emotely steht womöglich noch unter den verbundenen Apps deines Google-Kontos. Dort kannst du es entfernen.',
+      'other': 'Dein Konto ist gelöscht. emotely steht womöglich noch in deinem Apple Account und deinem Google-Konto. Dort kannst du es in den Einstellungen entfernen.',
+    });
+    return '$_temp0';
+  }
 }

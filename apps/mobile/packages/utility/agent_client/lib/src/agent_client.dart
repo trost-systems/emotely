@@ -10,7 +10,9 @@ import 'package:http/http.dart' as http;
 /// and the typed [Answer] the widget produced. Only its wire value is posted.
 typedef SessionAnswer = ({String toolCallId, Answer answer});
 
-/// The only network seam of the app: one call per session round.
+/// The app's calls to the agent under the user's sign-in: one per session
+/// round, and the one that revokes a Sign in with Apple grant before the
+/// account is deleted, at `revoke-apple` beside [endpoint].
 ///
 /// The session is stateless on the server; the caller echoes the signed
 /// transcript it was handed last time.
@@ -58,21 +60,47 @@ class const AgentClient({
       'app_version': appVersion,
       'user_context': ?userContext?.toJson(),
     });
+    final json = await _renewingOnce(() => _post(endpoint, body));
+    return AdvanceResponse.fromJson(json);
+  }
+
+  /// Revokes the signed-in account's Sign in with Apple grant before the
+  /// account is deleted (#193): Apple's sheet issued [authorizationCode]
+  /// moments ago, and the agent trades it for a token and revokes that.
+  /// Completes once the agent says it is revoked; anything else throws an
+  /// [AgentException], whose code says whether the code was for another
+  /// Apple ID or Apple could not be reached. A lapsed token is renewed and
+  /// the code resent once, as for a round.
+  Future<void> revokeApple({required String authorizationCode}) async {
+    final body = jsonEncode({'authorization_code': authorizationCode});
+    final json = await _renewingOnce(
+      () => _post(endpoint.resolve('revoke-apple'), body),
+    );
+    if (json['status'] != 'revoked') {
+      throw const AgentException(200, 'unexpected response');
+    }
+  }
+
+  /// [send], and once more after renewing the token if the agent says it
+  /// lapsed.
+  Future<Map<String, dynamic>> _renewingOnce(
+    Future<Map<String, dynamic>> Function() send,
+  ) async {
     try {
-      return await _post(body);
+      return await send();
     } on AgentException catch (error) {
       if (error.code != AgentErrorCode.unauthorized) {
         rethrow;
       }
       await refreshAccessToken();
-      return await _post(body);
+      return await send();
     }
   }
 
-  Future<AdvanceResponse> _post(String body) async {
+  Future<Map<String, dynamic>> _post(Uri url, String body) async {
     final response = await httpClient
         .post(
-          endpoint,
+          url,
           headers: {
             'content-type': 'application/json',
             if (accessToken() case final token?)
@@ -87,7 +115,7 @@ class const AgentClient({
     if (response.statusCode != 200) {
       throw _refusal(response.statusCode, text);
     }
-    return AdvanceResponse.fromJson(jsonDecode(text) as Map<String, dynamic>);
+    return jsonDecode(text) as Map<String, dynamic>;
   }
 
   static AgentException _refusal(int statusCode, String body) {

@@ -7,6 +7,8 @@ environment:
   sdk: ^3.13.0
 
 dependencies:
+  # The agent revokes a Sign in with Apple grant before deletion (#193).
+  agent_client: any
   analytics: any
   crypto: 3.0.7
   flutter:

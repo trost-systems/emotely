@@ -7,6 +7,7 @@ import 'package:testing/testing.dart';
 
 import '../fake_account_device_data.dart';
 import '../fake_account_navigator.dart';
+import '../fake_sign_in_grants.dart';
 import '../strings.dart';
 
 /// Drives the account screen on its own route, composed the way the app
@@ -16,10 +17,12 @@ class _AccountRobot(
   final WidgetTester tester, {
   required final SupabaseStub supabase,
   final bool forgetFails = false,
+  final FakeSignInGrants? grants,
 }) {
   final analytics = AnalyticsSpy();
   final navigator = FakeAccountNavigator();
   late final deviceData = FakeAccountDeviceData(fails: forgetFails);
+  late final signInGrants = grants ?? FakeSignInGrants();
 
   static const openKey = Key('launcher.open');
 
@@ -46,6 +49,7 @@ class _AccountRobot(
     registerAccount(GetIt.I);
     GetIt.I.registerSingleton<AccountNavigator>(navigator);
     GetIt.I.registerSingleton<AccountDeviceData>(deviceData);
+    GetIt.I.registerSingleton<SignInGrants>(signInGrants);
     final home = Builder(
       builder: (context) => Scaffold(
         body: Center(
@@ -103,6 +107,7 @@ void main() {
       List<AuthRound> deletions = const [],
       AuthRound? logoutAnswer,
       bool forgetFails = false,
+      FakeSignInGrants? grants,
     }) {
       final supabase = SupabaseStub()
         ..rest(deletion, deletions)
@@ -111,8 +116,106 @@ void main() {
         tester,
         supabase: supabase,
         forgetFails: forgetFails,
+        grants: grants,
       );
     }
+
+    /// What the screen says after a deletion that left [left] in place.
+    Finder stillLinked(WidgetTester tester, String left) =>
+        find.text(tester.strings.accountDeletedStillLinked(left));
+
+    testWidgets('revokes the sign-in grants before the account is deleted', (
+      tester,
+    ) async {
+      late final _AccountRobot robot;
+      var deletionsWhenRevoked = -1;
+      robot = robotWith(
+        tester,
+        deletions: [rpcReturned(null)],
+        grants: FakeSignInGrants(
+          onRevoke: () =>
+              deletionsWhenRevoked = robot.supabase.to(deletion).length,
+        ),
+      );
+      await robot.launch();
+      await robot.askToDelete();
+
+      await robot.tap(robot.confirm);
+
+      // Afterwards there is no session left to prove whose grant it is.
+      expect(robot.signInGrants.revocations, 1);
+      expect(deletionsWhenRevoked, 0);
+      expect(robot.supabase.to(deletion), hasLength(1));
+      // Everything revoked: nothing more to say than the screen leaving.
+      expect(find.byType(SnackBar), findsNothing);
+      expect(robot.account, findsNothing);
+    });
+
+    for (final (left, name) in [
+      ({SignInGrant.apple}, 'apple'),
+      ({SignInGrant.google}, 'google'),
+      ({SignInGrant.apple, SignInGrant.google}, 'other'),
+    ]) {
+      testWidgets('deletes the account anyway when $left stays, and says '
+          'where to remove it', (tester) async {
+        final robot = robotWith(
+          tester,
+          deletions: [rpcReturned(null)],
+          grants: FakeSignInGrants(left: left),
+        );
+        await robot.launch();
+        await robot.askToDelete();
+
+        await robot.tap(robot.confirm);
+
+        expect(robot.supabase.to(deletion), hasLength(1));
+        expect(robot.supabase.to(logout), hasLength(1));
+        expect(robot.account, findsNothing);
+        // Said on the app's own messenger, so it outlives this screen.
+        expect(stillLinked(tester, name), findsOneWidget);
+      });
+    }
+
+    for (final asksApple in [true, false]) {
+      testWidgets('the confirmation says Apple will ask once more: '
+          '$asksApple', (tester) async {
+        final robot = robotWith(
+          tester,
+          grants: FakeSignInGrants(asksApple: asksApple),
+        );
+        await robot.launch();
+
+        await robot.askToDelete();
+
+        expect(robot.confirmation, findsOneWidget);
+        expect(
+          find.text(tester.strings.accountConfirmationAppleNote),
+          asksApple ? findsOneWidget : findsNothing,
+        );
+      });
+    }
+
+    testWidgets('asks the providers once, however often deletion is retried', (
+      tester,
+    ) async {
+      final robot = robotWith(
+        tester,
+        deletions: [restRefused(), rpcReturned(null)],
+        grants: FakeSignInGrants(left: {SignInGrant.apple}),
+      );
+      await robot.launch();
+      await robot.askToDelete();
+      await robot.tap(robot.confirm);
+
+      expect(robot.failure, findsOneWidget);
+
+      await robot.tap(robot.retry);
+
+      // A second Apple sheet would ask the user for nothing new.
+      expect(robot.signInGrants.revocations, 1);
+      expect(robot.account, findsNothing);
+      expect(stillLinked(tester, 'apple'), findsOneWidget);
+    });
 
     testWidgets('deletes the account once the loss is confirmed', (
       tester,
