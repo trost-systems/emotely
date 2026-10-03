@@ -12,6 +12,7 @@ import 'package:emotely_web/pages/de/confirm.dart';
 import 'package:emotely_web/pages/de/delete_account.dart';
 import 'package:emotely_web/pages/de/home.dart';
 import 'package:emotely_web/pages/de/imprint.dart';
+import 'package:emotely_web/pages/de/privacy.dart';
 import 'package:emotely_web/pages/delete_account.dart';
 import 'package:emotely_web/pages/home.dart';
 import 'package:emotely_web/pages/imprint.dart';
@@ -1161,6 +1162,104 @@ void main() {
         expect(find.textContaining('pseudonym'), findsComponents);
         expect(find.textContaining('anonyme Zählung'), findsNothing);
       });
+    });
+  });
+
+  // The site notice in German, held to the English one's claims in the
+  // 'Legal pages' group above, one test per English test.
+  group('PrivacyDe', () {
+    testComponents('names every party that touches an address', (tester) {
+      tester.pumpComponent(const PrivacyDe());
+
+      expect(find.text('Datenschutzerklärung'), findsOneComponent);
+      expect(find.textContaining('Supabase'), findsComponents);
+      expect(find.textContaining('Resend'), findsComponents);
+      expect(find.textContaining('Vercel'), findsComponents);
+      expect(find.textContaining('PostHog'), findsComponents);
+      expect(find.textContaining('hello@getemotely.com'), findsComponents);
+    });
+
+    testComponents('gives a legal basis, a retention and a regulator', (
+      tester,
+    ) {
+      tester.pumpComponent(const PrivacyDe());
+
+      expect(find.textContaining('Art. 6 Abs. 1 lit. a'), findsComponents);
+      expect(find.textContaining('Art. 6 Abs. 1 lit. f'), findsComponents);
+      expect(find.textContaining('nach einem Tag gelöscht'), findsOneComponent);
+      expect(
+        find.textContaining('nach einer Woche gelöscht'),
+        findsOneComponent,
+      );
+      expect(find.textContaining('Landesbeauftragte'), findsOneComponent);
+      expect(
+        find.textContaining('von dieser Website selbst ausgeliefert'),
+        findsOneComponent,
+      );
+    });
+
+    testComponents('answers the Art. 13 questions a reader cannot infer', (
+      tester,
+    ) {
+      tester.pumpComponent(const PrivacyDe());
+
+      // Art. 13 (2) (e): obligatory or not, and what follows if not.
+      expect(find.textContaining('nicht verpflichtet'), findsOneComponent);
+      // Art. 33/34: a breach has a named timeline.
+      expect(
+        find.textContaining('innerhalb von 72 Stunden'),
+        findsOneComponent,
+      );
+      // WP260: an active notice before a material change.
+      expect(
+        find.textContaining('per E-Mail, bevor es wirksam wird'),
+        findsOneComponent,
+      );
+      // Art. 13 (1) (b): the absence of a DPO is itself the disclosure.
+      expect(
+        find.textContaining('keinen Datenschutzbeauftragten'),
+        findsOneComponent,
+      );
+    });
+
+    testComponents('points at the German deletion page', (tester) {
+      tester.pumpComponent(const PrivacyDe());
+
+      expect(find.text('der Löschseite'), findsOneComponent);
+      expect(find.textContaining('Konto löschen'), findsComponents);
+      expect(
+        find.byComponentPredicate(
+          (component) =>
+              component is DomComponent &&
+              component.attributes?['href'] == '/de/delete-account',
+        ),
+        findsOneComponent,
+      );
+      // Truthful about backups, rather than promising none exist.
+      expect(find.textContaining('Aufbewahrungsfenster'), findsComponents);
+    });
+
+    testComponents('hands the app off to its own German notice', (tester) {
+      tester.pumpComponent(const PrivacyDe());
+
+      expect(find.textContaining('in der App selbst'), findsNothing);
+      expect(find.text('eigene Datenschutzerklärung'), findsOneComponent);
+      expect(
+        find.byComponentPredicate(
+          (component) =>
+              component is DomComponent &&
+              component.attributes?['href'] == '/de/app-privacy',
+        ),
+        findsOneComponent,
+      );
+    });
+
+    testComponents('says "Datenschutzerklärung", never "Datenschutzhinweise"', (
+      tester,
+    ) {
+      tester.pumpComponent(const PrivacyDe());
+
+      expect(find.textContaining('Datenschutzhinweis'), findsNothing);
     });
   });
 
