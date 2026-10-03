@@ -31,6 +31,12 @@ class AgentStub() {
     'https://agent.test/api/advance-session',
   );
 
+  /// Where the client revokes a Sign in with Apple grant: beside
+  /// [endpoint], as on the real agent (#193).
+  static final Uri revokeAppleEndpoint = Uri.parse(
+    'https://agent.test/api/revoke-apple',
+  );
+
   /// The transcript and signature every round hands out unless overridden.
   static const transcript = <Object?>['round'];
   static const signature = 'sig';
@@ -103,6 +109,10 @@ Round completed({
         'answers': answers.map((id, answer) => MapEntry(id, answer.toJson())),
       },
     });
+
+/// The agent revoked the Sign in with Apple grant (#193).
+Round revoked() =>
+    () async => _json({'status': 'revoked'});
 
 /// The agent refused the round with [statusCode] and [code], the way it
 /// does: the code to act on, English beside it for logs.

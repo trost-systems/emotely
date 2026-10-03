@@ -184,12 +184,14 @@ class SupabaseStub() {
 
   /// Starts the client with a live session, as after a restored sign-in,
   /// for an account that signs in through [provider] (`email`, `google`,
-  /// `apple`; none says nothing about it).
+  /// `apple`; none says nothing about it). [providers] are every way in
+  /// linked to the account, [provider] alone unless given.
   Future<void> signedIn({
     String email = SupabaseStub.email,
     String? provider,
+    List<String>? providers,
   }) => supabase.auth.recoverSession(
-    jsonEncode(session(email: email, provider: provider)),
+    jsonEncode(session(email: email, provider: provider, providers: providers)),
   );
 
   /// The requests the app made to `METHOD /path`, in order.
@@ -207,12 +209,15 @@ class SupabaseStub() {
 
   /// A session as Supabase Auth returns it after a verified code; the
   /// account's [provider] is recorded in `app_metadata` the way Supabase
-  /// records the provider an account was created with, and [userMetadata]
-  /// is what the account keeps about itself (`user_metadata`).
+  /// records the provider an account was created with, [providers] every
+  /// one linked to it since ([provider] alone unless given), and
+  /// [userMetadata] is what the account keeps about itself
+  /// (`user_metadata`).
   static Map<String, Object?> session({
     String sub = userId,
     String email = SupabaseStub.email,
     String? provider,
+    List<String>? providers,
     Map<String, Object?> userMetadata = const {},
   }) => {
     'access_token': jwt(sub: sub),
@@ -226,10 +231,9 @@ class SupabaseStub() {
       'email': email,
       'created_at': '2026-09-01T00:00:00Z',
       'app_metadata': <String, Object?>{
-        if (provider != null) ...{
-          'provider': provider,
-          'providers': [provider],
-        },
+        'provider': ?provider,
+        if (providers ?? [?provider] case final linked when linked.isNotEmpty)
+          'providers': linked,
       },
       'user_metadata': userMetadata,
     },

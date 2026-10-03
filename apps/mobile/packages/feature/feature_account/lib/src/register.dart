@@ -11,9 +11,9 @@ import 'package:get_it/get_it.dart';
 /// first-launch sheet and by Privacy settings, each over the one consent
 /// they share.
 ///
-/// The app registers an `AccountNavigator` and an `AccountDeviceData`
-/// implementation itself; they are the app's to provide, not this
-/// feature's.
+/// The app registers an `AccountNavigator`, an `AccountDeviceData` and a
+/// `SignInGrants` implementation itself; they are the app's to provide, not
+/// this feature's.
 void registerAccount(GetIt getIt) => getIt
   ..registerFactory(
     () => AccountBloc(
@@ -22,6 +22,7 @@ void registerAccount(GetIt getIt) => getIt
       errors: getIt(),
       build: getIt(),
       deviceData: getIt(),
+      grants: getIt(),
     ),
   )
   ..registerFactory(

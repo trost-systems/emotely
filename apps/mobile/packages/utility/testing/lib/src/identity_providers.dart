@@ -65,6 +65,33 @@ class GoogleSignInFake.setup()
     return _rounds.removeAt(0)();
   }
 
+  /// What a lightweight sign-in finds: the Google account this device
+  /// remembers, or null when it remembers none (or the user dismissed the
+  /// account picker Android may show instead).
+  AuthenticationResults? remembered;
+
+  /// How often the app disconnected, i.e. revoked emotely's grant (#193).
+  var disconnects = 0;
+
+  /// When true, disconnecting throws as the plugin does when Google
+  /// refuses; nothing is counted in [disconnects].
+  var disconnectFails = false;
+
+  @override
+  Future<AuthenticationResults?> attemptLightweightAuthentication(
+    AttemptLightweightAuthenticationParameters params,
+  ) async => remembered;
+
+  @override
+  Future<void> disconnect(DisconnectParams params) async {
+    if (disconnectFails) {
+      throw const GoogleSignInException(
+        code: GoogleSignInExceptionCode.unknownError,
+      );
+    }
+    disconnects++;
+  }
+
   @override
   Future<void> signOut(SignOutParams params) async {
     if (signOutFails) {
@@ -82,6 +109,13 @@ ProviderRound<AuthenticationResults> googleToken(String idToken) =>
       user: const GoogleSignInUserData(email: GoogleSignInFake.email, id: 'g1'),
       authenticationTokens: AuthenticationTokenData(idToken: idToken),
     );
+
+/// The Google account a device remembers from an earlier sign-in, as a
+/// lightweight sign-in restores it ([GoogleSignInFake.remembered]).
+const googleRemembered = AuthenticationResults(
+  user: GoogleSignInUserData(email: GoogleSignInFake.email, id: 'g1'),
+  authenticationTokens: AuthenticationTokenData(idToken: 'google-id-token'),
+);
 
 /// Google's sheet failed with [code] — `canceled` when the user dismisses it.
 ProviderRound<AuthenticationResults> googleFailed(
