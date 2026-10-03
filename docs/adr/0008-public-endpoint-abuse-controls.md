@@ -187,7 +187,7 @@ protected call fetches a fresh one:
 
 | Caller | How it gets a token |
 | --- | --- |
-| App | `HumanCheck.guard` (`human_check` utility) runs the call with a token from Turnstile in a headless web view (`apps/mobile/app/lib/app/turnstile.dart`) under the site's origin |
+| App | `HumanCheck.guard` (`human_check` utility) runs the call with a token from `TurnstileChallenges`: Cloudflare's managed widget in a `webview_flutter` web view under the site's origin, which `TurnstileHost` shows over the navigator, transparent unless Cloudflare asks for a tap |
 | Web deletion page | `apps/web/lib/turnstile_web.dart` loads Cloudflare's script on the first "Send me a code" and runs a managed widget that is invisible unless Cloudflare wants an interaction |
 | Local stack | `supabase/config.toml` holds Cloudflare's always-pass test secret; builds against it pass the test site key |
 
