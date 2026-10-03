@@ -1,5 +1,10 @@
 # .claude/skills — the project's skills
 
+A skill covers one task, the one its name says. A step or fact that serves
+another task belongs in that task's skill, a new one when none covers it:
+how to open a pull request is `open-pr`, not `run-app`, even when a
+`run-app` script does part of the work.
+
 Skills use progressive disclosure. A `SKILL.md` is loaded whole on every
 invocation, so it holds what every invocation needs: the steps, and the
 facts each branch of the task relies on. Material that only some branches
