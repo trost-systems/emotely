@@ -68,6 +68,8 @@ Widget appUnderTest({
       server: 'server.apps.googleusercontent.com',
       ios: 'ios.apps.googleusercontent.com',
     ),
+    // Turnstile's web view cannot run here; every check passes.
+    humanCheckToken: HumanCheckStub().token,
   );
   // `main` awaits both restores before the first frame, the gate's over the
   // session Supabase restored; here every call PostHog hears queues behind

@@ -127,6 +127,8 @@ const _identifierParameters = {
   'package',
   'restorationId',
   'semanticsIdentifier',
+  // Cloudflare Turnstile's public widget key (#94).
+  'siteKey',
 };
 
 /// Parameters through which Flutter's non-widget classes show text:

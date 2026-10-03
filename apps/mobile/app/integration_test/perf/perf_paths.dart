@@ -70,6 +70,8 @@ class PerfPaths(final WidgetTester tester, final FakeBackend backend) {
       configUrl: FakeBackend.configUrl,
       passwordAccounts: const {},
       google: googleClients,
+      // Signed in already: no sign-in screen, so no human check to run.
+      humanCheckToken: HumanCheckStub().token,
     );
     // What `main` reads before the first frame. Usage analytics are
     // allowed, as a tester would on the first-launch sheet, so the sheet

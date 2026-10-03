@@ -6,6 +6,7 @@ import 'package:analytics/analytics.dart';
 import 'package:emotely/app/app.dart';
 import 'package:emotely/app/dependencies.dart';
 import 'package:emotely/app/environment.dart';
+import 'package:emotely/app/turnstile.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:feedback_link/feedback_link.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
@@ -65,6 +66,7 @@ Future<void> main() async {
     configUrl: urlFrom(configUrl, define: 'EMOTELY_CONFIG_URL'),
     passwordAccounts: passwordAccounts,
     google: googleClients,
+    humanCheckToken: turnstileToken,
   );
   runApp(await _restoredApp(supabase.client));
 }

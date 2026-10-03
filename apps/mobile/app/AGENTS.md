@@ -77,8 +77,10 @@ emotely-orange seed), not in hand-rolled widgets.
   job fails any read outside that file, apart from the smoke password in
   `integration_test/environment.dart`, which must never reach `lib/`.
 - Tests compose with the same `registerApp` and replace only the leaves:
-  the two http clients, the Supabase client, the PostHog instance and the
-  preferences store (`test/helpers/app_harness.dart`). `getIt.reset()`
+  the two http clients, the Supabase client, the PostHog instance, the
+  preferences store and the human check's token source, Cloudflare
+  Turnstile's hidden web view in `lib/app/turnstile.dart`
+  (`test/helpers/app_harness.dart`). `getIt.reset()`
   runs in teardown; `allowReassignment` stays off so a double registration
   fails loudly.
 - PostHog is reached only through `PostHogGate` (the `analytics` utility):

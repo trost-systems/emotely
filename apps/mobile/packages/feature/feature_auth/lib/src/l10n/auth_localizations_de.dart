@@ -109,4 +109,8 @@ class AuthLocalizationsDe extends AuthLocalizations {
   @override
   String get providerFailedMessage =>
       'Diese Anmeldung hat nicht geklappt. Versuch es noch einmal oder nimm deine E-Mail-Adresse.';
+
+  @override
+  String get humanCheckFailedMessage =>
+      'Ich konnte nicht bestätigen, dass ein Mensch fragt. Versuch es gleich noch einmal.';
 }

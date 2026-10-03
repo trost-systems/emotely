@@ -64,7 +64,9 @@ require_relative "lib/app_review_information"
 require_relative "lib/play_data_safety"
 
 # The rebuild starts at 2.0.0 (ADR 0012): the legacy app got to 1.21.15.
-BUILD_NAME = "2.0.0"
+# 2.0.1 is the first that passes the human check Supabase Auth enforces
+# (#94); the minimum app version follows it once it is on the beta tracks.
+BUILD_NAME = "2.0.1"
 
 def build_number
   ENV.fetch("BUILD_NUMBER") { UI.user_error!("BUILD_NUMBER is not set") }
