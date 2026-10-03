@@ -81,7 +81,11 @@ Future<EmotelyApp> _restoredApp(SupabaseClient supabase) async {
   // the first frame, so it has to have read what this device kept.
   final onboarding = GetIt.I<OnboardingStore>();
   await onboarding.restore();
-  return EmotelyApp(screenViews: gate.screenObserver(), onboarding: onboarding);
+  return EmotelyApp(
+    screenViews: gate.screenObserver(),
+    onboarding: onboarding,
+    debugBanner: debugBanner,
+  );
 }
 
 /// The debug build's binding: marionette's VM service extensions, which the

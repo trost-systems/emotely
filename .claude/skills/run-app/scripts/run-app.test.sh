@@ -83,6 +83,19 @@ test_read_smoke_account_accepts_a_listed_address() {
     fail "read_smoke_account accepts a listed address"
 }
 
+# --- the build's defines ----------------------------------------------------------
+
+test_the_build_names_the_smoke_account_and_hides_the_debug_banner() {
+  local defines
+  defines="$(app_defines smoke@example.com phc_made_up)"
+  [[ "$(jq -r .SMOKE_EMAIL <<<"${defines}")" == smoke@example.com ]] ||
+    fail "the build names the smoke account: got ${defines}"
+  [[ "$(jq -r .POSTHOG_KEY <<<"${defines}")" == phc_made_up ]] ||
+    fail "the build carries the PostHog key: got ${defines}"
+  [[ "$(jq -r .EMOTELY_DEBUG_BANNER <<<"${defines}")" == false ]] ||
+    fail "the build hides the DEBUG banner, so screenshots look like the installed app: got ${defines}"
+}
+
 # --- the session id ---------------------------------------------------------------
 
 test_a_session_id_is_the_checkout_name_and_a_random_suffix() {

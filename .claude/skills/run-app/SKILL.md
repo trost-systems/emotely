@@ -1,6 +1,6 @@
 ---
 name: run-app
-description: How to run, drive and verify the Flutter app (apps/mobile/app) on an iOS simulator — run-app.sh sets it up signed in against the deployed agent, the agent drives it with plain marionette commands, and the CLI records and collects an evidence bundle (screenshots, video, logs, PostHog events); plus the performance budget (perf.sh: profile-mode frames, request counts and backend latency) and the performance survey on real phones in Firebase Test Lab (survey.sh: history, findings by severity), the on-device acceptance session and the unit gate. Use whenever asked to run the app, see a screen, find or reach the screen a report or screenshot is about (the feature map), verify a change on a device, collect evidence for a pull request, run integration_test, or measure, debug or change the app's performance or the performance budget.
+description: How to run, drive and verify the Flutter app (apps/mobile/app) on an iOS simulator — run-app.sh sets it up signed in against the deployed agent, the agent drives it with plain marionette commands, and the CLI records and collects an evidence bundle (screenshots, video, logs, PostHog events); plus the performance budget (perf.sh: profile-mode frames, request counts and backend latency) and the performance survey on real phones in Firebase Test Lab (survey.sh: history, findings by severity), the on-device acceptance session and the unit gate. Use whenever asked to run the app, see a screen, find or reach the screen a report or screenshot is about (the feature map), verify a change on a device, collect an evidence bundle, run integration_test, or measure, debug or change the app's performance or the performance budget.
 ---
 
 # Running apps/mobile/app
@@ -9,10 +9,9 @@ description: How to run, drive and verify the Flutter app (apps/mobile/app) on a
 
 `scripts/run-app.sh` sets the app up signed in on a fresh simulator, you drive
 it with plain `marionette` commands, and it collects the evidence.
-Verifying a change on the simulator, or posting its evidence — read
+Verifying a change on the simulator, or collecting its evidence — read
 [references/verification.md](references/verification.md) first: up → drive →
-collect → down, the worked example, the keys, posting evidence and parallel
-sessions.
+collect → down, the worked example, the keys and parallel sessions.
 
 ## Find a screen
 
@@ -63,6 +62,7 @@ All configuration is `--dart-define`s, read in one place: `lib/app/environment.d
 | `EMOTELY_SUPABASE_PUBLISHABLE_KEY` | the hosted project's key | Supabase publishable key; public, acts only under the signed-in user |
 | `SMOKE_EMAIL` | none | debug builds only: the one address asked for a password (the CLI sets it); the live integration test signs in with it too |
 | `SMOKE_PASSWORD` | none | integration_test only: the smoke user's password |
+| `EMOTELY_DEBUG_BANNER` | `true` | debug builds only: `false` hides Flutter's DEBUG banner (the CLI sets it, so screenshots look like the installed app) |
 
 Every secret lives in `apps/agent/.env.local` and is read **blind** — never
 printed, never pasted into a message:

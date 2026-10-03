@@ -21,6 +21,13 @@
 #   states   per bloc, each state and what the screen shows in it
 #   keys     the widget keys that drive it (`--key` in marionette). The app
 #            sets no semantics identifiers; keys are the handles.
+#   flow     optional, true for a screen whose use is a sequence of steps;
+#            pull request evidence (.claude/skills/open-pr/scripts/
+#            evidence.sh) records a video of a change to one.
+#
+# That evidence maps a diff to screens through `package` and walks them in
+# the order of the entries here: the screens reached by signing out come
+# last.
 #
 # CI keeps it honest: scripts/feature-map.sh fails when a package declares a
 # route the map does not list, when an entry names a route that no longer
@@ -99,6 +106,7 @@ screens:
   - route: SessionRoute
     package: feature_session
     path: /session
+    flow: true
     reach:
       - Tap journal_view.start, or journal_view.continue for the
         unfinished session (?resume=<id>).
@@ -348,6 +356,7 @@ screens:
   - route: OnboardingRoute
     package: feature_onboarding
     path: /welcome
+    flow: true
     reach:
       - Tap app_shell.more, more_view.profile, then profile_view.sign_out.
         The app lands here, on Welcome, with the usage-analytics sheet over
@@ -402,6 +411,7 @@ screens:
   - route: SignInRoute
     package: feature_auth
     path: /sign-in
+    flow: true
     reach:
       - Reach Welcome (OnboardingRoute) by signing out, then tap
         onboarding.welcome.have_account. Visit it last, since the way back

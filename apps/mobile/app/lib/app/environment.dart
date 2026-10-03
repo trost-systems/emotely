@@ -53,6 +53,16 @@ const supabasePublishableKey = String.fromEnvironment(
 /// release build can carry it.
 const smokeEmail = kDebugMode ? String.fromEnvironment('SMOKE_EMAIL') : '';
 
+/// Whether a debug build shows Flutter's DEBUG banner
+/// (`--dart-define=EMOTELY_DEBUG_BANNER=false` turns it off). The
+/// verification CLI (the run-app skill) turns it off, so screenshots posted
+/// as pull request evidence look like the app people install. Profile and
+/// release builds have no banner, and outside debug the define is never
+/// read.
+const debugBanner =
+    kDebugMode &&
+    bool.fromEnvironment('EMOTELY_DEBUG_BANNER', defaultValue: true);
+
 /// The accounts beyond the review accounts that sign in with a password:
 /// the smoke account when a debug build names one, otherwise none.
 const passwordAccounts = {if (smokeEmail != '') smokeEmail};

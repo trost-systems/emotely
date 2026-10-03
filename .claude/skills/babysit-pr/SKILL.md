@@ -357,6 +357,15 @@ Each pass, in either phase, in this order:
 After any push, start again from the new SHA in the same turn. A push is not a
 finish line, and neither is the first all-green snapshot.
 
+**A fix that changes a screen** — your pushed diff touches a feature
+package's `lib/` or `l10n/`, the design system, or `apps/mobile/app` — makes
+the description's before/after evidence stale. Refresh it with the open-pr
+skill's step 5: `.claude/skills/open-pr/scripts/evidence.sh plan <n>`, then `up` /
+`down` for base and head, driving each planned screen in between, then
+`post <n>`, which replaces the section. A PR whose diff now touches no screen
+loses the section at `plan`. Do it once CI is running on the new SHA, not
+instead of watching it.
+
 ## Reporting
 
 While watching, report only changes and the occasional heartbeat — not every
