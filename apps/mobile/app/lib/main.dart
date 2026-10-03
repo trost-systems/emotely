@@ -12,6 +12,7 @@ import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 import 'package:flutter/widgets.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:human_check/human_check.dart';
 import 'package:marionette_flutter/marionette_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
@@ -38,6 +39,12 @@ Future<void> main() async {
   final packageInfo = await PackageInfo.fromPlatform();
   // One http client for both agent endpoints: same host, one connection pool.
   final httpClient = http.Client();
+  // The human check (#94): the token source Supabase Auth's captcha needs,
+  // and the host the app shows its web view in, over the same challenges.
+  final turnstile = TurnstileChallenges(
+    siteKey: turnstileSiteKey,
+    origin: Uri.parse(turnstileOrigin),
+  );
   registerApp(
     GetIt.I,
     agentHttpClient: httpClient,
@@ -65,12 +72,16 @@ Future<void> main() async {
     configUrl: urlFrom(configUrl, define: 'EMOTELY_CONFIG_URL'),
     passwordAccounts: passwordAccounts,
     google: googleClients,
+    humanCheckToken: turnstile.token,
   );
-  runApp(await _restoredApp(supabase.client));
+  runApp(await _restoredApp(supabase.client, turnstile));
 }
 
 /// The app over what this device kept, read before the first frame.
-Future<EmotelyApp> _restoredApp(SupabaseClient supabase) async {
+Future<EmotelyApp> _restoredApp(
+  SupabaseClient supabase,
+  TurnstileChallenges turnstile,
+) async {
   // PostHog opens here only if the user allowed it on an earlier launch
   // and the answer is the restored session's account's (#216): a session
   // can end while the app is closed. Awaited so the first identify of a
@@ -85,6 +96,7 @@ Future<EmotelyApp> _restoredApp(SupabaseClient supabase) async {
     screenViews: gate.screenObserver(),
     onboarding: onboarding,
     debugBanner: debugBanner,
+    turnstile: turnstile,
   );
 }
 

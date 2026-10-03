@@ -6,6 +6,7 @@ import 'package:feature_auth/src/providers/provider_sign_in.dart';
 import 'package:feature_auth/src/review_accounts.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:human_check/human_check.dart';
 import 'package:profile_repository/profile_repository.dart';
 // gotrue has its own AuthState (the stream event); ours is the bloc state.
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
@@ -20,7 +21,9 @@ part 'auth_state.dart';
 /// accounts ([reviewAccounts]) take a password at the second step instead,
 /// since a reviewer has no mailbox to read, and so do the
 /// [_passwordAccounts] the app names (the smoke account in a debug build,
-/// which has no mailbox either). Supabase Auth owns the session
+/// which has no mailbox either). A code request and a password both go
+/// through [HumanCheck] first: Supabase Auth refuses either without a
+/// Cloudflare Turnstile token (#94). Supabase Auth owns the session
 /// (persistence, refresh); this bloc mirrors it into UI state and tells
 /// PostHog who the user is. Each sign-in through the screen also leaves the
 /// way in on the device ([LastSignInStore]), for the "Last used" tag, and
@@ -32,6 +35,7 @@ class AuthBloc({
   required final ErrorReporter _errors,
   required final ProviderSignIn _providers,
   required final LastSignInStore _lastSignIn,
+  required final HumanCheck _humanCheck,
   final Set<String> _passwordAccounts = const {},
 }) extends Bloc<AuthEvent, AuthState> {
   this : super(_initial(_supabase.auth.currentSession)) {
@@ -100,13 +104,16 @@ class AuthBloc({
     emit(AuthState.requestingCode(email: email));
     unawaited(_analytics.codeRequested());
     try {
-      await _supabase.auth.signInWithOtp(
-        email: email,
-        shouldCreateUser: event.createAccount,
-        // Supabase keeps it only on an account this request creates, so the
-        // very first mail is in the app's language; an existing account
-        // learns it once signed in ([_keepMailLanguage]).
-        data: {mailLanguageKey: ?_language},
+      await _humanCheck.guard(
+        (captchaToken) => _supabase.auth.signInWithOtp(
+          email: email,
+          shouldCreateUser: event.createAccount,
+          // Supabase keeps it only on an account this request creates, so
+          // the very first mail is in the app's language; an existing
+          // account learns it once signed in ([_keepMailLanguage]).
+          data: {mailLanguageKey: ?_language},
+          captchaToken: captchaToken,
+        ),
       );
       emit(AuthState.codeSent(email: email));
     } on Exception catch (error, stackTrace) {
@@ -164,9 +171,12 @@ class AuthBloc({
       emit(AuthState.checkingPassword(email: email));
       try {
         // Always a session: an answer without one throws, like a refusal.
-        final session = await _supabase.auth.signInWithPassword(
-          email: email,
-          password: event.password,
+        final session = await _humanCheck.guard(
+          (captchaToken) => _supabase.auth.signInWithPassword(
+            email: email,
+            password: event.password,
+            captchaToken: captchaToken,
+          ),
         );
         unawaited(_analytics.signedIn(SignInMethod.password));
         // A password starts at the email field, the button it tags.
@@ -374,6 +384,9 @@ class AuthBloc({
     // A code asked for with `shouldCreateUser: false` for an address with
     // no account: GoTrue refuses the sign-up it would take.
     AuthApiException(errorCode: 'otp_disabled') => SignInProblem.noAccount,
+    // No token, or one GoTrue could not verify with Cloudflare (#94).
+    HumanCheckFailed() || AuthApiException(errorCode: 'captcha_failed') =>
+      SignInProblem.humanCheckFailed,
     AuthRetryableFetchException() => SignInProblem.unreachable,
     _ => fallback,
   };

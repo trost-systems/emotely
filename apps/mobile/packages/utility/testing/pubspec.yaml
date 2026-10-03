@@ -29,6 +29,8 @@ dependencies:
   # url_launcher (the Apple one sorts further down).
   google_sign_in_platform_interface: 3.1.0
   http: 1.6.0
+  # The human check, whose token source is the leaf HumanCheckStub scripts.
+  human_check: any
   journal_repository: any
   material_ui: ^1.1.0
   mockito: 5.8.1
