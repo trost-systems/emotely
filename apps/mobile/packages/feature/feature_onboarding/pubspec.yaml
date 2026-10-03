@@ -8,6 +8,8 @@ environment:
 
 dependencies:
   analytics: any
+  # Steps are timed on its clock, which widget tests fake (#225).
+  clock: 1.1.3
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1

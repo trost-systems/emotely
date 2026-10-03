@@ -566,6 +566,35 @@ void main() {
       ]);
     });
 
+    testWidgets('times Welcome from when it came on screen on a launch '
+        'that already has the usage-analytics answer', (tester) async {
+      final robot = OnboardingRobot(tester);
+      await robot.launch();
+      await tester.pump(const Duration(seconds: 8));
+      await robot.tap(robot.getStarted);
+
+      expect(
+        robot.propertiesOf('onboarding_step_completed').single['duration_ms'],
+        inInclusiveRange(8000, 9000),
+      );
+    });
+
+    testWidgets('times Welcome from the usage-analytics answer, not the '
+        'time under the sheet', (tester) async {
+      final robot = OnboardingRobot(tester, choice: null);
+      await robot.launch();
+      await tester.pump(const Duration(seconds: 20));
+      await GetIt.I<PostHogGate>().allow();
+      await robot.settle();
+      await tester.pump(const Duration(seconds: 8));
+      await robot.tap(robot.getStarted);
+
+      expect(
+        robot.propertiesOf('onboarding_step_completed').single['duration_ms'],
+        inInclusiveRange(8000, 9000),
+      );
+    });
+
     testWidgets('reports where onboarding led and where the name came from', (
       tester,
     ) async {
