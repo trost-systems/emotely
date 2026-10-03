@@ -5,7 +5,9 @@
   package that has a `test/` directory. `analysis` and `testing` have none
   and are not measured; test support is not behavior.
 - Exemptions are per-file and explicit: `// coverage:ignore-file` on its own
-  line, reserved for composition roots (main.dart). Generated files
+  line, reserved for composition roots (main.dart) and the one leaf no
+  test can host, the Turnstile web view behind the human check
+  (`lib/app/turnstile.dart`; tests hand `registerApp` a `HumanCheckStub`). Generated files
   (`*.freezed.dart`, `*.g.dart`, `*.gen.dart`, `*.mocks.dart`) are excluded
   via `--exclude-coverage '**/*.{freezed,g,gen,mocks}.dart'` on the same
   command.

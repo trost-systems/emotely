@@ -29,6 +29,7 @@ class SignInRobot(
   required final SupabaseStub supabase,
   required final AgentStub agent,
   final Set<String> passwordAccounts = const {},
+  final HumanCheckStub? humanCheck,
   final SignInMode mode = SignInMode.signIn,
   final String? name,
   final Locale locale = const Locale('de'),
@@ -132,6 +133,7 @@ class SignInRobot(
       agent: agent,
       supabase: supabase,
       analytics: analytics,
+      humanCheck: humanCheck,
     );
     registerAuth(
       GetIt.I,

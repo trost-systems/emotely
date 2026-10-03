@@ -16,6 +16,7 @@ import 'package:design_system/design_system.dart';
 import 'package:emotely/app/app.dart';
 import 'package:emotely/app/dependencies.dart';
 import 'package:emotely/app/environment.dart';
+import 'package:emotely/app/turnstile.dart';
 import 'package:feature_account/feature_account.dart';
 import 'package:feature_journal/feature_journal.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
@@ -80,9 +81,12 @@ class LiveSessionRobot(final WidgetTester tester) {
         persistSession: false,
       ),
     );
+    // The password grant needs a human check like any other (#94): a real
+    // one, from the same hidden web view the app uses on this device.
     await supabase.client.auth.signInWithPassword(
       email: smokeEmail,
       password: smokePassword,
+      captchaToken: await turnstileToken(),
     );
     final posthog = Posthog();
     // The real startup gate against the real endpoint: if the deployed config
@@ -108,6 +112,7 @@ class LiveSessionRobot(final WidgetTester tester) {
       // Signed in above, not through the screen.
       passwordAccounts: const {},
       google: googleClients,
+      humanCheckToken: turnstileToken,
     );
     // The smoke account has allowed usage analytics, as a tester would on
     // the first-launch sheet: the run reports to PostHog like one (#204).

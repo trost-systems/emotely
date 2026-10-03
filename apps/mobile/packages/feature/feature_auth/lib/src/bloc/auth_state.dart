@@ -74,4 +74,9 @@ enum SignInProblem() {
 
   /// A provider's sheet or its token failed; not a dismissal.
   providerFailed,
+
+  /// The human check (Cloudflare Turnstile) gave no token, or GoTrue
+  /// refused the one it gave (#94). Nothing the user typed was judged, so
+  /// this never says an address or a password is wrong.
+  humanCheckFailed,
 }

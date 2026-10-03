@@ -13,6 +13,7 @@ import 'package:feature_session/feature_session.dart';
 import 'package:feedback_link/feedback_link.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:human_check/human_check.dart';
 import 'package:journal_repository/journal_repository.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:profile_repository/profile_repository.dart';
@@ -31,6 +32,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// that cannot be built fails the launch, not the first screen that needs
 /// it.
 ///
+/// [humanCheckToken] is the leaf behind the human check (#94): Cloudflare
+/// Turnstile in a hidden web view in a build, a scripted stub in a test.
+///
 /// [passwordAccounts] are the addresses beyond the store review accounts
 /// that sign in with a password: the smoke account in a debug build the
 /// verification CLI drives, nothing in any other build.
@@ -47,6 +51,7 @@ void registerApp(
   required Uri configUrl,
   required Set<String> passwordAccounts,
   required GoogleClientIds google,
+  required HumanCheckToken humanCheckToken,
 }) {
   getIt.registerSingleton(supabase);
   registerAgentClient(
@@ -71,6 +76,7 @@ void registerApp(
   _registerRecords(getIt, supabase);
   registerFeedbackLink(getIt, build: build);
   registerConfig(getIt, appVersion: appVersion);
+  registerHumanCheck(getIt, token: humanCheckToken);
   registerAuth(getIt, google: google, passwordAccounts: passwordAccounts);
   registerJournal(getIt);
   registerSession(getIt);
