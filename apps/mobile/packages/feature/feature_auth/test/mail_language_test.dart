@@ -11,7 +11,7 @@ import 'sign_in_robot.dart';
 final iOS = TargetPlatformVariant.only(TargetPlatform.iOS);
 
 void main() {
-  // The sign-in mail (supabase/templates/sign_in_code.html) is written in
+  // The sign-in mail (supabase/templates/email_code.html) is written in
   // the language the account keeps as `user_metadata.app_locale`, English
   // when it keeps none. The app shows the screen in one language; the
   // account learns it when a code is asked for (a new account) and after

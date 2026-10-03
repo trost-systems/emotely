@@ -169,6 +169,8 @@ one word each on every screen and in every language.
 | --- | --- | --- |
 | the More tab | „Mehr“ | |
 | account | das Konto | |
+| password | das Passwort | "Kennwort" |
+| code (the six digits a mail carries, to confirm an address or reset a password) | der Code | "PIN", "token" |
 | profile | das Profil | |
 | privacy notice | die Datenschutzerklärung | "Datenschutzhinweise" |
 | privacy settings | die Datenschutzeinstellungen | |

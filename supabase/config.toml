@@ -179,7 +179,19 @@ enable_anonymous_sign_ins = false
 # Allow/disallow testing manual linking of accounts
 enable_manual_linking = false
 # Passwords shorter than this value will be rejected as weak. Minimum 6, recommended 8 or more.
-minimum_password_length = 6
+#
+# Ten, and no composition rules (#187): NIST SP 800-63B (rev. 4, § 3.1.1.2)
+# asks for length and against forced character classes, which only push
+# people to predictable patterns. GoTrue checks the length whenever a
+# password is set (sign-up, reset), never at sign-in, so an older, shorter
+# password keeps working until it is next changed. The app checks the same
+# ten characters before it asks (feature_auth's `minimumPasswordLength`).
+#
+# Supabase's leaked-password check (HaveIBeenPwned) would sit beside this,
+# but it is a Pro-plan feature and the project is on the free plan; it is
+# also not a config.toml key (only the dashboard or the Management API's
+# `password_hibp_enabled` set it), so it could not deploy from main anyway.
+minimum_password_length = 10
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
 # are: `letters_digits`, `lower_upper_letters_digits`, `lower_upper_letters_digits_symbols`
 password_requirements = ""
@@ -223,7 +235,13 @@ enable_signup = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
+#
+# On (#187): an account made with a password has no session until its
+# address is confirmed with the code in the confirmation mail, so nobody
+# can hold an account on an address they cannot read. Apple and Google
+# vouch for their addresses themselves, and the stores' review accounts and
+# the smoke account are created confirmed through the Auth admin API.
+enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
@@ -233,22 +251,43 @@ otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 600
 
-# Sign-in is a one-time code typed into the app, not a link (no deep link,
-# no web). Supabase sends codes through the magic-link template, and the
-# default template carries only a link — so the template below is what makes
-# sign-in work at all. The hosted free tier only accepts a custom template
-# once the project sends through its own SMTP, which the hosted project does
-# (see [remotes.production] at the end of this file); locally the template
-# renders into Inbucket.
+# Every mail Auth sends carries a six-digit code typed where it was asked
+# for, never a link (#187, ADR 0010): the app has no deep links and runs
+# the implicit flow, a code works when the mail is read on another device,
+# and a mail scanner that opens links cannot use it up. The default
+# templates carry only a link, so the templates below are what make
+# confirming an address and resetting a password work at all. The hosted
+# free tier only accepts a custom template once the project sends through
+# its own SMTP, which the hosted project does (see [remotes.production] at
+# the end of this file); locally every template renders into Inbucket.
 #
 # Body and subject are Go templates the auth server renders per mail, with
 # the account's user_metadata as `.Data`: German when the app kept "de" as
 # its `app_locale` (#229), English otherwise, including for an account that
 # keeps no language at all. The CLI passes this file's strings through as
-# they are, so the subject needs no escaping.
+# they are, so the subjects need no escaping. The codes expire after
+# `otp_expiry` above, which the mails state as ten minutes.
+
+# A new account, made with a password: the code confirms the address and
+# opens the account (`verifyOTP` type `signup`).
+[auth.email.template.confirmation]
+subject = '{{ if eq .Data.app_locale "de" }}Bestätige dein emotely-Konto{{ else }}Confirm your emotely account{{ end }}'
+content_path = "./supabase/templates/confirmation.html"
+
+# A forgotten password: the code signs the account in so the app can set a
+# new password (`verifyOTP` type `recovery`). It also gives an account that
+# never had a password one: every account made by a sign-in code before
+# #187.
+[auth.email.template.recovery]
+subject = '{{ if eq .Data.app_locale "de" }}Neues Passwort für emotely{{ else }}Reset your emotely password{{ end }}'
+content_path = "./supabase/templates/recovery.html"
+
+# A code for an account that exists (`/otp`): the web account-deletion page
+# proves the mailbox with it, and app builds from before #187 still sign in
+# with it until the minimum version retires them. Worded for both.
 [auth.email.template.magic_link]
-subject = '{{ if eq .Data.app_locale "de" }}Dein Anmeldecode für emotely{{ else }}Your emotely sign-in code{{ end }}'
-content_path = "./supabase/templates/sign_in_code.html"
+subject = '{{ if eq .Data.app_locale "de" }}Dein Code für emotely{{ else }}Your emotely code{{ end }}'
+content_path = "./supabase/templates/email_code.html"
 
 # SMTP is configured for the hosted project only, under [remotes.production]
 # at the end of this file. Local development keeps Inbucket.
@@ -258,11 +297,15 @@ content_path = "./supabase/templates/sign_in_code.html"
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
 
-# Uncomment to customize notification email template
-# [auth.email.notification.password_changed]
-# enabled = true
-# subject = "Your password has been changed"
-# content_path = "./templates/password_changed_notification.html"
+# A security notification, not a code: whenever an account's password is
+# set to a new one (a reset, a first password for an account made with a
+# code, a password chosen again before confirming), its address hears
+# about it, so a change the owner did not make does not go unnoticed
+# (NIST SP 800-63B § 4.6). Same language rule as the mails above.
+[auth.email.notification.password_changed]
+enabled = true
+subject = '{{ if eq .Data.app_locale "de" }}Dein emotely-Passwort wurde geändert{{ else }}Your emotely password was changed{{ end }}'
+content_path = "./supabase/templates/password_changed.html"
 
 [auth.sms]
 # Allow/disallow new user signups via SMS to your project.
