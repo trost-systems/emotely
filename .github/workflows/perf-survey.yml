@@ -15,8 +15,8 @@ name: Performance survey
 #
 # Cost: none. The Firebase project emotely-ci is on the Spark plan with no
 # billing account: 5 physical and 10 virtual test runs a day, shared by
-# every run in the project. A full survey spends 2 physical runs (the
-# devices survey.yaml marks `default: true`), leaving 3 for ad-hoc runs.
+# every run in the project. A full survey spends 3 physical runs (the
+# devices survey.yaml marks `default: true`), leaving 2 for ad-hoc runs.
 #
 # Sign-in is keyless (Workload Identity Federation): the service account
 # ftl-runner holds Test Lab admin, analytics viewer and Editor on the

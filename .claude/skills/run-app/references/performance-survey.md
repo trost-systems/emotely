@@ -69,10 +69,10 @@ run, through `.github/workflows/perf-survey.yml` or `survey.sh ftl`:
 | --- | --- | --- | --- | --- |
 | Galaxy S24 | `SC-51E:36` | 120 Hz Android flagship | yes | 1 |
 | Galaxy A14 | `a14m:34` | low-end Android, 60/90 Hz | yes | 1 |
-| iPhone 16 Pro | `iphone16pro:18.3` | 120 Hz iPhone | not yet (iOS, below) | +1 once on |
+| iPhone 16 Pro | `iphone16pro:18.3` | 120 Hz iPhone | yes | 1 |
 | Medium Phone | `MediumPhone.arm:34` | virtual, for trying things | no | virtual |
 
-A full survey is **2 physical runs** (3 with the iPhone): at least 2 of the
+A full survey is **3 physical runs**: at least 2 of the
 day's 5 always stay for an agent chasing a regression. `survey.test.sh`
 fails a default set that would leave fewer. Iterate on the virtual device;
 a physical run is for a number that matters.
@@ -202,8 +202,7 @@ human:
   first CI run on the iPhone (37105150605) hung on the sign-in screen until
   Test Lab's 20-minute timeout.
 
-Still to run: the CI side (`gh workflow run perf-survey.yml --ref main -f
-device=iphone-16-pro`), which signs with match in the `release`
-environment; the run above was signed and started from a maintainer's
-machine. When it records, set the iPhone's `default: true` in
-`survey.yaml`.
+CI signs and runs it too: `gh workflow run perf-survey.yml --ref main -f
+device=iphone-16-pro` (run 37114812734, 2026-10-03) signed with match in
+the `release` environment and recorded. The iPhone is part of every full
+survey since.
