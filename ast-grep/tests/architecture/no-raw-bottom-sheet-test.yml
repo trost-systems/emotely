@@ -1,0 +1,44 @@
+id: no-raw-bottom-sheet
+valid:
+  # The design system's way, which rises with the keyboard.
+  - |
+    Future<void> open(BuildContext context) async {
+      final pick = await showSheet<String>(
+        context: context,
+        builder: (_) => const PickerSheet(),
+      );
+    }
+  # A persistent sheet inside a Scaffold, which the Scaffold lifts itself.
+  - |
+    void open(BuildContext context) =>
+        Scaffold.of(context).showBottomSheet((_) => const Hint());
+  # Names that only contain the word, and the word in a comment or a string.
+  - |
+    /// Not a raw showModalBottomSheet; see design_system's sheet.dart.
+    const hint = 'showModalBottomSheet';
+    final showModalBottomSheetCount = 0;
+invalid:
+  # Material's sheet, which the keyboard covers.
+  - |
+    Future<void> open(BuildContext context) async {
+      final pick = await showModalBottomSheet<String>(
+        context: context,
+        builder: (_) => const PickerSheet(),
+      );
+    }
+  - |
+    void open(BuildContext context) => unawaited(
+      showModalBottomSheet(context: context, builder: (_) => const Hint()),
+    );
+  # Its route, pushed by hand.
+  - |
+    void open(NavigatorState navigator) => navigator.push(
+      ModalBottomSheetRoute<void>(
+        builder: (_) => const Hint(),
+        isScrollControlled: false,
+      ),
+    );
+  # Under a prefix.
+  - |
+    void open(BuildContext context) =>
+        m.showModalBottomSheet(context: context, builder: (_) => const Hint());

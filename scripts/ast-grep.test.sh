@@ -208,6 +208,31 @@ test_holds_the_routing_and_material_rules_to_the_flutter_workspace() {
 ${actual}"
 }
 
+# no-raw-bottom-sheet (#308) holds every hand-written file of the Flutter
+# workspace, its tests included, but design_system's sheet helper, the one
+# file that opens Material's sheet for everyone else.
+test_lets_only_the_sheet_helper_open_a_material_sheet() {
+  local source='final f = showModalBottomSheet;\n'
+  local dir
+  dir="$(repo \
+    apps/mobile/packages/utility/design_system/lib/src/sheet.dart "${source}" \
+    apps/mobile/packages/utility/design_system/lib/src/other.dart "${source}" \
+    apps/mobile/packages/feature/feature_x/test/x_test.dart "${source}" \
+    apps/mobile/packages/feature/feature_x/lib/src/x.g.dart "${source}" \
+    apps/web/lib/main.dart "${source}")"
+
+  local sheet="Material's modal bottom sheet ignores the keyboard: open a sheet with showSheet from package:design_system, which keeps it above the keyboard (#308)"
+  local expected
+  expected="$(printf '%s\n' \
+    "apps/mobile/packages/feature/feature_x/test/x_test.dart:1: ${sheet}" \
+    "apps/mobile/packages/utility/design_system/lib/src/other.dart:1: ${sheet}")"
+  local actual
+  actual="$(findings "${dir}")"
+  [[ "${actual}" == "${expected}" ]] ||
+    fail "lets only the sheet helper open a Material sheet: got
+${actual}"
+}
+
 # no-feature-dependency and feature-package-name (ADR 0015): a feature or a
 # utility never lists a feature, which is known by its name; the app, the
 # glue, lists them all.
@@ -356,6 +381,7 @@ test_fails_with_the_file_the_line_and_the_reason
 test_fails_a_define_read_in_a_feature_package
 test_holds_the_container_rules_to_lib_but_main
 test_holds_the_routing_and_material_rules_to_the_flutter_workspace
+test_lets_only_the_sheet_helper_open_a_material_sheet
 test_lets_only_the_app_depend_on_a_feature
 test_wants_rule_ids_and_a_reason_on_ast_grep_ignore
 test_rule_tests_pass_with_every_rule_in_place

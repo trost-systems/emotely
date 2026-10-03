@@ -1,0 +1,43 @@
+id: no-raw-bottom-sheet
+snapshots:
+  ? |
+    Future<void> open(BuildContext context) async {
+      final pick = await showModalBottomSheet<String>(
+        context: context,
+        builder: (_) => const PickerSheet(),
+      );
+    }
+  : labels:
+    - source: showModalBottomSheet
+      style: primary
+      start: 69
+      end: 89
+  ? |
+    void open(BuildContext context) =>
+        m.showModalBottomSheet(context: context, builder: (_) => const Hint());
+  : labels:
+    - source: showModalBottomSheet
+      style: primary
+      start: 41
+      end: 61
+  ? |
+    void open(BuildContext context) => unawaited(
+      showModalBottomSheet(context: context, builder: (_) => const Hint()),
+    );
+  : labels:
+    - source: showModalBottomSheet
+      style: primary
+      start: 48
+      end: 68
+  ? |
+    void open(NavigatorState navigator) => navigator.push(
+      ModalBottomSheetRoute<void>(
+        builder: (_) => const Hint(),
+        isScrollControlled: false,
+      ),
+    );
+  : labels:
+    - source: ModalBottomSheetRoute
+      style: primary
+      start: 57
+      end: 78
