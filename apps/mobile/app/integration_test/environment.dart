@@ -7,3 +7,13 @@ library;
 /// live session signs in with it before the app starts; its email is the
 /// app's own `smokeEmail`.
 const smokePassword = String.fromEnvironment('SMOKE_PASSWORD');
+
+/// The screens the performance survey walks (`--dart-define=
+/// SURVEY_SCREENS=journal,entry`), comma-separated; empty, all of them
+/// (`survey_test.dart`).
+const surveyOnly = String.fromEnvironment('SURVEY_SCREENS');
+
+/// Whether the survey writes survey.json to the device
+/// (`--dart-define=SURVEY_ON_DEVICE=true`): a Test Lab build, where no
+/// driver receives it.
+const surveyOnDevice = bool.fromEnvironment('SURVEY_ON_DEVICE');

@@ -1,6 +1,6 @@
 ---
 name: run-app
-description: How to run, drive and verify the Flutter app (apps/mobile/app) on an iOS simulator — run-app.sh sets it up signed in against the deployed agent, the agent drives it with plain marionette commands, and the CLI records and collects an evidence bundle (screenshots, video, logs, PostHog events); plus the performance budget (perf.sh: profile-mode frames, request counts and backend latency), the on-device acceptance session and the unit gate. Use whenever asked to run the app, see a screen, find or reach the screen a report or screenshot is about (the feature map), verify a change on a device, collect evidence for a pull request, run integration_test, or measure, debug or change the app's performance or the performance budget.
+description: How to run, drive and verify the Flutter app (apps/mobile/app) on an iOS simulator — run-app.sh sets it up signed in against the deployed agent, the agent drives it with plain marionette commands, and the CLI records and collects an evidence bundle (screenshots, video, logs, PostHog events); plus the performance budget (perf.sh: profile-mode frames, request counts and backend latency) and the performance survey on real phones in Firebase Test Lab (survey.sh: history, findings by severity), the on-device acceptance session and the unit gate. Use whenever asked to run the app, see a screen, find or reach the screen a report or screenshot is about (the feature map), verify a change on a device, collect evidence for a pull request, run integration_test, or measure, debug or change the app's performance or the performance budget.
 ---
 
 # Running apps/mobile/app
@@ -33,12 +33,23 @@ paths: the journal scroll, opening an entry and a session round.
   `apps/mobile/app/test/perf/request_budget_test.dart`, in seconds.
 - **Nightly:** frames at 60 fps and the deployed backend's latency, on
   emulators. It never blocks; whatever fails files the `performance` issue.
-- **On a phone:** frames come from #256's device-farm survey.
+- **On a phone:** frames come from the performance survey below.
 
 `scripts/perf.sh run` is the nightly's profile run, for measuring frames
 locally on a fresh Android emulator. Measuring, reading a failure or
 changing the budget — read
 [references/performance.md](references/performance.md) first.
+
+## Performance survey on real phones
+
+`scripts/survey.sh` walks every screen of the feature map in profile mode on
+real phones in Firebase Test Lab, on demand (a workflow run by hand, or
+`survey.sh ftl`; no schedule), keeps
+each run's numbers in a history (`survey.sh history --device a14m --screen
+journal`) and files findings by severity as one issue per screen and metric.
+Test Lab's daily quota is shared and small. Running it, reading the history,
+fixing a finding, or touching the devices or severity rules — read
+[references/performance-survey.md](references/performance-survey.md) first.
 
 ## Build-time configuration
 

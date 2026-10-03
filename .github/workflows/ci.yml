@@ -311,6 +311,7 @@ jobs:
       - run: bash scripts/l10n-check.test.sh
       - run: bash .claude/skills/run-app/scripts/run-app.test.sh
       - run: bash .claude/skills/run-app/scripts/perf.test.sh
+      - run: bash .claude/skills/run-app/scripts/survey.test.sh
 
   # The ast-grep gate (ADR 0018): every rule under ast-grep/rules, over every
   # tracked file. The comment tripwire (ast-grep/rules/tripwire): hand-written

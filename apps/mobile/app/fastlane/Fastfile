@@ -129,6 +129,16 @@ platform :ios do
     lane_context[:IPA_OUTPUT_PATH] = ipa
   end
 
+  desc "Install match's App Store certificate and profile for the performance survey's XCTest build (Test Lab re-signs it); no build"
+  lane :survey_signing do
+    # On CI, a throwaway keychain that match can import into.
+    setup_ci if ENV["CI"]
+    match(type: "appstore", readonly: true, api_key: asc_api_key)
+    # survey.sh signs with the profile's certificate (`build ios --profile`).
+    profile = ENV.fetch("sigh_de.emotely.emotely_appstore_profile-path")
+    File.open(ENV["GITHUB_ENV"], "a") { |file| file.puts("SURVEY_PROFILE=#{profile}") } if ENV["GITHUB_ENV"]
+  end
+
   desc "Build the release IPA and upload it to TestFlight for the internal Team group"
   lane :internal do
     build
