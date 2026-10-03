@@ -280,12 +280,13 @@ extension AccountStatePatterns on AccountState {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AccountIdle value)?  idle,TResult Function( AccountDeleting value)?  deleting,TResult Function( AccountDeleted value)?  deleted,TResult Function( AccountFailure value)?  failure,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AccountIdle value)?  idle,TResult Function( AccountDeleting value)?  deleting,TResult Function( AccountSigningOut value)?  signingOut,TResult Function( AccountDeleted value)?  deleted,TResult Function( AccountFailure value)?  failure,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case AccountIdle() when idle != null:
 return idle(_that);case AccountDeleting() when deleting != null:
-return deleting(_that);case AccountDeleted() when deleted != null:
+return deleting(_that);case AccountSigningOut() when signingOut != null:
+return signingOut(_that);case AccountDeleted() when deleted != null:
 return deleted(_that);case AccountFailure() when failure != null:
 return failure(_that);case _:
   return orElse();
@@ -305,12 +306,13 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AccountIdle value)  idle,required TResult Function( AccountDeleting value)  deleting,required TResult Function( AccountDeleted value)  deleted,required TResult Function( AccountFailure value)  failure,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AccountIdle value)  idle,required TResult Function( AccountDeleting value)  deleting,required TResult Function( AccountSigningOut value)  signingOut,required TResult Function( AccountDeleted value)  deleted,required TResult Function( AccountFailure value)  failure,}){
 final _that = this;
 switch (_that) {
 case AccountIdle():
 return idle(_that);case AccountDeleting():
-return deleting(_that);case AccountDeleted():
+return deleting(_that);case AccountSigningOut():
+return signingOut(_that);case AccountDeleted():
 return deleted(_that);case AccountFailure():
 return failure(_that);}
 }
@@ -326,12 +328,13 @@ return failure(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AccountIdle value)?  idle,TResult? Function( AccountDeleting value)?  deleting,TResult? Function( AccountDeleted value)?  deleted,TResult? Function( AccountFailure value)?  failure,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AccountIdle value)?  idle,TResult? Function( AccountDeleting value)?  deleting,TResult? Function( AccountSigningOut value)?  signingOut,TResult? Function( AccountDeleted value)?  deleted,TResult? Function( AccountFailure value)?  failure,}){
 final _that = this;
 switch (_that) {
 case AccountIdle() when idle != null:
 return idle(_that);case AccountDeleting() when deleting != null:
-return deleting(_that);case AccountDeleted() when deleted != null:
+return deleting(_that);case AccountSigningOut() when signingOut != null:
+return signingOut(_that);case AccountDeleted() when deleted != null:
 return deleted(_that);case AccountFailure() when failure != null:
 return failure(_that);case _:
   return null;
@@ -350,11 +353,12 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  idle,TResult Function()?  deleting,TResult Function()?  deleted,TResult Function()?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  idle,TResult Function()?  deleting,TResult Function( Set<SignInGrant> stillLinked)?  signingOut,TResult Function()?  deleted,TResult Function()?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AccountIdle() when idle != null:
 return idle();case AccountDeleting() when deleting != null:
-return deleting();case AccountDeleted() when deleted != null:
+return deleting();case AccountSigningOut() when signingOut != null:
+return signingOut(_that.stillLinked);case AccountDeleted() when deleted != null:
 return deleted();case AccountFailure() when failure != null:
 return failure();case _:
   return orElse();
@@ -374,11 +378,12 @@ return failure();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  idle,required TResult Function()  deleting,required TResult Function()  deleted,required TResult Function()  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  idle,required TResult Function()  deleting,required TResult Function( Set<SignInGrant> stillLinked)  signingOut,required TResult Function()  deleted,required TResult Function()  failure,}) {final _that = this;
 switch (_that) {
 case AccountIdle():
 return idle();case AccountDeleting():
-return deleting();case AccountDeleted():
+return deleting();case AccountSigningOut():
+return signingOut(_that.stillLinked);case AccountDeleted():
 return deleted();case AccountFailure():
 return failure();}
 }
@@ -394,11 +399,12 @@ return failure();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  idle,TResult? Function()?  deleting,TResult? Function()?  deleted,TResult? Function()?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  idle,TResult? Function()?  deleting,TResult? Function( Set<SignInGrant> stillLinked)?  signingOut,TResult? Function()?  deleted,TResult? Function()?  failure,}) {final _that = this;
 switch (_that) {
 case AccountIdle() when idle != null:
 return idle();case AccountDeleting() when deleting != null:
-return deleting();case AccountDeleted() when deleted != null:
+return deleting();case AccountSigningOut() when signingOut != null:
+return signingOut(_that.stillLinked);case AccountDeleted() when deleted != null:
 return deleted();case AccountFailure() when failure != null:
 return failure();case _:
   return null;
@@ -471,6 +477,80 @@ String toString() {
 
 
 
+
+/// @nodoc
+
+
+class AccountSigningOut implements AccountState {
+  const AccountSigningOut({required  Set<SignInGrant> stillLinked}): _stillLinked = stillLinked;
+  
+
+ final  Set<SignInGrant> _stillLinked;
+ Set<SignInGrant> get stillLinked {
+  if (_stillLinked is EqualUnmodifiableSetView) return _stillLinked;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableSetView(_stillLinked);
+}
+
+
+/// Create a copy of AccountState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AccountSigningOutCopyWith<AccountSigningOut> get copyWith => _$AccountSigningOutCopyWithImpl<AccountSigningOut>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AccountSigningOut&&const DeepCollectionEquality().equals(other.stillLinked, _stillLinked));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_stillLinked));
+}
+
+@override
+String toString() {
+    return 'AccountState.signingOut(stillLinked: $stillLinked)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AccountSigningOutCopyWith<$Res> implements $AccountStateCopyWith<$Res> {
+  factory $AccountSigningOutCopyWith(AccountSigningOut value, $Res Function(AccountSigningOut) _then) = _$AccountSigningOutCopyWithImpl;
+@useResult
+$Res call({
+ Set<SignInGrant> stillLinked
+});
+
+
+
+
+}
+/// @nodoc
+class _$AccountSigningOutCopyWithImpl<$Res>
+    implements $AccountSigningOutCopyWith<$Res> {
+  _$AccountSigningOutCopyWithImpl(this._self, this._then);
+
+  final AccountSigningOut _self;
+  final $Res Function(AccountSigningOut) _then;
+
+/// Create a copy of AccountState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? stillLinked = null,}) {
+  return _then(AccountSigningOut(
+stillLinked: null == stillLinked ? _self._stillLinked : stillLinked // ignore: cast_nullable_to_non_nullable
+as Set<SignInGrant>,
+  ));
+}
+
+
+}
 
 /// @nodoc
 

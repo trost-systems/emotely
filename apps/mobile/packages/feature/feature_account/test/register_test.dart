@@ -7,6 +7,7 @@ import 'package:get_it/get_it.dart';
 import 'package:testing/testing.dart';
 
 import 'fake_account_device_data.dart';
+import 'fake_sign_in_grants.dart';
 
 void main() {
   group('registerAccount', () {
@@ -20,7 +21,9 @@ void main() {
       );
 
       registerAccount(getIt);
-      getIt.registerSingleton<AccountDeviceData>(FakeAccountDeviceData());
+      getIt
+        ..registerSingleton<AccountDeviceData>(FakeAccountDeviceData())
+        ..registerSingleton<SignInGrants>(FakeSignInGrants());
 
       final account = getIt<AccountBloc>();
       final consent = getIt<ConsentBloc>();

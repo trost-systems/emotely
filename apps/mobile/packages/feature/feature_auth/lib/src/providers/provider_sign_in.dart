@@ -5,6 +5,8 @@ import 'dart:math';
 import 'package:analytics/analytics.dart';
 import 'package:crypto/crypto.dart';
 import 'package:feature_auth/src/last_sign_in/last_sign_in_store.dart';
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show OAuthProvider;
@@ -72,6 +74,44 @@ class ProviderSignIn({required final GoogleClientIds google}) {
       return;
     }
     await GoogleSignIn.instance.signOut();
+  }
+
+  /// A fresh authorization code from Apple's sheet, for the agent to revoke
+  /// the account's grant with (#193); null if the user dismissed the sheet
+  /// or the platform has no native one (Android). It asks for nothing about
+  /// the user: the code is all revocation needs. Single-use, and valid for
+  /// five minutes.
+  Future<String?> appleAuthorizationCode() async {
+    if (defaultTargetPlatform != TargetPlatform.iOS) {
+      return null;
+    }
+    try {
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: const [],
+      );
+      return credential.authorizationCode;
+    } on SignInWithAppleAuthorizationException catch (error) {
+      if (error.code != AuthorizationErrorCode.canceled) {
+        rethrow;
+      }
+      return null;
+    }
+  }
+
+  /// Revokes emotely's grant on the Google account this device signs in
+  /// with (#193), restoring that account first without a sheet where the
+  /// platform can (Android may offer its account picker instead). False
+  /// when no account came back, so there was nothing here to disconnect.
+  Future<bool> disconnectGoogle() async {
+    await (_googleNonce ??= _initializeGoogle());
+    // No future at all means the platform cannot restore one: none either.
+    final account = await GoogleSignIn.instance
+        .attemptLightweightAuthentication();
+    if (account == null) {
+      return false;
+    }
+    await GoogleSignIn.instance.disconnect();
+    return true;
   }
 
   Future<ProviderToken?> _google() async {

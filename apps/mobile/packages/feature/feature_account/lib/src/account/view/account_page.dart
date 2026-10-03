@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:feature_account/src/account/bloc/account_bloc.dart';
+import 'package:feature_account/src/account/sign_in_grants.dart';
 import 'package:feature_account/src/l10n/l10n.dart';
 import 'package:feature_account/src/navigator.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,20 +29,22 @@ class const AccountView({super.key}) extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocConsumer<AccountBloc, AccountState>(
-    listenWhen: (_, state) => state is AccountDeleted,
-    listener: (context, _) {
-      // Only this route pops itself; never whatever else may be on top,
-      // and never the root under it.
-      if (ModalRoute.of(context)?.isCurrent ?? false) {
-        Navigator.of(context).pop();
-      }
+    listenWhen: (_, state) =>
+        state is AccountDeleted ||
+        state is AccountSigningOut && state.stillLinked.isNotEmpty,
+    listener: (context, state) => switch (state) {
+      AccountSigningOut(:final stillLinked) => _sayStillLinked(
+        context,
+        stillLinked,
+      ),
+      _ => _leave(context),
     },
     // The server deletes the account whether or not this screen stays; the
     // bloc lives with the route, so leaving mid-flight would drop the local
     // sign-out and keep a session for a user who no longer exists. Every
     // way out (back arrow, system back, swipe) asks the route first.
     builder: (context, state) => PopScope(
-      canPop: state is! AccountDeleting,
+      canPop: state is! AccountDeleting && state is! AccountSigningOut,
       child: Scaffold(
         appBar: AppBar(title: Text(context.l10n.accountTitle)),
         body: SafeArea(
@@ -51,12 +54,37 @@ class const AccountView({super.key}) extends StatelessWidget {
               AccountIdle() => const _DeleteAccount(),
               // Deleted has no screen of its own: the listener above pops
               // this route the moment it arrives.
-              AccountDeleting() || AccountDeleted() => const _Busy(),
+              AccountDeleting() ||
+              AccountSigningOut() ||
+              AccountDeleted() => const _Busy(),
               AccountFailure() => const _Failure(),
             },
           ),
         ),
       ),
+    ),
+  );
+}
+
+/// Only this route pops itself; never whatever else may be on top, and
+/// never the root under it.
+void _leave(BuildContext context) {
+  if (ModalRoute.of(context)?.isCurrent ?? false) {
+    Navigator.of(context).pop();
+  }
+}
+
+/// The account is deleted, but Apple or Google may still list emotely
+/// (#193): says so, and where to remove it. On the app's own messenger, so
+/// the message stays on the welcome screen the sign-out lands on, and long
+/// enough to read the path it names.
+void _sayStillLinked(BuildContext context, Set<SignInGrant> stillLinked) {
+  final provider = stillLinked.length == 1 ? stillLinked.single.name : 'other';
+  ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+    SnackBar(
+      content: Text(context.l10n.accountDeletedStillLinked(provider)),
+      duration: const Duration(seconds: 12),
+      showCloseIcon: true,
     ),
   );
 }

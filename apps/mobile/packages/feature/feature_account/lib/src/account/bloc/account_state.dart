@@ -9,6 +9,13 @@ sealed class AccountState with _$AccountState {
   /// The account is being deleted.
   const factory deleting() = AccountDeleting;
 
+  /// The account is gone on the server; this device is forgetting it and
+  /// ending its session. [stillLinked] are the sign-in grants that could
+  /// not be revoked (#193), which the screen tells the user how to remove
+  /// themselves — now, while it is still there to say so.
+  const factory signingOut({required Set<SignInGrant> stillLinked}) =
+      AccountSigningOut;
+
   /// The account is gone and this device signed out; the screen leaves.
   const factory deleted() = AccountDeleted;
 

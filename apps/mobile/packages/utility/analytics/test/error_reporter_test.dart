@@ -61,6 +61,11 @@ void main() {
       await reporter.usageAnalyticsRecordFailed(saveRefused, trace);
       await reporter.profileLoadFailed(saveRefused, trace);
       await reporter.profileSaveFailed(saveRefused, trace);
+      await reporter.signInRevocationFailed(
+        refused,
+        trace,
+        provider: SignInMethod.apple,
+      );
 
       expect(spy.exceptions, [
         captured(refused, {'step': 'session_round', 'status_code': 429}),
@@ -137,6 +142,7 @@ void main() {
           withheld(PostgrestApiException, code: '42501', statusCode: 403),
           {'step': 'profile_save'},
         ),
+        captured(refused, {'step': 'sign_in_revocation', 'provider': 'apple'}),
       ]);
       for (final exception in spy.exceptions) {
         expect(exception.stackTrace, same(trace));
