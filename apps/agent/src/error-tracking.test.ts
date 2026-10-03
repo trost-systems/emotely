@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { gunzipSync } from "node:zlib";
 import { PostHog } from "posthog-node";
+import { AppleRequestError } from "./apple-sign-in.ts";
 import {
   classifyModelFailure,
   createErrorReporter,
@@ -165,6 +166,34 @@ describe("content-free error reporting", () => {
     assert.ok(
       sent.includes("provider_ineligible"),
       "the failure kind is missing",
+    );
+  });
+
+  it("reports an Apple refusal in Apple's fixed words, and nothing it echoed", async () => {
+    const { client, wire } = recordingClient();
+    const report = createErrorReporter(client);
+
+    report(new AppleRequestError("token", 400, "invalid_grant"), {
+      step: "apple_revocation",
+      userId: "user-1",
+    });
+    // Apple's `error` is a closed set; anything else it sends is not
+    // forwarded, whatever it says.
+    report(new AppleRequestError("revoke", 400, NEEDLE), {
+      step: "apple_revocation",
+      userId: "user-1",
+    });
+    await client.shutdown();
+
+    const sent = wire();
+    assert.ok(sent.includes("apple_revocation"), "the step is missing");
+    assert.ok(sent.includes("token 400 invalid_grant"), "Apple's code is lost");
+    assert.ok(sent.includes("revoke 400 unknown"), "the stand-in is missing");
+    assert.ok(!sent.includes(NEEDLE), "Apple's free text reached PostHog");
+    // Not a gateway failure: no failure kind is claimed for it.
+    assert.equal(
+      classifyModelFailure(new AppleRequestError("revoke", 503)),
+      undefined,
     );
   });
 
