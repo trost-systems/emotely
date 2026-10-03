@@ -54,13 +54,21 @@ previous_base() {
   has_commit "$previous" && echo "$previous"
 }
 
-# The merge base of HEAD and main, deepening both histories until they meet.
+# The merge base of HEAD and main. In Vercel's shallow clone both histories
+# are deepened until they meet; a full clone (a local run, where HEAD may be
+# unpushed) fetches main whole and is never made shallow.
 merge_base() {
   [ -n "$remote" ] || return 1
+  main_ref="refs/vercel-ignore/$main"
+  if [ "$(git rev-parse --is-shallow-repository)" != true ]; then
+    fetch "$remote" "+refs/heads/$main:$main_ref" || return 1
+    git merge-base "$main_ref" "$head" 2>/dev/null
+    return
+  fi
   for depth in 50 200 1000; do
-    fetch --depth="$depth" "$remote" \
-      "+refs/heads/$main:refs/vercel-ignore/$main" "$head" || return 1
-    git merge-base "refs/vercel-ignore/$main" "$head" 2>/dev/null && return 0
+    fetch --depth="$depth" "$remote" "+refs/heads/$main:$main_ref" "$head" ||
+      return 1
+    git merge-base "$main_ref" "$head" 2>/dev/null && return 0
   done
   return 1
 }

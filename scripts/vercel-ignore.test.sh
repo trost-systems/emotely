@@ -206,6 +206,26 @@ test_first_push_without_input_changes_skips() {
     "$(run "${clone}" feature "")" "${clone}"
 }
 
+# Run by hand in a developer's full clone, with commits not yet pushed: the
+# merge base is found locally and the clone is not made shallow.
+test_full_clone_with_unpushed_commits() {
+  local origin clone
+  origin="$(new_origin)"
+  clone="$(dirname "${origin}")/full-clone"
+  git clone --quiet "${origin}" "${clone}"
+  branch "${clone}" feature
+  commit "${clone}" other/file >/dev/null
+  expect "full clone, unpushed commits elsewhere" skip \
+    "$(run "${clone}" feature "")" "${clone}"
+
+  commit "${clone}" app/input >/dev/null
+  commit "${clone}" other/file >/dev/null
+  expect "full clone, an unpushed input change" build \
+    "$(run "${clone}" feature "")" "${clone}"
+  [[ "$(git -C "${clone}" rev-parse --is-shallow-repository)" == false ]] ||
+    fail "full clone: the clone was made shallow"
+}
+
 test_first_push_without_a_reachable_base_builds() {
   local origin clone
   origin="$(new_origin)"
@@ -272,6 +292,7 @@ test_first_push_with_an_earlier_input_change_builds
 test_first_push_without_a_remote_fetches_from_github
 test_first_push_of_a_long_branch_builds
 test_first_push_without_input_changes_skips
+test_full_clone_with_unpushed_commits
 test_first_push_without_a_reachable_base_builds
 test_production_on_main
 test_project_wrappers
