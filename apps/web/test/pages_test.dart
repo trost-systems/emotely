@@ -425,6 +425,24 @@ void main() {
       );
     });
 
+    testComponents('says how a password is kept and an address confirmed', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacy());
+
+      // #187: email and password for everyone; a new account opens with
+      // the code mailed to it, and a reset goes the same way. GoTrue keeps
+      // a bcrypt hash of the password, never the password.
+      expect(find.textContaining('a password you choose'), findsComponents);
+      expect(find.textContaining('one-way hash'), findsComponents);
+      expect(find.textContaining('six-digit code'), findsComponents);
+      expect(find.textContaining('no password, no link'), findsNothing);
+      expect(
+        find.textContaining('with a password instead of a code'),
+        findsNothing,
+      );
+    });
+
     testComponents('says the app asks what to call you, and where it goes', (
       tester,
     ) {
@@ -934,6 +952,24 @@ void main() {
       expect(
         find.textContaining('die Sprache, in der die App angezeigt wird'),
         findsComponents,
+      );
+    });
+
+    testComponents('says how a password is kept and an address confirmed', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(
+        find.textContaining('ein Passwort, das du wählst'),
+        findsComponents,
+      );
+      expect(find.textContaining('Einweg-Hash'), findsComponents);
+      expect(find.textContaining('sechsstelligen Code'), findsComponents);
+      expect(find.textContaining('kein Passwort, kein Link'), findsNothing);
+      expect(
+        find.textContaining('mit einem Passwort statt mit einem Code'),
+        findsNothing,
       );
     });
 

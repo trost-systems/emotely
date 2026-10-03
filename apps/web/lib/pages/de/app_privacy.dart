@@ -99,12 +99,18 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
     p([
       .text(
         'Zum Anmelden braucht es eine E-Mail-Adresse, auf einem von drei '
-        'Wegen: Die App schickt dir einen sechsstelligen Code, den du '
-        'eintippst (kein Passwort, kein Link), oder „Mit Google anmelden“ '
-        '(iOS und Android) bzw. „Mit Apple anmelden“ (iPhone) bestätigt, '
-        'wer du bist, und gibt deine Adresse weiter. Die Adresse und die '
-        'Anmeldedaten liegen bei Supabase Auth auf Servern in Frankfurt, '
-        'Deutschland (EU). Die App fragt nie nach einer Telefonnummer, einem '
+        'Wegen: deine Adresse und ein Passwort, das du wählst, oder „Mit '
+        'Google anmelden“ (iOS und Android) bzw. „Mit Apple anmelden“ '
+        '(iPhone), das bestätigt, wer du bist, und deine Adresse '
+        'weitergibt. Ein neues Konto mit Passwort öffnet sich erst, wenn '
+        'du den sechsstelligen Code eintippst, den die App an die Adresse '
+        'schickt, und ein vergessenes Passwort setzt du mit so einem Code '
+        'zurück (ein Code, nie ein Link). Supabase Auth speichert das '
+        'Passwort nur als Einweg-Hash, nie so, wie du es getippt hast, '
+        'sodass niemand es zurücklesen kann. Die Adresse, der Passwort-Hash '
+        'und die Anmeldedaten liegen bei Supabase Auth auf Servern in '
+        'Frankfurt, Deutschland (EU). Die App fragt nie nach einer '
+        'Telefonnummer, einem '
         'Geburtsdatum, Kontakten, Fotos, deinem Standort oder einer '
         'Werbe-ID.',
       ),
@@ -130,10 +136,10 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
     ]),
     p([
       .text(
-        'Bevor die App einen Code anfordert und bevor sie ein Passwort '
-        'prüft, prüft Cloudflare Turnstile in einer verborgenen Web-Ansicht, '
-        'dass ein Mensch und kein Skript fragt. Es liest, was es braucht, '
-        'um beides zu unterscheiden – deine IP-Adresse, den '
+        'Bevor die App ein Konto anlegt, ein Passwort prüft oder einen Code '
+        'anfordert, prüft Cloudflare Turnstile in einer verborgenen '
+        'Web-Ansicht, dass ein Mensch und kein Skript fragt. Es liest, was '
+        'es braucht, um beides zu unterscheiden – deine IP-Adresse, den '
         'TLS-Fingerabdruck und den User-Agent dieser Web-Ansicht und dass '
         'die Anfrage von emotely kommt –, und antwortet mit einem '
         'Einmal-Token, das Supabase bei Cloudflare bestätigt. Deine '
@@ -147,8 +153,8 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
     p([
       .text(
         'Mit den Anmeldedaten speichert Supabase Auth außerdem die Sprache, '
-        'in der die App angezeigt wird (Englisch oder Deutsch), damit deine '
-        'E-Mails mit dem Anmeldecode in dieser Sprache kommen.',
+        'in der die App angezeigt wird (Englisch oder Deutsch), damit die '
+        'E-Mails mit deinen Codes in dieser Sprache kommen.',
       ),
     ]),
     p([
@@ -467,11 +473,11 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
     h3([.text('Die Konten für die Store-Prüfung')]),
     p([
       .text(
-        'Zwei feste Konten melden sich mit einem Passwort statt mit einem '
-        'Code an, weil die Prüferinnen und Prüfer von Apple und Google kein '
-        'Postfach haben, aus dem sie einen Code lesen könnten. Sie gehören '
-        'zum Prüfverfahren, und nichts in der App kann ein solches Konto '
-        'anlegen.',
+        'Zwei feste Konten, die wir bestätigt anlegen statt über die App, '
+        'lassen die Prüferinnen und Prüfer von Apple und Google sich wie '
+        'alle anderen mit E-Mail-Adresse und Passwort anmelden, ohne ein '
+        'Postfach, aus dem sie einen Code lesen müssten. Sie gehören zum '
+        'Prüfverfahren.',
       ),
     ]),
 
