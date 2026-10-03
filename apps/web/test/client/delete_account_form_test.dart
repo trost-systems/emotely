@@ -54,8 +54,182 @@ List<(String, Map<String, Object?>)> installPosthogStub() {
   return captured;
 }
 
+/// Stands in for Cloudflare's `window.turnstile`: hands out numbered
+/// tokens on `execute`, or fails every check when [fails] is set, and
+/// remembers how each widget was rendered and how many were removed.
+class TurnstileStub() {
+  final rendered = <JSObject>[];
+  var removed = 0;
+  var fails = false;
+
+  /// Installs this stub as `window.turnstile`, as the script would.
+  void install() {
+    final api = JSObject();
+    api['render'] = ((JSString container, JSObject params) {
+      rendered.add(params);
+      return 'widget-${rendered.length}'.toJS;
+    }).toJS;
+    api['execute'] = ((JSString widget) {
+      final params = rendered.last;
+      if (fails) {
+        params
+            .getProperty<JSFunction>('error-callback'.toJS)
+            .callAsFunction(null, '300010'.toJS);
+      } else {
+        params
+            .getProperty<JSFunction>('callback'.toJS)
+            .callAsFunction(null, 'turnstile-token-${rendered.length}'.toJS);
+      }
+    }).toJS;
+    api['remove'] = ((JSString widget) {
+      removed++;
+    }).toJS;
+    globalContext['turnstile'] = api;
+  }
+
+  /// The option [name] the latest widget was rendered with.
+  String? option(String name) =>
+      rendered.last.getProperty<JSString?>(name.toJS)?.toDart;
+}
+
+/// The human check a request carried, as GoTrue reads it.
+Object? captchaOf(http.Request request) =>
+    (jsonDecode(request.body) as Map)['gotrue_meta_security'];
+
 void main() {
+  late TurnstileStub turnstile;
+
+  setUp(() {
+    turnstile = TurnstileStub()..install();
+    addTearDown(() => globalContext.delete('turnstile'.toJS));
+  });
+
   group('DeleteAccountForm', () {
+    testClient('runs the human check only when a code is asked for', (
+      tester,
+    ) async {
+      final seen = <http.Request>[];
+      await withApi(seen: seen, () async {
+        tester.pumpComponent(const DeleteAccountForm());
+        await tester.input(
+          find.byKey(const Key('email')),
+          value: 'alice@example.com',
+        );
+
+        expect(turnstile.rendered, isEmpty);
+
+        await tester.click(find.byKey(const Key('send-code')));
+        await pumpEventQueue();
+
+        expect(turnstile.rendered, hasLength(1));
+        // Invisible unless Cloudflare wants an interaction, run on submit.
+        expect(turnstile.option('execution'), 'execute');
+        expect(turnstile.option('appearance'), 'interaction-only');
+        expect(turnstile.option('language'), 'en');
+        expect(turnstile.option('sitekey'), isNotEmpty);
+        expect(captchaOf(seen.single), {'captcha_token': 'turnstile-token-1'});
+        // Single use: the widget goes once its token is spent.
+        expect(turnstile.removed, 1);
+      });
+    });
+
+    testClient('a failed human check sends nothing and offers a retry', (
+      tester,
+    ) async {
+      final seen = <http.Request>[];
+      turnstile.fails = true;
+      await withApi(seen: seen, () async {
+        tester.pumpComponent(const DeleteAccountForm());
+        await tester.input(
+          find.byKey(const Key('email')),
+          value: 'alice@example.com',
+        );
+        await tester.click(find.byKey(const Key('send-code')));
+        await pumpEventQueue();
+
+        expect(seen, isEmpty);
+        expect(find.textContaining('Something went wrong'), findsOneComponent);
+        expect(find.byKey(const Key('send-code')), findsOneComponent);
+        expect(turnstile.removed, 1);
+      });
+    });
+
+    testClient('a retry after a refused check carries a fresh token', (
+      tester,
+    ) async {
+      final seen = <http.Request>[];
+      await withApi(
+        seen: seen,
+        handler: (_) async => seen.length == 1
+            ? http.Response('{"error_code":"captcha_failed"}', 400)
+            : http.Response('{}', 200),
+        () async {
+          tester.pumpComponent(const DeleteAccountForm());
+          await tester.input(
+            find.byKey(const Key('email')),
+            value: 'alice@example.com',
+          );
+          await tester.click(find.byKey(const Key('send-code')));
+          await pumpEventQueue();
+
+          expect(
+            find.textContaining('Something went wrong'),
+            findsOneComponent,
+          );
+
+          await tester.click(find.byKey(const Key('send-code')));
+          await pumpEventQueue();
+
+          expect(seen.map(captchaOf), [
+            {'captcha_token': 'turnstile-token-1'},
+            {'captcha_token': 'turnstile-token-2'},
+          ]);
+          expect(find.textContaining('has an account'), findsOneComponent);
+        },
+      );
+    });
+
+    testClient("loads Cloudflare's script on the first request only", (
+      tester,
+    ) async {
+      final seen = <http.Request>[];
+      globalContext.delete('turnstile'.toJS);
+      await withApi(seen: seen, () async {
+        tester.pumpComponent(const DeleteAccountForm());
+        String? scriptSource() => web.document
+            .querySelector('script[src*="challenges.cloudflare.com"]')
+            ?.getAttribute('src');
+
+        expect(scriptSource(), isNull);
+
+        await tester.input(
+          find.byKey(const Key('email')),
+          value: 'alice@example.com',
+        );
+        await tester.click(find.byKey(const Key('send-code')));
+        await pumpEventQueue();
+
+        expect(
+          scriptSource(),
+          'https://challenges.cloudflare.com/turnstile/v0/api.js'
+          '?render=explicit',
+        );
+        expect(seen, isEmpty);
+
+        // What the script does once it ran: `window.turnstile` exists.
+        turnstile.install();
+        web.document
+            .querySelector('script[src*="challenges.cloudflare.com"]')!
+            .dispatchEvent(web.Event('load'));
+        await pumpEventQueue();
+
+        expect(captchaOf(seen.single), {'captcha_token': 'turnstile-token-1'});
+        web.document
+            .querySelector('script[src*="challenges.cloudflare.com"]')!
+            .remove();
+      });
+    });
+
     testClient('asks for a code, then deletes with the code', (tester) async {
       final seen = <http.Request>[];
       await withApi(seen: seen, () async {
@@ -377,6 +551,8 @@ void main() {
         await tester.click(find.byKey(const Key('send-code')));
         await pumpEventQueue();
 
+        // Cloudflare's check speaks the page's language, if it ever speaks.
+        expect(turnstile.option('language'), 'de');
         // Conditional, as in English: no enumeration oracle in any language.
         expect(
           find.textContaining('Wenn zu dieser Adresse ein Konto gehört'),

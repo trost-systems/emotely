@@ -18,6 +18,20 @@ const supabasePublishableKey = String.fromEnvironment(
   defaultValue: 'sb_publishable_di6BB76PPuuoDklt7jtI0w_KlwO_8JF',
 );
 
+/// The Cloudflare Turnstile widget's site key
+/// (`-DEMOTELY_TURNSTILE_SITE_KEY=…`), public like the publishable key: it
+/// only names the widget. Its secret half lives in the hosted project's
+/// auth config, where GoTrue checks every token with Cloudflare (#94).
+///
+/// The default is Cloudflare's published test key that always passes
+/// (developers.cloudflare.com/turnstile/troubleshooting/testing/), which
+/// hands out a dummy token only a test secret accepts: what a local stack
+/// verifies against.
+const turnstileSiteKey = String.fromEnvironment(
+  'EMOTELY_TURNSTILE_SITE_KEY',
+  defaultValue: '1x00000000000000000000AA',
+);
+
 /// The PostHog project token (`-DPOSTHOG_KEY=phc_…`), the same project as
 /// the app (ADR 0004). Empty means analytics off: no script is emitted.
 const posthogKey = String.fromEnvironment('POSTHOG_KEY');
