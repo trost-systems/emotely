@@ -92,10 +92,6 @@ class TurnstileStub() {
       rendered.last.getProperty<JSString?>(name.toJS)?.toDart;
 }
 
-/// The `<script>` that loads Cloudflare's Turnstile, if the page added one.
-web.Element? cloudflareScript() =>
-    web.document.querySelector('script[src*="challenges.cloudflare.com"]');
-
 /// The human check a request carried, as GoTrue reads it.
 Object? captchaOf(http.Request request) =>
     (jsonDecode(request.body) as Map)['gotrue_meta_security'];
@@ -198,27 +194,33 @@ void main() {
       (tester) async {
         final seen = <http.Request>[];
         globalContext.delete('turnstile'.toJS);
+        // What the page appends to <head> is kept here instead, so no
+        // request ever reaches Cloudflare from a test.
+        final appended = <web.Element>[];
+        final head = web.document.head!;
+        head['append'] = appended.add.toJS;
+        addTearDown(() => head.delete('append'.toJS));
         await withApi(seen: seen, () async {
           tester.pumpComponent(const DeleteAccountForm());
-
-          expect(cloudflareScript(), isNull);
-
           await tester.input(
             find.byKey(const Key('email')),
             value: 'alice@example.com',
           );
+
+          expect(appended, isEmpty);
+
           await tester.click(find.byKey(const Key('send-code')));
           await pumpEventQueue();
 
           expect(
-            cloudflareScript()?.getAttribute('src'),
+            appended.single.getAttribute('src'),
             'https://challenges.cloudflare.com/turnstile/v0/api.js'
             '?render=explicit',
           );
           expect(seen, isEmpty);
 
           // Blocked or offline: the check fails, and no code is asked for.
-          cloudflareScript()!.dispatchEvent(web.Event('error'));
+          appended.single.dispatchEvent(web.Event('error'));
           await pumpEventQueue();
 
           expect(seen, isEmpty);
@@ -226,7 +228,6 @@ void main() {
             find.textContaining('Something went wrong'),
             findsOneComponent,
           );
-          cloudflareScript()!.remove();
         });
       },
     );
