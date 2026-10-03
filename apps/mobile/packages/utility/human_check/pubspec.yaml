@@ -1,0 +1,15 @@
+name: human_check
+description: The proof that a person, not a script, is asking Supabase Auth for a mail or a sign-in — a Cloudflare Turnstile token in front of every captcha-protected call.
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  get_it: 9.2.1
+
+dev_dependencies:
+  analysis: any
+  flutter_test:
+    sdk: flutter

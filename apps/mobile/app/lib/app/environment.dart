@@ -45,6 +45,28 @@ const supabasePublishableKey = String.fromEnvironment(
   defaultValue: 'sb_publishable_di6BB76PPuuoDklt7jtI0w_KlwO_8JF',
 );
 
+/// The Cloudflare Turnstile widget's site key
+/// (`--dart-define=EMOTELY_TURNSTILE_SITE_KEY=…`), public like the
+/// publishable key: it only names the widget. Supabase Auth holds the
+/// secret half and checks every token with Cloudflare (#94). The web
+/// deletion page uses the same widget, since the project verifies against
+/// one secret.
+///
+/// The default is the production widget `emotely` (managed, domain
+/// getemotely.com). A build against a local Supabase stack, whose
+/// `config.toml` holds Cloudflare's always-pass test secret, passes
+/// Cloudflare's test site key `1x00000000000000000000AA` instead: its dummy
+/// token is the only one that secret accepts.
+const turnstileSiteKey = String.fromEnvironment(
+  'EMOTELY_TURNSTILE_SITE_KEY',
+  defaultValue: '0x4AAAAAAFM-YfLo___9K9cj',
+);
+
+/// The origin the hidden web view runs the check under. Nothing is loaded
+/// from it; Cloudflare only accepts a token from a hostname the widget
+/// lists, and the widget lists the site's domain.
+const turnstileOrigin = 'https://getemotely.com/';
+
 /// The smoke account (`--dart-define=SMOKE_EMAIL=…`), in a debug build only:
 /// the verification CLI (the run-app skill) signs in as it through the
 /// sign-in screen, and it has no mailbox to read a code from, so a debug
