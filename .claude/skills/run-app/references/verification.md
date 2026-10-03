@@ -103,8 +103,9 @@ The other kinds: `longtext_input.field` then `longtext_input.submit`;
 `rating_input.submit`; `emoji_input.slot.0`, `tap --text 😊` (the
 third-party picker has no keys) then `emoji_input.submit`;
 `color_input.slot.0`, `color_input.select` then `color_input.submit`.
-Discard what you open: the nightly live smoke starts a new session and fails
-on an unfinished one.
+Discard what you open: the on-device acceptance session starts a new
+session and fails on an unfinished one. (The nightly live smoke signs in
+as the probes' own account, not the smoke account.)
 
 ## The copies to post
 
