@@ -36,6 +36,7 @@ _EntryRecord _$EntryRecordFromJson(Map<String, dynamic> json) => _EntryRecord(
   questions: (json['questions'] as List<dynamic>)
       .map((e) => AskQuestion.fromJson(e as Map<String, dynamic>))
       .toList(),
+  journalDay: DateTime.parse(json['journal_day'] as String),
   createdAt: DateTime.parse(json['created_at'] as String),
 );
 
@@ -45,5 +46,6 @@ Map<String, dynamic> _$EntryRecordToJson(_EntryRecord instance) =>
       'summary': instance.summary,
       'answers': instance.answers.map((k, e) => MapEntry(k, e.toJson())),
       'questions': instance.questions.map((e) => e.toJson()).toList(),
+      'journal_day': instance.journalDay.toIso8601String(),
       'created_at': instance.createdAt.toIso8601String(),
     };

@@ -29,8 +29,10 @@ class const EntryPageView({required final String entryId, super.key})
       appBar: AppBar(
         title: Text(switch (state) {
           EntryReady(:final record) =>
-            // Month, day and year: a journal spans years.
-            MaterialLocalizations.of(context).formatShortDate(record.createdAt),
+            // The day the entry is about (#158). Month, day and year: a
+            // journal spans years.
+            MaterialLocalizations.of(context)
+                .formatShortDate(record.journalDay),
           EntryLoading() || EntryFailure() => context.l10n.entryScreenTitle,
         }),
       ),

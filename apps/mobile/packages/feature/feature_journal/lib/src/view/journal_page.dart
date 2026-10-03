@@ -180,8 +180,9 @@ class const _EntryTile({required final EntryRecord record})
   Widget build(BuildContext context) => ListTile(
     key: JournalView.entryKey(record.id),
     title: Text(
-      // Month, day and year: a journal spans years.
-      MaterialLocalizations.of(context).formatShortDate(record.createdAt),
+      // The day the entry is about (#158). Month, day and year: a journal
+      // spans years.
+      MaterialLocalizations.of(context).formatShortDate(record.journalDay),
     ),
     subtitle: Text(
       record.summary,

@@ -20,14 +20,17 @@ Map<String, Object?> sessionRow({
   'questions': [for (final question in questions) question.toJson()],
   'app_version': '1.0.0',
   'created_at': '2026-09-07T20:00:00+00:00',
+  'journal_day': '2026-09-07',
   'updated_at': '2026-09-07T20:05:00+00:00',
 };
 
-/// An `entries` row as Supabase returns it.
+/// An `entries` row as Supabase returns it, filed at [createdAt] and about
+/// the date of [journalDay] (the date of [createdAt] in UTC when not given).
 Map<String, Object?> entryRow({
   required String id,
   required String summary,
   required DateTime createdAt,
+  DateTime? journalDay,
   Map<String, Answer> answers = const {},
   List<AskQuestion> questions = const [],
 }) => {
@@ -40,4 +43,12 @@ Map<String, Object?> entryRow({
   ),
   'questions': [for (final question in questions) question.toJson()],
   'created_at': createdAt.toUtc().toIso8601String(),
+  'journal_day': _dateLiteral(journalDay ?? createdAt.toUtc()),
 };
+
+/// The `YYYY-MM-DD` literal Postgres emits for a `date` column.
+String _dateLiteral(DateTime day) => [
+  day.year.toString().padLeft(4, '0'),
+  day.month.toString().padLeft(2, '0'),
+  day.day.toString().padLeft(2, '0'),
+].join('-');

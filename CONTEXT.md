@@ -73,6 +73,16 @@ The durable artifact a session produces: the summary passed to
 which is the conversation that produced it. German: der Eintrag; all of a
 user's entries together are the journal, das Tagebuch.
 
+## Journal day
+
+The day a **journal entry** is about, and the date the journal shows and
+sorts it by: the local calendar date on the device when its **session**
+started, where a session started before 04:00 belongs to the day before.
+Fixed once the session starts, so it does not change with a later resume,
+another device or a trip to another time zone. Not when the entry was
+filed, which only orders entries within the same day (#158). German: der
+Tag.
+
 ## Onboarding
 
 The steps a new user walks on the device before they have an account, from

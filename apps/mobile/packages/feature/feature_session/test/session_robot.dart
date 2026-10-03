@@ -31,6 +31,9 @@ class SessionRobot(
   /// sets a context before or during the session.
   final userContext = FakeUserContextSource();
 
+  /// The device's clock as the session reads it; a test moves it.
+  var clock = DateTime(2026, 10, 3, 9);
+
   Finder get thinking => find.byType(CircularProgressIndicator);
   Finder get question => find.byKey(SessionView.questionKey);
   Finder get answerInput => find.byType(AnswerInput);
@@ -51,7 +54,7 @@ class SessionRobot(
       supabase: supabaseStub,
       analytics: analytics,
     );
-    registerSession(GetIt.I);
+    registerSession(GetIt.I, now: () => clock);
     GetIt.I.registerSingleton<UserContextSource>(userContext);
     return featureUnderTest(
       routes: [$sessionRoute],
