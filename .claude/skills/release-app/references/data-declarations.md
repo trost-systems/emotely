@@ -2,10 +2,22 @@
 
 App Store Connect (App Privacy) and Play Console (Data safety) each ask which
 data types the app collects, and a reviewer compares the answers with the
-notice at `https://getemotely.com/app-privacy`. Both consoles are human-facing
-forms; an agent edits them in Chrome. **App Store Connect needs Peter signed
-in** in that Chrome profile: a signed-out session is his to sign in to, never
-the agent's. Play Console stays signed in.
+notice at `https://getemotely.com/app-privacy`.
+
+**Play Data safety lives in the repository**:
+`apps/mobile/app/fastlane/data_safety.csv`, the file the Play Console's
+**App content → Data safety → Export to CSV** produces. A change merged to
+`main` is written to Play by the `play-data-safety` workflow (`fastlane
+android data_safety`, `POST applications/{pkg}/dataSafety`), and the upload
+**replaces every answer**: change the CSV, never the form. Until the first
+export is committed, the workflow skips with a notice and the form below is
+still the truth. The tables in this file describe what the CSV must say;
+when they and the CSV disagree, the CSV is what Play has.
+
+App Store Connect's App Privacy has no API for an API key and stays a form:
+an agent edits it in Chrome. **App Store Connect needs Peter signed in** in
+that Chrome profile: a signed-out session is his to sign in to, never the
+agent's. Play Console stays signed in.
 
 ## What is declared
 
