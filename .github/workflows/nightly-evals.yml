@@ -26,19 +26,38 @@ jobs:
   live-smoke:
     runs-on: ubuntu-latest
     environment: ci
+    # id-token: the keyless sign-in below, through GitHub's OIDC token.
+    permissions:
+      contents: read
+      id-token: write
     env:
       SUPABASE_URL: ${{ vars.SUPABASE_URL }}
       SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
-      SMOKE_EMAIL: ${{ secrets.SMOKE_EMAIL }}
-      SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # The probe's Google ID token, keyless: workload identity federation
+      # from this workflow on main to the zero-role service account
+      # signin-probe in emotely-ci, for our Google web client (the first id
+      # of [auth.external.google] in supabase/config.toml). Auth's ID-token
+      # grant takes it without a captcha, and the before-user-created hook
+      # lets this one service account have an account (#304, ADR 0008).
+      - id: probe
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.PROBE_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.PROBE_SERVICE_ACCOUNT }}
+          token_format: id_token
+          id_token_audience: 928057308670-ak9h2h5h8s9rpsgcgto30uf5ecg4thq6.apps.googleusercontent.com
+          id_token_include_email: true
+          create_credentials_file: false
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Full session against the DEPLOYED endpoint as the smoke user, plus
-      # anonymous / tamper / forgery probes (all must be 401).
+      # Full session against the DEPLOYED endpoint as the probe's account,
+      # plus anonymous / tamper / forgery probes (all must be 401).
       - run: pnpm --filter @emotely/agent smoke
+        env:
+          PROBE_ID_TOKEN: ${{ steps.probe.outputs.id_token }}

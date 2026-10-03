@@ -27,7 +27,7 @@ name: Nightly performance budget
 on:
   schedule:
     # After the nightly evals (03:00) and their live smoke, which signs in
-    # as the same smoke account the latency probe uses.
+    # as the same probe account the latency probe uses.
     - cron: "30 4 * * *"
   workflow_dispatch:
     inputs:
@@ -97,10 +97,12 @@ jobs:
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # The smoke account, for the latency probe.
+    # The Supabase variables, for the latency probe.
     environment: ci
+    # id-token: the probe's keyless sign-in, through GitHub's OIDC token.
     permissions:
       contents: read
+      id-token: write
       issues: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -111,12 +113,24 @@ jobs:
           path: samples
       # Over its ceilings, latency fails the gate below, which reads
       # latency.json; a probe that breaks is reported on its own.
+      # The probe's Google ID token, keyless, as for the nightly live smoke
+      # (nightly-evals.yml says why). A failure here leaves the latency step
+      # without a token, and that step reports the broken probe.
+      - id: probe
+        continue-on-error: true
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.PROBE_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.PROBE_SERVICE_ACCOUNT }}
+          token_format: id_token
+          id_token_audience: 928057308670-ak9h2h5h8s9rpsgcgto30uf5ecg4thq6.apps.googleusercontent.com
+          id_token_include_email: true
+          create_credentials_file: false
       - name: Latency of the deployed backend
         id: latency
         continue-on-error: true
         env:
-          SMOKE_EMAIL: ${{ secrets.SMOKE_EMAIL }}
-          SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
+          PROBE_ID_TOKEN: ${{ steps.probe.outputs.id_token }}
         run: |
           mkdir -p samples/latency
           bash .claude/skills/run-app/scripts/perf.sh latency samples/latency

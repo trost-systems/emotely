@@ -12,7 +12,7 @@
 set -euo pipefail
 
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# The smoke account, its lock and the secrets handling are run-app.sh's;
+# The account lock and the secrets handling are run-app.sh's;
 # sourcing it defines them and runs nothing.
 # shellcheck source=SCRIPTDIR/run-app.sh
 source "$SCRIPTS_DIR/run-app.sh"
@@ -28,6 +28,11 @@ AVD_IMAGE="${EMOTELY_AVD_IMAGE:-system-images;android-34;google_apis;$([[ "$(una
 # public (ADR 0010); the latency probe signs in and reads with them.
 SUPABASE_URL="https://khfkszlujgkfjgnawdlf.supabase.co"
 SUPABASE_PUBLISHABLE_KEY="sb_publishable_di6BB76PPuuoDklt7jtI0w_KlwO_8JF"
+# The latency probe signs in as this service account in the emotely-ci
+# Google Cloud project, with a Google ID token for the web client of
+# supabase/config.toml's [auth.external.google] (ADR 0008, #304).
+PROBE_SERVICE_ACCOUNT="signin-probe@emotely-ci.iam.gserviceaccount.com"
+GOOGLE_WEB_CLIENT_ID="928057308670-ak9h2h5h8s9rpsgcgto30uf5ecg4thq6.apps.googleusercontent.com"
 # Supabase reads and agent rounds per latency measurement.
 READ_SAMPLES=20
 AGENT_SAMPLES=5
@@ -48,9 +53,12 @@ Usage: perf.sh <command>
                    and judge the run against the budget. Exits 1 over budget.
                    Prints the verdict; the run directory holds summary.md,
                    result.json, requests.json and each path's timeline.
-  latency <dir>    Measure the deployed backend as the smoke account:
-                   $READ_SAMPLES Supabase reads and $AGENT_SAMPLES agent first rounds, into
-                   <dir>/latency.json. Takes the smoke account's lock.
+  latency <dir>    Measure the deployed backend as the probe's account
+                   ($PROBE_SERVICE_ACCOUNT, signed in with a Google ID
+                   token: PROBE_ID_TOKEN, or minted with the gcloud config
+                   in ~/.config/emotely/gcloud): $READ_SAMPLES Supabase reads and
+                   $AGENT_SAMPLES agent first rounds, into <dir>/latency.json. Takes that
+                   account's lock.
   gate <dir>... --env <name>
                    Judge a run directory again (after editing the budget),
                    or the median of several runs of one commit.
@@ -72,7 +80,7 @@ Options for run:
   --latency        Also measure the deployed backend (see latency).
 
 The fake backend inside the app is made up (ADR 0005); the latency probe
-reads the smoke account's own rows and prints only timings.
+reads the probe account's own rows and prints only timings.
 EOF
 }
 
@@ -196,7 +204,46 @@ cmd_run() {
 
 # --- latency --------------------------------------------------------------------
 
-# latency <dir>: the deployed backend as the smoke account, from here. The
+# probe_id_token <secrets dir>: a Google ID token for the probe's service
+# account, audience our Google web client. CI hands one over (PROBE_ID_TOKEN,
+# minted keyless by google-github-actions/auth); locally it is minted through
+# IAM Credentials with the emotely gcloud config, whose account needs
+# roles/iam.serviceAccountOpenIdTokenCreator on the service account.
+probe_id_token() {
+  if [[ -n "${PROBE_ID_TOKEN:-}" ]]; then
+    printf '%s' "$PROBE_ID_TOKEN"
+    return
+  fi
+  local config="$HOME/.config/emotely/gcloud" token
+  [[ -d "$config" ]] ||
+    die "no probe token: set PROBE_ID_TOKEN, or sign in to $config (CLOUDSDK_CONFIG) with an account that may mint ID tokens for $PROBE_SERVICE_ACCOUNT"
+  printf 'header = "Authorization: Bearer %s"\n' "$(CLOUDSDK_CONFIG="$config" gcloud auth print-access-token)" \
+    >"$1/gcp.curl" || die "gcloud could not give an access token from $config"
+  token="$(curl -sS --fail -K "$1/gcp.curl" -H 'content-type: application/json' \
+    --data "$(jq -cn --arg a "$GOOGLE_WEB_CLIENT_ID" '{audience: $a, includeEmail: true}')" \
+    "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$PROBE_SERVICE_ACCOUNT:generateIdToken" |
+    jq -r '.token // empty')" || die "could not mint an ID token for $PROBE_SERVICE_ACCOUNT"
+  [[ -n "$token" ]] || die "IAM Credentials returned no ID token for $PROBE_SERVICE_ACCOUNT"
+  printf '%s' "$token"
+}
+
+# sign_in_probe <secrets dir>: the probe's Supabase access token, through
+# Auth's ID-token grant. Not a password grant: under the auth captcha (#94)
+# that needs a human check, and the ID-token grant needs none (#304). The
+# before-user-created hook lets this one service account have an account.
+sign_in_probe() {
+  local id_token token
+  id_token="$(probe_id_token "$1")"
+  jq -n --arg t "$id_token" '{provider: "google", id_token: $t}' >"$1/grant.json"
+  printf 'header = "apikey: %s"\n' "$SUPABASE_PUBLISHABLE_KEY" >"$1/grant.curl"
+  token="$(curl -sS --fail -K "$1/grant.curl" -H 'Content-Type: application/json' \
+    --data @"$1/grant.json" "$SUPABASE_URL/auth/v1/token?grant_type=id_token" |
+    jq -r '.access_token // empty')" || die "the probe's ID-token grant failed"
+  [[ -n "$token" ]] || die "the probe's ID-token grant returned no token"
+  printf '%s' "$token"
+}
+
+# latency <dir>: the deployed backend as the probe's account, from here. The
 # journal list and an entry, read the way the app reads them, and the
 # agent's first round of a new session: the time to its first byte (the
 # gate) and to its last (tracked). The agent answers a round in one piece,
@@ -205,11 +252,9 @@ cmd_latency() {
   STEP="latency"
   local out="${1:?latency needs a run directory}"
   local lock_pid=$$
-  # The CI runner passes the account in its environment; locally it comes
-  # from the agent's .env.local, as for run-app.sh.
-  if [[ -z "${SMOKE_EMAIL:-}" || -z "${SMOKE_PASSWORD:-}" ]]; then
-    read_smoke_account
-  fi
+  # One latency run at a time on the probe's account, as run-app.sh holds
+  # the smoke account; account_lock keys on SMOKE_EMAIL.
+  SMOKE_EMAIL="$PROBE_SERVICE_ACCOUNT"
   SESSION="perf-$(new_session_id "$REPO")"
   take_account_lock "$lock_pid"
   LOCKED_ACCOUNT="$(account_lock)"
@@ -218,14 +263,9 @@ cmd_latency() {
   SECRETS_DIR="$secrets"
   chmod 700 "$secrets"
 
-  jq -n --arg email "$SMOKE_EMAIL" --arg password "$SMOKE_PASSWORD" \
-    '{email: $email, password: $password}' >"$secrets/grant.json"
-  printf 'header = "apikey: %s"\n' "$SUPABASE_PUBLISHABLE_KEY" >"$secrets/supabase.curl"
   local token
-  token="$(curl -sS --fail -K "$secrets/supabase.curl" -H 'Content-Type: application/json' \
-    --data @"$secrets/grant.json" "$SUPABASE_URL/auth/v1/token?grant_type=password" |
-    jq -r '.access_token // empty')" || die "the smoke account's password grant failed"
-  [[ -n "$token" ]] || die "the smoke account's password grant returned no token"
+  token="$(sign_in_probe "$secrets")" || exit 2
+  printf 'header = "apikey: %s"\n' "$SUPABASE_PUBLISHABLE_KEY" >"$secrets/supabase.curl"
   printf 'header = "Authorization: Bearer %s"\n' "$token" >>"$secrets/supabase.curl"
   printf 'header = "Authorization: Bearer %s"\n' "$token" >"$secrets/agent.curl"
 
@@ -305,7 +345,7 @@ cmd_gate() {
   # One run per JSON value, through a file: the pooled frame times of a few
   # runs are more than an argument list holds.
   for run in "${runs[@]}"; do run_json "$run"; done >"$out/runs.json"
-  # Measured only where a run had the smoke account (`perf.sh latency`).
+  # Measured only where a run measured latency (`perf.sh latency`).
   for run in "${runs[@]}"; do
     if [[ -f "$run/latency.json" ]]; then
       latency="$(jq -s . "$run/latency.json")"
@@ -345,7 +385,7 @@ cmd_baseline() {
 }
 
 # Whatever this command took, given back however it ends: the secrets, the
-# smoke account and the emulator it booted.
+# account lock and the emulator it booted.
 OWN_EMULATOR=0
 LOCKED_ACCOUNT=""
 SECRETS_DIR=""
@@ -373,4 +413,7 @@ perf_main() {
   esac
 }
 
-perf_main "$@"
+# Sourced by its tests, it defines everything and runs nothing.
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  perf_main "$@"
+fi
