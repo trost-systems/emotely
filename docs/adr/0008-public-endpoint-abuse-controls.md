@@ -165,3 +165,84 @@ them. The commands above are the recovery procedure.
   abuse it can support is bandwidth against a cached static body — the rule
   above and the edge cache are the whole defense, and they are proportionate
   to it.
+
+## Amendment 2026-10-03: the auth endpoints get a human check (#94)
+
+Everything above guards the agent on Vercel. Supabase Auth's public routes
+go straight to `*.supabase.co` and were guarded only by GoTrue's own rate
+limits: `sign_in_sign_ups` (30 per 5 min per IP) and `email_sent` (30 per
+hour, **project-wide**). One script from one address could spend the hourly
+mail cap in minutes, after which no real sign-in code and no deletion code
+went out for the rest of the hour; and `/otp` with `create_user: false`
+answers 422 for an unknown address and 200 for a known one, so account
+existence was readable by anyone with the publishable key.
+
+**Decision: Supabase Auth's CAPTCHA, with Cloudflare Turnstile.** GoTrue
+checks a Turnstile token with Cloudflare before `/otp`, `/signup`,
+`/recover`, `/resend`, `/magiclink` and the password grant — for every
+client, so neither the app nor the web page can be skipped. Verifying a
+code, refreshing a session and the Google/Apple ID-token grant are not
+checked. A token is single-use and lapses after five minutes, so every
+protected call fetches a fresh one:
+
+| Caller | How it gets a token |
+| --- | --- |
+| App | `HumanCheck.guard` (`human_check` utility) runs the call with a token from `TurnstileChallenges`: Cloudflare's managed widget in a `webview_flutter` web view under the site's origin, which `TurnstileHost` shows over the navigator, transparent unless Cloudflare asks for a tap |
+| Web deletion page | `apps/web/lib/turnstile_web.dart` loads Cloudflare's script on the first "Send me a code" and runs a managed widget that is invisible unless Cloudflare wants an interaction |
+| Local stack | `supabase/config.toml` holds Cloudflare's always-pass test secret; builds against it pass the test site key |
+
+One widget (`emotely`, managed, domain `getemotely.com`) serves both
+callers, because the project verifies against a single secret
+(`TURNSTILE_SECRET_KEY` in the `ci` environment, deployed by
+`supabase-deploy` from `main` like `SMTP_PASS`, ADR 0010). The site key is
+public and lives in each caller's build configuration.
+
+What it buys: every code mail and every probe of the 422-vs-200 answer now
+costs a solved Turnstile challenge, which a script cannot mint in bulk.
+`email_sent` stays at 30 per hour as the safety net behind it. A per-address
+throttle in a `send_email` hook was considered and deferred: it cannot tell
+the app from the web page, and the check removes the cheap burst it would
+have caught.
+
+Rollout, so that nothing breaks in between: the web page and the app send
+tokens first (GoTrue ignores them while the captcha is off), the app's
+first such version (2.0.1) reaches the beta tracks, and only then does one
+merge switch the captcha on in production and raise `MIN_APP_VERSION` to
+2.0.1, so an older build is sent to the update screen instead of failing at
+sign-in.
+
+What it costs:
+
+- **Cloudflare becomes a recipient**: the IP address, TLS fingerprint and
+  user agent of whoever asks, and Cloudflare uses those signals for its own
+  bot detection as a controller (its Turnstile privacy addendum). Both
+  privacy notices say so; the consent wording is untouched, because the
+  check never sees a journal.
+- **Every password grant needs a token too**, including the store reviewer
+  accounts (through the app, unchanged for them) and every script that
+  signs in with a password: the nightly live smoke, the latency probe, and
+  `run-app.sh`'s credential check. None of them can solve a challenge, and
+  GoTrue's only bypass is a service-role key, which ADR 0010 keeps out of
+  CI. How they sign in under enforcement is
+  [#304](https://github.com/trost-systems/emotely/issues/304), and the
+  captcha is not switched on in production before it is settled.
+- **The free plan is sized for it**: unlimited challenges and siteverify
+  calls, 20 widgets, 10 hostnames per widget.
+
+Verified after the deploy that switches it on, from any machine, with the
+publishable key and an address that has an account:
+
+```bash
+# No token, then Cloudflare's public dummy token: both 400 captcha_failed,
+# and no mail arrives.
+curl -s -o /dev/null -w '%{http_code}\n' -H "apikey: $KEY" -H 'content-type: application/json' \
+  -d '{"email":"test@getemotely.com","create_user":false}' "$URL/auth/v1/otp"
+curl -s -o /dev/null -w '%{http_code}\n' -H "apikey: $KEY" -H 'content-type: application/json' \
+  -d '{"email":"test@getemotely.com","create_user":false,"gotrue_meta_security":{"captcha_token":"XXXX.DUMMY.TOKEN.XXXX"}}' \
+  "$URL/auth/v1/otp"
+# A burst of 40 such requests (above the hourly cap of 30), then a real
+# sign-in from the app: its code still arrives, so the burst spent nothing.
+```
+
+The same 400 answers an unknown address, so the 422-vs-200 oracle needs a
+solved challenge per probe.

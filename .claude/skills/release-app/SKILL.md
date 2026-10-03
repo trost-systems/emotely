@@ -213,7 +213,13 @@ trigger an email (`apps/mobile/packages/feature/feature_auth/lib/src/review_acco
 - `app-store-review@getemotely.com`
 
 The app shows a password step for exactly these addresses (trimmed,
-case-insensitive) and calls `signInWithPassword`; the accounts exist only on
+case-insensitive) and calls `signInWithPassword`, with a Cloudflare
+Turnstile token from a web view that stays invisible unless Cloudflare
+asks for a tap (then a checkbox appears at the bottom), since the hosted
+project demands
+one on every password grant (#94; a reviewer's
+`sign_in_password_failed` burst can also be a failed check, error
+`HumanCheckFailed` or `captcha_failed` in PostHog); the accounts exist only on
 the server, the app has no sign-up path. **The accounts must exist before the
 addresses are public** (in a store build or a console): they do, both were
 created on the hosted project through the Auth admin API on 2026-09-13.

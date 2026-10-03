@@ -210,11 +210,21 @@ token_verifications = 30
 # Number of Web3 logins that can be made in a 5 minute interval per IP address.
 web3 = 30
 
-# Configure one of the supported captcha providers: `hcaptcha`, `turnstile`.
-# [auth.captcha]
-# enabled = true
-# provider = "hcaptcha"
-# secret = ""
+# The human check (#94, ADR 0008): Auth refuses a code request, a password
+# sign-in, a sign-up and a password recovery unless the request carries a
+# Cloudflare Turnstile token that verifies with Cloudflare. Verifying a code,
+# refreshing a session and the Google/Apple ID-token grant are not checked.
+#
+# Locally this is Cloudflare's published always-pass test secret, which
+# accepts only the dummy token of the test site key `1x00000000000000000000AA`
+# (pass it as EMOTELY_TURNSTILE_SITE_KEY to an app or site pointed at the
+# local stack). Local Auth still calls Cloudflare's siteverify, so it needs
+# the internet. The hosted project overrides the secret only, in
+# [remotes.production] at the end of this file.
+[auth.captcha]
+enabled = true
+provider = "turnstile"
+secret = "1x0000000000000000000000000000000AA"
 
 [auth.email]
 # Allow/disallow new user signups via email to your project.
@@ -456,3 +466,11 @@ sender_name = "emotely"
 # Per hour. Resend's free tier caps sending at 100 a day; this keeps a burst
 # of sign-ins well inside it while still being far above real use.
 email_sent = 30
+
+# The production widget `emotely` (managed, getemotely.com)'s secret, from the
+# GitHub `ci` environment as TURNSTILE_SECRET_KEY, created and stored blind
+# with the widget (#94). Everything else in [auth.captcha] comes from above:
+# remotes merge key by key. An unresolved env() is silently not pushed, so
+# the deploy job refuses to start without the variable.
+[remotes.production.auth.captcha]
+secret = "env(TURNSTILE_SECRET_KEY)"
