@@ -15,6 +15,11 @@ enum SignInGrant() {
 /// says when and the app says how: it implements this in its composition
 /// root and registers it as a singleton; a test fakes it.
 abstract class SignInGrants() {
+  /// Whether [revoke] will show Apple's sheet: the account signs in with
+  /// Apple and this device has the sheet (iOS). The confirmation says so
+  /// first, so the sheet does not come as a surprise.
+  bool get asksApple;
+
   /// Revokes every grant the signed-in account holds, and answers those
   /// still in place — the user dismissed a provider's sheet, the device had
   /// no way to ask (Apple on Android), or the provider refused. Never

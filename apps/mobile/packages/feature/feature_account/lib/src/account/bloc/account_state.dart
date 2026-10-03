@@ -3,8 +3,10 @@ part of 'account_bloc.dart';
 /// Where the deletion stands; the screen renders exactly one step per state.
 @freezed
 sealed class AccountState with _$AccountState {
-  /// Nothing asked yet: the screen offers to delete the account.
-  const factory idle() = AccountIdle;
+  /// Nothing asked yet: the screen offers to delete the account. When
+  /// [asksApple], deleting will show Apple's sheet first (#193), and the
+  /// confirmation says so.
+  const factory idle({@Default(false) bool asksApple}) = AccountIdle;
 
   /// The account is being deleted.
   const factory deleting() = AccountDeleting;

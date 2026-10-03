@@ -76,13 +76,17 @@ class ProviderSignIn({required final GoogleClientIds google}) {
     await GoogleSignIn.instance.signOut();
   }
 
+  /// Whether this device has Apple's native sheet: iOS only. Android
+  /// would need a browser redirect, which the app does not offer.
+  static bool get hasAppleSheet => defaultTargetPlatform == TargetPlatform.iOS;
+
   /// A fresh authorization code from Apple's sheet, for the agent to revoke
   /// the account's grant with (#193); null if the user dismissed the sheet
   /// or the platform has no native one (Android). It asks for nothing about
   /// the user: the code is all revocation needs. Single-use, and valid for
   /// five minutes.
   Future<String?> appleAuthorizationCode() async {
-    if (defaultTargetPlatform != TargetPlatform.iOS) {
+    if (!hasAppleSheet) {
       return null;
     }
     try {

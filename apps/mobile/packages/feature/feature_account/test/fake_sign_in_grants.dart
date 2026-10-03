@@ -6,6 +6,7 @@ import 'package:feature_account/feature_account.dart';
 class FakeSignInGrants({
   final Set<SignInGrant> left = const {},
   final void Function()? onRevoke,
+  @override final bool asksApple = false,
 }) extends SignInGrants {
   /// How often the feature asked for the grants to be revoked.
   var revocations = 0;

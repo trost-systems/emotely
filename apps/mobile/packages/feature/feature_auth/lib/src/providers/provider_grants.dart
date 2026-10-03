@@ -23,6 +23,12 @@ class ProviderGrants({
   required final AgentClient _agent,
   required final ErrorReporter _errors,
 }) {
+  /// Whether [revoke] will show Apple's sheet: the account signs in with
+  /// Apple, and this device has the sheet.
+  bool get asksApple =>
+      ProviderSignIn.hasAppleSheet &&
+      _linked().contains(IdentityProvider.apple);
+
   /// Revokes every grant the signed-in account holds, and answers the
   /// providers whose grant is still in place: the user dismissed a sheet,
   /// the device had no way to ask, or the provider or the agent refused.

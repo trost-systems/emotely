@@ -8,6 +8,9 @@ import 'package:feature_auth/feature_auth.dart';
 class const AppSignInGrants(final ProviderGrants _grants)
     implements SignInGrants {
   @override
+  bool get asksApple => _grants.asksApple;
+
+  @override
   Future<Set<SignInGrant>> revoke() async => {
     for (final provider in await _grants.revoke())
       switch (provider) {

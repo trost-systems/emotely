@@ -176,6 +176,25 @@ void main() {
       });
     }
 
+    for (final asksApple in [true, false]) {
+      testWidgets('the confirmation says Apple will ask once more: '
+          '$asksApple', (tester) async {
+        final robot = robotWith(
+          tester,
+          grants: FakeSignInGrants(asksApple: asksApple),
+        );
+        await robot.launch();
+
+        await robot.askToDelete();
+
+        expect(robot.confirmation, findsOneWidget);
+        expect(
+          find.text(tester.strings.accountConfirmationAppleNote),
+          asksApple ? findsOneWidget : findsNothing,
+        );
+      });
+    }
+
     testWidgets('asks the providers once, however often deletion is retried', (
       tester,
     ) async {
