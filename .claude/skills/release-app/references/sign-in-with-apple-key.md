@@ -39,8 +39,10 @@ is a 500 on every call, never a silent skip. The app treats any failure as
 "not revoked": it deletes the account anyway and tells the user where to
 remove emotely from their Apple Account.
 
-A human backup of the `.p8` sits in the login keychain as
-`emotely_siwa_key_<KEY_ID>_base64`, like the App Store Connect API key.
+**No backup is kept.** The Vercel environment holds the only copy. Nothing
+is encrypted or signed with the key that outlives a request, so a lost key
+costs nothing to replace: create a new one and follow
+[Rotating it](#rotating-it).
 
 ## Creating it (human step: production access)
 
@@ -59,13 +61,12 @@ A human backup of the `.p8` sits in the login keychain as
    printf %s VCZSHMZY25 | vercel env add APPLE_TEAM_ID production
    printf %s de.emotely.emotely | vercel env add APPLE_CLIENT_ID production
    printf %s 'sb_publishable_…' | vercel env add SUPABASE_PUBLISHABLE_KEY production
-   security add-generic-password -U -a "$USER" \
-     -s 'emotely_siwa_key_<KEY_ID>_base64' -w "$(base64 -i "$key")"
    rm -P "$key"
    ```
 
    The first line checks the shape and prints only the length (a P-256
-   `.p8` is about 250 bytes).
+   `.p8` is about 250 bytes). The downloaded file is deleted once stored:
+   no copy is kept outside Vercel.
 4. Redeploy production (`vercel redeploy <current-production-deployment-url>`;
    the Ignored Build Step skips commits that touch no agent input).
 5. Verify by behavior, not by reading the value back:
@@ -92,8 +93,8 @@ own client secret, so the new key works from the deployment that carries it.
 2. `vercel env update APPLE_SIGN_IN_KEY production < new.p8` and
    `printf %s '<NEW_KEY_ID>' | vercel env update APPLE_SIGN_IN_KEY_ID production`,
    then redeploy and verify as above.
-3. **Revoke the old key** in the portal and delete its keychain item. A leak
-   is closed only once the old key is revoked.
+3. **Revoke the old key** in the portal. A leak is closed only once the old
+   key is revoked.
 
 Revocations in the window between steps 2 and 3 are unaffected; a deletion
 in the seconds of a redeploy that fails is told so in the app, like any
@@ -105,4 +106,21 @@ The route needs a live Supabase session and revokes only the Apple ID linked
 to that account, so it cannot be used on anyone else's grant. It still gets
 its own WAF rate-limit rule
 ([ADR 0008](../../../../docs/adr/0008-public-endpoint-abuse-controls.md)):
-a real user calls it once, when they delete their account.
+a real user calls it once, when they delete their account. The rule lives
+on the Vercel project, not in the repository; it is added once, after the
+route is deployed, from `apps/agent`:
+
+```bash
+vercel firewall rules add "Rate limit revoke-apple" \
+  --project emotely-agent \
+  --condition '{"type":"path","op":"eq","value":"/api/revoke-apple"}' \
+  --action rate_limit --rate-limit-window 60 --rate-limit-requests 10 \
+  --rate-limit-keys ip --rate-limit-action rate_limit --yes
+vercel firewall diff --project emotely-agent      # review
+vercel firewall publish --project emotely-agent   # make live
+```
+
+The nightly live smoke (`pnpm --filter @emotely/agent smoke`) makes two
+calls to the route — one anonymous (401) and one signed in without a code
+(400) — well inside the limit, and fails on a 500, which is what a missing
+variable or a key that will not load looks like.

@@ -172,6 +172,35 @@ for (const platform of ["ios", "android"]) {
   }
 }
 
+// Sign in with Apple revocation (#193). The function throws at cold start
+// when any of its variables is missing (the Apple key above all), which a
+// user only meets as "emotely may still be listed" after deleting their
+// account — so the probe is that it answers at all. Without a token it must
+// refuse with 401; with one and no code, with 400 before Supabase or Apple
+// is asked. A 500 here means a variable is missing or the key will not load.
+async function revokeApple(authorization?: string): Promise<Response> {
+  return await fetch(`${BASE}/api/revoke-apple`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...(authorization === undefined ? {} : { authorization }),
+    },
+    body: JSON.stringify({}),
+  });
+}
+const revokeAnonymous = await revokeApple();
+if (revokeAnonymous.status !== 401) {
+  throw new Error(
+    `revoke-apple did not refuse an anonymous caller: ${revokeAnonymous.status}`,
+  );
+}
+const revokeWithoutCode = await revokeApple(`Bearer ${accessToken}`);
+if (revokeWithoutCode.status !== 400) {
+  throw new Error(
+    `revoke-apple did not refuse a request without a code: ${revokeWithoutCode.status}`,
+  );
+}
+
 console.log(
-  `# live-smoke OK: ${askedOrder.length} questions, summary ${res.entry.summary.length} chars, 401s verified (anonymous, tampered, forged), config min ${config.min_app_version}`,
+  `# live-smoke OK: ${askedOrder.length} questions, summary ${res.entry.summary.length} chars, 401s verified (anonymous, tampered, forged, revoke-apple), config min ${config.min_app_version}`,
 );
