@@ -413,6 +413,17 @@ test_none_leaves_a_body_without_a_section_alone() {
   [[ "$(cat "${work}/out.md")" == "$(cat "${work}/clean.md")" ]] || fail "none changes nothing in a clean body"
 }
 
+test_a_body_that_only_mentions_the_marker_has_no_section() {
+  local tick=$'\x60'
+  printf "The section sits between %s%s%s and %s%s%s.\n" "${tick}" "${MARK_START}" "${tick}" "${tick}" "${MARK_END}" "${tick}" >"${work}/mentions.md"
+  if has_section "${work}/mentions.md"; then
+    fail "a marker quoted inside a line is not a section"
+  fi
+  splice_section "${work}/mentions.md" "${work}/section.md" >"${work}/out.md"
+  grep -qF 'The section sits between' "${work}/out.md" || fail "the line quoting the marker stays"
+  [[ "$(markers_in "${work}/out.md")" == 2 ]] || fail "insert adds one section beside the quote: got $(cat "${work}/out.md")"
+}
+
 test_handles_a_body_edited_in_the_browser() {
   printf 'Top.\r\n\r\n%s\r\nOLD\r\n%s\r\n' "${MARK_START}" "${MARK_END}" >"${work}/crlf.md"
   has_section "${work}/crlf.md" || fail "finds the section in a CRLF body"

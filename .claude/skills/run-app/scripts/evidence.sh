@@ -418,7 +418,9 @@ render_section() {
     -f "$EVIDENCE_SCRIPTS/evidence-section.jq" "$1"
 }
 
-has_section() { tr -d '\r' <"$1" | grep -qF "$MARK_START"; }
+# A section starts at the start of a line; a marker quoted in a sentence is
+# not one.
+has_section() { tr -d '\r' <"$1" | grep -q "^$MARK_START"; }
 
 # Prints its arguments as lines, without leading or trailing blank lines.
 lines() {
