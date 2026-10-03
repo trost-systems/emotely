@@ -435,6 +435,11 @@ void main() {
       // a bcrypt hash of the password, never the password.
       expect(find.textContaining('a password you choose'), findsComponents);
       expect(find.textContaining('one-way hash'), findsComponents);
+      // The password-changed security notification (supabase/config.toml).
+      expect(
+        find.textContaining('the address gets a mail saying so'),
+        findsComponents,
+      );
       expect(find.textContaining('six-digit code'), findsComponents);
       expect(find.textContaining('no password, no link'), findsNothing);
       expect(
@@ -965,6 +970,10 @@ void main() {
         findsComponents,
       );
       expect(find.textContaining('Einweg-Hash'), findsComponents);
+      expect(
+        find.textContaining('bekommt die Adresse eine Mail darüber'),
+        findsComponents,
+      );
       expect(find.textContaining('sechsstelligen Code'), findsComponents);
       expect(find.textContaining('kein Passwort, kein Link'), findsNothing);
       expect(
