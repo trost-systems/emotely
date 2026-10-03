@@ -62,10 +62,11 @@ and Peter's iCloud Passwords.
   (`category`, `purposes`, `data_protections` per data type). What each
   answer means and why: the release-app skill's
   `references/data-declarations.md`.
-- **Not yet in the repository.** The first run creates it: with Peter signed
-  in, read **App Store Connect → App Privacy** and write every data type,
-  its purposes and its linkage into the JSON; Peter reviews it in the pull
-  request. Until then the console is the truth.
+- Eight data types, all linked, none used for tracking: read from App Store
+  Connect on 2026-10-03, then corrected to what the code does (#290).
+  `fastlane/test` checks every id is one App Store Connect knows and holds
+  the expected purposes per type, so a purpose changes in the test and the
+  file together; the console follows after the merge.
 - **Console**: App Store Connect → App Privacy → Edit, per data type.
   Alternatively Peter runs, in his own terminal (it asks for his Apple ID
   and 2FA, which no agent enters):
@@ -77,6 +78,13 @@ and Peter's iCloud Passwords.
   Linked to You"** panel. Editing a type's purposes resets its linkage to
   "not linked" silently: click the linkage answer on every edit, even when
   it looks right.
+- **Adding a purpose takes two publishes** (seen 2026-10-03 on User ID,
+  Other User Content and Other Diagnostic Data): the first **Publish**
+  stores the new purpose as "not linked" even with **Yes, linked** checked,
+  and the type shows up under both panels. Open the same type again — its
+  linkage question now reads **No** — select **Yes** (check the radio's
+  state with `javascript_tool`, not by eye), click through, **Publish**
+  again, and reload until the "Data Not Linked to You" panel is gone.
 
 ### Play App access (reviewer sign-in)
 
