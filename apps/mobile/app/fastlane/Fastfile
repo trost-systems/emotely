@@ -42,6 +42,9 @@
 # Inputs, all environment variables (secrets of the `release` environment):
 #   APP_STORE_CONNECT_API_KEY_ID / _ISSUER_ID / _API_KEY_P8   the ASC API key
 #   MATCH_PASSWORD                                            match encryption
+#   APP_REVIEW_DEMO_PASSWORD / APP_REVIEW_CONTACT_PHONE       App Review
+#                                                             information
+#                                                             (ios metadata)
 #   PLAY_SERVICE_ACCOUNT_JSON                                 Play upload account
 #   POSTHOG_KEY                                               analytics token
 #   BUILD_NUMBER                                              monotonic build id
@@ -53,6 +56,7 @@
 
 require_relative "lib/play_review_guard"
 require_relative "lib/app_store_listing"
+require_relative "lib/app_review_information"
 
 # The rebuild starts at 2.0.0 (ADR 0012): the legacy app got to 1.21.15.
 BUILD_NAME = "2.0.0"
@@ -90,6 +94,11 @@ APP_DIR = File.expand_path("..", FastlaneCore::FastlaneFolder.path)
 # The store listings, English and German, in deliver's layout; Play's under
 # android/ in supply's. scripts/store-listing-check.sh guards their limits.
 METADATA_DIR = File.join(FastlaneCore::FastlaneFolder.path, "metadata")
+
+# App Review information for Apple's reviewer, without its secrets (see
+# fastlane/lib/app_review_information.rb). Outside metadata/ because deliver
+# would read a review_information/ folder there itself.
+APP_REVIEW_DIR = File.join(FastlaneCore::FastlaneFolder.path, "app_review")
 
 def flutter(*args)
   require "shellwords"
@@ -338,10 +347,32 @@ platform :ios do
       # precheck's in-app purchase check needs an Apple ID, not an API key,
       # and nothing is submitted here.
       run_precheck_before_submit: false
-      # Deliberately absent: review information (it holds the demo account's
-      # password and stays in App Store Connect), App Privacy (Apple takes it
-      # through the console only) and screenshots.
+      # Deliberately absent: review information (set below, not through
+      # deliver, whose summary would print the phone number), App Privacy
+      # (Apple takes it through the console only) and screenshots.
     )
+
+    # App Review information: files in fastlane/app_review plus the demo
+    # password and contact phone from secrets. Without the secrets the
+    # listing still goes up and the review detail stays as it is, with a
+    # notice; deliver would otherwise mark the demo account as not required.
+    begin
+      review = AppReviewInformation.attributes(APP_REVIEW_DIR)
+    rescue AppReviewInformation::Missing => e
+      AppStoreListing.notice(e.message, title: "App Review information not updated")
+      next
+    end
+    detail = begin
+      version.fetch_app_store_review_detail
+    rescue StandardError
+      nil
+    end
+    if detail
+      detail.update(attributes: review)
+    else
+      version.create_app_store_review_detail(attributes: review)
+    end
+    UI.success(AppReviewInformation.describe(review))
   end
 end
 

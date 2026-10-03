@@ -2,7 +2,8 @@ name: Store listings
 
 # Uploads the App Store and Play listings kept in
 # apps/mobile/app/fastlane/metadata (English and German) with the `metadata`
-# lanes: listing text, keywords, URLs and categories only. No build, no
+# lanes: listing text, keywords, URLs and categories, and the App Review
+# information in apps/mobile/app/fastlane/app_review. No build, no
 # screenshots, no release notes, nothing submitted for review.
 #
 # Runs when a change to the listings reaches main, and by hand:
@@ -21,6 +22,7 @@ on:
     branches: [main]
     paths:
       - 'apps/mobile/app/fastlane/metadata/**'
+      - 'apps/mobile/app/fastlane/app_review/**'
   workflow_dispatch:
     inputs:
       store:
@@ -59,6 +61,8 @@ jobs:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+          APP_REVIEW_DEMO_PASSWORD: ${{ secrets.APP_REVIEW_DEMO_PASSWORD }}
+          APP_REVIEW_CONTACT_PHONE: ${{ secrets.APP_REVIEW_CONTACT_PHONE }}
 
   play:
     if: inputs.store != 'app-store'

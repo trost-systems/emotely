@@ -94,7 +94,9 @@ The README version badges are fed by the `status` job; how they work and how to 
 ## Secrets (`release` environment on trost-systems/emotely)
 
 Set blind, never echoed: `gh secret set NAME -R trost-systems/emotely --env release < file`.
-The list is in ADR 0013. `PLAY_SERVICE_ACCOUNT_JSON` is the JSON key of
+The list is in ADR 0013, plus `APP_REVIEW_DEMO_PASSWORD` and
+`APP_REVIEW_CONTACT_PHONE` for the App Review information (see
+[What the consoles say](#what-the-consoles-say)). `PLAY_SERVICE_ACCOUNT_JSON` is the JSON key of
 `google-play-upload-konto@pc-api-5174249003608815741-70.iam.gserviceaccount.com`.
 
 The environment only deploys from **`main`** (a custom deployment branch
@@ -258,9 +260,9 @@ created on the hosted project through the Auth admin API on 2026-09-13.
 
 ### What the consoles say
 
-The consoles hold text saved on 2026-09-13 for the build that opened on
-sign-in. **Replace it with the text below in the first store submission of
-the onboarding build (#204)**: that build opens on the usage-analytics
+The Play Console holds text saved on 2026-09-13 for the build that opened
+on sign-in. **Replace it with the text below in the first store submission
+of the onboarding build (#204)**: that build opens on the usage-analytics
 question and Welcome, not on sign-in, and asks a reviewer account without a
 name for one, once.
 
@@ -277,23 +279,24 @@ this is 494):
 > journaling. Delete: More > Delete account > Delete account > Delete. It
 > really deletes the account; email peter@petertrost.com to recreate it.
 
-**App Store Connect → version → App Review Information → Sign-in
-required.** User name `app-store-review@getemotely.com`, the password above,
-Notes:
+**App Store Connect → version → App Review Information** is no longer a
+console step: the repository holds it and the `ios metadata` lane sets it
+on the version in preparation, with the listing (see
+[Store listings](#store-listings-english-and-german)).
 
-> Demo account for review. Open the app and answer the usage-analytics
-> question either way (Don’t allow or Allow). On Welcome, tap I have an
-> account, enter the user name above as the email address and tap Send me a
-> code. Because this address is a designated reviewer account, the app asks
-> for a password instead of sending a one-time code; enter the password
-> above. Regular users sign in with a one-time code sent by email, or with
-> Apple or Google. If the app asks what to call you, type any name or skip.
-> Before the first session the app asks for explicit consent to send the
-> conversation to an AI provider (GDPR Art. 9): tick the box and tap Start
-> journaling. It is not asked again. Account deletion: More -> Delete
-> account -> Delete account -> Delete. Deleting the demo account really
-> deletes it; if it no longer signs in, contact peter@petertrost.com and we
-> recreate it within the hour.
+- `apps/mobile/app/fastlane/app_review/`: `first_name`, `last_name`,
+  `email_address` (contact), `demo_user` and `notes` (≤ 4000 characters,
+  English; `fastlane/test` fails the build otherwise). Change the notes there
+  when the path a reviewer walks changes.
+- **The demo password and the contact phone are secrets** of the `release`
+  environment, `APP_REVIEW_DEMO_PASSWORD` and `APP_REVIEW_CONTACT_PHONE`,
+  never files. The lane PATCHes `appStoreReviewDetails` itself (deliver's
+  summary would print the phone) and logs only which fields it set. Without
+  either secret it leaves the review detail alone and says so in a notice.
+- Rotating the reviewer password (`scripts/reviewer-accounts.sh` in this
+  skill) means
+  updating the secret too, blind:
+  `gh secret set APP_REVIEW_DEMO_PASSWORD -R trost-systems/emotely --env release < file`.
 
 ## App Store Connect prep for a new version
 
@@ -375,8 +378,8 @@ aborted) and copy the text over by hand.
 
 **Still console steps**, which no lane touches: App Privacy and Data safety
 ([references/data-declarations.md](references/data-declarations.md)), Play's
-privacy policy URL, screenshots and graphics, App Review information and
-Play's sign-in details ([What the consoles say](#what-the-consoles-say)).
+privacy policy URL, screenshots and graphics (#266), and Play's sign-in
+details ([What the consoles say](#what-the-consoles-say)).
 
 ## Local tooling
 

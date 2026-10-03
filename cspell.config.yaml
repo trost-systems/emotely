@@ -15,6 +15,7 @@ files:
   # set, each wording under its language key (overrides below).
   - "apps/agent/src/default-question-set.ts"
   - "apps/mobile/app/fastlane/metadata/**/*.txt"
+  - "apps/mobile/app/fastlane/app_review/*.txt"
 import:
   - "@cspell/dict-de-de/cspell-ext.json"
 dictionaryDefinitions:
@@ -64,6 +65,8 @@ overrides:
       - "**/l10n/*_en.arb"
       - "**/fastlane/metadata/en-US/*.txt"
       - "**/fastlane/metadata/android/en-US/**/*.txt"
+      # App Review information, read by Apple's reviewer in English.
+      - "**/fastlane/app_review/*.txt"
     language: en-US
     # The App Store keywords' abbreviation for cognitive behavioral therapy.
     words: [cbt]
