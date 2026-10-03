@@ -110,9 +110,11 @@ class const PrivacyDe({super.key}) extends StatelessComponent {
       li([
         strong([.text('Resend')]),
         .text(
-          ' verschickt von Servern in der EU zwei E-Mails: die, in der du '
-          'deine Adresse bestätigen sollst, und später die, die dir sagt, '
-          'dass dein Platz frei ist.',
+          ' verschickt unsere E-Mails von Servern in der EU: die, in der du '
+          'deine Adresse bestätigen sollst, später die, die dir sagt, dass '
+          'dein Platz frei ist, und nur wenn sich etwas Wesentliches daran '
+          'ändert, was mit deiner Adresse geschieht, eine Mitteilung, bevor '
+          'es wirksam wird (Art. 6 Abs. 1 lit. c DSGVO).',
         ),
       ]),
       li([
@@ -215,7 +217,9 @@ class const PrivacyDe({super.key}) extends StatelessComponent {
         'nachvollziehbar bleibt, was sich wann geändert hat. Ändert sich '
         'etwas Wesentliches daran, was mit deiner Adresse geschieht, '
         'erfährst du es per E-Mail, bevor es wirksam wird, statt es hier '
-        'selbst bemerken zu müssen.',
+        'selbst bemerken zu müssen. Diese E-Mail erfüllt unsere Pflicht, '
+        'dich zu informieren (Art. 12 bis 14 DSGVO); ihre Rechtsgrundlage '
+        'ist Art. 6 Abs. 1 lit. c DSGVO.',
       ),
     ]),
 
