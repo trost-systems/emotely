@@ -85,6 +85,7 @@ mixin _EmailSignIn on Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     final email = event.email.trim();
+    _chosen = (email: email, password: event.password);
     emit(AuthState.checking(email: email));
     unawaited(_analytics.signUpRequested());
     try {
@@ -191,7 +192,15 @@ mixin _EmailSignIn on Bloc<AuthEvent, AuthState> {
     }
   }
 
-  /// The confirmation code, which opens the new account.
+  /// The address and password of the last sign-up on this screen, kept
+  /// only until its confirmation code opens the account. GoTrue keeps an
+  /// unconfirmed account's *first* password when the address signs up
+  /// again, so the app sets the one typed last ([_onConfirmationSubmitted]).
+  ({String email, String password})? _chosen;
+
+  /// The confirmation code, which opens the new account, then the password
+  /// typed last for it. GoTrue answers `same_password` in the ordinary
+  /// case, which changes nothing and mails nothing.
   Future<void> _onConfirmationSubmitted(
     AuthConfirmationSubmitted event,
     Emitter<AuthState> emit,
@@ -202,13 +211,22 @@ mixin _EmailSignIn on Bloc<AuthEvent, AuthState> {
       purpose: CodePurpose.confirmAccount,
     )) {
       emit(AuthState.checkingCode(email: email, purpose: purpose));
+      final Session session;
       try {
-        final session = await _verify(email, event.code, OtpType.signup);
-        _passwordAccepted(session.user, emit);
+        session = await _verify(email, event.code, OtpType.signup);
       } on Exception catch (error, stackTrace) {
         unawaited(_errors.codeVerifyFailed(error, stackTrace));
         unawaited(_analytics.confirmationCodeRejected());
         _codeRefused(email, purpose, error, emit);
+        return;
+      }
+      final chosen = _chosen;
+      _chosen = null;
+      if (chosen != null && chosen.email == email) {
+        await _savePassword(email, session.user, chosen.password, emit);
+      } else {
+        // Confirmed from a sign-in: the password typed there already works.
+        _passwordAccepted(session.user, emit);
       }
     }
   }
@@ -234,7 +252,13 @@ mixin _EmailSignIn on Bloc<AuthEvent, AuthState> {
         _codeRefused(email, purpose, error, emit);
         return;
       }
-      await _savePassword(email, session.user, event.newPassword, emit);
+      await _savePassword(
+        email,
+        session.user,
+        event.newPassword,
+        emit,
+        reset: true,
+      );
     }
   }
 
@@ -274,16 +298,18 @@ mixin _EmailSignIn on Bloc<AuthEvent, AuthState> {
     ),
   );
 
-  /// Sets [password] on [user]'s account, which a reset code signed in,
-  /// and lets them in. The same password as before is set already. Any
-  /// other failure keeps the user on the screen to try again: they are
-  /// signed in, but an account that never had a password still has none.
+  /// Sets [password] on [user]'s account, which a code signed in, and lets
+  /// them in. The same password as before is set already. Any other
+  /// failure keeps the user on the screen to try again: they are signed
+  /// in, but an account may not have the password they chose. [reset] says
+  /// it is a reset's password, for analytics.
   Future<void> _savePassword(
     String email,
     User user,
     String password,
-    Emitter<AuthState> emit,
-  ) async {
+    Emitter<AuthState> emit, {
+    bool reset = false,
+  }) async {
     try {
       await _supabase.auth.updateUser(UserAttributes(password: password));
     } on Exception catch (error, stackTrace) {
@@ -292,7 +318,9 @@ mixin _EmailSignIn on Bloc<AuthEvent, AuthState> {
         return;
       }
       unawaited(_errors.passwordSaveFailed(error, stackTrace));
-      unawaited(_analytics.passwordResetFailed());
+      if (reset) {
+        unawaited(_analytics.passwordResetFailed());
+      }
       emit(
         AuthState.newPasswordRequired(
           email: email,

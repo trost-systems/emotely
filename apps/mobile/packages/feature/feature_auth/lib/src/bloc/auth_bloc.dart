@@ -168,16 +168,17 @@ class AuthBloc({
   /// Supabase's own view of the session, which wins: a sign-out, an expiry
   /// or a deleted account ends the signed-in state wherever the UI is.
   ///
-  /// Except while a reset code has signed the account in to set its new
-  /// password: the session is real, but the user is not past the screen
-  /// until the password is saved ([_savePassword]).
+  /// Except while a code has signed the account in and its password is
+  /// still being set (a reset's new one, or a new account's typed last):
+  /// the session is real, but the user is not past the screen until the
+  /// password is saved ([_savePassword]).
   void _onSessionChanged(AuthSessionChanged event, Emitter<AuthState> emit) {
     switch ((event.userId, event.identity)) {
       case (final userId?, final identity?):
         if (state case AuthSignedIn(userId: final current)
             when current == userId) {
           _stillSignedIn(userId, identity, emit);
-        } else if (!_resettingPassword) {
+        } else if (!_settingPassword) {
           _signed(userId, identity, emit);
         }
       case _:
@@ -187,8 +188,8 @@ class AuthBloc({
     }
   }
 
-  bool get _resettingPassword => switch (state) {
-    AuthCheckingCode(purpose: CodePurpose.resetPassword) ||
+  bool get _settingPassword => switch (state) {
+    AuthCheckingCode() ||
     AuthNewPasswordRequired() ||
     AuthSavingPassword() => true,
     _ => false,

@@ -69,6 +69,95 @@ void main() {
       expect(await robot.kept(), SignInOption.email);
     });
 
+    group('keeps the password typed last', () {
+      const first = 'the first long password';
+      const last = 'the last long password';
+      const passwordChange = 'PUT /auth/v1/user';
+
+      // GoTrue keeps an unconfirmed account's first password when the
+      // address signs up again; the app sets the one typed last once the
+      // confirmation code has opened the account.
+      Future<SignInRobot> signUpTwice(
+        WidgetTester tester,
+        SupabaseStub supabase,
+      ) async {
+        final robot = robotFor(tester, supabase);
+        await robot.launch();
+        await robot.submitCredentials(password: first);
+        await robot.tapChangeEmail();
+        await robot.submitCredentials(password: last);
+        await robot.confirmWith();
+        return robot;
+      }
+
+      testWidgets('once the code opens the account', (tester) async {
+        final supabase = SupabaseStub()
+          ..script(
+            signUp: [accountCreated(), accountCreated()],
+            verify: [sessionGranted()],
+          );
+
+        final robot = await signUpTwice(tester, supabase);
+
+        expect(
+          robot.posted('user').where((body) => body.containsKey('password')),
+          [
+            {'password': last},
+          ],
+        );
+        expect(robot.home, findsOneWidget);
+      });
+
+      testWidgets('and lets in an account that has it already', (tester) async {
+        // The ordinary case: GoTrue answers that nothing changed.
+        final supabase = SupabaseStub()
+          ..script(
+            signUp: [accountCreated(), accountCreated()],
+            verify: [sessionGranted()],
+          )
+          ..rest(passwordChange, [
+            authRefused(
+              statusCode: 422,
+              errorCode: 'same_password',
+              message: 'New password should be different from the old one.',
+            ),
+          ]);
+
+        final robot = await signUpTwice(tester, supabase);
+
+        expect(robot.home, findsOneWidget);
+        expect(robot.analytics.exceptions, isEmpty);
+      });
+
+      testWidgets('or asks for it again when it could not be set', (
+        tester,
+      ) async {
+        final supabase = SupabaseStub()
+          ..script(
+            signUp: [accountCreated(), accountCreated()],
+            verify: [sessionGranted()],
+          )
+          ..rest(passwordChange, [authUnreachable()]);
+
+        final robot = await signUpTwice(tester, supabase);
+
+        expect(robot.signIn, findsOneWidget);
+        expect(
+          find.text(robot.strings.newPasswordPrompt(SupabaseStub.email)),
+          findsOneWidget,
+        );
+        robot.expectError(
+          SignInProblem.unreachable,
+          robot.strings.unreachableMessage,
+        );
+        // Not a failed reset: no one asked for one.
+        expect(
+          robot.analytics.events.map((captured) => captured['event']),
+          isNot(contains('password_reset_failed')),
+        );
+      });
+    });
+
     testWidgets('signs in at once when the project confirms no addresses', (
       tester,
     ) async {
