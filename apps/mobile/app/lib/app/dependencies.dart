@@ -26,8 +26,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// exercises the production graph with fake edges.
 ///
 /// Everything registered here is user-agnostic and lives for the process;
-/// blocs are factories. Nothing is lazy: a dependency that cannot be built
-/// fails the launch, not the first screen that needs it.
+/// blocs are factories, and so is the session's user context, which lives
+/// as long as the session bloc that asks it. Nothing is lazy: a dependency
+/// that cannot be built fails the launch, not the first screen that needs
+/// it.
 ///
 /// [passwordAccounts] are the addresses beyond the store review accounts
 /// that sign in with a password: the smoke account in a debug build the
@@ -93,9 +95,13 @@ void _registerRecords(GetIt getIt, SupabaseClient supabase) {
 /// The app's side of each feature's navigator, next to the features, of
 /// the session's question of who the user is, and of what a deleted
 /// account leaves on this device.
+///
+/// The user context is a factory, like the bloc that asks it: it remembers
+/// the user's profile for one session (#264), and nothing per-user may
+/// outlive a screen, so each session gets its own and closes it.
 void _registerSeams(GetIt getIt) => getIt
-  ..registerSingleton<UserContextSource>(
-    AppUserContextSource(profiles: getIt(), errors: getIt()),
+  ..registerFactory<UserContextSource>(
+    () => AppUserContextSource(profiles: getIt(), errors: getIt()),
   )
   ..registerSingleton<AccountDeviceData>(AppAccountDeviceData(getIt()))
   ..registerSingleton<AccountNavigator>(const AppAccountNavigator())

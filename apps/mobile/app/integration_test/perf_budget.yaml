@@ -43,10 +43,10 @@ requests:
   # Start a session and answer 16 rating questions.
   session_round:
     # Consent check, clear + create the session, 16 saved rounds, and the
-    # profile before each of the 17 agent rounds: the app's UserContextSource
-    # reads the name afresh for every round's user_context (#210). #264
-    # reads it once per session, which brings this down to 20.
-    supabase: 36
+    # profile once for the session's user_context: the app's
+    # UserContextSource reads it on the first round and remembers it for
+    # the other 16 (#264; it was read before every round, 36 in all).
+    supabase: 20
     agent: 17 # the first round, then one per answer
 
 # The deployed backend, measured from the runner as the smoke account

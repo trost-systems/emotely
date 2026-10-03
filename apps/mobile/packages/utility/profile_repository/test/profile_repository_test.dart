@@ -105,6 +105,53 @@ void main() {
       });
     });
 
+    group('saved', () {
+      test('tells every listener the profile as each save left it '
+          '(#264)', () async {
+        supabase.always(profileSave, rowsChanged());
+        final first = <Profile>[];
+        final second = <Profile>[];
+        repository.saved.listen(first.add);
+        repository.saved.listen(second.add);
+
+        await repository.saveDisplayName(_name('Peter'));
+        await repository.saveDisplayName(_name('Pebble'), isPlaceholder: true);
+        await pumpEventQueue();
+
+        const saves = [
+          Profile(displayName: 'Peter', nameIsPlaceholder: false),
+          Profile(displayName: 'Pebble', nameIsPlaceholder: true),
+        ];
+        expect(first, saves);
+        expect(second, saves);
+      });
+
+      test('says nothing of a save Supabase refused', () async {
+        supabase.rest(profileSave, [restRefused()]);
+        final saves = <Profile>[];
+        repository.saved.listen(saves.add);
+
+        await expectLater(
+          repository.saveDisplayName(_name('Peter')),
+          throwsA(isA<PostgrestApiException>()),
+        );
+        await pumpEventQueue();
+
+        expect(saves, isEmpty);
+      });
+
+      test('keeps nothing for a listener that comes later', () async {
+        supabase.rest(profileSave, [rowsChanged()]);
+        await repository.saveDisplayName(_name('Peter'));
+        final saves = <Profile>[];
+
+        repository.saved.listen(saves.add);
+        await pumpEventQueue();
+
+        expect(saves, isEmpty);
+      });
+    });
+
     group('signIn', () {
       test('is nothing while nobody is signed in', () {
         expect(repository.signIn(), isNull);

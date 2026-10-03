@@ -73,7 +73,10 @@ hand-rolled widgets.
   of seam: an abstract source the app implements and registers next to
   the navigators. The session's `UserContextSource` (who the user is, for
   the agent) is implemented in `lib/app/user_context.dart`, over
-  the profile repository; the account's `AccountDeviceData` (what a
+  the profile repository. It is the one seam registered as a factory: it
+  remembers the profile for one session (#264), so each session bloc gets
+  its own and closes it, which keeps the user's data no longer than the
+  screen. The account's `AccountDeviceData` (what a
   deleted account leaves on the device, today sign-in's "Last used"
   method) in `lib/app/account_device_data.dart`.
 - Build-time values (`--dart-define`s) are read and validated in the app

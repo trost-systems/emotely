@@ -3,6 +3,8 @@
 // so the warning is silenced here rather than globally.
 // ignore_for_file: experimental_member_use
 
+import 'dart:async';
+
 import 'package:profile_repository/src/display_name.dart';
 import 'package:profile_repository/src/profile.dart';
 import 'package:profile_repository/src/sign_in_identity.dart';
@@ -15,7 +17,20 @@ import 'package:supabase_schema/supabase_schema.dart';
 ///
 /// It keeps nothing between calls. It is a singleton for the process, and
 /// a profile held here would outlive the user who signed out (ADR 0015).
-class const ProfileRepository({required final SupabaseClient supabase}) {
+/// Whoever keeps a profile for a while, for no longer than a screen, hears
+/// of the app's own renames through [saved] instead.
+class ProfileRepository({required final SupabaseClient supabase}) {
+  // Synchronous, so every listener has the new profile before the save
+  // returns: the round that follows a rename can never miss it.
+  final _saved = StreamController<Profile>.broadcast(sync: true);
+
+  /// Every profile [saveDisplayName] saves from here on, told before the
+  /// save returns, so a screen that keeps the profile it read learns of a
+  /// rename made in the app without asking Supabase again (#264). A rename
+  /// made on another device is not among them: only a read sees it.
+  /// Nothing is kept for a listener that comes later.
+  Stream<Profile> get saved => _saved.stream;
+
   /// The user's profile, or nothing when they have none yet: an account
   /// that came in without a name, until the name step writes one.
   Future<Profile?> profile() async {
@@ -30,7 +45,7 @@ class const ProfileRepository({required final SupabaseClient supabase}) {
 
   /// Names the user [name], creating their profile if there is none;
   /// [isPlaceholder] when the app chose it on Skip. Returns the profile as
-  /// it now stands.
+  /// it now stands, and tells [saved] the same.
   ///
   /// An upsert on the user's key, which the server fills in: the app never
   /// sends its own id, and never the timestamps, which are the server's
@@ -48,7 +63,12 @@ class const ProfileRepository({required final SupabaseClient supabase}) {
           ),
           onConflict: [Profiles.userId],
         );
-    return Profile(displayName: name.value, nameIsPlaceholder: isPlaceholder);
+    final profile = Profile(
+      displayName: name.value,
+      nameIsPlaceholder: isPlaceholder,
+    );
+    _saved.add(profile);
+    return profile;
   }
 
   /// Who is signed in and how, from the session on this device; nothing
