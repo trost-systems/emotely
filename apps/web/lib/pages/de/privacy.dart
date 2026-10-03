@@ -68,6 +68,20 @@ class const PrivacyDe({super.key}) extends StatelessComponent {
         ),
       ]),
       li([
+        strong([.text('Die Prüfung auf der Löschseite')]),
+        .text(
+          ': nur auf der Löschseite, und dort erst, sobald du einen Code '
+          'anforderst, prüft Cloudflare Turnstile im Hintergrund, dass ein '
+          'Mensch und kein Skript fragt, bevor ein Code verschickt wird. '
+          'Rechtsgrundlage: unser berechtigtes Interesse, Skripte davon '
+          'abzuhalten, Fremden Codes zu schicken und die Anmelde-E-Mails '
+          'aufzubrauchen, auf die alle echten Nutzer angewiesen sind (Art. 6 '
+          'Abs. 1 lit. f DSGVO). Was die Prüfung in deinem Browser liest, ist '
+          'für die Löschung, um die du gebeten hast, unbedingt erforderlich '
+          'und braucht daher keine Einwilligung (§ 25 Abs. 2 Nr. 2 TDDDG).',
+        ),
+      ]),
+      li([
         strong([.text('Besuchszählung')]),
         .text(
           ': wie viele Menschen die Website besuchen und sich eintragen, pro '
@@ -92,7 +106,7 @@ class const PrivacyDe({super.key}) extends StatelessComponent {
     h2(id: 'processors', [.text('Wer die Daten verarbeitet')]),
     p([
       .text(
-        'Vier Anbieter verarbeiten Daten für uns nach '
+        'Fünf Anbieter verarbeiten Daten für uns nach '
         'Auftragsverarbeitungsverträgen (Art. 28 DSGVO). Wo die '
         'Muttergesellschaft eines Anbieters außerhalb der EU sitzt, stützt '
         'sich die Übermittlung auf die Standardvertragsklauseln der EU (Art. '
@@ -133,14 +147,34 @@ class const PrivacyDe({super.key}) extends StatelessComponent {
           'aufgerufen hast und woher der Link kam, nie deine E-Mail-Adresse.',
         ),
       ]),
+      li([
+        strong([.text('Cloudflare')]),
+        .text(
+          ' führt die Prüfung auf der Löschseite durch (Turnstile). Es liest, '
+          'was es braucht, um einen Menschen von einem Skript zu '
+          'unterscheiden – deine IP-Adresse, den TLS-Fingerabdruck und den '
+          'User-Agent deines Browsers und welche Website fragt –, und '
+          'antwortet mit einem Einmal-Token, das unser Anmeldesystem bei '
+          'Cloudflare bestätigt. Cloudflare nutzt diese Signale außerdem als '
+          'eigener Verantwortlicher, um seine Bot-Erkennung zu verbessern, '
+          'wie es sein ',
+        ),
+        a(href: 'https://www.cloudflare.com/turnstile-privacy-policy/', [
+          .text('Turnstile-Datenschutzzusatz'),
+        ]),
+        .text(' beschreibt. Deine E-Mail-Adresse sieht es nie.'),
+      ]),
     ]),
     p([
       .text(
         'Die Schriften, Icons und Bilder werden von dieser Website selbst '
-        'ausgeliefert, nicht von Google oder einem anderen Dritten; das '
-        'einzige fremde Skript ist das von PostHog, geladen von dessen '
-        'Servern in der EU. Auf dieser Website werden keine Cookies, keine '
-        'Tracking-Pixel und nichts im Browser Gespeichertes verwendet.',
+        'ausgeliefert, nicht von Google oder einem anderen Dritten. Zwei '
+        'fremde Skripte werden geladen: das von PostHog, von dessen Servern '
+        'in der EU, und das von Cloudflare, nur auf der Löschseite, sobald '
+        'du einen Code anforderst. Die Website selbst setzt keine Cookies '
+        'und verwendet keine Tracking-Pixel; gespeichert werden kann in '
+        'deinem Browser nur, was die Prüfung von Cloudflare dort braucht, '
+        'auf der Löschseite.',
       ),
     ]),
 
@@ -152,7 +186,9 @@ class const PrivacyDe({super.key}) extends StatelessComponent {
         'eintritt; unbestätigt ist sie nach einer Woche weg. Die IP-Adresse '
         'ist nach einem Tag weg. Anfrageprotokolle sind nach kurzer Zeit '
         'weg. Besuchszählungen sind zusammengefasst und lassen sich nicht '
-        'auf dich zurückführen.',
+        'auf dich zurückführen. Das Token aus der Prüfung auf der Löschseite '
+        'ist nach wenigen Minuten verbraucht, und was Cloudflare von einer '
+        'Prüfung behält, behält es so, wie sein Zusatz es beschreibt.',
       ),
     ]),
     p([

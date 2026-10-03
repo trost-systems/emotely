@@ -11,6 +11,9 @@ void main() {
   // Shaped like an access token, obviously not one (a secret scanner reads
   // this): three dot-separated segments, no signature over anything.
   const accessToken = 'header.payload.not-a-signature';
+  // What Turnstile hands the page once the visitor passed its check;
+  // GoTrue verifies it with Cloudflare before it sends a mail.
+  const captcha = 'turnstile-token';
 
   group('requestDeletionCode', () {
     test('asks for a code without ever creating an account', () async {
@@ -25,6 +28,7 @@ void main() {
         email: 'alice@example.com',
         supabaseUrl: supabase,
         publishableKey: key,
+        captchaToken: captcha,
       );
 
       expect(outcome, CodeRequestOutcome.sent);
@@ -37,6 +41,8 @@ void main() {
       expect(jsonDecode(seen!.body), {
         'email': 'alice@example.com',
         'create_user': false,
+        // Where GoTrue reads the human check from (#94).
+        'gotrue_meta_security': {'captcha_token': captcha},
       });
     });
 
@@ -58,6 +64,7 @@ void main() {
           email: 'nobody@example.com',
           supabaseUrl: supabase,
           publishableKey: key,
+          captchaToken: captcha,
         );
 
         expect(outcome, CodeRequestOutcome.sent);
@@ -74,8 +81,28 @@ void main() {
         email: 'alice@example.com',
         supabaseUrl: supabase,
         publishableKey: key,
+        captchaToken: captcha,
       );
       expect(outcome, CodeRequestOutcome.tooMany);
+    });
+
+    test('a refused human check is retryable, with a fresh token', () async {
+      // GoTrue's answer to a missing, spent or forged Turnstile token.
+      final client = MockClient(
+        (_) async => http.Response(
+          '{"error_code":"captcha_failed",'
+          '"msg":"captcha protection: request disallowed"}',
+          400,
+        ),
+      );
+      final outcome = await requestDeletionCode(
+        client,
+        email: 'alice@example.com',
+        supabaseUrl: supabase,
+        publishableKey: key,
+        captchaToken: captcha,
+      );
+      expect(outcome, CodeRequestOutcome.failed);
     });
 
     test('any other status or a network error is retryable', () async {
@@ -89,6 +116,7 @@ void main() {
           email: 'alice@example.com',
           supabaseUrl: supabase,
           publishableKey: key,
+          captchaToken: captcha,
         );
         expect(outcome, CodeRequestOutcome.failed);
       }

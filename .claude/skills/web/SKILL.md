@@ -119,14 +119,24 @@ attempt.
 
 `create_user: false` makes GoTrue answer 422 `otp_disabled` for an unknown
 address and 200 for a known one; both map to `sent` and the copy is
-conditional ("if that address has an account"). That does **not** close the
-oracle and the page is not what opens it — `/auth/v1/otp` is public, the
-app's own sign-in calls it the same way, and a scripted caller reads the
-422-vs-200 (or the send latency) straight from GoTrue. Closing it needs a
-server-side control, tracked in
-[#94](https://github.com/trost-systems/emotely/issues/94); what the page owes
-its reader is not to answer the question for them. The events it sends
-carry an outcome name only — no address, no code.
+conditional ("if that address has an account"). The page is not what opens
+the oracle — a scripted caller reads the 422-vs-200 (or the send latency)
+straight from GoTrue. What makes that expensive, and keeps a script from
+spending the hourly mail quota, is the human check
+([#94](https://github.com/trost-systems/emotely/issues/94)): the code request
+carries a single-use Cloudflare Turnstile token in `gotrue_meta_security`,
+which GoTrue verifies with Cloudflare once captcha is enforced, answering
+`400 captcha_failed` otherwise. `lib/turnstile_web.dart` loads Cloudflare's
+script on the first click of "Send me a code", renders a managed widget
+that stays invisible unless Cloudflare wants an interaction, and removes it
+after each token, so a retry always carries a fresh one. Tests stub
+`window.turnstile` (`TurnstileStub` in the form test). The site key is
+`EMOTELY_TURNSTILE_SITE_KEY` (`lib/environment.dart`), public like the
+publishable key. Cloudflare's always-pass test site key
+`1x00000000000000000000AA` hands out a dummy token that only the test secret
+in `supabase/config.toml` accepts, so it is what a local stack needs; the
+hosted project verifies against the production widget's secret. The events
+it sends carry an outcome name only — no address, no code.
 
 Every island is pre-rendered at build time, so anything that needs
 `window` sits behind `kIsWeb`. To exercise it locally, `supabase start` and pass
