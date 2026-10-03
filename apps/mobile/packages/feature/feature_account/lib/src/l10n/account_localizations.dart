@@ -619,6 +619,12 @@ abstract class AccountLocalizations {
   /// In en, this message translates to:
   /// **'Sign out'**
   String get accountSignOutButton;
+
+  /// Message at the bottom of the screen, shown once the account is deleted, still visible on the welcome screen that follows. The account signed in with Apple or Google, and emotely could not disconnect itself from that company's account (the user dismissed its sheet, the phone could not ask, or the company was unreachable), so the user is told where to remove emotely themselves. provider is apple, google, or other for both. 'Sign in with Apple' is Apple's own name for the feature, as its settings show it.
+  ///
+  /// In en, this message translates to:
+  /// **'{provider, select, apple{Your account is deleted. emotely may still be listed in your Apple Account under Sign in with Apple. You can remove it there.} google{Your account is deleted. emotely may still be listed among your Google Account\'s connected apps. You can remove it there.} other{Your account is deleted. emotely may still be listed in your Apple Account and your Google Account. You can remove it in their settings.}}'**
+  String accountDeletedStillLinked(String provider);
 }
 
 class _AccountLocalizationsDelegate

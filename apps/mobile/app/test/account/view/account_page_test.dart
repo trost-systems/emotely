@@ -1,8 +1,8 @@
 import 'package:feature_account/feature_account.dart';
 import 'package:feature_auth/feature_auth.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../helpers/helpers.dart';
@@ -63,6 +63,63 @@ void main() {
         event('account_deleted'),
       ]);
       expect(robot.analytics.resets, 1);
+    });
+
+    testWidgets('revokes Sign in with Apple before deleting the account', (
+      tester,
+    ) async {
+      final apple = AppleSignInFake.setup()..script([appleToken('id-token')]);
+      final robot = robotWith(tester, deletions: [rpcReturned(null)]);
+      robot.agent.script([revoked()]);
+      await robot.launch(providers: ['apple']);
+      await robot.askToDelete();
+
+      await robot.tap(robot.confirm);
+
+      expect(apple.requests, hasLength(1));
+      expect(robot.agent.lastRequest, {'authorization_code': 'apple-code'});
+      expect(robot.supabase.to(deletion), hasLength(1));
+      expect(robot.welcome, findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+    testWidgets('deletes the account anyway when Apple cannot be asked, and '
+        'says so on the welcome screen', (tester) async {
+      final apple = AppleSignInFake.setup();
+      final robot = robotWith(tester, deletions: [rpcReturned(null)]);
+      await robot.launch(providers: ['email', 'apple']);
+      await robot.askToDelete();
+
+      await robot.tap(robot.confirm);
+
+      // Android has no Apple sheet: the account goes regardless, and the
+      // message outlives the screen that showed it.
+      expect(apple.requests, isEmpty);
+      expect(robot.supabase.to(deletion), hasLength(1));
+      expect(robot.welcome, findsOneWidget);
+      expect(
+        find.text(robot.strings.accountDeletedStillLinked('apple')),
+        findsOneWidget,
+      );
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+    testWidgets('disconnects Google, or says where to when it cannot', (
+      tester,
+    ) async {
+      // This device remembers no Google account to disconnect.
+      final google = GoogleSignInFake.setup();
+      final robot = robotWith(tester, deletions: [rpcReturned(null)]);
+      await robot.launch(providers: ['google']);
+      await robot.askToDelete();
+
+      await robot.tap(robot.confirm);
+
+      expect(google.disconnects, 0);
+      expect(robot.welcome, findsOneWidget);
+      expect(
+        find.text(robot.strings.accountDeletedStillLinked('google')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('forgets the way in last used along with the account', (

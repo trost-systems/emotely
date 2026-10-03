@@ -1,6 +1,7 @@
 import 'package:feature_auth/src/bloc/auth_bloc.dart';
 import 'package:feature_auth/src/last_sign_in/last_sign_in_bloc.dart';
 import 'package:feature_auth/src/last_sign_in/last_sign_in_store.dart';
+import 'package:feature_auth/src/providers/provider_grants.dart';
 import 'package:feature_auth/src/providers/provider_sign_in.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,6 +22,14 @@ void registerAuth(
 }) => getIt
   ..registerSingleton(ProviderSignIn(google: google))
   ..registerSingleton(LastSignInStore(preferences: SharedPreferencesAsync()))
+  ..registerFactory(
+    () => ProviderGrants(
+      supabase: getIt(),
+      providers: getIt(),
+      agent: getIt(),
+      errors: getIt(),
+    ),
+  )
   ..registerFactory(
     () => AuthBloc(
       supabase: getIt(),

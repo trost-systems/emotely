@@ -92,6 +92,22 @@ class const ErrorReporter({required final PostHogGate gate}) {
   Future<void> mailLanguageSaveFailed(Exception error, StackTrace stackTrace) =>
       _report(error, stackTrace, step: 'mail_language_save');
 
+  /// The grant the account holds with [provider] could not be revoked
+  /// before the account was deleted (#193): the provider's sheet failed,
+  /// or the agent or the provider refused. The account is deleted anyway,
+  /// and the user is told where to remove emotely themselves; a run of
+  /// these means revocation is broken for everyone.
+  Future<void> signInRevocationFailed(
+    Exception error,
+    StackTrace stackTrace, {
+    required SignInMethod provider,
+  }) => _report(
+    error,
+    stackTrace,
+    step: 'sign_in_revocation',
+    properties: {'provider': provider.name},
+  );
+
   /// The `delete_account` call failed.
   Future<void> accountDeletionFailed(Exception error, StackTrace stackTrace) =>
       _report(error, stackTrace, step: 'account_deletion');

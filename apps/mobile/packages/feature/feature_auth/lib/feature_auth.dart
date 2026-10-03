@@ -11,7 +11,11 @@ export 'src/bloc/auth_bloc.dart';
 export 'src/l10n/auth_localizations.dart' show AuthLocalizations;
 export 'src/last_sign_in/last_sign_in_store.dart';
 export 'src/navigator.dart';
-export 'src/providers/provider_sign_in.dart' show GoogleClientIds;
+// The app revokes a deleted account's grants through these (#193): the
+// account feature asks, and only the app knows both features.
+export 'src/providers/provider_grants.dart';
+export 'src/providers/provider_sign_in.dart'
+    show GoogleClientIds, IdentityProvider;
 export 'src/register.dart';
 export 'src/review_accounts.dart';
 // Every feature's part file generates a `$appRoutes`; the app composes
