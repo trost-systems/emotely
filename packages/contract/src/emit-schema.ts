@@ -10,6 +10,8 @@ import {
   maxAnswerLength,
   maxDisplayNameLength,
   recordAnswerInput,
+  revokeAppleRequest,
+  revokeAppleResponse,
 } from "./index.ts";
 
 // CI tripwire: the committed JSON Schema must match the zod source of truth.
@@ -27,6 +29,8 @@ const schema = {
   }),
   config_response: z.toJSONSchema(configResponse, { io: "input" }),
   error_response: z.toJSONSchema(errorResponse, { io: "input" }),
+  revoke_apple_request: z.toJSONSchema(revokeAppleRequest, { io: "input" }),
+  revoke_apple_response: z.toJSONSchema(revokeAppleResponse, { io: "input" }),
   limits: {
     max_answer_length: maxAnswerLength,
     max_display_name_length: maxDisplayNameLength,

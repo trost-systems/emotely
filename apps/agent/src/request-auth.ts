@@ -13,6 +13,16 @@ export type VerifyCaller = (request: Request) => Promise<Caller | undefined>;
 const BEARER = "Bearer ";
 
 /**
+ * The bearer token on [request], as sent. Only meaningful once
+ * `VerifyCaller` accepted the request: then it is the caller's live token,
+ * fit to act as them towards Supabase.
+ */
+export function bearerToken(request: Request): string | undefined {
+  const header = request.headers.get("authorization") ?? "";
+  return header.startsWith(BEARER) ? header.slice(BEARER.length) : undefined;
+}
+
+/**
  * Who is calling: the Supabase user whose access token rides in the
  * Authorization header, verified locally against the project's public signing
  * keys (asymmetric JWT, so no round trip to Supabase and no shared secret in
@@ -24,16 +34,15 @@ export function createCallerVerifier(opts: {
   issuer: string;
 }): VerifyCaller {
   return async (request) => {
-    const header = request.headers.get("authorization") ?? "";
-    if (!header.startsWith(BEARER)) {
+    const token = bearerToken(request);
+    if (token === undefined) {
       return;
     }
     // Malformed, expired, wrong key: all the same to the caller — 401.
-    const payload: JWTPayload | undefined = await jwtVerify(
-      header.slice(BEARER.length),
-      opts.keys,
-      { issuer: opts.issuer, audience: "authenticated" },
-    ).then(
+    const payload: JWTPayload | undefined = await jwtVerify(token, opts.keys, {
+      issuer: opts.issuer,
+      audience: "authenticated",
+    }).then(
       (verified) => verified.payload,
       () => undefined,
     );

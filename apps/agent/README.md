@@ -11,6 +11,22 @@ this file holds what is specific to operating the service.
 | --- | --- | --- |
 | `POST /api/advance-session` | Supabase JWT ([ADR 0010](../../docs/adr/0010-supabase-data-layer.md)) | One session round: verifies the signed transcript, calls the model, returns the next question or the finished entry. |
 | `GET /api/config` | none | The startup config the app reads once before anything else: `min_app_version` and `store_url`. Takes `?platform=ios\|android` to pick the right store listing. Public and edge-cached — see below. |
+| `POST /api/revoke-apple` | Supabase JWT | Revokes the caller's Sign in with Apple grant before their account is deleted ([#193](https://github.com/trost-systems/emotely/issues/193)) — see below. |
+
+`POST /api/revoke-apple` exists because Supabase never revokes Apple tokens
+and stores none to revoke. When a user whose account has an Apple identity
+deletes it, the app asks Apple's sheet for a fresh authorization code and
+posts it here with the user's token. The route asks Supabase
+(`GET /auth/v1/user`, under the caller's own token) which Apple ID the
+account is linked to, trades the code at Apple's `/auth/token` for a refresh
+token, and revokes that at `/auth/revoke` — only if the code's Apple ID is
+the linked one. Each call to Apple carries a client secret minted per
+request from the Sign in with Apple key, five minutes long; no Apple token
+outlives the request. Any refusal (`apple_identity_mismatch`,
+`apple_revocation_unavailable`) leaves the grant in place, and the app
+deletes the account anyway and tells the user where to remove emotely
+themselves. Apple's and Supabase's refusals are reported to PostHog with
+`step: "apple_revocation"`, in their fixed vocabulary only.
 
 `GET /api/config` is the one unauthenticated endpoint. The app checks it
 **above the sign-in gate** ([#49](https://github.com/trost-systems/emotely/issues/49)):
@@ -35,8 +51,8 @@ Two consequences worth knowing when you change `MIN_APP_VERSION`:
 
 ## Environment variables
 
-Read once per cold start in [`api/advance-session.ts`](api/advance-session.ts)
-and [`api/config.ts`](api/config.ts). Values are set on the `emotely-agent`
+Read once per cold start in [`api/advance-session.ts`](api/advance-session.ts),
+[`api/config.ts`](api/config.ts) and [`api/revoke-apple.ts`](api/revoke-apple.ts). Values are set on the `emotely-agent`
 Vercel project by a human, never committed (see the root
 [`AGENTS.md`](../../AGENTS.md)).
 
@@ -51,6 +67,9 @@ Vercel project by a human, never committed (see the root
 | `EMOTELY_STORE_URL` | no | Where the force-update screen sends a caller that named no platform, or one we do not know. Overrides `STORE_URL` in `src/session-config.ts`. Set these to correct a link without an app release — the only kind of fix that reaches someone who cannot install one. |
 | `EMOTELY_STORE_URL_IOS` | no | The App Store listing, served for `?platform=ios`. Overrides `STORE_URL_IOS`. |
 | `EMOTELY_STORE_URL_ANDROID` | no | The Play listing, served for `?platform=android`. Overrides `STORE_URL_ANDROID`. |
+| `SUPABASE_PUBLISHABLE_KEY` | for `/api/revoke-apple` | The project's public key, which Supabase's gateway asks of every request; the route reads the caller's identities with it and the caller's token. |
+| `APPLE_SIGN_IN_KEY` | for `/api/revoke-apple` | The Sign in with Apple `.p8` (PEM). **The one secret here besides the signing secrets.** Created, stored and rotated as the release-app skill's `references/sign-in-with-apple-key.md` says; production only. |
+| `APPLE_SIGN_IN_KEY_ID`, `APPLE_TEAM_ID`, `APPLE_CLIENT_ID` | for `/api/revoke-apple` | The key's id, team `VCZSHMZY25`, and the App ID `de.emotely.emotely` — the client secret's `kid`, `iss` and `sub`. |
 
 ## Picking a model: it must qualify under the privacy filters
 
