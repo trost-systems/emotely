@@ -34,14 +34,13 @@ screens:
 # full or ad hoc; each device of a run is one test run.
 #
 # `default: true` marks the devices a full survey runs (`gh workflow run
-# perf-survey.yml --ref main` with no device). They are 2 physical runs,
-# which leaves 3 of the day's 5 for chasing a regression (`survey.sh ftl`,
-# or the workflow with one device). The iPhone joins the default set (3,
-# still 2 to spare) once Test Lab pulls its survey.json back: the walk
-# runs and passes there, the pull does not yet
-# (references/performance-survey.md, "iOS"). There is no schedule
-# (decided 2026-10-03): emotely does not change often enough to measure
-# every night.
+# perf-survey.yml --ref main` with no device). They are 3 physical runs,
+# which leaves 2 of the day's 5 for chasing a regression (`survey.sh ftl`,
+# or the workflow with one device). The iPhone's survey.json comes back
+# through the device log (references/performance-survey.md, "iOS"); it
+# joined the default set after CI run 37114812734 recorded it. There is no
+# schedule (decided 2026-10-03): emotely does not change often enough to
+# measure every night.
 #
 # `judges` lists the metrics a device's findings may be filed on; the
 # rest are recorded only. A virtual device draws through its host's
@@ -60,7 +59,7 @@ devices:
     version: "18.3"
     name: iPhone 16 Pro
     form: physical
-    default: false
+    default: true
   galaxy-a14:
     platform: android
     model: a14m
