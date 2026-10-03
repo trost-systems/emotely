@@ -137,7 +137,9 @@ Production: `getemotely.com`; `www.getemotely.com` redirects (308) to it.
   because the build image has none, `dart pub get`, activates `jaspr_cli`.
 - `scripts/vercel-build.sh` — `jaspr build` with the sitemap, then prunes the
   package assets `build_web_compilers` copies next to the JS.
-- `scripts/vercel-ignore.sh` — exit 0 (skip) unless `apps/web` changed, so
+- `scripts/vercel-ignore.sh` — exit 0 (skip) unless `apps/web` changed since
+  the branch's last deployment (on its first, since its merge base with
+  `main`; the shared logic is the root `scripts/vercel-ignore.sh`), so
   agent- or app-only PRs never build or preview the site. The agent project
   has the mirror image.
 
