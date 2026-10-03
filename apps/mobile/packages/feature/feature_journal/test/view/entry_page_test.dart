@@ -12,6 +12,8 @@ void main() {
   group(EntryPage, () {
     const entries = 'GET /rest/v1/entries';
     final written = DateTime.utc(2026, 9, 7, 20);
+    // The day its session started on, the day before it was filed.
+    final aboutDay = DateTime(2026, 9, 6);
     final analytics = AnalyticsSpy();
 
     /// The entry as the journal stores it: one rated question.
@@ -19,6 +21,7 @@ void main() {
       id: 'e-1',
       summary: 'A seven kind of day.',
       createdAt: written,
+      journalDay: aboutDay,
       answers: {rateQuestion.questionId: const Answer.rating(7)},
       questions: [rateQuestion],
     );
@@ -63,7 +66,8 @@ void main() {
         tester.element(find.byType(EntryPageView)),
       );
       expect(supabase.to(entries).single.query['id'], 'eq.e-1');
-      expect(find.text(material.formatShortDate(written)), findsOneWidget);
+      expect(find.text(material.formatShortDate(aboutDay)), findsOneWidget);
+      expect(find.text(material.formatShortDate(written)), findsNothing);
       expect(
         find.text(
           DesignSystemLocalizations.of(tester.element(find.byType(EntryView)))

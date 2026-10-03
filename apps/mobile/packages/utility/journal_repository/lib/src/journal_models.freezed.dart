@@ -334,7 +334,7 @@ $PendingQuestionCopyWith<$Res>? get pending {
 /// @nodoc
 mixin _$EntryRecord {
 
- String get id; String get summary; Map<String, Answer> get answers; List<AskQuestion> get questions; DateTime get createdAt;
+ String get id; String get summary; Map<String, Answer> get answers; List<AskQuestion> get questions; DateTime get journalDay; DateTime get createdAt;
 /// Create a copy of EntryRecord
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -348,20 +348,20 @@ $EntryRecordCopyWith<EntryRecord> get copyWith => _$EntryRecordCopyWithImpl<Entr
 @override
 bool operator ==(Object other) {
   final _this = this as EntryRecord;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EntryRecord&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.summary, _this.summary) || other.summary == _this.summary)&&const DeepCollectionEquality().equals(other.answers, _this.answers)&&const DeepCollectionEquality().equals(other.questions, _this.questions)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EntryRecord&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.summary, _this.summary) || other.summary == _this.summary)&&const DeepCollectionEquality().equals(other.answers, _this.answers)&&const DeepCollectionEquality().equals(other.questions, _this.questions)&&(identical(other.journalDay, _this.journalDay) || other.journalDay == _this.journalDay)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as EntryRecord;
-  return Object.hash(runtimeType,_this.id,_this.summary,const DeepCollectionEquality().hash(_this.answers),const DeepCollectionEquality().hash(_this.questions),_this.createdAt);
+  return Object.hash(runtimeType,_this.id,_this.summary,const DeepCollectionEquality().hash(_this.answers),const DeepCollectionEquality().hash(_this.questions),_this.journalDay,_this.createdAt);
 }
 
 @override
 String toString() {
   final _this = this as EntryRecord;
-  return 'EntryRecord(id: ${_this.id}, summary: ${_this.summary}, answers: ${_this.answers}, questions: ${_this.questions}, createdAt: ${_this.createdAt})';
+  return 'EntryRecord(id: ${_this.id}, summary: ${_this.summary}, answers: ${_this.answers}, questions: ${_this.questions}, journalDay: ${_this.journalDay}, createdAt: ${_this.createdAt})';
 }
 
 
@@ -372,7 +372,7 @@ abstract mixin class $EntryRecordCopyWith<$Res>  {
   factory $EntryRecordCopyWith(EntryRecord value, $Res Function(EntryRecord) _then) = _$EntryRecordCopyWithImpl;
 @useResult
 $Res call({
- String id, String summary, Map<String, Answer> answers, List<AskQuestion> questions, DateTime createdAt
+ String id, String summary, Map<String, Answer> answers, List<AskQuestion> questions, DateTime journalDay, DateTime createdAt
 });
 
 
@@ -389,13 +389,14 @@ class _$EntryRecordCopyWithImpl<$Res>
 
 /// Create a copy of EntryRecord
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? summary = null,Object? answers = null,Object? questions = null,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? summary = null,Object? answers = null,Object? questions = null,Object? journalDay = null,Object? createdAt = null,}) {
   return _then(EntryRecord(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,summary: null == summary ? _self.summary : summary // ignore: cast_nullable_to_non_nullable
 as String,answers: null == answers ? _self.answers : answers // ignore: cast_nullable_to_non_nullable
 as Map<String, Answer>,questions: null == questions ? _self.questions : questions // ignore: cast_nullable_to_non_nullable
-as List<AskQuestion>,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as List<AskQuestion>,journalDay: null == journalDay ? _self.journalDay : journalDay // ignore: cast_nullable_to_non_nullable
+as DateTime,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,
   ));
 }
@@ -481,10 +482,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String summary,  Map<String, Answer> answers,  List<AskQuestion> questions,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String summary,  Map<String, Answer> answers,  List<AskQuestion> questions,  DateTime journalDay,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _EntryRecord() when $default != null:
-return $default(_that.id,_that.summary,_that.answers,_that.questions,_that.createdAt);case _:
+return $default(_that.id,_that.summary,_that.answers,_that.questions,_that.journalDay,_that.createdAt);case _:
   return orElse();
 
 }
@@ -502,10 +503,10 @@ return $default(_that.id,_that.summary,_that.answers,_that.questions,_that.creat
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String summary,  Map<String, Answer> answers,  List<AskQuestion> questions,  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String summary,  Map<String, Answer> answers,  List<AskQuestion> questions,  DateTime journalDay,  DateTime createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _EntryRecord():
-return $default(_that.id,_that.summary,_that.answers,_that.questions,_that.createdAt);case _:
+return $default(_that.id,_that.summary,_that.answers,_that.questions,_that.journalDay,_that.createdAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -522,10 +523,10 @@ return $default(_that.id,_that.summary,_that.answers,_that.questions,_that.creat
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String summary,  Map<String, Answer> answers,  List<AskQuestion> questions,  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String summary,  Map<String, Answer> answers,  List<AskQuestion> questions,  DateTime journalDay,  DateTime createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _EntryRecord() when $default != null:
-return $default(_that.id,_that.summary,_that.answers,_that.questions,_that.createdAt);case _:
+return $default(_that.id,_that.summary,_that.answers,_that.questions,_that.journalDay,_that.createdAt);case _:
   return null;
 
 }
@@ -537,7 +538,7 @@ return $default(_that.id,_that.summary,_that.answers,_that.questions,_that.creat
 @JsonSerializable()
 
 class _EntryRecord implements EntryRecord {
-  const _EntryRecord({required this.id, required this.summary, required  Map<String, Answer> answers, required  List<AskQuestion> questions, required this.createdAt}): _answers = answers,_questions = questions;
+  const _EntryRecord({required this.id, required this.summary, required  Map<String, Answer> answers, required  List<AskQuestion> questions, required this.journalDay, required this.createdAt}): _answers = answers,_questions = questions;
   factory _EntryRecord.fromJson(Map<String, dynamic> json) => _$EntryRecordFromJson(json);
 
 @override final  String id;
@@ -556,6 +557,7 @@ class _EntryRecord implements EntryRecord {
   return EqualUnmodifiableListView(_questions);
 }
 
+@override final  DateTime journalDay;
 @override final  DateTime createdAt;
 
 /// Create a copy of EntryRecord
@@ -571,18 +573,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EntryRecord&&(identical(other.id, id) || other.id == id)&&(identical(other.summary, summary) || other.summary == summary)&&const DeepCollectionEquality().equals(other.answers, _answers)&&const DeepCollectionEquality().equals(other.questions, _questions)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EntryRecord&&(identical(other.id, id) || other.id == id)&&(identical(other.summary, summary) || other.summary == summary)&&const DeepCollectionEquality().equals(other.answers, _answers)&&const DeepCollectionEquality().equals(other.questions, _questions)&&(identical(other.journalDay, journalDay) || other.journalDay == journalDay)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,summary,const DeepCollectionEquality().hash(_answers),const DeepCollectionEquality().hash(_questions),createdAt);
+    return Object.hash(runtimeType,id,summary,const DeepCollectionEquality().hash(_answers),const DeepCollectionEquality().hash(_questions),journalDay,createdAt);
 }
 
 @override
 String toString() {
-    return 'EntryRecord(id: $id, summary: $summary, answers: $answers, questions: $questions, createdAt: $createdAt)';
+    return 'EntryRecord(id: $id, summary: $summary, answers: $answers, questions: $questions, journalDay: $journalDay, createdAt: $createdAt)';
 }
 
 
@@ -593,7 +595,7 @@ abstract mixin class _$EntryRecordCopyWith<$Res> implements $EntryRecordCopyWith
   factory _$EntryRecordCopyWith(_EntryRecord value, $Res Function(_EntryRecord) _then) = __$EntryRecordCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String summary, Map<String, Answer> answers, List<AskQuestion> questions, DateTime createdAt
+ String id, String summary, Map<String, Answer> answers, List<AskQuestion> questions, DateTime journalDay, DateTime createdAt
 });
 
 
@@ -610,13 +612,14 @@ class __$EntryRecordCopyWithImpl<$Res>
 
 /// Create a copy of EntryRecord
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? summary = null,Object? answers = null,Object? questions = null,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? summary = null,Object? answers = null,Object? questions = null,Object? journalDay = null,Object? createdAt = null,}) {
   return _then(_EntryRecord(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,summary: null == summary ? _self.summary : summary // ignore: cast_nullable_to_non_nullable
 as String,answers: null == answers ? _self._answers : answers // ignore: cast_nullable_to_non_nullable
 as Map<String, Answer>,questions: null == questions ? _self._questions : questions // ignore: cast_nullable_to_non_nullable
-as List<AskQuestion>,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as List<AskQuestion>,journalDay: null == journalDay ? _self.journalDay : journalDay // ignore: cast_nullable_to_non_nullable
+as DateTime,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,
   ));
 }

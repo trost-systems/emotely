@@ -765,14 +765,18 @@ void main() {
           findsOneWidget,
         );
 
+        robot.clock = DateTime(2026, 10, 5, 20);
         await robot.tapStartOver();
 
         // A fresh session: no transcript, and its first save replaces the
-        // stored one the agent refused.
+        // stored one the agent refused, under the day it starts over on.
         expect(agent.lastRequest, isNot(contains('transcript')));
         final replaced = robot.supabaseStub.to('DELETE /rest/v1/sessions');
         expect(replaced.single.query['status'], 'eq.in_progress');
-        expect(robot.supabaseStub.to('POST /rest/v1/sessions'), hasLength(1));
+        expect(
+          robot.supabaseStub.to('POST /rest/v1/sessions').single.body,
+          containsPair('journal_day', '2026-10-05'),
+        );
         expect(robot.questionText, SessionRobot.grateful.question);
         expect(find.text(tester.strings.questionNumber(1)), findsOneWidget);
       });
