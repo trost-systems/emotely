@@ -1,6 +1,6 @@
 ---
 name: release-app
-description: How to ship the Flutter app (apps/mobile/app) to the TestFlight Team and Beta groups and the Play internal and closed alpha tracks with fastlane and the app-release workflow, how signing works (match, the ASC API key, the Android upload keystore), and how to rotate any of it. Use whenever asked to release, ship a beta, invite a beta tester, upload a build, fix signing, or touch apps/mobile/app/fastlane or .github/workflows/app-release.yml.
+description: How to ship the Flutter app (apps/mobile/app) to the TestFlight Team and Beta groups and the Play internal and closed alpha tracks with fastlane and the app-release workflow, how signing works (match, the ASC API key, the Android upload keystore), and how to rotate any of it, plus the App Store and Play listings kept in the repository (English and German) and the manual workflow that uploads them. Use whenever asked to release, ship a beta, invite a beta tester, upload a build, fix signing, change a store listing, or touch apps/mobile/app/fastlane, .github/workflows/app-release.yml or store-listings.yml.
 ---
 
 # Releasing the app (apps/mobile/app)
@@ -106,14 +106,18 @@ refused by design. Check with
 
 ## Privacy policy URL (store requirements)
 
-Both stores have a field for it, and both are **human steps in the console**.
-The value is the same in every place:
+Both stores have a field for it. Play's is a **human step in the console**;
+App Store Connect's is part of the listing, kept in the repository (see
+[Store listings](#store-listings-english-and-german)). The notice exists in
+English and German:
 
 ```
-https://getemotely.com/app-privacy
+https://getemotely.com/app-privacy       English
+https://getemotely.com/de/app-privacy    German
 ```
 
-That is the **app's** notice (`apps/web/lib/pages/app_privacy.dart`), not
+That is the **app's** notice (`apps/web/lib/pages/app_privacy.dart`, German
+in `apps/web/lib/pages/de/app_privacy.dart`), not
 `/privacy`, which covers the web site and the waitlist and says so in its
 first sentence. Pointing a store at `/privacy` is what got the 2026-09-13
 Play update rejected — *"Invalid Privacy policy — URL provided
@@ -121,14 +125,17 @@ https://emotely.de/app-privacy/ does not link to a valid privacy policy
 page"* — first because the legacy domain was dead, and then because the
 replacement disclaimed the app it was supposed to cover.
 
-- **Play Console → Policy → App content → Privacy policy.** Paste the URL,
-  save, and submit. Google fetches it, so it must be reachable without
-  signing in and must not redirect through anything that asks for consent.
-- **App Store Connect → App Privacy → Privacy Policy URL.** Set it **per
+- **Play Console → Policy → App content → Privacy policy.** Play keeps
+  **one URL for the whole app**, not one per language, and no API sets it:
+  paste the English URL, save, and submit. Google fetches it, so it must be
+  reachable without signing in and must not redirect through anything that
+  asks for consent.
+- **App Store Connect → App Privacy → Privacy Policy URL.** One **per
   locale** — English and German both, since the listing carries both; ASC
-  keeps one URL per localization and an empty one blocks submission. The
-  page itself is English-only for now, which is allowed, but if a German
-  translation is ever added the German locale must point at it.
+  keeps one URL per localization and an empty one blocks submission. They
+  are `fastlane/metadata/{en-US,de-DE}/privacy_url.txt`, uploaded with the
+  rest of the listing: each locale points at the notice in its own
+  language. A new locale gets its own translation of the notice first.
 
 **The ASC data declarations must keep agreeing with the page.** App Store
 Connect asks separately *which* data types are collected, and a reviewer
@@ -290,10 +297,67 @@ Notes:
 
 ## App Store Connect prep for a new version
 
-Version records, the app name and TestFlight Test Information are set through
-the ASC API with the same key (no dashboard clicking). The one-off script that
-did it for 2.0.0 lived outside the repo; the patterns are `appStoreVersions`,
-`appInfoLocalizations`, `betaAppLocalizations`, `betaAppReviewDetails`.
+Version records and TestFlight Test Information are set through the ASC API
+with the same key (no dashboard clicking). The one-off script that did it for
+2.0.0 lived outside the repo; the patterns are `appStoreVersions`,
+`betaAppLocalizations`, `betaAppReviewDetails`. The listing, the app name
+included, is not set this way any more: see the next section.
+
+## Store listings (English and German)
+
+The App Store and Play listings live in `apps/mobile/app/fastlane/metadata`,
+downloaded from both consoles on 2026-09-29, and the repository is their
+source of truth from then on:
+
+- **App Store** (deliver's layout): `{en-US,de-DE}/` holds `name`,
+  `subtitle`, `keywords`, `description`, `privacy_url`, `support_url`,
+  `marketing_url`; `copyright.txt` and `primary_category.txt` apply to both.
+- **Play** (supply's layout): `android/{en-US,de-DE}/` holds `title`,
+  `short_description`, `full_description`. **No final newline**: supply
+  uploads the file as it is.
+
+A file that is absent leaves that field in the console alone, so add one only
+to take a field over. Copy follows [`CONTEXT.md`](../../../CONTEXT.md), in
+German too (du, "Session", "Eintrag", "Tagebuch", "emotely" lower case).
+Every pull request checks the files: `pnpm spell` (German against the German
+dictionary, and the words CONTEXT.md says to avoid) and
+`scripts/store-listing-check.sh` in the `scripts` job (each store's field
+limits, App Store keywords counted in bytes; every locale has every field
+English has).
+
+**Changing a listing** is a pull request, then an upload once it has merged.
+The upload is the `metadata` lanes (`fastlane ios metadata`, `fastlane
+android metadata`), run by the manual workflow, never by a merge:
+
+```bash
+gh workflow run store-listings.yml                  # both stores
+gh workflow run store-listings.yml -f store=play    # or app-store
+gh run watch
+```
+
+It writes to both stores and is public once accepted, so **an agent asks
+Peter before starting it** and names what changes. What it does:
+
+- App Store: writes the version in preparation (the lane fails if there is
+  none) and the app info in preparation. No binary, no screenshots, no
+  submission; phased release and a ratings reset stay as App Store Connect
+  has them. Keywords, description and URLs of a version already live change
+  only with the next version.
+- Play: one edit with the listing text only, committed at once; Google
+  reviews it before it shows. No binary, no images, no release notes, no
+  track changes.
+
+**Never downloaded into the repository**: `deliver download_metadata` writes
+`review_information/` with the reviewer account's password, and `supply init`
+the screenshots. To see what a console holds, read it read-only into a
+scratch directory (spaceship's `appInfoLocalizations` and
+`appStoreVersionLocalizations`; supply's `Client#listings` in an edit that is
+aborted) and copy the text over by hand.
+
+**Still console steps**, which no lane touches: App Privacy and Data safety
+([references/data-declarations.md](references/data-declarations.md)), Play's
+privacy policy URL, screenshots and graphics, App Review information and
+Play's sign-in details ([What the consoles say](#what-the-consoles-say)).
 
 ## Local tooling
 

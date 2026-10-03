@@ -16,6 +16,11 @@ files:
   - ".claude/**/*.{dart,ts,md,sh,yaml,yml}"
   - ".github/**/*.{md,sh,yaml,yml}"
   - "apps/mobile/**/l10n/*_en.arb"
+  # The release tooling (fastlane's Ruby) and the English store listings.
+  - "apps/mobile/app/{Gemfile,fastlane/Fastfile,fastlane/Appfile,fastlane/Matchfile}"
+  - "apps/mobile/app/fastlane/**/*.rb"
+  - "apps/mobile/app/fastlane/metadata/**/en-US/**/*.txt"
+  - "apps/mobile/app/fastlane/metadata/en-US/*.txt"
 useGitignore: true
 ignorePaths:
   # Generated: build_runner, freezed, mockito, gen-l10n (from the English

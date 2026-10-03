@@ -62,6 +62,8 @@ jobs:
               - 'scripts/**'
               - '.claude/skills/*/scripts/**'
               - 'apps/*/scripts/*.sh'
+              # The store listings store-listing-check.sh guards.
+              - 'apps/mobile/app/fastlane/metadata/**'
               - '.github/workflows/ci.yml'
             supabase:
               - 'supabase/**'
@@ -302,7 +304,9 @@ jobs:
   # its lock between parallel agent sessions are tested the same way, and so
   # is the performance budget's gate (perf.sh). The Vercel projects' Ignored
   # Build Step (vercel-ignore.sh) decides which commits deploy at all, so its
-  # choice of base is tested against throwaway shallow clones.
+  # choice of base is tested against throwaway shallow clones. The store
+  # listings are checked against the stores' field limits here, since the
+  # consoles refuse an over-long field only during the upload.
   scripts:
     needs: changes
     if: needs.changes.outputs.scripts == 'true'
@@ -316,6 +320,8 @@ jobs:
       - run: bash .claude/skills/run-app/scripts/run-app.test.sh
       - run: bash .claude/skills/run-app/scripts/perf.test.sh
       - run: bash .claude/skills/run-app/scripts/survey.test.sh
+      - run: bash scripts/store-listing-check.test.sh
+      - run: bash scripts/store-listing-check.sh
 
   # The ast-grep gate (ADR 0018): every rule under ast-grep/rules, over every
   # tracked file. The comment tripwire (ast-grep/rules/tripwire): hand-written

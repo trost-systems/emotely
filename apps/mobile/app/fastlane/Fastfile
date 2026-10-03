@@ -21,6 +21,17 @@
 #                                           Play `internal` track
 #   bundle exec fastlane android beta       no build: promote the `internal`
 #                                           release to the closed `alpha` track
+#   bundle exec fastlane ios metadata       no build: upload the App Store
+#                                           listing in fastlane/metadata to the
+#                                           version in preparation; no
+#                                           screenshots, no submission
+#   bundle exec fastlane android metadata   no build: upload the Play listing
+#                                           in fastlane/metadata/android; no
+#                                           images, no release notes
+#
+# The metadata lanes are the one way a listing changes (edit the files, merge,
+# then run them): never on a merge, only through the store-listings workflow,
+# which a human starts or approves.
 #
 # Inputs, all environment variables (secrets of the `release` environment):
 #   APP_STORE_CONNECT_API_KEY_ID / _ISSUER_ID / _API_KEY_P8   the ASC API key
@@ -66,6 +77,10 @@ end
 # apps/mobile/app. Lanes run from here, but `sh` runs inside fastlane/, so the
 # flutter command gets an explicit `cd`.
 APP_DIR = File.expand_path("..", FastlaneCore::FastlaneFolder.path)
+
+# The store listings, English and German, in deliver's layout; Play's under
+# android/ in supply's. scripts/store-listing-check.sh guards their limits.
+METADATA_DIR = File.join(FastlaneCore::FastlaneFolder.path, "metadata")
 
 def flutter(*args)
   require "shellwords"
@@ -263,6 +278,55 @@ platform :ios do
       # instead, so a pending first review is never restarted by accident).
     )
   end
+
+  desc "No build: upload the App Store listing (fastlane/metadata) to the version in preparation"
+  lane :metadata do
+    api_key = asc_api_key
+
+    # deliver writes to the version in preparation; without one there is
+    # nothing a listing can be written to (the version record is created by
+    # the ASC prep, see the release-app skill).
+    version = asc_app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+    UI.user_error!("App Store Connect has no version in preparation to write the listing to") if version.nil?
+
+    # deliver sets phased release and a ratings reset to its defaults (both
+    # off) whenever it uploads metadata, deleting either if it exists. A
+    # listing change must not change how the version is released, so the
+    # lane passes on what App Store Connect already holds.
+    phased_release = begin
+      !version.fetch_app_store_version_phased_release.nil?
+    rescue StandardError
+      false
+    end
+    reset_ratings = begin
+      !version.fetch_reset_ratings_request.nil?
+    rescue StandardError
+      false
+    end
+
+    upload_to_app_store(
+      api_key: api_key,
+      app_identifier: APP_IDENTIFIER,
+      metadata_path: METADATA_DIR,
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      # The version in preparation keeps its number; deliver neither creates
+      # nor renames one.
+      skip_app_version_update: true,
+      submit_for_review: false,
+      phased_release: phased_release,
+      reset_ratings: reset_ratings,
+      # The pull request that changed the files was the review; deliver's
+      # HTML preview would wait for a keypress on a non-interactive run.
+      force: true,
+      # precheck's in-app purchase check needs an Apple ID, not an API key,
+      # and nothing is submitted here.
+      run_precheck_before_submit: false
+      # Deliberately absent: review information (it holds the demo account's
+      # password and stays in App Store Connect), App Privacy (Apple takes it
+      # through the console only) and screenshots.
+    )
+  end
 end
 
 platform :android do
@@ -313,6 +377,23 @@ platform :android do
       track: "internal",
       track_promote_to: "alpha",
       **(promote_build_number ? { version_code: Integer(promote_build_number) } : {})
+    )
+  end
+
+  desc "No build: upload the Play listing (fastlane/metadata/android): title and descriptions"
+  lane :metadata do
+    # A binary-free edit that writes the listing text only. supply looks up
+    # a release on `track` even when it uploads no release notes, and
+    # `internal` has exactly one (the beta lane relies on the same); without
+    # binaries, a promotion or a rollout it leaves every track as it is.
+    upload_to_play_store(
+      play_store_defaults.merge(
+        skip_upload_metadata: false,
+        skip_upload_aab: true,
+        skip_upload_apk: true,
+        track: "internal",
+        metadata_path: File.join(METADATA_DIR, "android")
+      )
     )
   end
 end

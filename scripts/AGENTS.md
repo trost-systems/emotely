@@ -51,8 +51,16 @@ is shallow and may have no remote, so it fetches from the public GitHub
 repository the deployment names. `vercel-ignore.test.sh` runs it in
 throwaway shallow clones.
 
+`store-listing-check.sh` checks the store listings in
+`apps/mobile/app/fastlane/metadata` against each store's field limits (App
+Store keywords count bytes, everything else characters), fails a locale that
+lacks a field English has, and a Play file ending in a newline (supply
+uploads it verbatim). A limit the stores change goes into its `case` table.
+
 Shell here is linted by the `scripts` CI job: `shellcheck --external-sources
 --severity=style scripts/*.sh`, clean (with the skills' and
 `apps/*/scripts` shell); the same job runs `bash
-scripts/release-status.test.sh`, `bash scripts/l10n-check.test.sh` and `bash
-scripts/vercel-ignore.test.sh`.
+scripts/release-status.test.sh`, `bash scripts/l10n-check.test.sh`, `bash
+scripts/vercel-ignore.test.sh`, `bash scripts/store-listing-check.test.sh`
+and the listing check itself (the job also runs when only a listing
+changed).
