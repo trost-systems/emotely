@@ -460,7 +460,7 @@ platform :android do
       next
     end
 
-    # supply's client only for its authorisation; the call itself is not an
+    # supply's client only for its authorization; the call itself is not an
     # edit, so nothing here commits one.
     play = Supply::Client.new(
       service_account_json: StringIO.new(ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON")),

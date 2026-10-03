@@ -22,7 +22,7 @@ module PlayDataSafety
   end
 
   # Writes the declaration in `path` for `package_name` through `service`, an
-  # AndroidPublisherService that is already authorised.
+  # AndroidPublisherService that is already authorized.
   def self.upload(service, package_name, path)
     request = Google::Apis::AndroidpublisherV3::SafetyLabelsUpdateRequest.new(safety_labels: File.read(path))
     service.data_application_safety(package_name, request)
