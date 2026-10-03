@@ -100,6 +100,15 @@ external files directory; iOS: its Documents) and logs it in numbered
 chunks as well; `survey.sh ftl` pulls the file, or puts it back together
 from the device log (`survey.sh from-log`) when Test Lab pulled nothing.
 
+**A run that hangs fails in minutes, and says where.** The walk logs each
+screen and each step on it (`survey: consent: tap widget with key
+[<'privacy_settings.confirm'>]`) and each screen's duration (`survey:
+consent took 22057 ms`) to the device log. Each screen has 4 minutes; past
+that the run fails with `survey: <screen> did not finish within 240 s; it
+was at <step>; the screen shows ...; the last requests were ...`. On Test
+Lab both are in `syslog.txt` (iPhone) or `logcat` (Android) beside the
+results.
+
 ## The history
 
 Every run's records, one JSON object per line, in `survey.jsonl` on the
@@ -168,9 +177,9 @@ survey files; an ad-hoc run files only when given a tag
 
 ## iOS
 
-The walk runs and passes on the iPhone 16 Pro in Test Lab (run
-`matrix-1bm9e4zytbfda`, 2026-09-29, 9.5 minutes, `survey.json` written to
-the app's Documents), and the XCTest bundle is built and signed without a
+The whole walk runs on the iPhone 16 Pro in Test Lab and comes back as
+records (`matrix-3esl1poochxu8`, 2026-10-03: all ten screens at 120 Hz,
+about 7 minutes), and the XCTest bundle is built and signed without a
 human:
 
 - `survey.sh build ios --profile <.mobileprovision>` builds the walk for
@@ -182,11 +191,19 @@ human:
   hands the profile's path over as `SURVEY_PROFILE`.
 - Under Test Lab's XCTest runner the app has no `HOME`: the walk finds its
   container through Darwin's per-app temporary directory instead.
+- Test Lab does not pull `de.emotely.emotely:/Documents/survey` back,
+  although the matrix carries the pull directory. The walk also logs
+  `survey.json` in chunks, which the always-kept `syslog.txt` holds, and
+  `survey.sh ftl` puts it back together from there (`[ftl] no survey.json
+  pulled; reading it from the device log`).
+- A focused field's cursor on iOS fades in and out by an animation that
+  never stops, so `pumpAndSettle` after typing never settles: the walk
+  types with `EditableText.debugDeterministicCursor` on. Without it the
+  first CI run on the iPhone (37105150605) hung on the sign-in screen until
+  Test Lab's 20-minute timeout.
 
-**The gap:** Test Lab did not pull `de.emotely.emotely:/Documents/survey`
-back, although the matrix carried the pull directory. The walk now also
-logs `survey.json` in chunks, which the always-kept `syslog.txt` holds,
-and `survey.sh ftl` falls back to it (verified end to end on Android's
-logcat, not yet on an iPhone). To finish: one physical run,
-`gh workflow run perf-survey.yml --ref main -f device=iphone-16-pro`; if it
-records, set the iPhone's `default: true` in `survey.yaml`.
+Still to run: the CI side (`gh workflow run perf-survey.yml --ref main -f
+device=iphone-16-pro`), which signs with match in the `release`
+environment; the run above was signed and started from a maintainer's
+machine. When it records, set the iPhone's `default: true` in
+`survey.yaml`.
