@@ -8,6 +8,7 @@ import 'package:emotely_web/pages/de/confirm.dart';
 import 'package:emotely_web/pages/de/delete_account.dart';
 import 'package:emotely_web/pages/de/home.dart';
 import 'package:emotely_web/pages/de/imprint.dart';
+import 'package:emotely_web/pages/de/privacy.dart';
 import 'package:emotely_web/pages/delete_account.dart';
 import 'package:emotely_web/pages/home.dart';
 import 'package:emotely_web/pages/imprint.dart';
@@ -87,6 +88,12 @@ class const App({super.key}) extends StatelessComponent {
             path: '/de/confirm',
             title: 'Bestätige deine Adresse — emotely',
             builder: (_, _) => const ConfirmDe(),
+          ),
+          // The site notice: what the German waitlist form stores (#253).
+          Route(
+            path: '/de/privacy',
+            title: 'Datenschutzerklärung — emotely',
+            builder: (_, _) => const PrivacyDe(),
           ),
           // Where the app's German consent and privacy screens link (#229).
           Route(

@@ -16,7 +16,7 @@ class const Privacy({super.key}) extends StatelessComponent {
       .text('. Last updated 15 September 2026.'),
     ]),
 
-    h2([.text('What the site stores')]),
+    h2(id: 'stores', [.text('What the site stores')]),
     p([
       .text(
         'Nothing, unless you join the waitlist. Then it stores the email '
@@ -30,7 +30,7 @@ class const Privacy({super.key}) extends StatelessComponent {
       ),
     ]),
 
-    h2([.text('Why, and on what basis')]),
+    h2(id: 'basis', [.text('Why, and on what basis')]),
     ul([
       li([
         strong([.text('Your address')]),
@@ -73,7 +73,7 @@ class const Privacy({super.key}) extends StatelessComponent {
       ]),
     ]),
 
-    h2([.text('Who handles it')]),
+    h2(id: 'processors', [.text('Who handles it')]),
     p([
       .text(
         'Four providers process data for us under data processing '
@@ -125,7 +125,7 @@ class const Privacy({super.key}) extends StatelessComponent {
       ),
     ]),
 
-    h2([.text('For how long')]),
+    h2(id: 'retention', [.text('For how long')]),
     p([
       .text(
         'Your address stays on the list until early access is over or you '
@@ -152,7 +152,7 @@ class const Privacy({super.key}) extends StatelessComponent {
       ),
     ]),
 
-    h2([.text('Keeping it safe')]),
+    h2(id: 'security', [.text('Keeping it safe')]),
     p([
       .text(
         'The site is served over an encrypted HTTPS connection and makes no '
@@ -165,7 +165,7 @@ class const Privacy({super.key}) extends StatelessComponent {
       ),
     ]),
 
-    h2([.text('Your rights')]),
+    h2(id: 'rights', [.text('Your rights')]),
     p([
       .text(
         'You can ask what is stored about you, have it corrected or '
@@ -182,7 +182,7 @@ class const Privacy({super.key}) extends StatelessComponent {
       ),
     ]),
 
-    h2([.text('Changes to this notice')]),
+    h2(id: 'changes', [.text('Changes to this notice')]),
     p([
       .text(
         'Changes are published here with a new date at the top, and every '
@@ -193,7 +193,7 @@ class const Privacy({super.key}) extends StatelessComponent {
       ),
     ]),
 
-    h2([.text('Responsible')]),
+    h2(id: 'responsible', [.text('Responsible')]),
     p([
       .text('Peter Trost, Yalovastr. 5, 72108 Rottenburg am Neckar, Germany, '),
       a(href: 'mailto:$contactEmail', [.text(contactEmail)]),

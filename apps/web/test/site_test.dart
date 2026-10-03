@@ -1,7 +1,9 @@
 import 'package:emotely_web/main.server.options.dart';
 import 'package:emotely_web/site_document.dart';
 import 'package:emotely_web/site_locale.dart';
+import 'package:emotely_web/site_shell.dart';
 import 'package:html/dom.dart' as html;
+import 'package:jaspr/dom.dart' show main_;
 import 'package:jaspr/server.dart';
 import 'package:jaspr_test/server_test.dart';
 
@@ -10,6 +12,21 @@ Future<html.Document> _render(ServerTester tester, String path) async {
   tester.pumpComponent(siteDocument());
   final response = await tester.request(path);
   expect(response.statusCode, 200, reason: path);
+  return response.document!;
+}
+
+/// An English page no table row translates, framed by the shell: every
+/// page of the site has a German version, so the one-language case is
+/// rendered from the shell itself.
+Future<html.Document> _renderUntranslated(ServerTester tester) async {
+  const path = '/not-translated';
+  tester.pumpComponent(
+    const Document(
+      body: SiteShell(locale: .en, path: path, child: main_([])),
+    ),
+  );
+  final response = await tester.request(path);
+  expect(response.statusCode, 200);
   return response.document!;
 }
 
@@ -33,7 +50,13 @@ void main() {
     });
 
     test('a page without a German version stays English in German', () {
-      expect(SiteLocale.de.pathFor('/privacy'), '/privacy');
+      expect(SiteLocale.de.pathFor('/not-translated'), '/not-translated');
+      expect(SiteLocale.de.has('/not-translated'), isFalse);
+    });
+
+    test('both privacy notices exist in German', () {
+      expect(SiteLocale.de.pathFor('/privacy'), '/de/privacy');
+      expect(SiteLocale.de.pathFor('/app-privacy'), '/de/app-privacy');
     });
 
     test('English always maps to itself', () {
@@ -83,7 +106,7 @@ void main() {
     testServer('a page in one language only lists no alternates', (
       tester,
     ) async {
-      expect(_alternates(await _render(tester, '/privacy')), isEmpty);
+      expect(_alternates(await _renderUntranslated(tester)), isEmpty);
     });
   });
 
@@ -110,7 +133,14 @@ void main() {
     });
 
     testServer('a page in one language only offers no switch', (tester) async {
-      expect(languageSwitch(await _render(tester, '/privacy')), isNull);
+      expect(languageSwitch(await _renderUntranslated(tester)), isNull);
+    });
+
+    testServer('the site notice offers its German version', (tester) async {
+      final link = languageSwitch(await _render(tester, '/privacy'))!;
+
+      expect(link.attributes['href'], '/de/privacy');
+      expect(link.text, 'Deutsch');
     });
   });
 
@@ -151,6 +181,7 @@ void main() {
       ('/app-privacy', 'en'),
       ('/imprint', 'en'),
       ('/de/app-privacy', 'de'),
+      ('/de/privacy', 'de'),
       ('/de/imprint', 'de'),
     ]) {
       testServer('$path is declared "$lang"', (tester) async {
@@ -251,12 +282,28 @@ void main() {
       expect(footer.text, contains('Impressum'));
       expect(footer.text, contains('Datenschutz in der App'));
       expect(footer.text, contains('Konto löschen'));
-      expect(_hrefs(footer), containsAll(['/de/imprint', '/de/app-privacy']));
-      // The site notice has no German version yet, and the link says so
-      // rather than surprising a German reader with English.
-      expect(_hrefs(footer), contains('/privacy'));
-      expect(footer.text, contains('auf Englisch'));
+      expect(
+        _hrefs(footer),
+        containsAll(['/de/imprint', '/de/privacy', '/de/app-privacy']),
+      );
+      expect(_hrefs(footer), isNot(contains('/privacy')));
+      expect(footer.text, contains('Datenschutz auf der Website'));
+      expect(footer.text, isNot(contains('auf Englisch')));
       expect(footer.text, isNot(contains('Imprint')));
+    });
+
+    // Rather than surprising a German reader with English.
+    testServer('a German link to an untranslated page says it is English', (
+      tester,
+    ) async {
+      tester.pumpComponent(
+        const Document(body: PageLink('/not-translated', 'Seite', locale: .de)),
+      );
+      final response = await tester.request('/');
+      final link = response.document!.querySelector('body a')!;
+
+      expect(link.attributes['href'], '/not-translated');
+      expect(link.text, 'Seite (auf Englisch)');
     });
 
     testServer('German pages carry a German header', (tester) async {
@@ -269,35 +316,38 @@ void main() {
     });
   });
 
-  group('German notice and its English original', () {
-    // The German notice is a translation, not a second text: the same
+  group('German notices and their English originals', () {
+    // A German notice is a translation, not a second text: the same
     // sections under the same anchors, so a link to #rights lands in the
-    // same place in either language, and a section added to one without
-    // the other fails here.
-    testServer('have the same section ids and the same headings', (
-      tester,
-    ) async {
-      final english = await _render(tester, '/app-privacy');
-      final german = await _render(tester, '/de/app-privacy');
+    // same place in either language, and a section, a paragraph or a list
+    // item added to one without the other fails here.
+    for (final (englishPath, germanPath) in [
+      ('/app-privacy', '/de/app-privacy'),
+      ('/privacy', '/de/privacy'),
+    ]) {
+      testServer('$germanPath has the shape of $englishPath', (tester) async {
+        final english = await _render(tester, englishPath);
+        final german = await _render(tester, germanPath);
 
-      List<String> ids(html.Document document) => document
-          .querySelectorAll('main [id]')
-          .map((element) => element.id)
-          .toList();
-      Map<String, int> headings(html.Document document) => {
-        for (final tag in ['h1', 'h2', 'h3', 'li', 'p', 'strong'])
-          tag: document.querySelectorAll('main $tag').length,
-      };
-      List<String> anchors(html.Document document) => document
-          .querySelectorAll('main nav.toc a')
-          .map((link) => link.attributes['href']!)
-          .toList();
+        List<String> ids(html.Document document) => document
+            .querySelectorAll('main [id]')
+            .map((element) => element.id)
+            .toList();
+        Map<String, int> headings(html.Document document) => {
+          for (final tag in ['h1', 'h2', 'h3', 'li', 'p', 'strong'])
+            tag: document.querySelectorAll('main $tag').length,
+        };
+        List<String> anchors(html.Document document) => document
+            .querySelectorAll('main nav.toc a')
+            .map((link) => link.attributes['href']!)
+            .toList();
 
-      expect(ids(german), ids(english));
-      expect(ids(english), isNotEmpty);
-      expect(headings(german), headings(english));
-      expect(anchors(german), anchors(english));
-    });
+        expect(ids(german), ids(english));
+        expect(ids(english), isNotEmpty);
+        expect(headings(german), headings(english));
+        expect(anchors(german), anchors(english));
+      });
+    }
 
     testServer('the imprints have the same shape', (tester) async {
       final english = await _render(tester, '/imprint');

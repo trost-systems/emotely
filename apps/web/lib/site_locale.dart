@@ -40,6 +40,7 @@ enum SiteLocale() {
 const germanPaths = {
   '/': '/de',
   '/confirm': '/de/confirm',
+  '/privacy': '/de/privacy',
   '/app-privacy': '/de/app-privacy',
   '/delete-account': '/de/delete-account',
   '/imprint': '/de/imprint',
