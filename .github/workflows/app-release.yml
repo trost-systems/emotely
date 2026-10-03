@@ -6,7 +6,10 @@ name: App release
 # both stores: the TestFlight `Team` group (it has access to all builds) and
 # the Play `internal` track. No outside tester sees those. Both jobs share
 # one monotonic build number, and the `status` job records what they
-# uploaded for the README badges.
+# uploaded for the README badges. While anything of the app is in Google's
+# review, Play refuses the internal upload; the Android job then ends green
+# with a notice, keeps the App Bundle, and play-internal-catch-up.yml
+# uploads it once Play accepts commits again.
 #
 # A manual run (workflow_dispatch) is the beta release: it builds nothing and
 # promotes a build already on the internal stage — the newest, or the one
@@ -132,7 +135,10 @@ jobs:
       run:
         working-directory: apps/mobile/app
     steps:
+      # This job uploads an artifact; no token waits in .git/config beside it.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
@@ -157,20 +163,44 @@ jobs:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEY_PROPERTIES: ${{ secrets.ANDROID_KEY_PROPERTIES }}
       - run: flutter pub get
+      # scripts/play-deferred-build.sh derives a deferred build's number from
+      # this run's number the same way.
       - run: echo "BUILD_NUMBER=$((1000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+      # Every Play commit submits all of the app's pending changes, so while
+      # anything is in Google's review (a listing, an alpha release) Play
+      # refuses this one too (ERROR_IF_IN_REVIEW, fastlane/lib/
+      # play_review_guard.rb). The lane then ends green with a notice and
+      # `deferred=true`, the App Bundle is kept below, and
+      # play-internal-catch-up.yml uploads it once Play accepts commits again.
       - id: lane
         run: bundle exec fastlane android internal
         env:
           PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           POSTHOG_KEY: ${{ secrets.POSTHOG_KEY }}
+      # Only a deferred build is kept: one an upload already put on the track
+      # needs no catching up. 30 days outlasts a Play review; the catch-up
+      # deletes it as soon as the track has it or something newer.
+      - if: steps.lane.outputs.deferred == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: play-internal-deferred-aab
+          path: apps/mobile/app/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
+          # An App Bundle is a zip already.
+          compression-level: 0
+          # A re-run of this job replaces its own earlier copy.
+          overwrite: true
 
   # Records what the internal jobs uploaded in status.json on the `status` branch (README badges).
   # The only job that can write: keep it free of secrets, builds and third-party actions.
+  # A deferred Android upload succeeds without a `build` output: it shipped nothing.
   status:
     needs: [ios-internal, android-internal]
     if: >-
       !cancelled() && github.event_name == 'push' &&
-      (needs.ios-internal.result == 'success' || needs.android-internal.result == 'success')
+      (needs.ios-internal.result == 'success' ||
+       (needs.android-internal.result == 'success' && needs.android-internal.outputs.build != ''))
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -208,7 +238,7 @@ jobs:
             scripts/release-status.sh status.json ios internal \
               "${IOS_VERSION}" "${IOS_BUILD}" "${GITHUB_SHA}" "${now}"
           fi
-          if [[ "${ANDROID_RESULT}" == success ]]; then
+          if [[ "${ANDROID_RESULT}" == success && -n "${ANDROID_BUILD}" ]]; then
             scripts/release-status.sh status.json android internal \
               "${ANDROID_VERSION}" "${ANDROID_BUILD}" "${GITHUB_SHA}" "${now}"
           fi

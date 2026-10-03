@@ -1,6 +1,6 @@
 ---
 name: release-app
-description: How to ship the Flutter app (apps/mobile/app) to the TestFlight Team and Beta groups and the Play internal and closed alpha tracks with fastlane and the app-release workflow, how signing works (match, the ASC API key, the Android upload keystore), and how to rotate any of it, plus the App Store and Play listings kept in the repository (English and German) and the manual workflow that uploads them. Use whenever asked to release, ship a beta, invite a beta tester, upload a build, fix signing, change a store listing, or touch apps/mobile/app/fastlane, .github/workflows/app-release.yml or store-listings.yml.
+description: How to ship the Flutter app (apps/mobile/app) to the TestFlight Team and Beta groups and the Play internal and closed alpha tracks with fastlane and the app-release workflow, how signing works (match, the ASC API key, the Android upload keystore), and how to rotate any of it, plus the App Store and Play listings kept in the repository (English and German) and the manual workflow that uploads them. Use whenever asked to release, ship a beta, invite a beta tester, upload a build, fix signing, change a store listing, or touch apps/mobile/app/fastlane, .github/workflows/app-release.yml, store-listings.yml or play-internal-catch-up.yml.
 ---
 
 # Releasing the app (apps/mobile/app)
@@ -22,7 +22,12 @@ internal group **`Team`** (it has "access to all builds" in App Store
 Connect, so nothing assigns it) and on the Play **`internal`** track. No
 outside tester sees it, nothing is submitted for review, and the iOS job
 returns as soon as the build shows up in App Store Connect rather than
-waiting for processing. Nobody outside the team is notified.
+waiting for processing. Nobody outside the team is notified. While anything
+of the app is in Google's review, Play refuses the internal upload and the
+Android job **ends green with a notice** instead ("Play internal upload
+deferred"); the build reaches the track within the hour after the review,
+by itself (see [No Play write restarts a review](#store-listings-english-and-german)).
+Never re-run the job for it.
 
 **Beta, manual.** Promoting to the outside testers is a `workflow_dispatch`
 run. It builds nothing: it takes a build already on the internal stage and
@@ -348,16 +353,41 @@ gh run watch
 **No Play write restarts a review.** `edits.commit` defaults to canceling
 whatever is in Google's review and resubmitting it with the new changes, and
 supply cannot change that; `fastlane/lib/play_review_guard.rb` makes every
-commit of every lane use `ERROR_IF_IN_REVIEW` instead. While a closed-testing
-release or a listing change is in review, a Play write therefore **fails**
-with a message that says so, rather than silently starting the review over:
-run it again once Google has finished (the Play Console's Publishing
-overview shows what is in review). That includes the `android-internal`
-upload of a merge.
+commit of every lane use `ERROR_IF_IN_REVIEW` instead. A commit submits
+**all** of the app's pending changes, whichever lane makes it, so while a
+closed-testing release, a listing change or a Data safety change is in
+review, Play refuses every commit. `android beta` and `android metadata`
+**fail** with a message that says so, rather than silently starting the
+review over: run them again once Google has finished (the Play Console's
+Publishing overview shows what is in review).
+
+**The internal upload of a merge catches up by itself.** Internal-track
+releases are not reviewed the usual way; the refusal comes from the shared
+commit, not from the build. So:
+
+- `android internal` treats exactly Google's documented refusal (HTTP 400,
+  `FAILED_PRECONDITION`, `ErrorInfo` reason `CHANGES_ALREADY_IN_REVIEW`;
+  `PlayReviewGuard.changes_in_review?`) as "deferred": a `::notice`, the
+  refused edit deleted, the job green, no badge update, and app-release
+  keeps the App Bundle as the artifact `play-internal-deferred-aab` (30
+  days). Any other refusal still fails red.
+- **`play-internal-catch-up.yml`** runs hourly (and by hand,
+  `gh workflow run play-internal-catch-up.yml`). Its `find` job, with no
+  secret and no lock, asks `scripts/play-deferred-build.sh` for the newest
+  deferred build (by app-release run number, build = 1000 + run number);
+  none, and it stops there. Otherwise `fastlane android catch_up` reads the
+  internal track's version codes (`applications.tracks.releases.list`, no
+  edit) and uploads the deferred AAB, unchanged, only if it is newer than
+  everything on the track. Still in review: a notice, next hour. Once the
+  track has it or something newer, `drain` deletes the deferred artifacts,
+  so later hours stop at `find`.
+- Nothing is rebuilt and nothing reviewed is canceled. The README badge
+  still shows the last build app-release itself uploaded.
 
 **One Play writer at a time.** Play keeps one open edit per account and any
 commit invalidates the others, so every job that writes to Play
-(`android-internal`, `android-beta`, the listing job) holds the job-level
+(`android-internal`, `android-beta`, the listing and Data safety jobs,
+`play-internal-catch-up`'s `catch-up`) holds the job-level
 concurrency group `play-writes` with `queue: max`: waiting jobs queue in
 order, none is dropped, and the lock is released with the job. The App
 Store listing jobs share `app-store-listing` the same way.

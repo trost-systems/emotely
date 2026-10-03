@@ -1,0 +1,123 @@
+name: Play internal catch-up
+
+# Uploads the newest build that app-release deferred for the Play `internal`
+# track, once Play accepts commits again.
+#
+# Every Play commit submits all of the app's pending changes, and every
+# commit of ours refuses to cancel what Google is reviewing
+# (ERROR_IF_IN_REVIEW, apps/mobile/app/fastlane/lib/play_review_guard.rb). So
+# while a listing, a Data safety change or an alpha release is in review,
+# app-release's `android-internal` ends green with a notice and keeps the App
+# Bundle as the artifact `play-internal-deferred-aab`. This workflow brings it
+# back, without a rebuild and without canceling any review:
+#
+#   find      no secret, no lock: which deferred build is newest, if any
+#             (scripts/play-deferred-build.sh). Most hours this is all that
+#             runs.
+#   catch-up  `fastlane android catch_up`: asks Play what the internal track
+#             holds and uploads the deferred build only if it is newer. Still
+#             in review: a notice, and the next hour tries again.
+#   drain     once the track has the build or something newer, deletes the
+#             deferred artifacts, so the next hour stops at `find`.
+#
+# A refusal for any other reason fails red, like every other Play write.
+on:
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+
+# One catch-up at a time; a newer pending run replaces an older one, which
+# asks the same question.
+concurrency:
+  group: play-internal-catch-up
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  find:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      build: ${{ steps.find.outputs.build }}
+      run_id: ${{ steps.find.outputs.run_id }}
+      artifacts: ${{ steps.find.outputs.artifacts }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/play-deferred-build.sh
+          sparse-checkout-cone-mode: false
+      - id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          found="$(bash scripts/play-deferred-build.sh "${GITHUB_REPOSITORY}")"
+          if [[ -z "${found}" ]]; then
+            echo "No deferred build waits for the Play internal track."
+          else
+            printf '%s\n' "${found}" | tee -a "${GITHUB_OUTPUT}"
+          fi
+
+  catch-up:
+    needs: find
+    if: needs.find.outputs.build != ''
+    runs-on: ubuntu-latest
+    environment: release
+    # The lock every Play writer holds (app-release.yml, store-listings.yml,
+    # play-data-safety.yml): Play keeps one open edit per account and any
+    # commit invalidates the others. Queued in order, never dropped.
+    concurrency:
+      group: play-writes
+      queue: max
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      settled: ${{ steps.lane.outputs.settled }}
+    defaults:
+      run:
+        working-directory: apps/mobile/app
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@a0102e0972be65f351c307e2d64b9314a57c8073 # v1.324.0
+        with:
+          working-directory: apps/mobile/app
+          bundler-cache: true
+      # The App Bundle app-release built and signed, byte for byte: same
+      # build number, same upload key, nothing rebuilt.
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ needs.find.outputs.run_id }}
+        run: gh run download "${RUN_ID}" -R "${GITHUB_REPOSITORY}" -n play-internal-deferred-aab -D "${RUNNER_TEMP}/deferred"
+      - id: lane
+        run: bundle exec fastlane android catch_up
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          BUILD_NUMBER: ${{ needs.find.outputs.build }}
+          CATCH_UP_AAB: ${{ runner.temp }}/deferred/app-release.aab
+
+  # The only job that deletes: no secret, no checkout.
+  drain:
+    needs: [find, catch-up]
+    if: needs.catch-up.outputs.settled == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACTS: ${{ needs.find.outputs.artifacts }}
+        run: |
+          set -euo pipefail
+          for id in ${ARTIFACTS}; do
+            [[ "${id}" =~ ^[0-9]+$ ]] || { echo "::error::not an artifact id: ${id}"; exit 1; }
+            gh api --method DELETE "repos/${GITHUB_REPOSITORY}/actions/artifacts/${id}"
+            echo "Deleted deferred App Bundle artifact ${id}."
+          done

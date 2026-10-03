@@ -19,6 +19,14 @@ on purpose: `dart` is the standalone SDK `apps/web` is pinned to, and
 
 `release-status.sh` records one store channel's version and build in the README badges' `status.json`.
 
+`play-deferred-build.sh` names the newest App Bundle app-release kept
+because Play refused its internal upload while something was in review
+(artifact `play-internal-deferred-aab`, from app-release pushes to `main`
+only, newest by run number), for `play-internal-catch-up.yml`. Its build
+number is `1000 +` that run's number, the same formula as app-release's
+`BUILD_NUMBER`; change both together. `play-deferred-build.test.sh` drives
+it with a fake `gh` that applies the script's own `--jq` filters with jq.
+
 `feature-map.sh` fails when a typed route in the Flutter workspace's tracked
 library code and the entries of
 `.claude/skills/run-app/references/feature-map.yaml` disagree, or when an
@@ -60,7 +68,8 @@ uploads it verbatim). A limit the stores change goes into its `case` table.
 Shell here is linted by the `scripts` CI job: `shellcheck --external-sources
 --severity=style scripts/*.sh`, clean (with the skills' and
 `apps/*/scripts` shell); the same job runs `bash
-scripts/release-status.test.sh`, `bash scripts/l10n-check.test.sh`, `bash
+scripts/release-status.test.sh`, `bash scripts/play-deferred-build.test.sh`,
+`bash scripts/l10n-check.test.sh`, `bash
 scripts/vercel-ignore.test.sh`, `bash scripts/store-listing-check.test.sh`
 and the listing check itself (the job also runs when only a listing
 changed).

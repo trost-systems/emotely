@@ -325,7 +325,9 @@ jobs:
   # agents run to release and to verify. shellcheck is the lint for all of
   # them; runners ship it preinstalled. release-status.sh gates what
   # app-release writes to the public badge file, so its refusals are tested
-  # here, before a release depends on them. run-app.sh's account guard and
+  # here, before a release depends on them. play-deferred-build.sh picks the
+  # build play-internal-catch-up.yml uploads to Play, so its choice is tested
+  # against a fake `gh` the same way. run-app.sh's account guard and
   # its lock between parallel agent sessions are tested the same way, and so
   # is the performance budget's gate (perf.sh). The Vercel projects' Ignored
   # Build Step (vercel-ignore.sh) decides which commits deploy at all, so its
@@ -340,6 +342,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - run: shellcheck --external-sources --severity=style scripts/*.sh .claude/skills/*/scripts/*.sh apps/*/scripts/*.sh
       - run: bash scripts/release-status.test.sh
+      - run: bash scripts/play-deferred-build.test.sh
       - run: bash scripts/l10n-check.test.sh
       - run: bash scripts/vercel-ignore.test.sh
       - run: bash .claude/skills/run-app/scripts/run-app.test.sh
