@@ -3,7 +3,9 @@ name: Performance survey
 # The performance survey (#242): every screen of the feature map walked in
 # profile mode on real phones in Firebase Test Lab, each run's numbers
 # appended to the history (the perf-survey branch), and findings filed as
-# one issue per screen and metric, by severity. The walk, the devices and
+# one issue per screen and metric, by severity. It runs on demand, never
+# on a schedule (decided 2026-10-03: emotely does not change often enough
+# to measure every night). The walk, the devices and
 # the severity rules: apps/mobile/app/integration_test/survey_test.dart and
 # survey.yaml; the reference: .claude/skills/run-app/references/
 # performance-survey.md. The performance budget (#169) is the rest: every
@@ -13,8 +15,8 @@ name: Performance survey
 #
 # Cost: none. The Firebase project emotely-ci is on the Spark plan with no
 # billing account: 5 physical and 10 virtual test runs a day, shared by
-# every run in the project. The nightly spends 1-2 physical runs
-# (survey.yaml's `nightly`), leaving 3 for ad-hoc runs.
+# every run in the project. A full survey spends 2 physical runs (the
+# devices survey.yaml marks `default: true`), leaving 3 for ad-hoc runs.
 #
 # Sign-in is keyless (Workload Identity Federation): the service account
 # ftl-runner holds Test Lab admin, analytics viewer and Editor on the
@@ -23,16 +25,20 @@ name: Performance survey
 # has no billing, and only this repository can sign in as the runner.
 
 on:
-  schedule:
-    # After the emulator budget (04:30), so the two never share a runner's
-    # morning.
-    - cron: "30 5 * * *"
+  # Two kinds of run, both by hand (`gh workflow run perf-survey.yml --ref
+  # main ...`):
+  # - a full survey: no device and no screens. Every screen on the default
+  #   devices; it files or updates the findings' issues, and its records
+  #   are the baselines later runs are judged against.
+  # - an ad-hoc run: one device, or some screens. Judged against those
+  #   baselines and kept in the history, never part of a baseline; it files
+  #   nothing unless given an issue_tag.
   workflow_dispatch:
     inputs:
       device:
         description: >-
           One device: a key of survey.yaml's devices or <model>:<version>
-          (Test Lab ids). Empty: today's nightly devices.
+          (Test Lab ids). Empty: survey.yaml's default devices.
         default: ""
       screens:
         description: "The screens to walk, comma-separated; empty walks them all."
@@ -77,6 +83,7 @@ jobs:
       - id: plan
         env:
           DEVICE: ${{ inputs.device }}
+          SCREENS: ${{ inputs.screens }}
         run: |
           set -euo pipefail
           if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
@@ -90,7 +97,9 @@ jobs:
             kind="adhoc"
           else
             devices="$(bash "$SURVEY" plan)"
-            kind="nightly"
+            # Every screen of the default devices is a full survey; some of
+            # them is an ad-hoc run.
+            if [[ -n "${SCREENS:-}" ]]; then kind="adhoc"; else kind="survey"; fi
           fi
           {
             echo "android=$(jq -c 'map(select(.platform == "android"))' <<<"$devices")"
@@ -261,7 +270,7 @@ jobs:
           fi
           # Before the append: the run is judged against what came before.
           bash "$SURVEY" classify run.jsonl >findings.json
-          if [[ "$SOURCE" == nightly || -n "${ISSUE_TAG:-}" ]]; then
+          if [[ "$SOURCE" == survey || -n "${ISSUE_TAG:-}" ]]; then
             bash "$SURVEY" issues findings.json --run-url "$RUN_URL" ${ISSUE_TAG:+--tag "$ISSUE_TAG"}
           fi
           bash "$SURVEY" append run.jsonl

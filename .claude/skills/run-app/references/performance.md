@@ -7,7 +7,7 @@ things hold the app to it:
 | --- | --- | --- | --- |
 | **Request counts** | `apps/mobile/app/test/perf/request_budget_test.dart`, a widget test in the app's `melos run test` | every app pull request, about a second | yes, through `ci-ok` |
 | **Frames and latency** | `.github/workflows/nightly-perf.yml`: `perf.sh run` in profile mode on three emulators, then the deployed backend's latency | nightly (and `gh workflow run`) | never: anything that fails opens or comments on the one issue labeled `performance` |
-| **Frames on a real phone** | `.github/workflows/perf-survey.yml`: `survey.sh`, every screen on Firebase Test Lab phones, kept in a history; read [performance-survey.md](performance-survey.md) | nightly (and `gh workflow run`, one device and screen) | never: a finding opens or comments on one issue per screen and metric, by severity |
+| **Frames on a real phone** | `.github/workflows/perf-survey.yml`: `survey.sh`, every screen on Firebase Test Lab phones, kept in a history; read [performance-survey.md](performance-survey.md) | on demand: `gh workflow run perf-survey.yml --ref main` for a full survey of the default phones, or one device and screen; no schedule | never: a full survey's findings open or comment on one issue per screen and metric, by severity |
 
 `scripts/perf.sh` is the profile run, the same one the nightly runs, for an
 agent to measure frames locally. It also reports the request counts.

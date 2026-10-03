@@ -35,12 +35,12 @@ def judged($c):
   // (if .device.form == "virtual" then ["build_p90"] else ["build_p90", "raster_p90", "missed_frames"] end);
 
 # The trailing baseline of one record's metric: the median of the same
-# device's last nightly runs of the screen before it, or null while there
-# are too few of them. Ad-hoc runs (a regression chased, a fix proved on a
+# device's last full surveys (source "survey") of the screen before it, or
+# null while there are too few of them. Ad-hoc runs (a regression chased, a fix proved on a
 # branch) are compared with it, never part of it.
 def baseline($r; $metric; $s):
   [$history[]
-    | select(.source == "nightly")
+    | select(.source == "survey")
     | select(.device.model == $r.device.model and .device.version == $r.device.version
         and .screen == $r.screen and .run != $r.run and (.frames // 0) >= $s.min_frames
         and .at < $r.at

@@ -43,7 +43,8 @@ changing the budget — read
 ## Performance survey on real phones
 
 `scripts/survey.sh` walks every screen of the feature map in profile mode on
-real phones in Firebase Test Lab (a nightly workflow and ad-hoc runs), keeps
+real phones in Firebase Test Lab, on demand (a workflow run by hand, or
+`survey.sh ftl`; no schedule), keeps
 each run's numbers in a history (`survey.sh history --device a14m --screen
 journal`) and files findings by severity as one issue per screen and metric.
 Test Lab's daily quota is shared and small. Running it, reading the history,

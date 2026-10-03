@@ -35,21 +35,21 @@ devices:
     version: "36"
     name: Fast Phone
     form: physical
-    nightly: daily
+    default: true
   slow-phone:
     platform: android
     model: slow
     version: "34"
     name: Slow Phone
     form: physical
-    nightly: [1, 4]
+    default: false
   virtual:
     platform: android
     model: Virtual.arm
     version: "34"
     name: Virtual
     form: virtual
-    nightly: never
+    default: false
     judges: [build_p90]
 severity:
   floor_ms: 16.7
@@ -100,10 +100,10 @@ record() {
 }
 
 # history_of <device> <journal build ms> <count> [source]: <count> earlier
-# nightly runs (or of [source]) of both screens on <device>, a day apart
+# full surveys (or runs of [source]) of both screens on <device>, a day apart
 # before 2026-09-20, each at those journal build times and a fast More.
 history_of() {
-  local device="$1" build="$2" count="$3" source="${4:-nightly}" i
+  local device="$1" build="$2" count="$3" source="${4:-survey}" i
   for ((i = 1; i <= count; i++)); do
     survey "$work/h.json" 120 "$(screen 200 "$build" 3)" "$(screen 200 2 3)"
     record "$work/h.json" "$device" "earlier-$device-$i" \
@@ -305,13 +305,13 @@ test_judges_no_drift_before_three_earlier_runs() {
   [[ "$findings" == "[]" ]] || fail "judges no drift before three runs: got $findings"
 }
 
-test_the_baseline_is_the_nightly_runs_alone() {
+test_the_baseline_is_the_full_surveys_alone() {
   # Ad-hoc runs chase a regression or prove a fix on a branch; the baseline
-  # is what main measured every night.
+  # is what the full surveys of the default devices measured.
   local history
   history="$(history_of slow:34 4 3 adhoc)"
   classify "$(today slow:34 60 "$(screen 200 6 3)" "$(screen 200 2 3)")" "$history"
-  [[ "$findings" == "[]" ]] || fail "the baseline is the nightly runs alone: got $findings"
+  [[ "$findings" == "[]" ]] || fail "the baseline is the full surveys alone: got $findings"
 }
 
 test_judges_no_drift_under_half_a_millisecond() {
@@ -481,25 +481,21 @@ test_the_history_query_filters_by_device_screen_and_days() {
   fi
 }
 
-# --- the nightly's devices --------------------------------------------------------
+# --- the default devices ----------------------------------------------------------
 
-test_the_nightly_runs_daily_devices_and_the_rotation_on_its_days() {
-  local monday tuesday
-  monday="$(bash "$SURVEY" plan --weekday 1 --config "$work/survey.yaml" | jq -c 'map(.key)')"
-  tuesday="$(bash "$SURVEY" plan --weekday 2 --config "$work/survey.yaml" | jq -c 'map(.key)')"
-  [[ "$monday" == '["fast-phone","slow-phone"]' ]] || fail "the nightly on a rotation day: got $monday"
-  [[ "$tuesday" == '["fast-phone"]' ]] || fail "the nightly off the rotation: got $tuesday"
+test_a_full_survey_runs_the_default_devices() {
+  local plan
+  plan="$(bash "$SURVEY" plan --config "$work/survey.yaml" | jq -c 'map(.key)')"
+  [[ "$plan" == '["fast-phone"]' ]] || fail "a full survey runs the default devices: got $plan"
 }
 
-test_the_nightly_stays_within_the_physical_quota() {
-  # 5 physical runs a day on the Spark plan, shared with ad-hoc runs: the
-  # nightly leaves at least 2 of them on every day of the week.
-  local config="$REPO/apps/mobile/app/integration_test/survey.yaml" day most=0 n
-  for day in 1 2 3 4 5 6 7; do
-    n="$(bash "$SURVEY" plan --weekday "$day" --config "$config" | jq 'map(select(.form == "physical")) | length')"
-    ((n > most)) && most=$n
-  done
-  ((most <= 3)) || fail "the nightly leaves 2 physical runs a day: it takes $most"
+test_a_full_survey_stays_within_the_physical_quota() {
+  # 5 physical runs a day on the Spark plan, shared with ad-hoc runs: a
+  # full survey leaves at least 2 of them, so one a day still leaves room
+  # to chase a regression.
+  local config="$REPO/apps/mobile/app/integration_test/survey.yaml" n
+  n="$(bash "$SURVEY" plan --config "$config" | jq 'map(select(.form == "physical")) | length')"
+  ((n >= 1 && n <= 3)) || fail "a full survey takes 1 to 3 physical runs: it takes $n"
 }
 
 # --- the screens ------------------------------------------------------------------

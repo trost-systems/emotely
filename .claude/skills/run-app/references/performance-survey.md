@@ -7,8 +7,8 @@ is the third of the three things in [performance.md](performance.md)'s
 "What runs where": every pull request holds the budget's request counts
 (a widget test), the nightly runs the budget's three paths on emulators
 (frames, latency and request counts, reported), and this measures frames
-on the phones users have, every screen, to pull up when making a screen
-faster.
+on the phones users have, every screen, on demand, to pull up when making a
+screen faster.
 
 ```bash
 S=.claude/skills/run-app/scripts/survey.sh
@@ -23,7 +23,7 @@ $S history --device galaxy-s24 --days 90 --json | jq -s 'map(.build_ms.p90)'
 
 - **Project `emotely-ci`**, Spark plan, no billing account: nothing can cost
   money. **5 physical and 10 virtual test runs a day**, shared by every run
-  in the project, scheduled or ad hoc. One device of one run is one test
+  in the project, full surveys and ad-hoc runs alike. One device of one run is one test
   run, whether it passes or not.
 - **Locally, gcloud for emotely always runs as `CLOUDSDK_CONFIG=$HOME/.config/emotely/gcloud`.**
   The default configuration belongs to another organization; `survey.sh`
@@ -44,22 +44,38 @@ $S history --device galaxy-s24 --days 90 --json | jq -s 'map(.build_ms.p90)'
   in as the runner. Without it the keyless sign-in works and the upload
   fails with 403 on `storage.objects.create`.
 
-## The device matrix and the quota
+## Running it, the devices and the quota
 
-`apps/mobile/app/integration_test/survey.yaml` lists the phones and when the
-nightly (`.github/workflows/perf-survey.yml`, 05:30 UTC) runs each:
+The survey runs **on demand, never on a schedule** (decided 2026-10-03:
+emotely does not change often enough to measure every night). Two kinds of
+run, through `.github/workflows/perf-survey.yml` or `survey.sh ftl`:
 
-| device | Test Lab id | why | nightly | physical runs |
+- **A full survey**: every screen on the default devices,
+  `gh workflow run perf-survey.yml --ref main` with no device and no
+  screens. It files or updates the findings' issues, and its records
+  (source `survey`) are the baselines later runs are judged against. Run
+  one before and after a change that could move frames, or whenever the
+  history is stale.
+- **An ad-hoc run**: one device, or some screens
+  (`-f device=galaxy-a14 -f screens=journal`, or `survey.sh ftl` locally).
+  It is judged against the baselines and kept in the history (source
+  `adhoc`), never part of a baseline, and files nothing unless given
+  `-f issue_tag=...`.
+
+`apps/mobile/app/integration_test/survey.yaml` lists the phones;
+`default: true` marks those a full survey runs:
+
+| device | Test Lab id | why | full survey | physical runs |
 | --- | --- | --- | --- | --- |
-| Galaxy S24 | `SC-51E:36` | 120 Hz Android flagship | daily | 1 |
-| Galaxy A14 | `a14m:34` | low-end Android, 60/90 Hz | Monday, Thursday | +1 |
+| Galaxy S24 | `SC-51E:36` | 120 Hz Android flagship | yes | 1 |
+| Galaxy A14 | `a14m:34` | low-end Android, 60/90 Hz | yes | 1 |
 | iPhone 16 Pro | `iphone16pro:18.3` | 120 Hz iPhone | not yet (iOS, below) | +1 once on |
-| Medium Phone | `MediumPhone.arm:34` | virtual, for trying things | never | virtual |
+| Medium Phone | `MediumPhone.arm:34` | virtual, for trying things | no | virtual |
 
-That is **1 physical run a day, 2 on Mondays and Thursdays** (with the
-iPhone, 2 and 3): at least 2 of the 5 always stay for an agent chasing a
-regression. `survey.test.sh` fails a matrix that would leave fewer. Iterate
-on the virtual device; a physical run is for a number that matters.
+A full survey is **2 physical runs** (3 with the iPhone): at least 2 of the
+day's 5 always stay for an agent chasing a regression. `survey.test.sh`
+fails a default set that would leave fewer. Iterate on the virtual device;
+a physical run is for a number that matters.
 
 ## What a run measures
 
@@ -94,7 +110,7 @@ append-only" refuses deleting it and pushing anything but a fast-forward.
 A record is one screen of one run on one device:
 
 ```json
-{"run": "…", "at": "2026-09-30T05:41:02Z", "commit": "abc1234", "source": "nightly",
+{"run": "…", "at": "2026-09-30T05:41:02Z", "commit": "abc1234", "source": "survey",
  "device": {"key": "galaxy-s24", "model": "SC-51E", "version": "36", "name": "Galaxy S24",
             "platform": "android", "form": "physical"},
  "refresh_hz": 120, "display_hz": 24, "startup_ms": 151, "screen": "journal", "frames": 2151,
@@ -114,8 +130,8 @@ The rules below were decided on 2026-10-02 (#256), the additions to the
 issue's proposal included.
 
 `survey.sh classify` judges a run against `survey.yaml`'s rules and each
-device's **trailing baseline**: the median of that device's last 7 nightly
-runs of the screen within 30 days, once there are 3. Ad-hoc runs are
+device's **trailing baseline**: the median of that device's last 7 full
+surveys of the screen within 30 days, once there are 3. Ad-hoc runs are
 compared with the baseline, never part of it.
 
 - **critical**: below the 60 fps floor on any device: a p90 over 16.7 ms,
@@ -133,8 +149,8 @@ renderer).
 **One issue per screen and metric** (build p90, raster p90, missed frames),
 whatever the device, titled `[<severity>] Perf survey: <screen> <metric>`.
 A later run that finds it again comments its numbers and retitles the issue
-when the severity changed; it never files a second one. No labels. The
-nightly files; an ad-hoc run files only when given a tag
+when the severity changed; it never files a second one. No labels. A full
+survey files; an ad-hoc run files only when given a tag
 (`workflow_dispatch -f issue_tag='[test]'`), which keeps its issues apart.
 
 ## Chasing a finding
@@ -173,4 +189,4 @@ logs `survey.json` in chunks, which the always-kept `syslog.txt` holds,
 and `survey.sh ftl` falls back to it (verified end to end on Android's
 logcat, not yet on an iPhone). To finish: one physical run,
 `gh workflow run perf-survey.yml --ref main -f device=iphone-16-pro`; if it
-records, set the iPhone's `nightly: daily` in `survey.yaml`.
+records, set the iPhone's `default: true` in `survey.yaml`.

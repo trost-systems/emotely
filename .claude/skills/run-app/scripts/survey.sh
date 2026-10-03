@@ -41,8 +41,8 @@ Measure:
                    against the history and print the findings. <device> is a
                    key of survey.yaml's devices or <model>:<version> (Test
                    Lab ids). One physical device is one of the project's 5
-                   physical test runs a day (10 virtual), shared with the
-                   nightly: use them on purpose.
+                   physical test runs a day (10 virtual), shared with
+                   every other run: use them on purpose.
   local --device <adb id> [--screens a,b] [--out <dir>]
                    The same walk on a phone or emulator attached here,
                    through flutter drive.
@@ -72,9 +72,8 @@ Judge and keep:
                    The history, narrowed: e.g. the journal on the Galaxy A14
                    over the last 30 days:
                      survey.sh history --device a14m --screen journal
-  plan [--weekday n]
-                   The devices the nightly runs today (or on ISO weekday n),
-                   as a JSON list.
+  plan             The devices a full survey runs (survey.yaml's
+                   `default: true`), as a JSON list.
 
 Options everywhere: --config <file> instead of survey.yaml.
 EOF
@@ -588,22 +587,18 @@ cmd_append() {
   log "$(wc -l <"$records" | tr -d ' ') record(s) added to $HISTORY_BRANCH"
 }
 
-# plan [--weekday n]: the devices the nightly runs today, as a JSON list of
-# survey.yaml's entries (with their key).
+# plan: the devices a full survey runs (survey.yaml's `default: true`), as
+# a JSON list of survey.yaml's entries (with their key).
 cmd_plan() {
-  local weekday config="$CONFIG"
-  weekday="$(date -u +%u)"
+  local config="$CONFIG"
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --weekday) weekday="${2:?}"; shift 2 ;;
       --config) config="${2:?}"; shift 2 ;;
       *) die "unknown option $1" ;;
     esac
   done
-  config_json "$config" | jq -c --argjson day "$weekday" '.devices | to_entries
-    | map(select(.value.nightly == "daily"
-        or ((.value.nightly | type) == "array" and (.value.nightly | index($day)) != null)))
-    | map({key} + .value)'
+  config_json "$config" | jq -c '.devices | to_entries
+    | map(select(.value.default == true) | {key} + .value)'
 }
 
 main() {
