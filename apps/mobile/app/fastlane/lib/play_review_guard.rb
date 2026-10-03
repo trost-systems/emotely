@@ -24,7 +24,7 @@ module PlayReviewGuard
 
   HINT = "Play refused the commit. The lanes commit with #{BEHAVIOR} so that " \
          "changes in Google's review (an alpha release, a listing) are never " \
-         "cancelled and resubmitted; if something is in review, run this again " \
+         "canceled and resubmitted; if something is in review, run this again " \
          "once Google has finished. Google said:"
 
   def commit_edit(package_name, edit_id, changes_in_review_behavior: nil, **rest, &block)

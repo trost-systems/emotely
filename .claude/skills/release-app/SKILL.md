@@ -349,7 +349,7 @@ gh run watch
 - **Play**: one edit with the listing text only; Google reviews it before it
   shows. No binary, no images, no release notes, no track changes.
 
-**No Play write restarts a review.** `edits.commit` defaults to cancelling
+**No Play write restarts a review.** `edits.commit` defaults to canceling
 whatever is in Google's review and resubmitting it with the new changes, and
 supply cannot change that; `fastlane/lib/play_review_guard.rb` makes every
 commit of every lane use `ERROR_IF_IN_REVIEW` instead. While a closed-testing

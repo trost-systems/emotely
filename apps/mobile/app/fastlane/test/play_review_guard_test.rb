@@ -42,7 +42,7 @@ class PlayReviewGuardTest < Minitest::Test
     assert_equal "ERROR_IF_IN_REVIEW", sent.first.query["changesInReviewBehavior"]
   end
 
-  def test_an_explicit_behaviour_is_kept
+  def test_an_explicit_behavior_is_kept
     publisher, sent = service
     publisher.commit_edit("de.emotely.emotely", "edit-1", changes_in_review_behavior: "CANCEL_IN_REVIEW_AND_SUBMIT")
 
