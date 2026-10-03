@@ -150,3 +150,50 @@ Checked before moving, against Vercel's docs of 2026-08/09:
 Frankfurt and keeps the standard contractual clauses for the gateway and the
 provider. The consent wording already said only that "the provider may be
 outside the EU", which is now exactly true, so `consentVersion` stays.
+
+## Amendment 2026-10-03: email and password replace the sign-in code
+
+Decision 4 made the emailed code the only way in, with one exception for
+the store reviewers. Two things outgrew it
+([#187](https://github.com/trost-systems/emotely/issues/187)): agents
+verifying the app need to sign in through the ordinary screen, which a
+mailbox-less smoke account could only do through a debug-build allowlist
+(#180), and the reviewer exception had become a list the app carried of
+accounts that work differently from everyone else's.
+
+**Decision (Peter, 2026-10-03): everyone signs in with an email and a
+password, beside Apple and Google; the app no longer offers the code.**
+
+- **Registering confirms the address first.** `enable_confirmations` is on:
+  `signUp` creates the account without a session, and the account opens
+  only once the six-digit code in the confirmation mail is typed into the
+  app (`verifyOTP`, type `signup`). A forgotten password is the same
+  shape: `resetPasswordForEmail` mails a code, the code signs the account
+  in (type `recovery`), and the app asks for the new password before it
+  lets the user past the screen.
+- **A code, not a link,** for both mails. A link would need universal links
+  and Android app links (an `apple-app-site-association` and an
+  `assetlinks.json` on getemotely.com, an associated-domains entitlement in
+  every signing profile, a verified intent filter) and the PKCE flow, which
+  fails whenever the mail is opened on another device than the one that
+  asked: a laptop's mail client is the common case. Mail scanners that open
+  every link (Outlook's Safe Links, corporate gateways) would use a
+  single-use link up before the user taps it. A code has none of these
+  problems, is what the app already did, and keeps `detectSessionInUri` off.
+- **Password rules follow NIST SP 800-63B:** at least ten characters, no
+  composition rules, checked by the server whenever a password is set and
+  by the app before it asks. Supabase's leaked-password check
+  (HaveIBeenPwned) would come next, but it is a Pro-plan feature and this
+  project is on the free plan (decision 1); it is also set only through the
+  dashboard or the Management API, not `config.toml`, so it would be the
+  first auth setting outside decision 5.
+- **The code stays on the server, for two callers that are not the app's
+  sign-in:** the web account-deletion page proves the mailbox with it, and
+  installed app builds from before #187 sign in with it until the minimum
+  version (#49) retires them. Its mail names neither. An account made with
+  a code has no password; "Forgot password?" gives it one, so nobody is
+  locked out.
+- **No allowlist.** The two reviewer accounts and the smoke account are
+  ordinary confirmed password users, created confirmed by the release
+  skill's script and the Auth admin API; the app knows nothing about them.
+  The exception above is retired with the list.

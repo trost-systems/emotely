@@ -88,6 +88,8 @@ overrides:
       - "sitzungen->Sessions"
       - "datenschutzhinweis->Datenschutzerklärung"
       - "datenschutzhinweise->Datenschutzerklärung"
+      - "kennwort->Passwort"
+      - "kennwörter->Passwörter"
   # The question set holds both languages in one file: only the wordings are
   # copy (`en: "…"`, `de: "…"` inside each `text`), checked against both
   # languages and the words to avoid in each.

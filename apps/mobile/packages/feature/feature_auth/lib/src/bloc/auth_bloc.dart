@@ -69,7 +69,7 @@ class AuthBloc({
 
   /// Where the account keeps the language its sign-in mail is written in:
   /// `user_metadata`, which the mail template reads as `.Data`
-  /// (`supabase/templates/sign_in_code.html`; English when it is missing).
+  /// (`supabase/templates/email_code.html`; English when it is missing).
   /// A key of the app's own, not `locale`: Google's claims are merged into
   /// the same metadata on every sign-in, and they carry a `locale` of
   /// their own.
