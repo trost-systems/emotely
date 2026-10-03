@@ -1,0 +1,52 @@
+# Nothing travels as go_router's `extra` (ADR 0016, decision 3; issue 170): a
+# route carries path and query parameters only, so every screen can be
+# reached from its location alone, by a deep link as much as by a tap. A
+# screen that needs an object reads it back by id with a bloc of its own.
+#
+# Flagged, in hand-written Dart under apps/mobile:
+# - an `extra:` argument to any call (`context.push(…, extra: …)`,
+#   `GoRouter.of(context).go(…)`, `pushNamed`, `replace` and the rest);
+# - a read of `.extra` on anything (`state.extra`);
+# - the identifier `$extra`, go_router_builder's field for it on a typed
+#   route, declared or passed.
+# Only syntax is read, so the word is go_router's throughout the workspace:
+# a field of our own named `extra` would be flagged too, and is renamed.
+#
+# Checked first (ADR 0018), and why none covers it: no analyzer, SDK or
+# flutter_agent_lints 1.0.1 rule knows go_router; go_router 18.0.1 and
+# go_router_builder 4.5.0 ship no lints; emotely's own analyzer plugin
+# (tools/emotely_lints) has no routing rule. Types would tell
+# `GoRouterState.extra` from another `extra`, but no such other one exists
+# in the workspace, so the analyzer is not needed (ADR 0018, point 1).
+#
+# Emotely-specific (ADR 0018, "General and emotely-specific rules"): it
+# enforces ADR 0016.
+id: no-route-extra
+language: dart
+severity: error
+files:
+  - apps/mobile/**/*.dart
+# Generated code answers to its generator.
+ignores:
+  - "**/*.g.dart"
+  - "**/*.freezed.dart"
+  - "**/*.gen.dart"
+  - "**/*.mocks.dart"
+rule:
+  any:
+    - kind: named_argument
+      has:
+        kind: label
+        regex: '\Aextra\s*:\z'
+    - kind: member_expression
+      has:
+        field: property
+        regex: '\Aextra\z'
+    - kind: identifier
+      regex: '\A\$extra\z'
+    # The grammar does not know primary constructors yet: a route's header,
+    # `class const EntryRoute(final Entry $extra) extends GoRouteData`,
+    # parses as an error node, so its text is searched instead.
+    - kind: ERROR
+      regex: '\$extra\b'
+message: 'go_router''s extra: a route carries path and query parameters only, and the screen reads its object back by id with a bloc (ADR 0016, decision 3)'

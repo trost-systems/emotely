@@ -1,0 +1,45 @@
+id: no-feature-dependency
+valid:
+  # A feature depends on utilities, the SDK and third-party packages.
+  - |
+    name: feature_journal
+    description: Home, and the way into feature_session's screen through a navigator.
+    resolution: workspace
+    dependencies:
+      analytics: any
+      flutter:
+        sdk: flutter
+      go_router: 18.0.1
+      journal_repository: any
+    dev_dependencies:
+      analysis: any
+      testing: any
+    flutter:
+      generate: true
+  # A key that only looks like a feature, outside the dependency sections.
+  - |
+    name: feature_auth
+    flutter_gen:
+      feature_flags: false
+invalid:
+  - |
+    name: feature_journal
+    dependencies:
+      analytics: any
+      feature_session: any
+  - |
+    name: feature_journal
+    dev_dependencies:
+      feature_auth: any
+  - |
+    name: feature_journal
+    dependency_overrides:
+      feature_account:
+        path: ../feature_account
+  - |
+    name: feature_journal
+    dependencies: {analytics: any, feature_session: any}
+  - |
+    name: feature_journal
+    dependencies:
+      "feature_session": any

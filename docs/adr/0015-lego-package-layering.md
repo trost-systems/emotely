@@ -83,7 +83,9 @@ package; at a dozen packages both are ceremony. `RepositoryProvider` and
 the tree, which was never the defect, but a feature package cannot reach a
 tree the app builds.
 
-The rules, in the app's `AGENTS.md` and enforced by review:
+The rules, in the app's `AGENTS.md` and enforced by review when decided;
+the amendments below say which a lint enforces now (all but the factories,
+the tests' composition and `main`'s async initialization):
 
 - **One composition root.** `registerApp` in the app calls one plain
   `registerX(GetIt, {...})` function per utility and per feature, in
@@ -122,3 +124,30 @@ rule `no-from-environment` (ADR 0018) fails any `String`, `bool` or
 is `app/integration_test/environment.dart`, for the smoke account's password,
 which the live integration test needs and no build of the app may carry.
 The other rules above stay review-only until #170.
+
+## Amendment 2026-10-03: the layering is enforced, not reviewed
+
+Since #170, ast-grep rules in `ast-grep/rules/architecture` (ADR 0018)
+fail what review used to catch:
+
+- **Features never depend on features:** `no-feature-dependency` fails a
+  `feature_*` key under `dependencies`, `dev_dependencies` or
+  `dependency_overrides` in any pubspec under `apps/mobile/packages`, a
+  utility's included, since a utility may not depend on a feature either.
+  A workspace member is listed by name alone, so `feature-package-name`
+  keeps every package under `packages/feature` named `feature_<name>`.
+- **One composition root:** `no-registration-outside-root` fails a call of
+  any of get_it's `register…` methods in a package's `lib/` outside a
+  top-level function named `register…` (or `_register…`). That the app
+  calls them in dependency order stays a review matter.
+- **Widgets touch the container in exactly two places:**
+  `no-container-lookup` fails `GetIt.I` or `GetIt.instance` anywhere in a
+  package's `lib/` but `BlocProvider(create: (_) => GetIt.I<SomeBloc>())`
+  and `GetIt.I<SomeNavigator>()`, with `main` exempt. It holds all of
+  `lib/`, not widgets alone: no other code reads the container either, and
+  "inside a widget" is not a syntactic fact.
+
+Still review-only: blocs as factories and everything else as user-agnostic
+singletons, tests composing with the production `registerApp`, and async
+initialization in `main`. Test code is outside the two get_it rules: it
+registers its fake navigators and reads the container.

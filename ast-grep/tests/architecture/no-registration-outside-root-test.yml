@@ -1,0 +1,63 @@
+id: no-registration-outside-root
+valid:
+  # A package's one registration function.
+  - |
+    void registerJournal(GetIt getIt) {
+      getIt.registerFactory(() => JournalBloc(repository: getIt()));
+    }
+  # The app's composition root and its private helpers, cascades included.
+  - |
+    void registerApp(GetIt getIt, {required SupabaseClient supabase}) {
+      getIt.registerSingleton(supabase);
+      _registerSeams(getIt);
+    }
+  - |
+    void _registerSeams(GetIt getIt) => getIt
+      ..registerSingleton<UserContextSource>(AppUserContextSource(profiles: getIt()))
+      ..registerSingleton<JournalNavigator>(const AppJournalNavigator());
+  # Every get_it method a registration function may call.
+  - |
+    void registerAgentClient(GetIt getIt) {
+      getIt.registerLazySingleton(() => AgentClient(getIt()));
+      getIt.registerFactoryParam<EntryBloc, String, void>((id, _) => EntryBloc(id));
+      getIt.registerSingletonAsync(Store.open);
+    }
+  # Flutter's restoration API shares the prefix, not the meaning.
+  - |
+    class _JournalViewState extends State<JournalView> with RestorationMixin {
+      @override
+      void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+        registerForRestoration(_tab, 'tab');
+      }
+    }
+  # Named in a comment or a string, nothing is registered.
+  - |
+    /// Never call `getIt.registerSingleton` outside a registration function.
+    const hint = 'GetIt.I.registerFactory';
+invalid:
+  # A widget registering into the container.
+  - |
+    Widget build(BuildContext context) {
+      GetIt.I.registerSingleton<JournalNavigator>(const AppJournalNavigator());
+      return const JournalView();
+    }
+  # main, beside the composition root instead of in it.
+  - |
+    Future<void> main() async {
+      registerApp(GetIt.I);
+      GetIt.I.registerLazySingleton(() => Clock());
+    }
+  # A package that registers itself, outside its registration function.
+  - |
+    final _registered = GetIt.I..registerFactory(() => JournalBloc(repository: GetIt.I()));
+  # A method is not the plain function the app calls.
+  - |
+    class JournalModule {
+      void registerAll(GetIt getIt) => getIt.registerCachedFactory(JournalBloc.new);
+    }
+  - |
+    void setUpJournal(GetIt getIt) {
+      getIt
+        ..registerSingletonWithDependencies(Clock.new, dependsOn: [Store])
+        ..registerSingletonIfAbsent(Clock.new);
+    }

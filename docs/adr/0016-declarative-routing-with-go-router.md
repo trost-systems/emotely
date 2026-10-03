@@ -172,3 +172,14 @@ package; the seams shrink to cross-feature asks (`startSession`,
 `requestConsent`, `signOut`), and `openEntry` and `openAccount` are gone.
 A feature's paths are part of its contract, which is what makes every
 screen addressable from outside.
+
+## Amendment 2026-10-03: no `extra` and no framework Material, by lint
+
+Decision 3 was enforced by review until #170. The ast-grep rule
+`no-route-extra` (ADR 0018) now fails, in hand-written Dart under
+`apps/mobile`, an `extra:` argument to any call, a read of `.extra`, and
+go_router_builder's `$extra` on a typed route. It reads syntax, so the word
+is go_router's throughout the workspace. `no-flutter-material` fails an
+import or export of `package:flutter/material.dart` or
+`package:flutter/cupertino.dart` there, which keeps the app on the
+`material_ui` / `cupertino_ui` split this ADR weighed go_router against.

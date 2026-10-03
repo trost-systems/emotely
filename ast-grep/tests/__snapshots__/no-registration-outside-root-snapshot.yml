@@ -1,0 +1,69 @@
+id: no-registration-outside-root
+snapshots:
+  ? |
+    Future<void> main() async {
+      registerApp(GetIt.I);
+      GetIt.I.registerLazySingleton(() => Clock());
+    }
+  : labels:
+    - source: registerLazySingleton
+      style: primary
+      start: 62
+      end: 83
+    - source: GetIt.I.registerLazySingleton
+      style: secondary
+      start: 54
+      end: 83
+  ? |
+    Widget build(BuildContext context) {
+      GetIt.I.registerSingleton<JournalNavigator>(const AppJournalNavigator());
+      return const JournalView();
+    }
+  : labels:
+    - source: registerSingleton
+      style: primary
+      start: 47
+      end: 64
+    - source: GetIt.I.registerSingleton
+      style: secondary
+      start: 39
+      end: 64
+  ? |
+    class JournalModule {
+      void registerAll(GetIt getIt) => getIt.registerCachedFactory(JournalBloc.new);
+    }
+  : labels:
+    - source: registerCachedFactory
+      style: primary
+      start: 63
+      end: 84
+    - source: getIt.registerCachedFactory
+      style: secondary
+      start: 57
+      end: 84
+  ? |
+    final _registered = GetIt.I..registerFactory(() => JournalBloc(repository: GetIt.I()));
+  : labels:
+    - source: registerFactory
+      style: primary
+      start: 29
+      end: 44
+    - source: 'registerFactory(() => JournalBloc(repository: GetIt.I()))'
+      style: secondary
+      start: 29
+      end: 86
+  ? |
+    void setUpJournal(GetIt getIt) {
+      getIt
+        ..registerSingletonWithDependencies(Clock.new, dependsOn: [Store])
+        ..registerSingletonIfAbsent(Clock.new);
+    }
+  : labels:
+    - source: registerSingletonWithDependencies
+      style: primary
+      start: 47
+      end: 80
+    - source: 'registerSingletonWithDependencies(Clock.new, dependsOn: [Store])'
+      style: secondary
+      start: 47
+      end: 111

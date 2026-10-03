@@ -1,0 +1,42 @@
+# The Flutter client builds on the standalone `material_ui` and
+# `cupertino_ui` packages (ADR 0016, issue 170), never on the framework's own
+# `package:flutter/material.dart` or `package:flutter/cupertino.dart`. The
+# libraries declare the same widgets, and the app's theme and `Material` are
+# material_ui's: what the framework's copies do under them is in
+# apps/mobile/AGENTS.md, "Dependencies still on flutter/material.dart".
+# Flagged: an `import` or `export` of either library, with any prefix or
+# combinator.
+#
+# Checked first (ADR 0018), and why none covers it, against
+# flutter_agent_lints 1.0.1 under the Dart 3.13 analyzer and Flutter 3.47.2:
+# - No analyzer or SDK lint bans a library by its URI.
+# - `depend_on_referenced_packages` wants the importing package to list the
+#   library's package, and every Flutter package lists `flutter`.
+# - Neither library is deprecated in Flutter 3.47.2, so
+#   `deprecated_member_use` stays silent.
+# - `ambiguous_import` fires only when a file imports both copies and names
+#   a widget they share; a file on the framework's copy alone compiles.
+# - emotely's own analyzer plugin (tools/emotely_lints) has no import rule.
+#
+# Emotely-specific (ADR 0018, "General and emotely-specific rules"): it
+# enforces this repository's choice of the standalone packages.
+id: no-flutter-material
+language: dart
+severity: error
+files:
+  - apps/mobile/**/*.dart
+# Generated code answers to its generator.
+ignores:
+  - "**/*.g.dart"
+  - "**/*.freezed.dart"
+  - "**/*.gen.dart"
+  - "**/*.mocks.dart"
+rule:
+  kind: uri
+  regex: '\Ar?[''"]package:flutter/(?:material|cupertino)\.dart[''"]\z'
+  inside:
+    stopBy: end
+    any:
+      - kind: library_import
+      - kind: library_export
+message: 'the framework''s Material or Cupertino library: import package:material_ui/material_ui.dart or package:cupertino_ui/cupertino_ui.dart instead (ADR 0016)'

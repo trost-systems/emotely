@@ -14,11 +14,11 @@
 #     Every rule in ast-grep/rules — the comment tripwire, the architecture
 #     rules — over every file git tracks, so build output, dependencies and
 #     scratch files are never read. ast-grep keeps the files it has a rule
-#     language for (Dart, TypeScript and JavaScript, shell); each rule's own
-#     `files` and `ignores` narrow that further. A bare `ast-grep-ignore`
-#     fails (`no-suppress-all`): a suppression names the rules it silences,
-#     and the tripwire wants its reason. Arguments go to `ast-grep scan`,
-#     e.g. `--format github` in CI.
+#     language for (Dart, TypeScript and JavaScript, shell, YAML); each
+#     rule's own `files` and `ignores` narrow that further. A bare
+#     `ast-grep-ignore` fails (`no-suppress-all`): a suppression names the
+#     rules it silences, and the tripwire wants its reason. Arguments go to
+#     `ast-grep scan`, e.g. `--format github` in CI.
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"

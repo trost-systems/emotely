@@ -1,0 +1,62 @@
+id: feature-package-name
+snapshots:
+  ? |
+    name: insights
+    dependencies:
+      analytics: any
+  : labels:
+    - source: 'name: insights'
+      style: primary
+      start: 0
+      end: 14
+    - source: |
+        name: insights
+        dependencies:
+          analytics: any
+      style: secondary
+      start: 0
+      end: 46
+    - source: |
+        name: insights
+        dependencies:
+          analytics: any
+      style: secondary
+      start: 0
+      end: 46
+    - source: |
+        name: insights
+        dependencies:
+          analytics: any
+      style: secondary
+      start: 0
+      end: 46
+    - source: name
+      style: secondary
+      start: 0
+      end: 4
+  ? |
+    name: journal_feature
+  : labels:
+    - source: 'name: journal_feature'
+      style: primary
+      start: 0
+      end: 21
+    - source: |
+        name: journal_feature
+      style: secondary
+      start: 0
+      end: 22
+    - source: |
+        name: journal_feature
+      style: secondary
+      start: 0
+      end: 22
+    - source: |
+        name: journal_feature
+      style: secondary
+      start: 0
+      end: 22
+    - source: name
+      style: secondary
+      start: 0
+      end: 4

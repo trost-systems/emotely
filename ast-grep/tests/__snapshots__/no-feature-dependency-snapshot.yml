@@ -1,0 +1,228 @@
+id: no-feature-dependency
+snapshots:
+  ? |
+    name: feature_journal
+    dependencies:
+      "feature_session": any
+  : labels:
+    - source: '"feature_session": any'
+      style: primary
+      start: 38
+      end: 60
+    - source: |
+        name: feature_journal
+        dependencies:
+          "feature_session": any
+      style: secondary
+      start: 0
+      end: 61
+    - source: |
+        name: feature_journal
+        dependencies:
+          "feature_session": any
+      style: secondary
+      start: 0
+      end: 61
+    - source: |
+        name: feature_journal
+        dependencies:
+          "feature_session": any
+      style: secondary
+      start: 0
+      end: 61
+    - source: dependencies
+      style: secondary
+      start: 22
+      end: 34
+    - source: |
+        dependencies:
+          "feature_session": any
+      style: secondary
+      start: 22
+      end: 61
+    - source: '"feature_session"'
+      style: secondary
+      start: 38
+      end: 55
+  ? |
+    name: feature_journal
+    dependencies:
+      analytics: any
+      feature_session: any
+  : labels:
+    - source: 'feature_session: any'
+      style: primary
+      start: 55
+      end: 75
+    - source: |
+        name: feature_journal
+        dependencies:
+          analytics: any
+          feature_session: any
+      style: secondary
+      start: 0
+      end: 76
+    - source: |
+        name: feature_journal
+        dependencies:
+          analytics: any
+          feature_session: any
+      style: secondary
+      start: 0
+      end: 76
+    - source: |
+        name: feature_journal
+        dependencies:
+          analytics: any
+          feature_session: any
+      style: secondary
+      start: 0
+      end: 76
+    - source: dependencies
+      style: secondary
+      start: 22
+      end: 34
+    - source: |
+        dependencies:
+          analytics: any
+          feature_session: any
+      style: secondary
+      start: 22
+      end: 76
+    - source: feature_session
+      style: secondary
+      start: 55
+      end: 70
+  ? |
+    name: feature_journal
+    dependencies: {analytics: any, feature_session: any}
+  : labels:
+    - source: 'feature_session: any'
+      style: primary
+      start: 53
+      end: 73
+    - source: |
+        name: feature_journal
+        dependencies: {analytics: any, feature_session: any}
+      style: secondary
+      start: 0
+      end: 75
+    - source: |
+        name: feature_journal
+        dependencies: {analytics: any, feature_session: any}
+      style: secondary
+      start: 0
+      end: 75
+    - source: |
+        name: feature_journal
+        dependencies: {analytics: any, feature_session: any}
+      style: secondary
+      start: 0
+      end: 75
+    - source: dependencies
+      style: secondary
+      start: 22
+      end: 34
+    - source: 'dependencies: {analytics: any, feature_session: any}'
+      style: secondary
+      start: 22
+      end: 74
+    - source: feature_session
+      style: secondary
+      start: 53
+      end: 68
+  ? |
+    name: feature_journal
+    dependency_overrides:
+      feature_account:
+        path: ../feature_account
+  : labels:
+    - source: |
+        feature_account:
+            path: ../feature_account
+      style: primary
+      start: 46
+      end: 92
+    - source: |
+        name: feature_journal
+        dependency_overrides:
+          feature_account:
+            path: ../feature_account
+      style: secondary
+      start: 0
+      end: 92
+    - source: |
+        name: feature_journal
+        dependency_overrides:
+          feature_account:
+            path: ../feature_account
+      style: secondary
+      start: 0
+      end: 92
+    - source: |
+        name: feature_journal
+        dependency_overrides:
+          feature_account:
+            path: ../feature_account
+      style: secondary
+      start: 0
+      end: 92
+    - source: dependency_overrides
+      style: secondary
+      start: 22
+      end: 42
+    - source: |
+        dependency_overrides:
+          feature_account:
+            path: ../feature_account
+      style: secondary
+      start: 22
+      end: 92
+    - source: feature_account
+      style: secondary
+      start: 46
+      end: 61
+  ? |
+    name: feature_journal
+    dev_dependencies:
+      feature_auth: any
+  : labels:
+    - source: 'feature_auth: any'
+      style: primary
+      start: 42
+      end: 59
+    - source: |
+        name: feature_journal
+        dev_dependencies:
+          feature_auth: any
+      style: secondary
+      start: 0
+      end: 60
+    - source: |
+        name: feature_journal
+        dev_dependencies:
+          feature_auth: any
+      style: secondary
+      start: 0
+      end: 60
+    - source: |
+        name: feature_journal
+        dev_dependencies:
+          feature_auth: any
+      style: secondary
+      start: 0
+      end: 60
+    - source: dev_dependencies
+      style: secondary
+      start: 22
+      end: 38
+    - source: |
+        dev_dependencies:
+          feature_auth: any
+      style: secondary
+      start: 22
+      end: 60
+    - source: feature_auth
+      style: secondary
+      start: 42
+      end: 54

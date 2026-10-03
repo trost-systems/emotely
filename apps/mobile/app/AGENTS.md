@@ -1,9 +1,8 @@
 # apps/mobile/app — Flutter client
 
-State management: bloc. Widgets: standalone
-`material_ui`/`cupertino_ui` packages (never `flutter/material.dart`). Custom
-look lives in `ThemeData` (Baskervville serif, emotely-orange seed), not in
-hand-rolled widgets.
+State management: bloc. Widgets: the standalone `material_ui`/`cupertino_ui`
+packages. Custom look lives in `ThemeData` (Baskervville serif,
+emotely-orange seed), not in hand-rolled widgets.
 
 ## Routing (ADR 0016)
 
@@ -23,10 +22,9 @@ hand-rolled widgets.
   outcome). The seams take the `BuildContext` of the tap; a caller that
   awaits the server before asking checks `context.mounted` first, and so
   does an implementation that uses the context after its own await.
-- Nothing travels as `extra`. A route carries path and query parameters
-  only (`EntryRoute(id:)`, `SessionRoute(resume:)`), and the screen reads
-  what it shows by that. A screen that needs an object gets a bloc that
-  loads it, not a constructor argument from the caller.
+- A screen that needs an object gets a bloc that loads it by the id in its
+  location (`EntryRoute(id:)`, `SessionRoute(resume:)`), not a constructor
+  argument from the caller.
 - Screens are routes; steps are bloc state. Sign-in's email-then-code, the
   session's questions, the onboarding steps and the consent screen's
   states are one page whose bloc picks the widget, not a page stack.
@@ -52,19 +50,13 @@ hand-rolled widgets.
 ## Dependencies (ADR 0015)
 
 - `lib/app/dependencies.dart` is the one composition root: `registerApp`
-  fills the get_it container in dependency order and nothing else registers
-  anything. Every utility and every feature exposes one plain
-  `registerX(GetIt getIt, {...})` function; the app calls them.
+  calls every utility's and every feature's one plain
+  `registerX(GetIt getIt, {...})` function, in dependency order.
 - Blocs are factories, created by the screen that owns them. Everything
   else is an eager singleton and user-agnostic: nothing per-user outlives a
   screen, so sign-out already drops all state. The day a per-user object
   must outlive a screen, it goes into a get_it scope pushed on sign-in and
   popped on sign-out — not into a singleton.
-- Widgets touch the container in exactly two places:
-  `BlocProvider(create: (_) => GetIt.I<SomeBloc>())`, and a page resolving
-  its own feature's navigator (`GetIt.I<JournalNavigator>()`). Nothing else
-  in a widget reads a dependency; a side effect that needs one (analytics, a
-  launcher) is an event the bloc handles.
 - Every feature's navigator is implemented in `lib/app/navigators.dart` and
   registered next to the feature in `registerApp`. The app is the only
   place that knows two features' pages and blocs together, so cross-feature

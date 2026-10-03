@@ -142,6 +142,99 @@ test_fails_a_define_read_in_a_feature_package() {
 ${output}"
 }
 
+# no-container-lookup and no-registration-outside-root (ADR 0015): a
+# package's lib/ reads the container in its two places and registers only in
+# a registration function. main may read it, to hand it to registerApp, but
+# registers nothing itself; the tests, which register fakes, are held to
+# neither. Every hit in a file is reported.
+test_holds_the_container_rules_to_lib_but_main() {
+  local lookup='GetIt.I<JournalRepository>()'
+  local register='GetIt.I..registerSingleton(a)..registerLazySingleton(b);'
+  local dir
+  dir="$(repo \
+    apps/mobile/packages/feature/feature_x/lib/src/x.dart "final r = ${lookup};\nfinal s = ${register}\n" \
+    apps/mobile/packages/utility/utility_y/lib/y.dart "final r = ${lookup};\n" \
+    apps/mobile/app/lib/app/app.dart "final r = ${lookup};\n" \
+    apps/mobile/app/lib/main.dart "final r = ${lookup};\nfinal s = ${register}\n" \
+    apps/mobile/packages/feature/feature_x/lib/src/x.g.dart "final r = ${lookup};\nfinal s = ${register}\n" \
+    apps/mobile/packages/feature/feature_x/test/x_test.dart "final r = ${lookup};\nfinal s = ${register}\n" \
+    apps/mobile/app/integration_test/live_test.dart "final r = ${lookup};\nfinal s = ${register}\n")"
+
+  local lookup_message="a get_it lookup outside its two places: a widget writes only BlocProvider(create: (_) => GetIt.I<SomeBloc>()) and GetIt.I<ItsFeatureNavigator>(); pass anything else into the bloc's constructor in the package's registerX function, and turn a side effect into a bloc event (ADR 0015)"
+  local register_message="outside a registration function: register in the package's one top-level registerX(GetIt getIt, {...}) function, which the app's registerApp calls (ADR 0015)"
+  local expected
+  expected="$(printf '%s\n' \
+    "apps/mobile/app/lib/app/app.dart:1: ${lookup_message}" \
+    "apps/mobile/app/lib/main.dart:2: \"registerLazySingleton\" ${register_message}" \
+    "apps/mobile/app/lib/main.dart:2: \"registerSingleton\" ${register_message}" \
+    "apps/mobile/packages/feature/feature_x/lib/src/x.dart:1: ${lookup_message}" \
+    "apps/mobile/packages/feature/feature_x/lib/src/x.dart:2: \"registerLazySingleton\" ${register_message}" \
+    "apps/mobile/packages/feature/feature_x/lib/src/x.dart:2: \"registerSingleton\" ${register_message}" \
+    "apps/mobile/packages/feature/feature_x/lib/src/x.dart:2: ${lookup_message}" \
+    "apps/mobile/packages/utility/utility_y/lib/y.dart:1: ${lookup_message}" | sort)"
+  local actual
+  actual="$(findings "${dir}")"
+  [[ "${actual}" == "${expected}" ]] ||
+    fail "holds the container rules to lib/ but main: got
+${actual}"
+}
+
+# no-route-extra and no-flutter-material (ADR 0016) hold every hand-written
+# file of the Flutter workspace, its tests included; generated code, the
+# analyzer plugin (whose tests hold such imports as strings and fixtures) and
+# the site are not theirs.
+test_holds_the_routing_and_material_rules_to_the_flutter_workspace() {
+  local source="import 'package:flutter/material.dart';\nfinal e = state.extra;\n"
+  local dir
+  dir="$(repo \
+    apps/mobile/packages/feature/feature_x/lib/src/x.dart "${source}" \
+    apps/mobile/app/test/app_test.dart "${source}" \
+    apps/mobile/packages/feature/feature_x/lib/src/routes.g.dart "${source}" \
+    tools/emotely_lints/test/fixture.dart "${source}" \
+    apps/web/lib/main.dart "${source}")"
+
+  local extra="go_router's extra: a route carries path and query parameters only, and the screen reads its object back by id with a bloc (ADR 0016, decision 3)"
+  local material="the framework's Material or Cupertino library: import package:material_ui/material_ui.dart or package:cupertino_ui/cupertino_ui.dart instead (ADR 0016)"
+  local expected
+  expected="$(printf '%s\n' \
+    "apps/mobile/app/test/app_test.dart:1: ${material}" \
+    "apps/mobile/app/test/app_test.dart:2: ${extra}" \
+    "apps/mobile/packages/feature/feature_x/lib/src/x.dart:1: ${material}" \
+    "apps/mobile/packages/feature/feature_x/lib/src/x.dart:2: ${extra}")"
+  local actual
+  actual="$(findings "${dir}")"
+  [[ "${actual}" == "${expected}" ]] ||
+    fail "holds the routing and material rules to the Flutter workspace: got
+${actual}"
+}
+
+# no-feature-dependency and feature-package-name (ADR 0015): a feature or a
+# utility never lists a feature, which is known by its name; the app, the
+# glue, lists them all.
+test_lets_only_the_app_depend_on_a_feature() {
+  local deps='dependencies:\n  analytics: any\n  feature_y: any\n'
+  local dir
+  dir="$(repo \
+    apps/mobile/packages/feature/feature_x/pubspec.yaml "name: feature_x\n${deps}" \
+    apps/mobile/packages/utility/utility_z/pubspec.yaml "name: utility_z\n${deps}" \
+    apps/mobile/packages/feature/insights/pubspec.yaml 'name: insights\n' \
+    apps/mobile/packages/utility/legal_links/pubspec.yaml 'name: legal_links\n' \
+    apps/mobile/app/pubspec.yaml "name: emotely\n${deps}" \
+    apps/mobile/pubspec.yaml "name: mobile\n${deps}")"
+
+  local dependency="feature_y is a feature: features and utilities never depend on a feature; reach its screen through your navigator, its data through a source the app implements, or move shared code into a utility (ADR 0015)"
+  local expected
+  expected="$(printf '%s\n' \
+    "apps/mobile/packages/feature/feature_x/pubspec.yaml:4: ${dependency}" \
+    "apps/mobile/packages/feature/insights/pubspec.yaml:1: a feature package's name starts with feature_ (apps/mobile/packages/feature/feature_<name>), so the no-feature-dependency rule knows it for a feature (ADR 0015)" \
+    "apps/mobile/packages/utility/utility_z/pubspec.yaml:4: ${dependency}")"
+  local actual
+  actual="$(findings "${dir}")"
+  [[ "${actual}" == "${expected}" ]] ||
+    fail "lets only the app depend on a feature: got
+${actual}"
+}
+
 # ast-grep's own suppression silences any rule here, so it must name the
 # rules it silences and give its reason like every other suppression. A bare
 # one on a code line would otherwise silence the finding on itself.
@@ -261,6 +354,9 @@ test_exempts_generated_files_and_anything_git_does_not_track
 test_reads_defines_only_in_each_apps_environment_file
 test_fails_with_the_file_the_line_and_the_reason
 test_fails_a_define_read_in_a_feature_package
+test_holds_the_container_rules_to_lib_but_main
+test_holds_the_routing_and_material_rules_to_the_flutter_workspace
+test_lets_only_the_app_depend_on_a_feature
 test_wants_rule_ids_and_a_reason_on_ast_grep_ignore
 test_rule_tests_pass_with_every_rule_in_place
 test_rule_tests_fail_on_a_test_whose_rule_was_renamed

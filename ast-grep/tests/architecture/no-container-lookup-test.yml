@@ -1,0 +1,111 @@
+id: no-container-lookup
+valid:
+  # A screen creates its bloc, the one form for it.
+  - |
+    @override
+    Widget build(BuildContext context) => BlocProvider(
+      create: (_) => GetIt.I<JournalBloc>(),
+      child: const JournalView(),
+    );
+  # With the event that starts it, on one line or wrapped.
+  - |
+    Widget build(BuildContext context) => BlocProvider(
+      create: (_) => GetIt.I<EntryBloc>()..add(EntryEvent.loaded(entryId)),
+      child: const EntryView(),
+    );
+  - |
+    Widget build(BuildContext context) => MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => GetIt.I<AuthBloc>()),
+        BlocProvider<ConfigBloc>(
+          lazy: false,
+          create: (context) =>
+              GetIt.I<ConfigBloc>()
+                ..add(const ConfigEvent.loaded()),
+        ),
+      ],
+      child: const App(),
+    );
+  # A route that owns its screen's bloc, declared with a primary constructor.
+  - |
+    @immutable
+    class const ConsentRoute() extends GoRouteData with $ConsentRoute {
+      @override
+      Widget build(BuildContext context, GoRouterState state) => BlocProvider(
+        create: (_) => GetIt.I<ConsentBloc>()..add(const ConsentEvent.loaded()),
+        child: const ConsentPage(),
+      );
+    }
+  # A page resolves its own feature's navigator, held or called at once.
+  - |
+    Widget build(BuildContext context) {
+      final navigator = GetIt.I<SignInNavigator>();
+      return TextButton(onPressed: () => navigator.leave(context), child: label);
+    }
+  - |
+    Future<void> _consent(BuildContext context) async {
+      await GetIt.I<AccountNavigator>().requestConsent(context);
+    }
+  - |
+    Widget build(BuildContext context) => ListTile(
+      onTap: () => GetIt.I<AccountNavigator>().signOut(context),
+      title: label,
+    );
+  # A registration function reads the container it is handed.
+  - |
+    void registerJournal(GetIt getIt) =>
+        getIt.registerFactory(() => JournalBloc(repository: getIt()));
+  # Named in a comment or a string, nothing is read.
+  - |
+    /// Resolve it with `GetIt.I<AccountNavigator>()`, never GetIt.I.get.
+    const hint = 'GetIt.I<JournalRepository>()';
+invalid:
+  # A widget reading a dependency for a side effect: that is a bloc event.
+  - |
+    Widget build(BuildContext context) => TextButton(
+      onPressed: () => GetIt.I<FeedbackLink>().open(),
+      child: label,
+    );
+  - |
+    Widget build(BuildContext context) {
+      final repository = GetIt.I<JournalRepository>();
+      return Text(repository.name);
+    }
+  # The bloc built by hand around a looked-up dependency, in its create.
+  - |
+    Widget build(BuildContext context) => BlocProvider(
+      create: (_) => JournalBloc(repository: GetIt.I<JournalRepository>()),
+      child: const JournalView(),
+    );
+  # A bloc from the container, but not created by its provider.
+  - |
+    Widget build(BuildContext context) =>
+        BlocProvider.value(value: GetIt.I<JournalBloc>(), child: child);
+  - |
+    Widget build(BuildContext context) => BlocProvider(
+      create: (_) {
+        return GetIt.I<JournalBloc>();
+      },
+      child: child,
+    );
+  # A provider other than the bloc's: service location scoped to the tree.
+  - |
+    Widget build(BuildContext context) => RepositoryProvider(
+      create: (_) => GetIt.I<JournalRepository>(),
+      child: child,
+    );
+  # Other spellings of the same lookup.
+  - |
+    final repository = GetIt.instance<JournalRepository>();
+  - |
+    final repository = GetIt.I.get<JournalRepository>();
+  - |
+    final repository = di.GetIt.I<JournalRepository>();
+  - |
+    final locator = GetIt.I;
+  # Outside a widget too: a bloc takes its dependencies in its constructor.
+  - |
+    class JournalBloc extends Bloc<JournalEvent, JournalState> {
+      JournalBloc() : _repository = GetIt.I<JournalRepository>(), super(const JournalState());
+      final JournalRepository _repository;
+    }

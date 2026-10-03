@@ -1,0 +1,55 @@
+id: no-route-extra
+valid:
+  # A typed route carries path and query parameters only.
+  - |
+    void open(BuildContext context, Entry entry) =>
+        EntryRoute(id: entry.id).go(context);
+  - |
+    Future<bool?> start(BuildContext context, String id) =>
+        SessionRoute(resume: id).push<bool>(context);
+  - |
+    void open(BuildContext context, String id) => context.go('/entries/$id');
+  # The screen reads what it shows by its location.
+  - |
+    String idOf(GoRouterState state) => state.pathParameters['id']!;
+  - |
+    String? resumeOf(GoRouterState state) => state.uri.queryParameters['resume'];
+  # A typed route declared with a primary constructor.
+  - |
+    class const EntryRoute({required final String id})
+        extends GoRouteData
+        with $EntryRoute {}
+  # Names that only contain the word.
+  - |
+    const extraSpace = 8.0;
+    final extras = options.extras;
+  # Named in a comment or a string.
+  - |
+    /// Nothing travels as `extra`; see ADR 0016.
+    const hint = 'state.extra';
+invalid:
+  # Handing an object to the next screen.
+  - |
+    void open(BuildContext context, Entry entry) =>
+        context.push('/entries/${entry.id}', extra: entry);
+  - |
+    void open(BuildContext context, Entry entry) =>
+        GoRouter.of(context).go('/entries/${entry.id}', extra: entry);
+  - |
+    void open(BuildContext context, Entry entry) =>
+        context.pushNamed('entry', pathParameters: {'id': entry.id}, extra: entry);
+  # Reading it back on the other side.
+  - |
+    Widget builder(BuildContext context, GoRouterState state) =>
+        EntryPage(entry: state.extra! as Entry);
+  - |
+    final entry = state.extra as Entry?;
+  # go_router_builder's way: a `$extra` field on a typed route.
+  - |
+    class const EntryRoute(final Entry $extra) extends GoRouteData with $EntryRoute {}
+  - |
+    class const EntryRoute({required final String id, final Entry? $extra})
+        extends GoRouteData
+        with $EntryRoute {}
+  - |
+    void open(BuildContext context, Entry entry) => EntryRoute($extra: entry).go(context);
