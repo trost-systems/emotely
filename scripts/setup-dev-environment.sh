@@ -537,7 +537,7 @@ fi
 ok "$ENV_FILE (sourced from $PROFILE_D and ~/.bashrc)"
 
 # --- 8. Docker ---------------------------------------------------------------
-# The Supabase stack (`supabase db start`, `supabase test db`) is containers.
+# The Supabase stack (the supabase skill's stack.sh, `supabase test db`) is containers.
 # Everything else works without it, so nothing here is fatal: aborting would
 # leave the machine less usable than if Docker were simply absent.
 
@@ -708,13 +708,15 @@ if [ "$VERIFY" -eq 1 ]; then
 
   if [ "$docker_ready" -eq 1 ]; then
     info "supabase: migrations + pgTAP row-level-security suite"
-    # CI gets a fresh Postgres every run, so its `db start` always replays the
-    # migrations. Here the container usually already exists and `db start` is a
+    # The checkout's own stack (stack.sh), never one another session uses.
+    # CI gets a fresh Postgres every run, so its start always replays the
+    # migrations. Here the container usually already exists and starting is a
     # no-op against it, which would test a new migration against the old schema
     # and pass. `db reset` is what replays them, as the supabase skill says.
-    (cd "$REPO_ROOT" && supabase db start && supabase db reset --local \
+    (cd "$REPO_ROOT" && bash .claude/skills/supabase/scripts/stack.sh up --db-only \
+      && supabase db reset --local \
       && supabase test db --local && supabase db lint --local --fail-on warning)
-    info "the database container is left running; 'supabase stop' shuts it down"
+    info "the checkout's database is left running; '.claude/skills/supabase/scripts/stack.sh down' deletes it"
   else
     info "supabase: SKIPPED — no usable Docker, so the schema suite did not run"
   fi

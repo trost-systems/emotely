@@ -129,9 +129,11 @@ its reader is not to answer the question for them. The events it sends
 carry an outcome name only — no address, no code.
 
 Every island is pre-rendered at build time, so anything that needs
-`window` sits behind `kIsWeb`. To exercise it locally, `supabase start` and pass
-`--dart-define=EMOTELY_SUPABASE_URL=http://127.0.0.1:54321` plus the local
-anon key to `jaspr serve` (see `lib/environment.dart`).
+`window` sits behind `kIsWeb`. To exercise it locally, start the checkout's
+own stack (`bash .claude/skills/supabase/scripts/stack.sh up`) and pass its
+`API_URL` as `--dart-define=EMOTELY_SUPABASE_URL=…` and its `PUBLISHABLE_KEY`
+as `--dart-define=EMOTELY_SUPABASE_PUBLISHABLE_KEY=…`, both from
+`supabase status -o env`, to `jaspr serve` (see `lib/environment.dart`).
 
 ## Deploy
 
