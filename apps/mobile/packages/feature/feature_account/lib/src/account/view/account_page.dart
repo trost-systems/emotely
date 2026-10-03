@@ -51,7 +51,9 @@ class const AccountView({super.key}) extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: switch (state) {
-              AccountIdle() => const _DeleteAccount(),
+              AccountIdle(:final asksApple) => _DeleteAccount(
+                asksApple: asksApple,
+              ),
               // Deleted has no screen of its own: the listener above pops
               // this route the moment it arrives.
               AccountDeleting() ||
@@ -90,7 +92,8 @@ void _sayStillLinked(BuildContext context, Set<SignInGrant> stillLinked) {
 }
 
 /// What deleting means, said once here; the dialog only asks.
-class const _DeleteAccount() extends StatelessWidget {
+class const _DeleteAccount({required final bool asksApple})
+    extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -105,7 +108,7 @@ class const _DeleteAccount() extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           foregroundColor: Theme.of(context).colorScheme.error,
         ),
-        onPressed: () => unawaited(_confirm(context)),
+        onPressed: () => unawaited(_confirm(context, asksApple: asksApple)),
         child: Text(context.l10n.accountDeleteButton),
       ),
     ],
@@ -113,11 +116,15 @@ class const _DeleteAccount() extends StatelessWidget {
 
   /// The dialog sits above this screen on the navigator, outside the
   /// bloc's scope, so the bloc is captured before it opens.
-  static Future<void> _confirm(BuildContext context) {
+  static Future<void> _confirm(
+    BuildContext context, {
+    required bool asksApple,
+  }) {
     final account = context.read<AccountBloc>();
     return showDialog<void>(
       context: context,
       builder: (_) => _Confirmation(
+        asksApple: asksApple,
         onConfirm: () => account.add(const AccountEvent.deletionRequested()),
       ),
     );
@@ -125,11 +132,15 @@ class const _DeleteAccount() extends StatelessWidget {
 }
 
 /// Asks once more, naming the loss in the question; the only way to delete.
-class const _Confirmation({required final VoidCallback onConfirm})
-    extends StatelessWidget {
+/// When [asksApple], it also says Apple's sheet comes next (#193).
+class const _Confirmation({
+  required final bool asksApple,
+  required final VoidCallback onConfirm,
+}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) => AlertDialog(
     title: Text(context.l10n.accountConfirmationMessage),
+    content: asksApple ? Text(context.l10n.accountConfirmationAppleNote) : null,
     actions: [
       TextButton(
         key: AccountView.cancelKey,

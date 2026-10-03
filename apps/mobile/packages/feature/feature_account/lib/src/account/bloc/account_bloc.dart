@@ -28,7 +28,7 @@ class AccountBloc({
   required final AccountDeviceData _deviceData,
   required final SignInGrants _grants,
 }) extends Bloc<AccountEvent, AccountState> {
-  this : super(const AccountState.idle()) {
+  this : super(AccountState.idle(asksApple: _grants.asksApple)) {
     on<AccountDeletionRequested>(_onDeletionRequested);
     on<AccountFeedbackRequested>(_onFeedbackRequested);
   }

@@ -74,6 +74,12 @@ void main() {
       await robot.launch(providers: ['apple']);
       await robot.askToDelete();
 
+      // Apple's sheet comes next, so the confirmation says so.
+      expect(
+        find.text(robot.strings.accountConfirmationAppleNote),
+        findsOneWidget,
+      );
+
       await robot.tap(robot.confirm);
 
       expect(apple.requests, hasLength(1));

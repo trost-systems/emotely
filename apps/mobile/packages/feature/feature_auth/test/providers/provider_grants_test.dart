@@ -26,6 +26,13 @@ class _Grants({required final List<String> providers}) {
   /// Signed in to an account with [providers] linked, revokes its grants
   /// and lets the reports it queued reach the spy.
   Future<Set<IdentityProvider>> revoke(WidgetTester tester) async {
+    final left = await (await compose()).revoke();
+    await tester.pumpAndSettle();
+    return left;
+  }
+
+  /// The grants of an account with [providers] linked, signed in.
+  Future<ProviderGrants> compose() async {
     await supabase.signedIn(provider: providers.first, providers: providers);
     registerUtilitiesUnderTest(
       GetIt.I,
@@ -34,9 +41,7 @@ class _Grants({required final List<String> providers}) {
       analytics: analytics,
     );
     registerAuth(GetIt.I, google: SignInRobot.googleClients);
-    final left = await GetIt.I<ProviderGrants>().revoke();
-    await tester.pumpAndSettle();
-    return left;
+    return GetIt.I<ProviderGrants>();
   }
 
   /// How often the agent was asked to revoke an Apple grant: the only
@@ -50,6 +55,25 @@ class _Grants({required final List<String> providers}) {
 
 void main() {
   group(ProviderGrants, () {
+    testWidgets('warns of Apple’s sheet only where it will appear', (
+      tester,
+    ) async {
+      final apple = await _Grants(providers: ['email', 'apple']).compose();
+      expect(apple.asksApple, isTrue);
+    }, variant: iOS);
+
+    testWidgets('never warns of Apple’s sheet on Android', (tester) async {
+      final apple = await _Grants(providers: ['apple']).compose();
+      expect(apple.asksApple, isFalse);
+    }, variant: android);
+
+    testWidgets('never warns of Apple’s sheet to a Google account', (
+      tester,
+    ) async {
+      final google = await _Grants(providers: ['google']).compose();
+      expect(google.asksApple, isFalse);
+    }, variant: iOS);
+
     testWidgets('revokes an Apple grant with a fresh code from the sheet', (
       tester,
     ) async {

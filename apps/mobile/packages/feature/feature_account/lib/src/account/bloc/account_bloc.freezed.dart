@@ -353,10 +353,10 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  idle,TResult Function()?  deleting,TResult Function( Set<SignInGrant> stillLinked)?  signingOut,TResult Function()?  deleted,TResult Function()?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( bool asksApple)?  idle,TResult Function()?  deleting,TResult Function( Set<SignInGrant> stillLinked)?  signingOut,TResult Function()?  deleted,TResult Function()?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AccountIdle() when idle != null:
-return idle();case AccountDeleting() when deleting != null:
+return idle(_that.asksApple);case AccountDeleting() when deleting != null:
 return deleting();case AccountSigningOut() when signingOut != null:
 return signingOut(_that.stillLinked);case AccountDeleted() when deleted != null:
 return deleted();case AccountFailure() when failure != null:
@@ -378,10 +378,10 @@ return failure();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  idle,required TResult Function()  deleting,required TResult Function( Set<SignInGrant> stillLinked)  signingOut,required TResult Function()  deleted,required TResult Function()  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( bool asksApple)  idle,required TResult Function()  deleting,required TResult Function( Set<SignInGrant> stillLinked)  signingOut,required TResult Function()  deleted,required TResult Function()  failure,}) {final _that = this;
 switch (_that) {
 case AccountIdle():
-return idle();case AccountDeleting():
+return idle(_that.asksApple);case AccountDeleting():
 return deleting();case AccountSigningOut():
 return signingOut(_that.stillLinked);case AccountDeleted():
 return deleted();case AccountFailure():
@@ -399,10 +399,10 @@ return failure();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  idle,TResult? Function()?  deleting,TResult? Function( Set<SignInGrant> stillLinked)?  signingOut,TResult? Function()?  deleted,TResult? Function()?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( bool asksApple)?  idle,TResult? Function()?  deleting,TResult? Function( Set<SignInGrant> stillLinked)?  signingOut,TResult? Function()?  deleted,TResult? Function()?  failure,}) {final _that = this;
 switch (_that) {
 case AccountIdle() when idle != null:
-return idle();case AccountDeleting() when deleting != null:
+return idle(_that.asksApple);case AccountDeleting() when deleting != null:
 return deleting();case AccountSigningOut() when signingOut != null:
 return signingOut(_that.stillLinked);case AccountDeleted() when deleted != null:
 return deleted();case AccountFailure() when failure != null:
@@ -418,33 +418,69 @@ return failure();case _:
 
 
 class AccountIdle implements AccountState {
-  const AccountIdle();
+  const AccountIdle({this.asksApple = false});
   
 
+@JsonKey() final  bool asksApple;
 
-
+/// Create a copy of AccountState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AccountIdleCopyWith<AccountIdle> get copyWith => _$AccountIdleCopyWithImpl<AccountIdle>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is AccountIdle);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AccountIdle&&(identical(other.asksApple, asksApple) || other.asksApple == asksApple));
 }
 
 
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode {
+    return Object.hash(runtimeType,asksApple);
+}
 
 @override
 String toString() {
-    return 'AccountState.idle()';
+    return 'AccountState.idle(asksApple: $asksApple)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $AccountIdleCopyWith<$Res> implements $AccountStateCopyWith<$Res> {
+  factory $AccountIdleCopyWith(AccountIdle value, $Res Function(AccountIdle) _then) = _$AccountIdleCopyWithImpl;
+@useResult
+$Res call({
+ bool asksApple
+});
 
 
+
+
+}
+/// @nodoc
+class _$AccountIdleCopyWithImpl<$Res>
+    implements $AccountIdleCopyWith<$Res> {
+  _$AccountIdleCopyWithImpl(this._self, this._then);
+
+  final AccountIdle _self;
+  final $Res Function(AccountIdle) _then;
+
+/// Create a copy of AccountState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? asksApple = null,}) {
+  return _then(AccountIdle(
+asksApple: null == asksApple ? _self.asksApple : asksApple // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
 
 /// @nodoc
 
