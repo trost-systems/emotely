@@ -108,7 +108,10 @@ on an unfinished one.
 
 ## Posting evidence to a pull request or issue
 
-Post the copies in `<bundle>/post/`, never the originals, which stay in the
+Before/after evidence in a pull request's description is
+`scripts/evidence.sh`, which follows this recipe:
+[pr-evidence.md](pr-evidence.md). By hand, for an issue or a comment, post
+the copies in `<bundle>/post/`, never the originals, which stay in the
 bundle:
 
 - **Screenshots**: `collect` writes each at 600 px wide. Show them at
@@ -122,10 +125,11 @@ bundle:
   on either command writes `video-2x.mp4` / `video-1x.mp4` instead.
 
 `--attach` (gh 2.99+, on `gh pr create|edit` and `gh issue create|comment`)
-rewrites only a Markdown `![alt](path)` reference into the uploaded URL. An
-`<img src="path">` tag or a bare video path stays as written and the file is
-appended at the end (gh 2.100.0, checked on #180). So upload first, then
-write the tags with the URLs:
+rewrites only a Markdown reference, `![alt](path)` or `[text](path)`, into
+the uploaded URL. An `<img src="path">` tag or a bare video path stays as
+written and the file is appended at the end (gh 2.100.0, checked on #180
+and in its source, `internal/attachments`). So upload first, then write the
+tags with the URLs:
 
 ```bash
 P=<bundle>/post

@@ -300,7 +300,9 @@ jobs:
   # app-release writes to the public badge file, so its refusals are tested
   # here, before a release depends on them. run-app.sh's account guard and
   # its lock between parallel agent sessions are tested the same way, and so
-  # is the performance budget's gate (perf.sh). The Vercel projects' Ignored
+  # are the pull request evidence's diff-to-screens mapping and the section
+  # it writes into a body (evidence.sh), and the performance budget's gate
+  # (perf.sh). The Vercel projects' Ignored
   # Build Step (vercel-ignore.sh) decides which commits deploy at all, so its
   # choice of base is tested against throwaway shallow clones.
   scripts:
@@ -314,6 +316,7 @@ jobs:
       - run: bash scripts/l10n-check.test.sh
       - run: bash scripts/vercel-ignore.test.sh
       - run: bash .claude/skills/run-app/scripts/run-app.test.sh
+      - run: bash .claude/skills/run-app/scripts/evidence.test.sh
       - run: bash .claude/skills/run-app/scripts/perf.test.sh
       - run: bash .claude/skills/run-app/scripts/survey.test.sh
 

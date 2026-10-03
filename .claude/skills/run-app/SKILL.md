@@ -1,6 +1,6 @@
 ---
 name: run-app
-description: How to run, drive and verify the Flutter app (apps/mobile/app) on an iOS simulator — run-app.sh sets it up signed in against the deployed agent, the agent drives it with plain marionette commands, and the CLI records and collects an evidence bundle (screenshots, video, logs, PostHog events); plus the performance budget (perf.sh: profile-mode frames, request counts and backend latency) and the performance survey on real phones in Firebase Test Lab (survey.sh: history, findings by severity), the on-device acceptance session and the unit gate. Use whenever asked to run the app, see a screen, find or reach the screen a report or screenshot is about (the feature map), verify a change on a device, collect evidence for a pull request, run integration_test, or measure, debug or change the app's performance or the performance budget.
+description: How to run, drive and verify the Flutter app (apps/mobile/app) on an iOS simulator — run-app.sh sets it up signed in against the deployed agent, the agent drives it with plain marionette commands, and the CLI records and collects an evidence bundle (screenshots, video, logs, PostHog events); plus the performance budget (perf.sh: profile-mode frames, request counts and backend latency) and the performance survey on real phones in Firebase Test Lab (survey.sh: history, findings by severity), the on-device acceptance session and the unit gate. Use whenever asked to run the app, see a screen, find or reach the screen a report or screenshot is about (the feature map), verify a change on a device, collect evidence for a pull request or put before/after screenshots and video into its description (evidence.sh), open a pull request that changes a screen, run integration_test, or measure, debug or change the app's performance or the performance budget.
 ---
 
 # Running apps/mobile/app
@@ -13,6 +13,28 @@ Verifying a change on the simulator, or posting its evidence — read
 [references/verification.md](references/verification.md) first: up → drive →
 collect → down, the worked example, the keys, posting evidence and parallel
 sessions.
+
+## Before opening a PR that changes a screen
+
+A pull request whose diff touches a feature's `lib/` or `l10n/`, the design
+system or the app carries before/after evidence in its description. Open
+the PR, then:
+
+```bash
+E=.claude/skills/run-app/scripts/evidence.sh
+$E plan            # the screens the diff changes; none ends here
+$E up base         # drive each planned screen, save it under the printed name
+$E down base
+$E up head         # the same screens
+$E down head
+$E post            # uploads with gh --attach, writes the section
+```
+
+Run it again after a push that changes a screen: the section is replaced.
+`evidence.sh plan <pr>` does the same for another agent's pull request,
+editing only its description. Running it, or what it plans, uploads and
+refuses — read [references/pr-evidence.md](references/pr-evidence.md)
+first.
 
 ## Find a screen
 
