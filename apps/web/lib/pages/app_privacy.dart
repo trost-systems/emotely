@@ -38,7 +38,7 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         'This notice covers the emotely mobile app (listed on Google Play as '
         '"Reflect Therapy AI: emotely") for iOS and Android. The web site at '
         'getemotely.com and its waitlist have a separate notice. Last '
-        'updated 2 October 2026.',
+        'updated 3 October 2026.',
       ),
     ]),
 
@@ -476,6 +476,14 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         ),
       ]),
       li([
+        strong([.text('Resend')]),
+        .text(
+          ' — sends our emails to your address from EU servers: the codes we '
+          'mail you and, only if something material changes about what happens '
+          'to your journal, the notice before it. Never your journal.',
+        ),
+      ]),
+      li([
         strong([.text('Apple and Google')]),
         .text(
           ' — distribute the app and, independently of us, collect their own '
@@ -650,9 +658,9 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         'Changes are published here with a new date at the top, and every '
         'version is in the public repository, so what changed and when is a '
         'matter of record. Anything that materially changes what happens to '
-        'your journal will be told to you in the app or by email before it '
-        'takes effect. emotely is open source under the MIT license: you '
-        'never have to take our word for any of this — ',
+        'your journal will be told to you by email before it takes effect. '
+        'emotely is open source under the MIT license: you never have to take '
+        'our word for any of this — ',
       ),
       a(href: repositoryUrl, [.text('read the code')]),
       .text('.'),

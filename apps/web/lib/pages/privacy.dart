@@ -94,9 +94,10 @@ class const Privacy({super.key}) extends StatelessComponent {
       li([
         strong([.text('Resend')]),
         .text(
-          ' sends two emails from servers in the EU: the one asking you to '
-          'confirm your address, and later the one that tells you your spot '
-          'is open.',
+          ' sends our emails from servers in the EU: the one asking you to '
+          'confirm your address, later the one that tells you your spot is '
+          'open, and, only if something material changes about what happens '
+          'to your address, a notice before it takes effect.',
         ),
       ]),
       li([

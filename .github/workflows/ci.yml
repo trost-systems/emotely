@@ -329,7 +329,8 @@ jobs:
   # its lock between parallel agent sessions are tested the same way, and so
   # are the pull request evidence's diff-to-screens mapping and the section
   # it writes into a body (evidence.sh), and the performance budget's gate
-  # (perf.sh). The Vercel projects' Ignored
+  # (perf.sh), and the change notice's refusals, the send without a
+  # terminal first (change-notice.sh). The Vercel projects' Ignored
   # Build Step (vercel-ignore.sh) decides which commits deploy at all, so its
   # choice of base is tested against throwaway shallow clones. The store
   # listings are checked against the stores' field limits here, since the
@@ -348,6 +349,7 @@ jobs:
       - run: bash .claude/skills/open-pr/scripts/evidence.test.sh
       - run: bash .claude/skills/run-app/scripts/perf.test.sh
       - run: bash .claude/skills/run-app/scripts/survey.test.sh
+      - run: bash .claude/skills/change-notice/scripts/change-notice.test.sh
       - run: bash scripts/store-listing-check.test.sh
       - run: bash scripts/store-listing-check.sh
 

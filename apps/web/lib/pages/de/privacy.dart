@@ -110,9 +110,11 @@ class const PrivacyDe({super.key}) extends StatelessComponent {
       li([
         strong([.text('Resend')]),
         .text(
-          ' verschickt von Servern in der EU zwei E-Mails: die, in der du '
-          'deine Adresse bestätigen sollst, und später die, die dir sagt, '
-          'dass dein Platz frei ist.',
+          ' verschickt unsere E-Mails von Servern in der EU: die, in der du '
+          'deine Adresse bestätigen sollst, später die, die dir sagt, dass '
+          'dein Platz frei ist, und nur wenn sich etwas Wesentliches daran '
+          'ändert, was mit deiner Adresse geschieht, eine Mitteilung, bevor '
+          'es wirksam wird.',
         ),
       ]),
       li([

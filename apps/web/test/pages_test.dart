@@ -161,6 +161,21 @@ void main() {
     });
 
     testComponents(
+      'the privacy page counts the change notice among the mails',
+      (tester) {
+        tester.pumpComponent(const Privacy());
+
+        // The change_notice schema mails confirmed addresses through Resend
+        // before a material change; "two emails" stopped being true with it.
+        expect(find.textContaining('two emails'), findsNothing);
+        expect(
+          find.textContaining('a notice before it takes effect'),
+          findsOneComponent,
+        );
+      },
+    );
+
+    testComponents(
       'the privacy page names every party that touches an address',
       (tester) {
         tester.pumpComponent(const Privacy());
@@ -491,7 +506,7 @@ void main() {
       tester.pumpComponent(const AppPrivacy());
 
       expect(
-        find.textContaining('Last updated 2 October 2026'),
+        find.textContaining('Last updated 3 October 2026'),
         findsOneComponent,
       );
     });
@@ -640,6 +655,23 @@ void main() {
     // overclaims are ABSENT — the needle pattern from apps/mobile/app. Findings 1,
     // 2 and 4 of the red-team review all survived a presence-only suite.
     group('claims nothing the code does not do', () {
+      testComponents('promises a material change by email, and only that', (
+        tester,
+      ) {
+        tester.pumpComponent(const AppPrivacy());
+
+        // WP260: an active notice before a material change. What sends it
+        // is a mail (the change_notice schema in supabase/migrations); the
+        // app has no screen that announces one, so the notice offers none.
+        expect(
+          find.textContaining('told to you by email before it takes effect'),
+          findsOneComponent,
+        );
+        expect(find.textContaining('in the app or by email'), findsNothing);
+        // The mail, like every sign-in code, leaves through Resend.
+        expect(find.text('Resend'), findsOneComponent);
+      });
+
       testComponents('does not deny sending the address to our own server', (
         tester,
       ) {
@@ -986,7 +1018,7 @@ void main() {
       tester.pumpComponent(const AppPrivacyDe());
 
       expect(
-        find.textContaining('Zuletzt aktualisiert am 2. Oktober 2026'),
+        find.textContaining('Zuletzt aktualisiert am 3. Oktober 2026'),
         findsOneComponent,
       );
     });
@@ -1048,6 +1080,19 @@ void main() {
       );
       expect(find.textContaining('nichts löschen musst'), findsComponents);
       expect(find.textContaining('Art. 7 Abs. 3'), findsComponents);
+    });
+
+    testComponents('promises a material change by email, and only that', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(
+        find.textContaining('erfährst du per E-Mail, bevor es wirksam wird'),
+        findsOneComponent,
+      );
+      expect(find.textContaining('in der App oder per E-Mail'), findsNothing);
+      expect(find.text('Resend'), findsOneComponent);
     });
 
     testComponents('carries the Art. 13 disclosures that are easy to forget', (
@@ -1253,6 +1298,16 @@ void main() {
       // Art. 13 (1) (b): the absence of a DPO is itself the disclosure.
       expect(
         find.textContaining('keinen Datenschutzbeauftragten'),
+        findsOneComponent,
+      );
+    });
+
+    testComponents('counts the change notice among the mails', (tester) {
+      tester.pumpComponent(const PrivacyDe());
+
+      expect(find.textContaining('zwei E-Mails'), findsNothing);
+      expect(
+        find.textContaining('eine Mitteilung, bevor es wirksam wird'),
         findsOneComponent,
       );
     });

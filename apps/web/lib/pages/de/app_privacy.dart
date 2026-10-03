@@ -32,7 +32,7 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
         'Diese Datenschutzerklärung gilt für die emotely-App für iOS und '
         'Android (bei Google Play als „Reflect Therapy AI: emotely“ '
         'gelistet). Für die Website getemotely.com und ihre Warteliste gibt '
-        'es eine eigene Datenschutzerklärung. Zuletzt aktualisiert am 2. '
+        'es eine eigene Datenschutzerklärung. Zuletzt aktualisiert am 3. '
         'Oktober 2026.',
       ),
     ]),
@@ -497,6 +497,15 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
         ),
       ]),
       li([
+        strong([.text('Resend')]),
+        .text(
+          ' – verschickt unsere E-Mails an deine Adresse von Servern in der '
+          'EU: die Codes, die wir dir schicken, und, nur wenn sich etwas '
+          'Wesentliches daran ändert, was mit deinem Tagebuch geschieht, die '
+          'Mitteilung davor. Nie dein Tagebuch.',
+        ),
+      ]),
+      li([
         strong([.text('Apple und Google')]),
         .text(
           ' – vertreiben die App und erheben, unabhängig von uns, eigene '
@@ -679,9 +688,9 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
         'Änderungen werden hier mit neuem Datum oben veröffentlicht, und '
         'jede Fassung liegt im öffentlichen Repository, sodass nachvollziehbar '
         'bleibt, was sich wann geändert hat. Alles, was wesentlich verändert, '
-        'was mit deinem Tagebuch geschieht, erfährst du in der App oder per '
-        'E-Mail, bevor es wirksam wird. emotely ist Open Source unter der '
-        'MIT-Lizenz: Du musst uns nichts davon einfach glauben – ',
+        'was mit deinem Tagebuch geschieht, erfährst du per E-Mail, bevor es '
+        'wirksam wird. emotely ist Open Source unter der MIT-Lizenz: Du musst '
+        'uns nichts davon einfach glauben – ',
       ),
       a(href: repositoryUrl, [.text('lies den Code')]),
       .text('.'),
