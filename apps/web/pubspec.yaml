@@ -8,7 +8,7 @@ environment:
 
 dependencies:
   http: ^1.6.0
-  jaspr: ^0.23.4
+  jaspr: ^0.23.5
   jaspr_router: ^0.9.0
   # Jaspr's VM-safe facade over package:web, so @client files compile on
   # the server too.
@@ -19,7 +19,7 @@ dev_dependencies:
   # jaspr_builder 0.23 pins analyzer ^12; build_web_compilers 4.8.6+ wants
   # analyzer 13+, so the compiler stays one patch behind the template default.
   build_web_compilers: ^4.8.5
-  flutter_agent_lints: ^1.0.1
+  flutter_agent_lints: ^1.1.0
   html: ^0.15.7
   jaspr_builder: ^0.23.4
   jaspr_test: ^0.23.4
