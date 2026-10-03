@@ -157,8 +157,10 @@ class const Privacy({super.key}) extends StatelessComponent {
     p([
       .text(
         'The site is served over an encrypted HTTPS connection and makes no '
-        'unencrypted one. The waitlist sits in a Postgres database that only '
-        'the site’s own server can reach, never the browser. If a breach '
+        'unencrypted one. The waitlist sits in a Postgres database. A '
+        'browser can add an address to it and confirm one with its '
+        'confirmation link, and nothing else: the list itself is never '
+        'readable from a browser. If a breach '
         'ever did put your address at risk, the supervisory authority named '
         'below is told within 72 hours of us becoming aware of it '
         '(Art. 33 GDPR), and you are told directly where the risk to you is '
