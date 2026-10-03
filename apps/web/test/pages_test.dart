@@ -172,6 +172,10 @@ void main() {
           find.textContaining('a notice before it takes effect'),
           findsOneComponent,
         );
+        // Its legal basis, wherever it is described: the change paragraph
+        // and the Resend entry.
+        expect(find.textContaining('Art. 6 (1) (c) GDPR'), findsNComponents(2));
+        expect(find.textContaining('Art. 12 to 14 GDPR'), findsOneComponent);
       },
     );
 
@@ -670,6 +674,9 @@ void main() {
         expect(find.textContaining('in the app or by email'), findsNothing);
         // The mail, like every sign-in code, leaves through Resend.
         expect(find.text('Resend'), findsOneComponent);
+        // Its legal basis, in the change paragraph and the Resend entry.
+        expect(find.textContaining('Art. 6 (1) (c) GDPR'), findsNComponents(2));
+        expect(find.textContaining('Art. 12 to 14 GDPR'), findsOneComponent);
       });
 
       testComponents('does not deny sending the address to our own server', (
@@ -1093,6 +1100,11 @@ void main() {
       );
       expect(find.textContaining('in der App oder per E-Mail'), findsNothing);
       expect(find.text('Resend'), findsOneComponent);
+      expect(
+        find.textContaining('Art. 6 Abs. 1 lit. c DSGVO'),
+        findsNComponents(2),
+      );
+      expect(find.textContaining('Art. 12 bis 14 DSGVO'), findsOneComponent);
     });
 
     testComponents('carries the Art. 13 disclosures that are easy to forget', (
@@ -1310,6 +1322,11 @@ void main() {
         find.textContaining('eine Mitteilung, bevor es wirksam wird'),
         findsOneComponent,
       );
+      expect(
+        find.textContaining('Art. 6 Abs. 1 lit. c DSGVO'),
+        findsNComponents(2),
+      );
+      expect(find.textContaining('Art. 12 bis 14 DSGVO'), findsOneComponent);
     });
 
     testComponents('says the language is stored, and why', (tester) {

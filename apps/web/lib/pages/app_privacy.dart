@@ -480,7 +480,8 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         .text(
           ' — sends our emails to your address from EU servers: the codes we '
           'mail you and, only if something material changes about what happens '
-          'to your journal, the notice before it. Never your journal.',
+          'to your journal, the notice before it (Art. 6 (1) (c) GDPR). '
+          'Never your journal.',
         ),
       ]),
       li([
@@ -659,6 +660,8 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         'version is in the public repository, so what changed and when is a '
         'matter of record. Anything that materially changes what happens to '
         'your journal will be told to you by email before it takes effect. '
+        'That email meets our duty to keep you informed (Art. 12 to 14 '
+        'GDPR), so its legal basis is Art. 6 (1) (c) GDPR. '
         'emotely is open source under the MIT license: you never have to take '
         'our word for any of this — ',
       ),

@@ -5,7 +5,7 @@
 -- role reaches any of it. The Resend key is a throwaway created inside the
 -- transaction, so nothing leaves the database: pg_net sends only on commit.
 begin;
-select plan(42);
+select plan(46);
 
 -- Fixtures -------------------------------------------------------------------------
 
@@ -120,6 +120,18 @@ select is(
   'the dry run says how far ahead of the change the notice goes out'
 );
 select is(
+  (change_notice.preview('both', pg_temp.effective(), pg_temp.message())
+    ->> 'runs_needed')::int,
+  1,
+  'and how many daily runs the readers not yet told will take'
+);
+select is(
+  (select jsonb_build_array(p -> 'per_day', p -> 'min_lead_days')
+    from change_notice.preview('both', pg_temp.effective(), pg_temp.message()) p),
+  '[50, 30]'::jsonb,
+  'under the rules it names: 50 a day, every run 30 days ahead'
+);
+select is(
   jsonb_path_query_array(
     change_notice.preview('both', pg_temp.effective(), pg_temp.message()),
     '$.mails[*] ? (@.recipients > 0) .kind'
@@ -195,6 +207,14 @@ select throws_ok(
   ),
   '22023', null,
   'a change that takes effect today is not notified before it takes effect'
+);
+select throws_ok(
+  format(
+    $$select change_notice.preview('both', current_date + 29, %L)$$,
+    pg_temp.message()
+  ),
+  '22023', null,
+  'every material change is notified at least 30 days before it takes effect'
 );
 select throws_ok(
   format(
@@ -368,6 +388,12 @@ select is(
 insert into public.waitlist (email, locale, confirmed_at)
 select 'reader' || n || '@example.com', 'en', now()
 from generate_series(1, 60) n;
+select is(
+  (change_notice.preview('both', pg_temp.effective(), pg_temp.message())
+    ->> 'runs_needed')::int,
+  2,
+  'sixty readers take two days at 50 a day, which the dry run says'
+);
 -- Today already spent 5 (three accepted, one failed, one queued again).
 select is(
   change_notice.send('both', pg_temp.effective(), pg_temp.message())

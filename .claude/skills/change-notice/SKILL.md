@@ -25,25 +25,36 @@ Per WP260 rev.01 paras 29–31 (the EDPB's transparency guidelines):
   processing starts (Art. 13 (3) GDPR): #295's reading of entries over time
   is the example in view.
 - **Fundamental**, a subset: new categories of recipient, a new transfer
-  outside the EU, a new purpose. These go out *well in advance*, so a reader
-  can object, withdraw or leave first. The law names no number of days; our
-  default is 30 days for fundamental and 14 for other material changes, and
-  the dry run prints the lead time so it is a decision, not an accident.
+  outside the EU, a new purpose. WP260 wants these *well in advance*, so a
+  reader can object, withdraw or leave first.
 - **Not material:** spelling, styling, a clearer sentence about the same
   processing. Those ship with the notice's new date and nothing else.
 
+**Every material change is told at least 30 days before it takes effect**
+(Peter, 2026-10-03: one lead time, fundamental or not; the law names no
+number). The schema refuses a run with less, so a notice that needs several
+daily runs (step 5) needs its date that many days further out: the dry run
+prints the runs it needs.
+
 ## 2. Who
 
-- `accounts` — the change touches the app or the journal (the app notice).
-- `waitlist` — the change touches what happens to a waitlist address (the
-  site notice).
-- `both` — the change touches both: a new controller, a new contact, how
-  rights are exercised.
+`--about` names the notice that changes, and that decides who is told:
+
+- `app` — the app notice: anything about the app's processing, the journal
+  above all. **Account holders only**; the waitlist has no journal and is
+  not told.
+- `site` — the site notice: what happens to a waitlist address. **The
+  waitlist only.**
+- `both` — only when both notices change, such as a new controller, a new
+  contact or how rights are exercised. An address in both sets gets one
+  mail, as the account holder.
 
 Account holders are those who completed sign-in; waitlist addresses are those
-confirmed. An address in both gets one mail, as the account holder. Each
-reader gets German when the app kept `de` (or, failing that, the waitlist row
-says `de`) and a German text exists; English otherwise.
+confirmed. Each reader gets German when the app kept `de` (or, failing that,
+the waitlist row says `de`) and a German text exists; English otherwise.
+
+The mail's legal basis is Art. 6 (1) (c) GDPR: it meets the duty to inform of
+Art. 12–14. Both notices say so, next to where they promise it.
 
 ## 3. Write the mail
 
@@ -69,12 +80,13 @@ own, so a reader needs no diff.
 
 ```bash
 S=.claude/skills/change-notice/scripts/change-notice.sh
-$S preview --audience accounts --effective 2026-12-01 --en en.txt --de de.txt            # local stack
-$S preview --audience accounts --effective 2026-12-01 --en en.txt --de de.txt --linked   # production, read-only
+$S preview --about app --effective 2026-12-01 --en en.txt --de de.txt            # local stack
+$S preview --about app --effective 2026-12-01 --en en.txt --de de.txt --linked   # production, read-only
 ```
 
 It prints the readers by kind and language, how many are not yet told, the
-lead time, and every mail exactly as it will go out. It writes nothing. Keep
+lead time, the daily runs the send will take, and every mail exactly as it
+will go out. It writes nothing. Keep
 the message files out of the repository (the scratchpad), and paste the
 preview into the conversation for Peter.
 
@@ -83,7 +95,7 @@ preview into the conversation for Peter.
 A send mails real people, so it is Peter's, at his own terminal:
 
 ```bash
-$S send --audience accounts --effective 2026-12-01 --en en.txt --de de.txt --linked
+$S send --about app --effective 2026-12-01 --en en.txt --de de.txt --linked
 ```
 
 It shows the preview, then asks for the number of readers not yet told to be
@@ -97,8 +109,9 @@ Resend's free tier (100 a day, 3,000 a month) is shared with sign-in codes
 and waitlist confirmations, so one run sends at most 50 and the schema
 refuses past 50 a day or 1,500 in 30 days. A larger audience goes out over
 several days: run the same `send` with the same files again; it continues the
-same notice and never mails anyone twice. A paid plan raises the two
-constants in `change_notice.send`, in a migration.
+same notice and never mails anyone twice, as long as the change is still 30
+days out. A paid plan raises `change_notice.per_day()` and `per_month()`, in
+a migration.
 
 Before the first send to accounts: Apple's Hide My Email relay delivers only
 mail from sources registered under Sign in with Apple → Email Sources in the

@@ -16,18 +16,25 @@
 -- change-notice skill's script is the one way in, and its send needs a
 -- human at a terminal.
 --
--- Recipients: account holders who completed sign-in and confirmed waitlist
--- addresses. An address in both is one reader, told as the account. Each
--- gets the language the app kept for it (`app_locale`, as the sign-in mail
--- uses) or the one it signed up to the waitlist in, when the notice has a
--- text in it; English otherwise.
+-- Recipients: account holders who completed sign-in (`accounts`, for a
+-- change to the app notice) or confirmed waitlist addresses (`waitlist`, for
+-- a change to the site notice); `both` only when both notices change. An
+-- address in both sets is one reader, told as the account. Each gets the
+-- language the app kept for it (`app_locale`, as the sign-in mail uses) or
+-- the one it signed up to the waitlist in, when the notice has a text in it;
+-- English otherwise.
+--
+-- Every reader is told at least 30 days before the change takes effect
+-- (Peter, 2026-10-03: one lead time for every material change; WP260 asks
+-- for "well in advance" without a number). Every run checks it, so a notice
+-- that takes several days to send needs its date that much further out.
 --
 -- Resend's free tier sends 100 mails a day and 3,000 a month, shared with
 -- sign-in codes and waitlist confirmations. A change notice takes at most
 -- half of each, over a rolling day and 30 days; a notice with more readers
 -- goes out over several runs, one batch request each, and a run past the
--- budget fails instead of starving sign-in. A paid plan raises both
--- constants in `send`, in a migration.
+-- budget fails instead of starving sign-in. A paid plan raises the
+-- constants below, in a migration.
 
 create schema change_notice;
 comment on schema change_notice is
@@ -90,6 +97,20 @@ alter table change_notice.deliveries enable row level security;
 revoke all on change_notice.notices, change_notice.deliveries
   from public, anon, authenticated, service_role;
 
+-- The rules, one place each -----------------------------------------------------
+
+create function change_notice.lead_days() returns int
+language sql immutable set search_path = '' as $$ select 30 $$;
+comment on function change_notice.lead_days() is
+  'Days between every notice and the change it announces, at least.';
+
+-- Half of Resend's free tier, the other half left to sign-in codes and
+-- waitlist confirmations; 50 is also within a batch request's 100 mails.
+create function change_notice.per_day() returns int
+language sql immutable set search_path = '' as $$ select 50 $$;
+create function change_notice.per_month() returns int
+language sql immutable set search_path = '' as $$ select 1500 $$;
+
 -- Checks and rendering ------------------------------------------------------------
 
 create function change_notice.validate(audience text, effective_on date, message jsonb)
@@ -106,9 +127,14 @@ begin
     raise exception using errcode = '22023',
       message = 'change_notice: audience is accounts, waitlist or both';
   end if;
-  if effective_on is null or effective_on <= current_date then
+  if effective_on is null
+    or effective_on < current_date + change_notice.lead_days()
+  then
     raise exception using errcode = '22023',
-      message = 'change_notice: the change must take effect after today, so the notice comes before it';
+      message = format(
+        'change_notice: the change must take effect at least %s days from today (on or after %s)',
+        change_notice.lead_days(), current_date + change_notice.lead_days()
+      );
   end if;
   if jsonb_typeof(message) is distinct from 'object' or not message ? 'en' then
     raise exception using errcode = '22023',
@@ -298,6 +324,11 @@ begin
     'lead_days', effective_on - current_date,
     'recipients', counts,
     'pending', pending,
+    -- At most per_day() a day, and every run must still be lead_days()
+    -- ahead: the last run is runs_needed - 1 days after the first.
+    'runs_needed', ceil(pending::numeric / change_notice.per_day())::int,
+    'per_day', change_notice.per_day(),
+    'min_lead_days', change_notice.lead_days(),
     'mails', mails
   );
 end;
@@ -358,10 +389,8 @@ volatile
 set search_path = ''
 as $$
 declare
-  -- Half of Resend's free tier, the other half left to sign-in codes and
-  -- waitlist confirmations; 50 is also within a batch request's 100 mails.
-  per_day constant int := 50;
-  per_month constant int := 1500;
+  per_day constant int := change_notice.per_day();
+  per_month constant int := change_notice.per_month();
   this_digest text := md5(audience || '|' || effective_on || '|' || message::text);
   key text;
   notice uuid;
