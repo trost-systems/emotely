@@ -78,6 +78,13 @@ and Peter's iCloud Passwords.
   Linked to You"** panel. Editing a type's purposes resets its linkage to
   "not linked" silently: click the linkage answer on every edit, even when
   it looks right.
+- **Adding a purpose takes two publishes** (seen 2026-10-03 on User ID,
+  Other User Content and Other Diagnostic Data): the first **Publish**
+  stores the new purpose as "not linked" even with **Yes, linked** checked,
+  and the type shows up under both panels. Open the same type again — its
+  linkage question now reads **No** — select **Yes** (check the radio's
+  state with `javascript_tool`, not by eye), click through, **Publish**
+  again, and reload until the "Data Not Linked to You" panel is gone.
 
 ### Play App access (reviewer sign-in)
 
