@@ -1,0 +1,200 @@
+name: Nightly performance budget
+
+# The performance budget (#169): the app's three main paths in profile mode
+# on an Android emulator, judged against
+# apps/mobile/app/integration_test/perf_budget.yaml by the same script an
+# agent runs locally (.claude/skills/run-app/scripts/perf.sh).
+#
+# Nightly only, and it never blocks a pull request: it notifies. Every run
+# that does not pass — a path over budget (frames, request counts or the
+# deployed backend's latency), or any part of the measurement breaking —
+# opens or comments on the one open issue labeled `performance`, with what
+# failed, the numbers and a link to the run. Pull requests are gated on the
+# request counts by an ordinary widget test instead
+# (apps/mobile/app/test/perf/request_budget_test.dart), in seconds.
+#
+# Where it runs: GitHub's standard ubuntu-latest runner, free for this
+# public repository, with KVM for the emulator. Flutter runs profile mode on
+# an Android emulator but not on the iOS simulator. An emulator's frames are
+# not a phone's: raster is the host's software renderer, and the shared
+# runner stalls frames. So here the budget judges the request counts and the
+# build p90 against this runner's own baseline, and only reports the 60 fps
+# floor. A real phone's frames come from the device-farm survey (#256).
+#
+# One runner can be a quarter slower than the next, so three sample the
+# same commit side by side and the gate judges their median.
+
+on:
+  schedule:
+    # After the nightly evals (03:00) and their live smoke, which signs in
+    # as the same smoke account the latency probe uses.
+    - cron: "30 4 * * *"
+  workflow_dispatch:
+    inputs:
+      samples:
+        description: >-
+          The runners side by side, as a JSON list. Five (`[1,2,3,4,5]`)
+          measure a new baseline: `perf.sh baseline` over their artifacts.
+        default: "[1,2,3]"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: ${{ fromJSON(inputs.samples || '[1,2,3]') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version-file: apps/mobile/app/.fvmrc
+          cache: true
+      - run: flutter pub get
+        working-directory: apps/mobile
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      # This sample's own verdict (exit 1) is not the gate's, which judges
+      # the median of all samples below; anything else is a broken run.
+      - name: Profile run
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          disable-animations: false
+          script: bash .claude/skills/run-app/scripts/perf.sh run --device emulator-5554 --env github-emulator --out "$GITHUB_WORKSPACE/perf-run" || test $? -eq 1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: perf-run-${{ matrix.sample }}
+          path: perf-run/
+          retention-days: 30
+
+  # Runs whatever the samples did, so a broken sample is reported too: every
+  # step that can fail is recorded rather than stopping the job, and the
+  # last step files the issue for any of them.
+  gate:
+    needs: sample
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # The smoke account, for the latency probe.
+    environment: ci
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        continue-on-error: true
+        with:
+          pattern: perf-run-*
+          path: samples
+      # Over its ceilings, latency fails the gate below, which reads
+      # latency.json; a probe that breaks is reported on its own.
+      - name: Latency of the deployed backend
+        id: latency
+        continue-on-error: true
+        env:
+          SMOKE_EMAIL: ${{ secrets.SMOKE_EMAIL }}
+          SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
+        run: |
+          mkdir -p samples/latency
+          bash .claude/skills/run-app/scripts/perf.sh latency samples/latency
+      # The median of the samples that finished (a broken one is reported
+      # below, not judged), with the latency beside them. 0 within budget,
+      # 1 over it, anything else a broken gate. The verdict lands in
+      # samples/verdict.
+      - name: Gate
+        id: gate
+        if: always()
+        run: |
+          runs=()
+          for run in samples/perf-run-*; do
+            if [ -f "$run/requests.json" ]; then runs+=("$run"); fi
+          done
+          status=0
+          if [ "${#runs[@]}" -eq 0 ]; then
+            echo "::error::no profile run finished"
+            status=2
+          else
+            if [ -f samples/latency/latency.json ]; then
+              cp samples/latency/latency.json "${runs[0]}/latency.json"
+            fi
+            bash .claude/skills/run-app/scripts/perf.sh gate "${runs[@]}" --env github-emulator || status=$?
+            mkdir -p samples/verdict
+            cp "${runs[0]}"/summary.md "${runs[0]}"/result.json samples/verdict/ 2>/dev/null || true
+            cp "${runs[0]}"/latency.json samples/verdict/ 2>/dev/null || true
+          fi
+          if [ -f samples/verdict/summary.md ]; then
+            cat samples/verdict/summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
+      - name: Upload the verdict
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: perf-verdict
+          path: samples/verdict/
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Open or update the budget issue
+        if: >-
+          always() && (needs.sample.result != 'success'
+          || steps.latency.outcome != 'success'
+          || steps.gate.outputs.status != '0')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SAMPLES: ${{ needs.sample.result }}
+          LATENCY: ${{ steps.latency.outcome }}
+          GATE: ${{ steps.gate.outputs.status }}
+        run: |
+          {
+            echo "The nightly performance budget did not pass on $(git rev-parse --short HEAD) ([run]($RUN_URL))."
+            echo
+            if [ "$GATE" = 1 ]; then
+              echo "- **Over budget:** the checks marked **fail** below (frames, request counts or latency)."
+            elif [ "$GATE" != 0 ]; then
+              echo "- **The gate broke** (exit ${GATE:-none}): see the run's \`Gate\` step."
+            fi
+            if [ "$SAMPLES" != success ]; then
+              echo "- **A profile run broke** (samples: $SAMPLES): see the \`sample\` jobs and their \`drive.log\` in the \`perf-run-N\` artifacts."
+            fi
+            if [ "$LATENCY" != success ]; then
+              echo "- **The latency probe broke** ($LATENCY): latency was not measured; see the run's \`Latency\` step."
+            fi
+            echo
+            echo "Each sample's timelines and summaries are the run's \`perf-run-N\` artifacts: \`gh run download ${{ github.run_id }}\`, then open a \`.timeline.json\` in https://ui.perfetto.dev. Reproduce locally: \`.claude/skills/run-app/scripts/perf.sh run\`."
+            if [ -f samples/verdict/summary.md ]; then
+              echo
+              cat samples/verdict/summary.md
+            fi
+          } > "$RUNNER_TEMP/issue.md"
+          gh label create performance --color FBCA04 --description "The performance budget (#169)" 2>/dev/null || true
+          issue=$(gh issue list --label performance --state open --search "Performance budget exceeded in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --body-file "$RUNNER_TEMP/issue.md"
+          else
+            gh issue create --title "Performance budget exceeded" --label performance --body-file "$RUNNER_TEMP/issue.md"
+          fi

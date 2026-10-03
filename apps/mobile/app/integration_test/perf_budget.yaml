@@ -1,0 +1,125 @@
+# The performance budget (#169): what the three main paths in
+# perf/perf_paths.dart may cost, and the measurements the limits come from.
+# Every app pull request holds the paths to `requests:` below through the
+# widget test test/perf/request_budget_test.dart, which reads this file.
+# `.claude/skills/run-app/scripts/perf.sh gate` judges a profile run against
+# all of it; the nightly workflow (.github/workflows/nightly-perf.yml) runs
+# it on `github-emulator`, and `perf.sh run` runs it here on
+# `local-emulator`.
+#
+# Changing a number here is a reviewed decision, like any other code: say
+# in the pull request what got slower or faster and why.
+
+frames:
+  # 60 fps is the floor that fails the run: the p90 of build and of raster
+  # each at most 16.7 ms, and under 1% of frames over it.
+  floor_ms: 16.7
+  max_missed_percent: 1
+  # 120 fps is the target: reported as a warning. Once every baseline holds
+  # it, it becomes the floor (set floor_ms to 8.3).
+  target_ms: 8.3
+  # A baseline tightens the floor: each p90 limit is the lower of the floor
+  # and the baseline plus this headroom, so a path that is fast today
+  # cannot get slower unnoticed while it stays under 16.7 ms.
+  headroom_percent: 20
+  # "Under 1%" allows no miss at all below 100 frames; a path that draws
+  # fewer measures nothing. Each path repeats its gesture to draw more.
+  min_frames: 100
+
+# Requests per path and service, against the in-process fake backend, so the
+# counts are exact. The pull-request widget test wants them exactly: an
+# increase fails, and so does a decrease, until the number here is lowered
+# in the same pull request. (The profile run fails an increase and reports a
+# decrease.) `config` is the agent's /api/config, asked once per launch.
+requests:
+  # Launch signed in onto the journal of 300 made-up entries, then fling to
+  # its end and back.
+  journal_scroll:
+    config: 1
+    supabase: 3 # the entries, the open session, the profile (the greeting)
+  # Open the newest entry and go back, 12 times.
+  entry_open:
+    supabase: 12 # the entry, each time
+  # Start a session and answer 16 rating questions.
+  session_round:
+    # Consent check, clear + create the session, 16 saved rounds, and the
+    # profile before each of the 17 agent rounds: the app's UserContextSource
+    # reads the name afresh for every round's user_context (#210). #264
+    # reads it once per session, which brings this down to 20.
+    supabase: 36
+    agent: 17 # the first round, then one per answer
+
+# The deployed backend, measured from the runner as the smoke account
+# (`perf.sh latency`): loose ceilings for the beta, to tighten later. The
+# whole agent round is bound by the model: tracked, not gated. The agent
+# answers a round in one piece, so its first byte is most of the round.
+latency:
+  supabase_read_p95_ms: 1000 # a journal read, an entry read
+  agent_first_byte_p95_ms: 5000
+
+# Where a run measured, and what it measured there before. A baseline is the
+# slowest p90 over several runs (`perf.sh baseline <run>...`), so it covers
+# the run-to-run noise; `measured` holds each run's p90 behind it.
+#
+# On an emulator the 60 fps floor measures the host, not the app, so there
+# it is reported and never gated (`floor: reported`), and only the build
+# p90 against the baseline plus 20% gates, with the request counts:
+# - raster runs through the host's graphics stack: 65-170 ms p90 under the
+#   runner's software renderer, a 16.7 ms swap on a Mac, never a phone's GPU;
+# - a shared host stalls the emulator now and then (single frames of
+#   50-120 ms), which alone breaks "under 1%": the runner missed 1.5-11%;
+# - the runner's build p90 swings 1.6x from one runner to the next, up to
+#   17.8 ms on the journal scroll, over the floor on its own. The nightly
+#   runs three runners side by side and gates their median.
+# A phone gates the whole floor.
+environments:
+  # The nightly: GitHub's ubuntu-latest runner, Android 34 x86_64 emulator
+  # under KVM, SwiftShader. Eight runners on 2026-09-26: five side by side
+  # on c5957d5 (https://github.com/trost-systems/emotely/actions/runs/36267427425),
+  # then three on 540bf49, an hour later and all slower
+  # (https://github.com/trost-systems/emotely/actions/runs/36270028637).
+  github-emulator:
+    raster: reported
+    floor: reported
+    baseline:
+      journal_scroll:
+        build_p90_ms: 17.811 # limit 21.373
+        raster_p90_ms: 111.072
+        measured:
+          build_p90_ms: [11.976, 11.131, 17.219, 13.241, 16.715, 17.784, 17.793, 17.811]
+          raster_p90_ms: [79.456, 80.624, 86.856, 77.547, 85.478, 111.072, 84.625, 86.95]
+      entry_open:
+        build_p90_ms: 13.7 # limit 16.44
+        raster_p90_ms: 168.283
+        measured:
+          build_p90_ms: [11.08, 8.686, 11.915, 8.42, 12.576, 13.562, 13.7, 11.266]
+          raster_p90_ms: [141.686, 135.723, 155.612, 140.596, 159.758, 159.785, 142.729, 168.283]
+      session_round:
+        build_p90_ms: 8.698 # limit 10.438
+        raster_p90_ms: 89.695
+        measured:
+          build_p90_ms: [4.651, 5.207, 8.05, 4.912, 8.698, 6.66, 6.613, 7.198]
+          raster_p90_ms: [62.765, 66.203, 70.334, 65.304, 72.947, 89.695, 70.104, 65.677]
+  # `perf.sh run` without --device: a fresh Android 34 arm64 emulator with
+  # the host GPU. No baseline, so frames are reported and only the request
+  # counts gate: a developer's machine runs other agents' builds beside the
+  # emulator, and its load moves the build p90 more than any headroom
+  # allows. Ten clean runs on an Apple M4 Pro, 2026-09-26, commit c5957d5:
+  # quiet, then busy. The busiest journal scroll (4.97 ms) was slower than
+  # one with 2 ms of extra work in every list item (4.42 ms).
+  local-emulator:
+    raster: reported
+    floor: reported
+    baseline: {}
+    reference:
+      journal_scroll:
+        build_p90_ms: [2.585, 2.501, 3.196, 2.887, 2.851, 2.535, 4.965, 3.269, 4.763, 3.932]
+      entry_open:
+        build_p90_ms: [1.947, 2.229, 2.366, 2.49, 2.092, 2.023, 2.658, 3.004, 3.583, 2.683]
+      session_round:
+        build_p90_ms: [1.51, 1.465, 1.57, 1.632, 1.564, 1.45, 1.645, 1.921, 3.582, 1.682]
+  # A phone (`perf.sh run --device <id>`): frames as users get them, and
+  # the whole floor gates. No baseline yet: the floor alone.
+  device:
+    raster: gated
+    baseline: {}
