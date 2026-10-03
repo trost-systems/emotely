@@ -55,6 +55,7 @@ class const JournalGreeting({
             // Never italic: it names the user.
             style: theme.textTheme.headlineMedium?.copyWith(
               fontStyle: FontStyle.normal,
+              color: theme.colorScheme.primary,
             ),
           ),
         ),
