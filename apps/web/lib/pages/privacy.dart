@@ -55,6 +55,19 @@ class const Privacy({super.key}) extends StatelessComponent {
         ),
       ]),
       li([
+        strong([.text('The human check on the deletion page')]),
+        .text(
+          ': only on the deletion page, and only once you ask for a code '
+          'there, Cloudflare Turnstile checks in the background that a '
+          'person and not a script is asking, before a code is mailed. '
+          'Basis: our legitimate interest in keeping scripts from mailing '
+          'codes to strangers and from using up the sign-in mail every real '
+          'user depends on (Art. 6 (1) (f) GDPR). What the check reads in '
+          'your browser is strictly necessary for the deletion you asked '
+          'for, so it needs no consent (§ 25 (2) No. 2 TDDDG).',
+        ),
+      ]),
+      li([
         strong([.text('Visit counts')]),
         .text(
           ': how many people visit and sign up, per page and per link. '
@@ -77,7 +90,7 @@ class const Privacy({super.key}) extends StatelessComponent {
     h2(id: 'processors', [.text('Who handles it')]),
     p([
       .text(
-        'Four providers process data for us under data processing '
+        'Five providers process data for us under data processing '
         "agreements (Art. 28 GDPR). Where a provider's parent company sits "
         'outside the EU, the transfer rests on the EU standard contractual '
         'clauses (Art. 46 GDPR).',
@@ -116,13 +129,32 @@ class const Privacy({super.key}) extends StatelessComponent {
           'viewed and where the link came from, never your email address.',
         ),
       ]),
+      li([
+        strong([.text('Cloudflare')]),
+        .text(
+          ' runs the human check on the deletion page (Turnstile). It reads '
+          'what it needs to tell a person from a script — your IP address, '
+          'your browser’s TLS fingerprint and user agent, and which site '
+          'asks — and answers with a one-time token that our sign-in '
+          'system confirms with Cloudflare. Cloudflare also uses these '
+          'signals, as a controller in its own right, to improve its bot '
+          'detection, as its ',
+        ),
+        a(href: 'https://www.cloudflare.com/turnstile-privacy-policy/', [
+          .text('Turnstile privacy addendum'),
+        ]),
+        .text(' describes. It never sees your email address.'),
+      ]),
     ]),
     p([
       .text(
         'The fonts, icons and images are served from this site itself, not '
-        'from Google or any other third party; the only outside script is '
-        "PostHog's, loaded from its EU servers. No cookies, no tracking "
-        'pixels and nothing stored in your browser are used on this site.',
+        'from Google or any other third party. Two outside scripts load: '
+        "PostHog's, from its EU servers, and Cloudflare's, only on the "
+        'deletion page once you ask for a code. The site itself sets no '
+        'cookies and uses no tracking pixels; the one thing that may be '
+        'stored in your browser is what Cloudflare’s check keeps there to '
+        'do its job, on the deletion page.',
       ),
     ]),
 
@@ -133,7 +165,9 @@ class const Privacy({super.key}) extends StatelessComponent {
         'ask for it to be removed, whichever comes first; unconfirmed, it '
         'is gone after a week. The IP address is '
         'gone after a day. Request logs are gone after a short time. Visit '
-        'counts are aggregated and cannot be traced back to you.',
+        'counts are aggregated and cannot be traced back to you. The '
+        'token from the deletion page’s check is spent within minutes, and '
+        'what Cloudflare keeps of a check it keeps as its addendum says.',
       ),
     ]),
     p([
