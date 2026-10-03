@@ -1,6 +1,7 @@
 import 'package:analysis_server_plugin/plugin.dart';
 import 'package:analysis_server_plugin/registry.dart';
 import 'package:emotely_lints/src/avoid_hardcoded_ui_text.dart';
+import 'package:emotely_lints/src/avoid_returning_widgets.dart';
 
 /// The entry point the analysis server looks for: it compiles this library
 /// and reads the top-level [plugin].
@@ -15,6 +16,8 @@ class EmotelyLints() extends Plugin {
 
   @override
   void register(PluginRegistry registry) {
-    registry.registerLintRule(AvoidHardcodedUiText());
+    registry
+      ..registerLintRule(AvoidHardcodedUiText())
+      ..registerLintRule(AvoidReturningWidgets());
   }
 }

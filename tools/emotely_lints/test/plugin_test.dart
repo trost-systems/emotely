@@ -2,6 +2,7 @@ import 'package:analysis_server_plugin/registry.dart';
 import 'package:analyzer/analysis_rule/analysis_rule.dart';
 import 'package:emotely_lints/main.dart';
 import 'package:emotely_lints/src/avoid_hardcoded_ui_text.dart';
+import 'package:emotely_lints/src/avoid_returning_widgets.dart';
 import 'package:test/test.dart';
 
 /// Records what the plugin registers; the plugin calls nothing else.
@@ -34,6 +35,7 @@ void main() {
 
       expect(registry.lintRules.map((rule) => rule.name), [
         AvoidHardcodedUiText.code.lowerCaseName,
+        AvoidReturningWidgets.code.lowerCaseName,
       ]);
       expect(registry.warningRules, isEmpty);
     });

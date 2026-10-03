@@ -5,6 +5,7 @@ import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/error/error.dart';
+import 'package:emotely_lints/src/flutter_types.dart';
 
 /// A string a user would read, written into the UI as a literal instead of
 /// coming from the package's ARB files (ADR 0020).
@@ -71,12 +72,12 @@ class _Visitor(final AnalysisRule rule) extends SimpleAstVisitor<void> {
     if (owner is! InterfaceElement) {
       return;
     }
-    final isWidget = _isWidget(owner);
-    if (!isWidget && (!_isFlutter(owner) || _isThrowable(owner))) {
+    final ownerIsWidget = isWidget(owner);
+    if (!ownerIsWidget && (!isFlutter(owner) || _isThrowable(owner))) {
       return;
     }
     arguments.arguments
-        .where((argument) => _isText(argument, isWidget: isWidget))
+        .where((argument) => _isText(argument, isWidget: ownerIsWidget))
         .forEach((argument) => rule.reportAtNode(argument.argumentExpression));
   }
 
@@ -149,21 +150,6 @@ const _textParameters = {
   'title',
   'tooltip',
 };
-
-/// Libraries whose classes are Flutter's, in the SDK or in the standalone
-/// Material and Cupertino packages the app uses.
-const _flutterPackages = {'flutter', 'material_ui', 'cupertino_ui'};
-
-bool _isFlutter(InterfaceElement element) {
-  final uri = element.library.uri;
-  return uri.isScheme('package') &&
-      _flutterPackages.contains(uri.pathSegments.first);
-}
-
-bool _isWidget(InterfaceElement element) => [
-  element.thisType,
-  ...element.allSupertypes,
-].any((type) => type.element.name == 'Widget' && _isFlutter(type.element));
 
 /// A letter anywhere in the literal's own text: punctuation, digits, emoji
 /// and interpolated values alone are not language.
