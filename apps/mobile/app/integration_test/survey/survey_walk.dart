@@ -1,4 +1,5 @@
 import 'package:feature_journal/feature_journal.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -6,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import '../perf/fake_backend.dart';
 import '../perf/perf_paths.dart';
 import 'frame_watch.dart';
+import 'screen_deadline.dart';
 
 /// The screens of the feature map (`.claude/skills/run-app/references/
 /// feature-map.yaml`), each walked by a gesture a user makes there, in the
@@ -40,7 +42,31 @@ class SurveyWalk(final WidgetTester tester, final PerfPaths paths) {
   /// enough frames for a percentile to mean something.
   static const repeats = 6;
 
+  /// How long one screen's walk may take before it fails as hung: the
+  /// slowest so far, the session on an iPhone, took about a minute.
+  static const screenDeadline = Duration(minutes: 4);
+
   FakeBackend get backend => paths.backend;
+
+  /// Where the walk is, in the device's log as it goes.
+  final _crumbs = Breadcrumbs(debugPrintSynchronously);
+
+  /// Runs [walk] as the screen [name], failing it as hung after
+  /// [screenDeadline] with the step it was at and what the screen shows.
+  Future<T> _guarded<T>(String name, Future<T> Function() walk) {
+    _crumbs.screen(name);
+    final clock = Stopwatch()..start();
+    return withinDeadline(
+      name,
+      screenDeadline,
+      walk,
+      waitingOn: () => '${_crumbs.last}; ${_onScreen()}',
+    ).whenComplete(
+      () => debugPrintSynchronously(
+        'survey: $name took ${clock.elapsedMilliseconds} ms',
+      ),
+    );
+  }
 
   /// Walks the app and reports what it measured, as `survey.json` holds it:
   /// the launch, the display's refresh rate and each screen's frames and
@@ -48,18 +74,18 @@ class SurveyWalk(final WidgetTester tester, final PerfPaths paths) {
   /// Onboarding and sign-in need the sign-out before them, so asking for
   /// sign-in alone walks onboarding's way there unmeasured.
   Future<Map<String, Object?>> run(Set<String> only) async {
-    final startup = await _launch();
+    final startup = await _guarded('launch', _launch);
     final screens = <String, Object?>{};
     for (final name in surveyScreens) {
       final wanted = only.isEmpty || only.contains(name);
       if (!wanted) {
         if (name == 'onboarding' && only.contains('sign_in')) {
-          await _signOut();
+          await _guarded('sign-out', _signOut);
         }
         continue;
       }
       final before = backend.requests.length;
-      final frames = await watchFrames(_walks[name]!);
+      final frames = await _guarded(name, () => watchFrames(_walks[name]!));
       screens[name] = {...frames, 'requests': backend.requests.sublist(before)};
     }
     return {
@@ -72,7 +98,10 @@ class SurveyWalk(final WidgetTester tester, final PerfPaths paths) {
 
   late final Map<String, Future<void> Function()> _walks = {
     'journal': _journal,
-    'entry': paths.openEntries,
+    'entry': () {
+      _crumbs.step("the budget's entry openings");
+      return paths.openEntries();
+    },
     'session': _session,
     'more': _more,
     'profile': _profile,
@@ -107,14 +136,14 @@ class SurveyWalk(final WidgetTester tester, final PerfPaths paths) {
     final list = find.byType(Scrollable).last;
     for (final direction in [-1, 1]) {
       for (var fling = 0; fling < repeats; fling++) {
-        await tester.fling(list, Offset(0, direction * 600), 3000);
-        await tester.pumpAndSettle();
+        await _fling(list, Offset(0, direction * 600), 3000);
       }
     }
   }
 
   /// A session: the budget's rounds, then left.
   Future<void> _session() async {
+    _crumbs.step("the budget's session rounds");
     await paths.answerRounds();
     await _back();
   }
@@ -124,10 +153,8 @@ class SurveyWalk(final WidgetTester tester, final PerfPaths paths) {
     for (var visit = 0; visit < repeats; visit++) {
       await _tap(_key('app_shell.more'));
       final rows = find.byType(Scrollable).last;
-      await tester.fling(rows, const Offset(0, -400), 2000);
-      await tester.pumpAndSettle();
-      await tester.fling(rows, const Offset(0, 400), 2000);
-      await tester.pumpAndSettle();
+      await _fling(rows, const Offset(0, -400), 2000);
+      await _fling(rows, const Offset(0, 400), 2000);
       await _tap(_key('app_shell.journal'));
     }
   }
@@ -202,8 +229,17 @@ class SurveyWalk(final WidgetTester tester, final PerfPaths paths) {
     // keyboard: a live binding leaves the platform's in place, and there
     // `enterText` types nothing.
     tester.testTextInput.register();
+    // On iOS a focused field's cursor fades in and out by an animation
+    // that never stops, so `pumpAndSettle` after typing never settled: the
+    // walk hung there on an iPhone in Test Lab until the 20-minute timeout
+    // (run 37105150605), and on the iOS simulator, where the screen
+    // deadline caught it in the fourth address. Android blinks the cursor
+    // by a timer and settles between blinks. A cursor that holds still is
+    // the testing hook for exactly this, and its frames are no user's.
+    EditableText.debugDeterministicCursor = true;
     try {
       for (var attempt = 0; attempt < repeats; attempt++) {
+        _crumbs.step('type an address');
         await tester.enterText(
           _key('sign_in_page.email'),
           'made-up-$attempt@example.com',
@@ -214,6 +250,7 @@ class SurveyWalk(final WidgetTester tester, final PerfPaths paths) {
         await _tapVisible(_key('sign_in_page.change_email'));
       }
     } finally {
+      EditableText.debugDeterministicCursor = false;
       tester.testTextInput.unregister();
     }
   }
@@ -242,34 +279,50 @@ class SurveyWalk(final WidgetTester tester, final PerfPaths paths) {
     if (target.evaluate().isNotEmpty) {
       return;
     }
+    fail('expected $what; ${_onScreen()}');
+  }
+
+  /// What is on screen and what the backend was asked last.
+  String _onScreen() {
     final texts = find
         .byType(Text)
         .evaluate()
         .map((element) => (element.widget as Text).data)
         .nonNulls;
     final requests = backend.requests.reversed.take(5).toList().reversed;
-    fail(
-      'expected $what; the screen shows ${texts.join(' | ')}; '
-      'the last requests were ${requests.join(', ')}',
-    );
+    return 'the screen shows ${texts.join(' | ')}; '
+        'the last requests were ${requests.join(', ')}';
   }
 
   Future<void> _tap(Finder target) async {
-    _expectShown(target, target.describeMatch(Plurality.one));
+    final what = target.describeMatch(Plurality.one);
+    _expectShown(target, what);
+    _crumbs.step('tap $what');
     await tester.tap(target);
+    _crumbs.step('settle after tapping $what');
     await tester.pumpAndSettle();
   }
 
   /// Scrolls [target] into view first: rows below the fold on a small phone.
   Future<void> _tapVisible(Finder target) async {
-    _expectShown(target, target.describeMatch(Plurality.one));
+    final what = target.describeMatch(Plurality.one);
+    _expectShown(target, what);
+    _crumbs.step('scroll to $what');
     await tester.ensureVisible(target);
     await tester.pumpAndSettle();
     await _tap(target);
   }
 
   Future<void> _back() async {
+    _crumbs.step('back');
     await tester.pageBack();
+    _crumbs.step('settle after back');
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> _fling(Finder target, Offset offset, double speed) async {
+    _crumbs.step('fling $offset');
+    await tester.fling(target, offset, speed);
     await tester.pumpAndSettle();
   }
 }
