@@ -73,8 +73,8 @@ by default) holds:
 - **Requests**: the count per path and service. On a pull request the widget
   test above holds them exactly. The profile run judges them too: any
   increase fails, and a decrease passes and asks for a lower number in the
-  budget. `session_round`'s Supabase count includes a profile read before
-  each agent round; #264 lowers it.
+  budget. `session_round`'s Supabase count includes one profile read for
+  the whole session (#264), not one per agent round.
 - **Latency** (`--latency`, and nightly): 20 Supabase reads and 5 agent first
   rounds from this machine, as the smoke account. p95 of the reads at most
   1 s, of the agent's first byte at most 5 s; the whole round is tracked,

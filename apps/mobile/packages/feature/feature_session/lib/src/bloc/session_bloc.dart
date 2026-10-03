@@ -131,6 +131,14 @@ class SessionBloc({
             .copyWith(locale: _locale),
       );
 
+  /// Ends the session, and with it what the app learned about the user for
+  /// it (#264).
+  @override
+  Future<void> close() async {
+    await _userContext.close();
+    await super.close();
+  }
+
   Future<void> _onRetried(SessionRetried event, Emitter<SessionState> emit) {
     unawaited(_analytics.sessionRetried());
     return _retry(emit);

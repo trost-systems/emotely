@@ -68,6 +68,13 @@ handful, and the same tooling holds.
   it. Same shape, same reason — two implementations, the app's and the
   fake — so it is the navigator's exception applied to data, not a new
   one.
+- *2026-10-03:* the user context is registered as a factory, not a
+  singleton (#264). It remembers the profile for one session instead of
+  reading it before every round, and that memory is per-user, so it may
+  live no longer than the session's screen: each session bloc gets its
+  own source and closes it, and nothing of the user is left for sign-out
+  to drop. It hears of a rename made in the app through the profile
+  repository's `saved` stream, which carries each save and keeps none.
 
 Decided on #39 (design comment of 2026-09-17), implemented as a stack of
 pull requests starting with the move to `apps/mobile`.

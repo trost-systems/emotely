@@ -85,6 +85,22 @@ void main() {
       expect(robot.userContext.asked, 2);
     });
 
+    testWidgets('lets the app forget who the user is once the session is '
+        'closed (#264)', (tester) async {
+      final agent = AgentStub()
+        ..script([awaiting(toolCallId: 'c1', question: SessionRobot.rate)]);
+      final robot = SessionRobot(tester, agent)
+        ..userContext.context = const UserContext(displayName: 'Maya');
+      await robot.launch();
+      await robot.settle();
+      expect(robot.userContext.closed, isFalse);
+
+      // The screen goes, and its bloc with it.
+      await tester.pumpWidget(const SizedBox());
+
+      expect(robot.userContext.closed, isTrue);
+    });
+
     testWidgets('tells the agent the language the screen is in (#228)', (
       tester,
     ) async {
