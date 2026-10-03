@@ -94,10 +94,17 @@ its `web.Event` has no target — so anything that reads an input runs under
 `lib/waitlist.dart` posts to `public.waitlist` with the publishable key and
 `Prefer: return=minimal`. The table (`supabase/migrations/*_waitlist.sql`,
 ADR 0011) owns validation, silent de-duplication and rate limits and answers
-201 / 429 (`PT429`) / 400. The confirmation mail the database sends links
-to `/confirm?t=<token>`; that page's island (`components/confirm_waitlist.dart`)
-calls the RPC `confirm_waitlist` once and shows confirmed / no longer valid /
-retry.
+201 / 429 (`PT429`) / 400. The row carries the page's `locale` (`en`, `de`),
+and the confirmation mail the database sends is written in it and links to
+that language's `/confirm?t=<token>` or `/de/confirm?t=<token>`; that page's
+island (`components/confirm_waitlist.dart`) calls the RPC `confirm_waitlist`
+once and shows confirmed / no longer valid / retry.
+
+The site and the database deploy separately, in no fixed order, so a new
+column the form sends must not break sign-ups while the migration is not yet
+live: PostgREST answers an unknown key with 400 `PGRST204` naming it, which
+`joinWaitlist` reads as "not yet" and retries without that key. Do the same
+for the next column the form starts sending.
 
 `lib/delete_account.dart` is the third island's seam (`/delete-account`,
 `components/delete_account_form.dart`), the web deletion route Google Play's

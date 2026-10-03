@@ -58,6 +58,7 @@ void main() {
 
         expect(seen, hasLength(1));
         expect(seen.single.body, contains('alice@example.com'));
+        expect(seen.single.body, contains('"locale":"en"'));
         expect(find.textContaining('Check your inbox'), findsOneComponent);
         expect(find.byKey(const Key('join')), findsNothing);
       });
@@ -219,6 +220,8 @@ void main() {
         await pumpEventQueue();
 
         expect(seen, hasLength(1));
+        // The confirmation mail is written in the language of the page.
+        expect(seen.single.body, contains('"locale":"de"'));
         expect(
           find.textContaining('Schau in dein Postfach'),
           findsOneComponent,

@@ -13,7 +13,7 @@ class const Privacy({super.key}) extends StatelessComponent {
     p([
       .text('This page covers getemotely.com, the web site. The app has its '),
       a(href: '/app-privacy', [.text('own privacy notice')]),
-      .text('. Last updated 15 September 2026.'),
+      .text('. Last updated 3 October 2026.'),
     ]),
 
     h2(id: 'stores', [.text('What the site stores')]),
@@ -22,11 +22,12 @@ class const Privacy({super.key}) extends StatelessComponent {
         'Nothing, unless you join the waitlist. Then it stores the email '
         'address you typed, the moment you sent it, a "source" tag (the '
         'campaign tags in the link you used, or the site that linked here), '
-        'a random token that the confirmation link carries, and the IP '
-        'address of the request. The IP address exists only to limit abuse '
-        'of the form: it is erased after one day, before it could be linked '
-        'to anything. An address that never clicks its confirmation link is '
-        'deleted after a week.',
+        'the language of the page you signed up on (English or German, so '
+        'the confirmation email comes in it), a random token that the '
+        'confirmation link carries, and the IP address of the request. The '
+        'IP address exists only to limit abuse of the form: it is erased '
+        'after one day, before it could be linked to anything. An address '
+        'that never clicks its confirmation link is deleted after a week.',
       ),
     ]),
 

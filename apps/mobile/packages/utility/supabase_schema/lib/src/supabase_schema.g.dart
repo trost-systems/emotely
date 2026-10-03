@@ -451,6 +451,10 @@ extension type const WaitlistRow(Map<String, dynamic> _json) implements Object {
   String get email => _json['email'] as String;
   String get id => _json['id'] as String;
   String? get ip => _json['ip'] as String?;
+
+  /// The site language the address signed up in (en, de); the confirmation mail
+  /// is written in it.
+  String get locale => _json['locale'] as String;
   String? get source => _json['source'] as String?;
 
   /// The row as decoded from the response.
@@ -471,6 +475,7 @@ extension type const WaitlistInsert._(Map<String, dynamic> _json)
     required String email,
     String? id,
     String? ip,
+    String? locale,
     String? source,
   }) : this._({
          'confirm_token': ?confirmToken,
@@ -479,6 +484,7 @@ extension type const WaitlistInsert._(Map<String, dynamic> _json)
          'email': email,
          'id': ?id,
          'ip': ?ip,
+         'locale': ?locale,
          'source': ?source,
        });
 
@@ -508,6 +514,7 @@ extension type const WaitlistUpdate._(Map<String, dynamic> _json)
     String? email,
     String? id,
     String? ip,
+    String? locale,
     String? source,
   }) : this._({
          'confirm_token': ?confirmToken,
@@ -516,6 +523,7 @@ extension type const WaitlistUpdate._(Map<String, dynamic> _json)
          'email': ?email,
          'id': ?id,
          'ip': ?ip,
+         'locale': ?locale,
          'source': ?source,
        });
 
@@ -556,5 +564,6 @@ class Waitlist {
   static const email = PostgrestColumn<WaitlistRow, String>('email');
   static const id = PostgrestColumn<WaitlistRow, String>('id');
   static const ip = PostgrestNullableColumn<WaitlistRow, String>('ip');
+  static const locale = PostgrestColumn<WaitlistRow, String>('locale');
   static const source = PostgrestNullableColumn<WaitlistRow, String>('source');
 }

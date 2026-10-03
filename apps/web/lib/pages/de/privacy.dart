@@ -21,7 +21,7 @@ class const PrivacyDe({super.key}) extends StatelessComponent {
     p([
       .text('Diese Seite gilt für getemotely.com, die Website. Die App hat '),
       PageLink('/app-privacy', 'eigene Datenschutzerklärung', locale: .de),
-      .text('. Zuletzt aktualisiert am 15. September 2026.'),
+      .text('. Zuletzt aktualisiert am 3. Oktober 2026.'),
     ]),
 
     h2(id: 'stores', [.text('Was die Website speichert')]),
@@ -31,7 +31,9 @@ class const PrivacyDe({super.key}) extends StatelessComponent {
         'speichert sie die E-Mail-Adresse, die du eingegeben hast, den '
         'Zeitpunkt, zu dem du sie abgeschickt hast, einen Herkunftsvermerk '
         '(„source“: die Kampagnen-Tags im Link, über den du gekommen bist, '
-        'oder die Website, die hierher verlinkt hat), ein zufälliges Token, '
+        'oder die Website, die hierher verlinkt hat), die Sprache der Seite, '
+        'auf der du dich eingetragen hast (Englisch oder Deutsch, damit die '
+        'Bestätigungs-E-Mail in ihr kommt), ein zufälliges Token, '
         'das der Bestätigungslink trägt, und die IP-Adresse der Anfrage. Die '
         'IP-Adresse dient nur dazu, Missbrauch des Formulars zu begrenzen: '
         'Sie wird nach einem Tag gelöscht, bevor sie mit irgendetwas '
