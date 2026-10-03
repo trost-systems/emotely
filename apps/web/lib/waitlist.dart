@@ -6,6 +6,7 @@ library;
 
 import 'dart:convert';
 
+import 'package:emotely_web/site_locale.dart';
 import 'package:http/http.dart' as http;
 
 /// What happened to a sign-up, as far as the form needs to know.
@@ -29,37 +30,84 @@ bool looksLikeEmail(String value) => _emailShape.hasMatch(value);
 
 final _emailShape = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
-/// Adds [email] to the waitlist through [client].
+/// Adds [email] to the waitlist through [client], with the [locale] of the
+/// page it was typed on: the confirmation mail is written in that language.
 Future<JoinOutcome> joinWaitlist(
   http.Client client, {
   required String email,
   required Uri supabaseUrl,
   required String publishableKey,
   String source = 'landing',
+  SiteLocale locale = .en,
 }) async {
+  final row = {'email': email, 'source': source, 'locale': locale.code};
   final http.Response response;
   try {
-    response = await client.post(
-      supabaseUrl.resolve('/rest/v1/waitlist'),
-      headers: {
-        'apikey': publishableKey,
-        'authorization': 'Bearer $publishableKey',
-        'content-type': 'application/json',
-        // No select privilege on the table, so nothing could come back anyway.
-        'prefer': 'return=minimal',
-      },
-      body: jsonEncode({'email': email, 'source': source}),
-    );
+    response = await _insert(client, row, supabaseUrl, publishableKey);
+    // The site and the database deploy separately (Vercel, CI's
+    // supabase-deploy), in no fixed order. Until the migration that adds
+    // `locale` is live, PostgREST refuses the unknown key with 400 PGRST204;
+    // the sign-up then goes through without it, in English, rather than
+    // telling the reader their address was refused.
+    if (_lacksColumn(response, 'locale')) {
+      return _outcomeOf(
+        await _insert(
+          client,
+          {...row}..remove('locale'),
+          supabaseUrl,
+          publishableKey,
+        ),
+      );
+    }
   } on http.ClientException {
     return JoinOutcome.failed;
   }
-  return switch (response.statusCode) {
-    201 => JoinOutcome.joined,
-    429 => JoinOutcome.tooMany,
-    400 => JoinOutcome.rejected,
-    _ => JoinOutcome.failed,
-  };
+  return _outcomeOf(response);
 }
+
+Future<http.Response> _insert(
+  http.Client client,
+  Map<String, String> row,
+  Uri supabaseUrl,
+  String publishableKey,
+) => client.post(
+  supabaseUrl.resolve('/rest/v1/waitlist'),
+  headers: {
+    'apikey': publishableKey,
+    'authorization': 'Bearer $publishableKey',
+    'content-type': 'application/json',
+    // No select privilege on the table, so nothing could come back anyway.
+    'prefer': 'return=minimal',
+  },
+  body: jsonEncode(row),
+);
+
+/// Whether PostgREST refused the request because its schema has no
+/// [column] on the table: 400 with code PGRST204, naming the column.
+bool _lacksColumn(http.Response response, String column) =>
+    response.statusCode == 400 &&
+    switch (_decoded(response.body)) {
+      {'code': 'PGRST204', 'message': final String message} => message.contains(
+        "'$column'",
+      ),
+      _ => false,
+    };
+
+/// [body] as JSON, or null when it is not JSON at all.
+Object? _decoded(String body) {
+  try {
+    return jsonDecode(body);
+  } on FormatException {
+    return null;
+  }
+}
+
+JoinOutcome _outcomeOf(http.Response response) => switch (response.statusCode) {
+  201 => JoinOutcome.joined,
+  429 => JoinOutcome.tooMany,
+  400 => JoinOutcome.rejected,
+  _ => JoinOutcome.failed,
+};
 
 /// What the confirm link led to.
 enum ConfirmOutcome() {

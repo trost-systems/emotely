@@ -103,9 +103,12 @@ client id, a new app signing key — read
 `public.waitlist` (ADR 0011) sends its own confirmation mail: an
 after-insert trigger calls Resend's API through `pg_net`, with the key read
 from Vault (`vault.decrypted_secrets`, name `resend_api_key`) at send time.
-Nothing outside Postgres holds that key. The link in the mail calls the
-anon-executable RPC `confirm_waitlist(token)`; unconfirmed rows are deleted
-after a week by the guard trigger.
+Nothing outside Postgres holds that key. The mail is written in the row's
+`locale` (`en` by default, `de` from the German page) and links that
+language's confirm page; a new site language needs its words in
+`waitlist_confirmation_mail()` and a value in the column's check. The link
+in the mail calls the anon-executable RPC `confirm_waitlist(token)`;
+unconfirmed rows are deleted after a week by the guard trigger.
 
 - **Local stacks have no key** and need none: the insert succeeds, the
   trigger logs `waitlist: no resend_api_key in vault` and sends nothing.

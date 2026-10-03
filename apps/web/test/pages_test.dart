@@ -209,6 +209,25 @@ void main() {
       },
     );
 
+    testComponents('the privacy page says the language is stored, and why', (
+      tester,
+    ) {
+      tester.pumpComponent(const Privacy());
+
+      // supabase/migrations/*_waitlist_locale.sql: the row keeps the site
+      // language, and the confirmation mail is written in it.
+      expect(
+        find.textContaining(
+          'the language of the page you signed up on (English or German',
+        ),
+        findsOneComponent,
+      );
+      expect(
+        find.textContaining('so the confirmation email comes in it'),
+        findsOneComponent,
+      );
+    });
+
     testComponents('the privacy page points at the deletion page', (tester) {
       tester.pumpComponent(const Privacy());
 
@@ -1218,6 +1237,22 @@ void main() {
       // Art. 13 (1) (b): the absence of a DPO is itself the disclosure.
       expect(
         find.textContaining('keinen Datenschutzbeauftragten'),
+        findsOneComponent,
+      );
+    });
+
+    testComponents('says the language is stored, and why', (tester) {
+      tester.pumpComponent(const PrivacyDe());
+
+      expect(
+        find.textContaining(
+          'die Sprache der Seite, auf der du dich eingetragen hast (Englisch '
+          'oder Deutsch',
+        ),
+        findsOneComponent,
+      );
+      expect(
+        find.textContaining('damit die Bestätigungs-E-Mail in ihr kommt'),
         findsOneComponent,
       );
     });

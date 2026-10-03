@@ -140,6 +140,7 @@ class _WaitlistFormState extends State<WaitlistForm> {
         client,
         email: email,
         source: source,
+        locale: _locale,
         supabaseUrl: supabaseUrl,
         publishableKey: supabasePublishableKey,
       );

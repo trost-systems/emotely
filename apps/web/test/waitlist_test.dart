@@ -39,9 +39,109 @@ void main() {
         expect(jsonDecode(seen!.body), {
           'email': 'alice@example.com',
           'source': 'landing',
+          'locale': 'en',
         });
       },
     );
+
+    test('sends the language of the page, so the mail is in it', () async {
+      http.Request? seen;
+      final client = MockClient((request) async {
+        seen = request;
+        return http.Response('', 201);
+      });
+
+      final outcome = await joinWaitlist(
+        client,
+        email: 'anna@example.com',
+        locale: .de,
+        supabaseUrl: supabase,
+        publishableKey: key,
+      );
+
+      expect(outcome, JoinOutcome.joined);
+      expect(jsonDecode(seen!.body), containsPair('locale', 'de'));
+    });
+
+    // Deploy order: the site can go live before the migration that adds
+    // the column. PostgREST then answers 400 PGRST204 for the unknown key,
+    // and the sign-up must still go through, in English, rather than tell
+    // the reader their address was refused.
+    test(
+      'before the database knows the language, signs up without it',
+      () async {
+        final seen = <http.Request>[];
+        final client = MockClient((request) async {
+          seen.add(request);
+          final body = jsonDecode(request.body) as Map<String, Object?>;
+          return body.containsKey('locale')
+              ? http.Response(
+                  '{"code":"PGRST204","details":null,"hint":null,'
+                  '"message":"Could not find the \'locale\' column of '
+                  '\'waitlist\' in the schema cache"}',
+                  400,
+                )
+              : http.Response('', 201);
+        });
+
+        final outcome = await joinWaitlist(
+          client,
+          email: 'anna@example.com',
+          locale: .de,
+          supabaseUrl: supabase,
+          publishableKey: key,
+        );
+
+        expect(outcome, JoinOutcome.joined);
+        expect(seen, hasLength(2));
+        expect(jsonDecode(seen.last.body), {
+          'email': 'anna@example.com',
+          'source': 'landing',
+        });
+      },
+    );
+
+    test('a 400 that is not JSON is a refusal, sent once', () async {
+      final seen = <http.Request>[];
+      final client = MockClient((request) async {
+        seen.add(request);
+        return http.Response('Bad Request', 400);
+      });
+
+      final outcome = await joinWaitlist(
+        client,
+        email: 'anna@example.com',
+        locale: .de,
+        supabaseUrl: supabase,
+        publishableKey: key,
+      );
+
+      expect(outcome, JoinOutcome.rejected);
+      expect(seen, hasLength(1));
+    });
+
+    test('any other 400 is a refusal, sent once', () async {
+      final seen = <http.Request>[];
+      final client = MockClient((request) async {
+        seen.add(request);
+        return http.Response(
+          '{"code":"PGRST204","message":"Could not find the \'source\' '
+          'column of \'waitlist\' in the schema cache"}',
+          400,
+        );
+      });
+
+      final outcome = await joinWaitlist(
+        client,
+        email: 'anna@example.com',
+        locale: .de,
+        supabaseUrl: supabase,
+        publishableKey: key,
+      );
+
+      expect(outcome, JoinOutcome.rejected);
+      expect(seen, hasLength(1));
+    });
 
     test('a 429 means the caller should wait', () async {
       final client = MockClient(
