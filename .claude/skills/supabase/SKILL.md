@@ -94,6 +94,24 @@ re-run the deploy (any push to `main` touching `supabase/**`). Sender and
 reply address is `hello@getemotely.com`, a Google Group in the Workspace.
 Anything with a secret uses `env(VAR)` and is never committed.
 
+The captcha (`[auth.captcha]`, Cloudflare Turnstile, #94 and ADR 0008)
+guards `/otp`, `/signup`, `/recover`, `/resend` and the password grant;
+`/verify`, refresh and the ID-token grant are unchecked. Locally it holds
+Cloudflare's always-pass test secret: a request needs
+`gotrue_meta_security.captcha_token` = `XXXX.DUMMY.TOKEN.XXXX` (what the
+test site key `1x00000000000000000000AA` hands out), and local Auth calls
+Cloudflare's siteverify, so it needs the internet. A curl against the local
+stack sends that dummy token; an app or site pointed at it passes
+`EMOTELY_TURNSTILE_SITE_KEY=1x00000000000000000000AA`. The hosted project's
+secret is the widget `emotely`'s, stored blind as the `ci` secret
+`TURNSTILE_SECRET_KEY` and merged in by `[remotes.production.auth.captcha]`;
+the deploy job fails without it, because `config push` silently skips an
+unresolved `env()`. Rotating it: `cf turnstile widgets rotate-secret` (or
+`POST /accounts/{id}/challenges/widgets/{sitekey}/rotate_secret`, which
+keeps the old secret valid two hours), pipe the new `secret` from the JSON
+straight into `gh secret set TURNSTILE_SECRET_KEY --env ci`, then re-run the
+deploy.
+
 Changing Google or Apple sign-in — the `[auth.external.*]` blocks, a
 client id, a new app signing key — read
 [references/provider-sign-in.md](references/provider-sign-in.md) first.
