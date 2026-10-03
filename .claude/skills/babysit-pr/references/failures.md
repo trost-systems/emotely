@@ -74,12 +74,14 @@ Two failure modes are specific to this job:
 
 ## `supabase` — `supabase/**`
 
-`supabase db start`, `supabase test db --local` (pgTAP), then
-`supabase db lint --local --fail-on warning`.
+`stack.sh up --db-only` (the supabase skill's script), `supabase test db
+--local` (pgTAP), then `supabase db lint --local --fail-on warning`.
 
 A pgTAP failure is usually a row-level-security assertion, and RLS is the point
 of the suite (ADR 0010) — a failing policy test is a security finding, not a
-flake. Reproduce with `supabase start` and `supabase test db --local`.
+flake. Reproduce on the checkout's own stack:
+`bash .claude/skills/supabase/scripts/stack.sh up --db-only`,
+`supabase db reset --local`, `supabase test db --local`.
 
 `supabase-deploy` only runs on `main`; it is never part of a PR's checks.
 

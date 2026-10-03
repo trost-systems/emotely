@@ -73,6 +73,8 @@ jobs:
               - '.github/workflows/ci.yml'
             supabase:
               - 'supabase/**'
+              # The script the supabase job starts its stack with.
+              - '.claude/skills/supabase/scripts/stack.sh'
               # The typed tables generated from the schema, the pin of their
               # generator, and the melos script that runs it with its flags
               # (see the supabase job).
@@ -328,8 +330,9 @@ jobs:
   # here, before a release depends on them. run-app.sh's account guard and
   # its lock between parallel agent sessions are tested the same way, and so
   # are the pull request evidence's diff-to-screens mapping and the section
-  # it writes into a body (evidence.sh), and the performance budget's gate
-  # (perf.sh). The Vercel projects' Ignored
+  # it writes into a body (evidence.sh), the performance budget's gate
+  # (perf.sh), and the per-checkout local Supabase stack (stack.sh) with
+  # Docker stubbed. The Vercel projects' Ignored
   # Build Step (vercel-ignore.sh) decides which commits deploy at all, so its
   # choice of base is tested against throwaway shallow clones. The store
   # listings are checked against the stores' field limits here, since the
@@ -348,6 +351,7 @@ jobs:
       - run: bash .claude/skills/open-pr/scripts/evidence.test.sh
       - run: bash .claude/skills/run-app/scripts/perf.test.sh
       - run: bash .claude/skills/run-app/scripts/survey.test.sh
+      - run: bash .claude/skills/supabase/scripts/stack.test.sh
       - run: bash scripts/store-listing-check.test.sh
       - run: bash scripts/store-listing-check.sh
 
@@ -401,7 +405,9 @@ jobs:
 
   # The schema gate: migrations apply to a fresh Postgres, and the pgTAP suite
   # proves row-level security holds (ADR 0010). Only the database container
-  # is started; nothing else is needed to run SQL tests.
+  # is started; nothing else is needed to run SQL tests. It starts the way
+  # an agent's checkout does (stack.sh, per-checkout name and ports), so the
+  # script is exercised against a real Docker on every schema change.
   supabase:
     needs: changes
     if: needs.changes.outputs.supabase == 'true'
@@ -411,7 +417,7 @@ jobs:
       - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
         with:
           version: 2.116.0
-      - run: supabase db start
+      - run: bash .claude/skills/supabase/scripts/stack.sh up --db-only
       - run: supabase test db --local
       - run: supabase db lint --local --fail-on warning
       # The app's typed tables are generated from this database
