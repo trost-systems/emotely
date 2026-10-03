@@ -488,7 +488,17 @@ jobs:
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       # Resend API key; resolved by `config push` for [remotes.production].
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      # The Turnstile widget's secret, the same way (#94).
+      TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
     steps:
+      # `config push` leaves a credential whose env() does not resolve
+      # unpushed and still succeeds, so a missing secret would deploy the
+      # captcha with whatever the project held before. Refuse instead.
+      - name: Credentials present
+        run: |
+          for name in SMTP_PASS TURNSTILE_SECRET_KEY; do
+            [ -n "${!name}" ] || { echo "::error::$name is empty in the ci environment"; exit 1; }
+          done
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: main
