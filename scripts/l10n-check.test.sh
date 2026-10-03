@@ -97,7 +97,23 @@ test_ignores_work_in_progress_outside_the_generated_code() {
     fail "unrelated uncommitted edits failed the check: ${output}"
 }
 
+# melos adds `--include-dependents` after it applies `--file-exists`, so a
+# scoped run reaches dependents without localizations (#308 hit it).
+test_passes_a_package_without_localizations() {
+  local dir="${work}/plain-${RANDOM}"
+  mkdir -p "${dir}/lib"
+  set +e
+  output="$(cd "${dir}" && PATH="${work}/bin:${PATH}" bash "${script}" 2>&1)"
+  status=$?
+  set -e
+  [[ ${status} -eq 0 ]] ||
+    fail "a package without l10n.yaml failed: exit ${status}: ${output}"
+  [[ "${output}" == *"no l10n.yaml"* ]] ||
+    fail "a package without l10n.yaml was skipped silently: ${output}"
+}
+
 test_passes_when_generated_code_and_translations_are_current
+test_passes_a_package_without_localizations
 test_ignores_work_in_progress_outside_the_generated_code
 test_fails_when_the_committed_code_is_out_of_date
 test_fails_when_a_generated_file_is_not_committed
