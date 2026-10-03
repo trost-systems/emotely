@@ -16,6 +16,7 @@ files:
   - "apps/agent/src/default-question-set.ts"
   - "apps/mobile/app/fastlane/metadata/**/*.txt"
   - "apps/mobile/app/fastlane/app_review/*.txt"
+  - "apps/mobile/app/fastlane/console/*.txt"
 import:
   - "@cspell/dict-de-de/cspell-ext.json"
 dictionaryDefinitions:
@@ -65,8 +66,10 @@ overrides:
       - "**/l10n/*_en.arb"
       - "**/fastlane/metadata/en-US/*.txt"
       - "**/fastlane/metadata/android/en-US/**/*.txt"
-      # App Review information, read by Apple's reviewer in English.
+      # App Review information and Play's sign-in instructions, read by the
+      # stores' reviewers in English.
       - "**/fastlane/app_review/*.txt"
+      - "**/fastlane/console/*.txt"
     language: en-US
     # The App Store keywords' abbreviation for cognitive behavioral therapy.
     words: [cbt]

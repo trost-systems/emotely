@@ -32,6 +32,7 @@ on:
       - '!apps/mobile/app/fastlane/metadata/**'
       - '!apps/mobile/app/fastlane/app_review/**'
       - '!apps/mobile/app/fastlane/data_safety.csv'
+      - '!apps/mobile/app/fastlane/console/**'
       # The Dart contract is pinned against the emitted JSON Schema.
       - 'packages/contract/contract.schema.json'
       - '.github/workflows/app-release.yml'

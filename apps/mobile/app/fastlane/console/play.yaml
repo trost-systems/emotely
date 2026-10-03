@@ -1,0 +1,51 @@
+# What the Play Console holds for the forms no API writes. The store-consoles
+# skill puts these answers into the console and checks them there; change a
+# value here first, in a pull request, then in the console. Read with yq.
+# Last compared with the console: 2026-10-02.
+
+# Policy → App content → Privacy policy. One URL for the whole app, not one
+# per language.
+privacy_policy_url: https://getemotely.com/app-privacy
+
+# Grow users → Store presence → Store settings → App category.
+category:
+  type: App
+  category: Health & fitness
+
+# Grow users → Store presence → Store settings → Store listing contact
+# details. Shown on the listing. (edits.details could write these; no lane
+# does yet.)
+contact:
+  email: p.trost93@gmail.com
+  website: https://getemotely.com
+  phone: ""
+
+# Store settings → External marketing.
+external_marketing: true
+
+# Test and release → Production → Countries/regions. The count the console
+# shows for the production track.
+production_countries: 178
+
+# Policy → App content → App access → Sign-in details. The password is never
+# here: it is in ~/.config/emotely/reviewer-accounts.env and Peter types it.
+app_access:
+  - name: Reviewer demo account
+    username: google-play-review@getemotely.com
+    instructions_file: play_app_access_instructions.txt
+    allow_google_to_use_for_testing: true
+
+# Policy → App content → Content ratings (IARC). Rated 2023-09-15 for the
+# legacy app; the questionnaire's answers are not shown afterwards, so they
+# are recorded here the next time it is filled in.
+content_rating:
+  iarc_certificate_id: 4f8b17c1-6019-4ded-b041-170aac4771c8
+  submitted: 2023-09-15
+  questionnaire_category: All other app types
+  ratings:
+    ClassInd: All ages
+    ESRB: Everyone
+    PEGI: PEGI 3
+    USK: All ages
+    IARC generic: 3+
+  answers: null
