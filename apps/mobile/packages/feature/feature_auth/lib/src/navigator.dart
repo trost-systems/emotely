@@ -2,12 +2,13 @@ import 'package:flutter/widgets.dart';
 
 /// Which door the sign-in screen is (#204, ADR 0019).
 enum SignInMode() {
-  /// The last step of onboarding: "Almost there, {name}". An email code
-  /// from here creates the account when there is none.
+  /// The last step of onboarding: "Almost there, {name}". The email and a
+  /// new password create the account (an address that has one is signed
+  /// into instead).
   signUp,
 
-  /// "I have an account": "Welcome back". An email code from here never
-  /// creates an account.
+  /// "I have an account": "Welcome back". The email and password sign in
+  /// and never create an account.
   signIn,
 }
 

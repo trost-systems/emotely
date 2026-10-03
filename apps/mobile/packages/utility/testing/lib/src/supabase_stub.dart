@@ -119,12 +119,18 @@ class SupabaseStub() {
   /// Queues auth responses per endpoint, served first-in first-out.
   void script({
     List<AuthRound> otp = const [],
+    List<AuthRound> signUp = const [],
+    List<AuthRound> recover = const [],
+    List<AuthRound> resend = const [],
     List<AuthRound> verify = const [],
     List<AuthRound> password = const [],
     List<AuthRound> idToken = const [],
     List<AuthRound> logout = const [],
   }) {
     rest('POST /auth/v1/otp', otp);
+    rest('POST /auth/v1/signup', signUp);
+    rest('POST /auth/v1/recover', recover);
+    rest('POST /auth/v1/resend', resend);
     rest('POST /auth/v1/verify', verify);
     // The password grant posts to `/token?grant_type=password`; the query
     // is recorded on the request, not part of the key.
@@ -253,7 +259,8 @@ class SupabaseStub() {
       base64Url.encode(utf8.encode(jsonEncode(claims))).replaceAll('=', '');
 }
 
-/// Supabase accepted the email and sent a code.
+/// Supabase accepted the email and mailed a code (a reset, a resent
+/// confirmation, or the web deletion page's).
 AuthRound codeSent() =>
     () async => _json(const {}, 200);
 

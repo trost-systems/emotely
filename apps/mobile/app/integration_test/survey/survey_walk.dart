@@ -221,8 +221,8 @@ class SurveyWalk(final WidgetTester tester, final PerfPaths paths) {
     }
   }
 
-  /// Sign-in, from Welcome: an address typed and a code asked for, and the
-  /// address changed again.
+  /// Sign-in, from Welcome: an address typed and a reset code asked for
+  /// ("Forgot password?"), and the address changed again.
   Future<void> _signIn() async {
     await _tap(_key('onboarding.welcome.have_account'));
     // Typing goes through the test's own text input, not the phone's
@@ -245,8 +245,8 @@ class SurveyWalk(final WidgetTester tester, final PerfPaths paths) {
           'made-up-$attempt@example.com',
         );
         await tester.pumpAndSettle();
-        await _tapVisible(_key('sign_in_page.send_code'));
-        _expectShown(_key('sign_in_page.code'), 'the code step');
+        await _tapVisible(_key('sign_in_page.forgot_password'));
+        _expectShown(_key('sign_in_page.code'), 'the reset code step');
         await _tapVisible(_key('sign_in_page.change_email'));
       }
     } finally {

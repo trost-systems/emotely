@@ -165,8 +165,7 @@ Several agent sessions on one machine can each run the CLI:
 ## How it fits together
 
 `main.dart` initializes `MarionetteBinding` only under `kDebugMode`, so
-profile and release builds never contain it. The debug build carries
-`SMOKE_EMAIL`, which makes the sign-in screen ask that one account for a
-password instead of a code; that workaround goes with email + password
-sign-in (#187). The installed `marionette_cli` must match the app's
+profile and release builds never contain it. The build knows no account:
+`up` signs the smoke account in through the ordinary email-and-password
+screen, as anyone signs in (#187). The installed `marionette_cli` must match the app's
 `marionette_flutter` version; `up`'s preflight says which to activate.

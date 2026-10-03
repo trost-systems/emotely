@@ -8,9 +8,10 @@ enum SignInVia() {
   apple,
   google,
 
-  /// A code sent to the address. The stores' review accounts, which sign
-  /// in with a password, are the email provider too and read the same.
-  emailCode,
+  /// The address and a password (#187). An account made with a sign-in
+  /// code before then is the email provider too and reads the same; it
+  /// gets its password through "Forgot password?".
+  email,
 }
 
 /// Who is signed in, as the user may see it on their own device: the
@@ -34,7 +35,7 @@ abstract class SignInIdentity with _$SignInIdentity {
   /// linked a second provider by the same address reads as the first. The
   /// session does not say which provider signed it in — its `amr` claim
   /// says `oauth` for Apple and Google alike — and the identities' sign-in
-  /// times are only kept for providers, never for an email code.
+  /// times are only kept for providers, never for an email and password.
   factory ofUser(User user) => SignInIdentity(
     email: switch (user.email) {
       null || '' => null,
@@ -48,7 +49,7 @@ abstract class SignInIdentity with _$SignInIdentity {
   static SignInVia? _via(Object? provider) => switch (provider) {
     'apple' => SignInVia.apple,
     'google' => SignInVia.google,
-    'email' => SignInVia.emailCode,
+    'email' => SignInVia.email,
     _ => null,
   };
 }

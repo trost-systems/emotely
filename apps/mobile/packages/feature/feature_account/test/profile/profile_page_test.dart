@@ -48,7 +48,7 @@ void main() {
     });
 
     for (final (provider, email, line) in <(String, String, _LineOf)>[
-      ('email', SupabaseStub.email, (strings) => strings.signInViaEmailCode),
+      ('email', SupabaseStub.email, (strings) => strings.signInViaEmail),
       ('apple', 'peter@icloud.com', (strings) => strings.signInViaApple),
       (
         'apple',

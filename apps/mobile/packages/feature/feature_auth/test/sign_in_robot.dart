@@ -20,6 +20,13 @@ class FakeSignInNavigator({final String? name}) extends SignInNavigator {
   void leave(BuildContext context, SignInMode mode) => left.add(mode);
 }
 
+/// A password long enough to choose, and one that is not.
+const goodPassword = 'correct horse battery staple';
+const shortPassword = 'too short';
+
+/// The six digits a scripted mail carries.
+const code = '482913';
+
 /// Drives sign-in on the feature's own screen, composed the way the app
 /// composes it, against a scripted Supabase. The root mirrors the app's:
 /// the sign-in screen while nobody is signed in, a stand-in for the
@@ -28,12 +35,11 @@ class SignInRobot(
   final WidgetTester tester, {
   required final SupabaseStub supabase,
   required final AgentStub agent,
-  final Set<String> passwordAccounts = const {},
-  final HumanCheckStub? humanCheck,
   final SignInMode mode = SignInMode.signIn,
   final String? name,
   final Locale locale = const Locale('de'),
   final ThemeMode themeMode = ThemeMode.light,
+  final HumanCheckStub? humanCheck,
 }) {
   final analytics = AnalyticsSpy();
   late final navigator = FakeSignInNavigator(name: name);
@@ -49,11 +55,15 @@ class SignInRobot(
   Finder get signIn => find.byType(SignInPage);
   Finder get home => find.byKey(homeKey);
   Finder get emailField => find.byKey(SignInPage.emailKey);
-  Finder get sendCode => find.byKey(SignInPage.sendCodeKey);
-  Finder get codeField => find.byKey(SignInPage.codeKey);
-  Finder get submitCode => find.byKey(SignInPage.signInKey);
   Finder get passwordField => find.byKey(SignInPage.passwordKey);
-  Finder get submitPassword => find.byKey(SignInPage.passwordSignInKey);
+  Finder get submit => find.byKey(SignInPage.submitKey);
+  Finder get forgotPassword => find.byKey(SignInPage.forgotPasswordKey);
+  Finder get codeField => find.byKey(SignInPage.codeKey);
+  Finder get confirm => find.byKey(SignInPage.confirmKey);
+  Finder get newPasswordField => find.byKey(SignInPage.newPasswordKey);
+  Finder get savePassword => find.byKey(SignInPage.savePasswordKey);
+  Finder get resendCode => find.byKey(SignInPage.resendCodeKey);
+  Finder get codeResent => find.byKey(SignInPage.codeResentKey);
   Finder get changeEmail => find.byKey(SignInPage.changeEmailKey);
   Finder get error => find.byKey(SignInPage.errorKey);
   Finder get busy => find.byType(CircularProgressIndicator);
@@ -102,7 +112,7 @@ class SignInRobot(
   SignInProblem? get problem => switch (state) {
     AuthSignedOut(:final problem) ||
     AuthCodeSent(:final problem) ||
-    AuthPasswordRequired(:final problem) => problem,
+    AuthNewPasswordRequired(:final problem) => problem,
     _ => null,
   };
 
@@ -116,14 +126,17 @@ class SignInRobot(
       tester.widget<ProviderButton>(googleButton).onPressed != null;
   bool get canTapApple =>
       tester.widget<ProviderButton>(appleButton).onPressed != null;
-  bool get canSendCode =>
-      tester.widget<FilledButton>(sendCode).onPressed != null;
-  bool get canSubmitCode =>
-      tester.widget<FilledButton>(submitCode).onPressed != null;
-  bool get canSubmitPassword =>
-      tester.widget<FilledButton>(submitPassword).onPressed != null;
-  bool get passwordObscured =>
-      tester.widget<TextField>(passwordField).obscureText;
+  bool get canSubmit => tester.widget<FilledButton>(submit).onPressed != null;
+  bool get canReset =>
+      tester.widget<TextButton>(forgotPassword).onPressed != null;
+  bool get canConfirm => tester.widget<FilledButton>(confirm).onPressed != null;
+  bool get canSavePassword =>
+      tester.widget<FilledButton>(savePassword).onPressed != null;
+  bool obscured(Finder field) => tester.widget<TextField>(field).obscureText;
+
+  /// The bodies the app posted to [path], in order.
+  List<Map<String, dynamic>> posted(String path) =>
+      supabase.bodies('/auth/v1/$path');
 
   /// The auth bloc above every screen and the one decision the app makes
   /// with it — signed in or not. Reading this composes the container.
@@ -135,11 +148,7 @@ class SignInRobot(
       analytics: analytics,
       humanCheck: humanCheck,
     );
-    registerAuth(
-      GetIt.I,
-      google: googleClients,
-      passwordAccounts: passwordAccounts,
-    );
+    registerAuth(GetIt.I, google: googleClients);
     GetIt.I.registerSingleton<SignInNavigator>(navigator);
     final root = BlocProvider(
       create: (_) => GetIt.I<AuthBloc>(),
@@ -170,54 +179,36 @@ class SignInRobot(
 
   Future<void> settle() => tester.pumpAndSettle();
 
-  Future<void> enterEmail(String email) async {
-    await tester.enterText(emailField, email);
+  Future<void> _type(Finder field, String text) async {
+    await tester.ensureVisible(field);
+    await tester.enterText(field, text);
     await tester.pump();
   }
 
-  Future<void> tapSendCode() async {
-    await tester.tap(sendCode);
+  Future<void> _tap(Finder button) async {
+    await tester.ensureVisible(button);
+    await tester.tap(button);
     await tester.pump();
   }
 
-  Future<void> enterCode(String code) async {
-    await tester.enterText(codeField, code);
-    await tester.pump();
-  }
+  Future<void> enterEmail(String email) => _type(emailField, email);
+  Future<void> enterPassword(String password) => _type(passwordField, password);
+  Future<void> enterCode(String typed) => _type(codeField, typed);
+  Future<void> enterNewPassword(String password) =>
+      _type(newPasswordField, password);
 
-  Future<void> tapSignIn() async {
-    await tester.tap(submitCode);
-    await tester.pump();
-  }
+  Future<void> tapSubmit() => _tap(submit);
+  Future<void> tapForgotPassword() => _tap(forgotPassword);
+  Future<void> tapConfirm() => _tap(confirm);
+  Future<void> tapSavePassword() => _tap(savePassword);
+  Future<void> tapResendCode() => _tap(resendCode);
+  Future<void> tapChangeEmail() => _tap(changeEmail);
+  Future<void> tapGoogle() => _tap(googleButton);
+  Future<void> tapApple() => _tap(appleButton);
 
-  Future<void> tapGoogle() async {
-    await tester.tap(googleButton);
-    await tester.pump();
-  }
-
-  Future<void> tapApple() async {
-    await tester.tap(appleButton);
-    await tester.pump();
-  }
-
-  Future<void> tapChangeEmail() async {
-    await tester.tap(changeEmail);
-    await tester.pump();
-  }
-
-  Future<void> enterPassword(String password) async {
-    await tester.enterText(passwordField, password);
-    await tester.pump();
-  }
-
-  Future<void> tapPasswordSignIn() async {
-    await tester.tap(submitPassword);
-    await tester.pump();
-  }
-
-  /// The keyboard's "done" action on the password field.
-  Future<void> submitPasswordFromKeyboard() async {
-    await tester.showKeyboard(passwordField);
+  /// The keyboard's "done" action on [field].
+  Future<void> submitFromKeyboard(Finder field) async {
+    await tester.showKeyboard(field);
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pump();
   }
@@ -226,20 +217,46 @@ class SignInRobot(
   /// asks the app to; the Supabase stub needs a `logout:` round.
   Future<void> signOut() async {
     tester
-        .element(find.byType(BlocBuilder<AuthBloc, AuthState>))
+        .element(find.byType(BlocBuilder<AuthBloc, AuthState>).first)
         .read<AuthBloc>()
         .add(const AuthEvent.signOutRequested());
     await settle();
   }
 
-  /// Enters [email] and goes on to whichever step follows it.
-  Future<void> submitEmail(String email) async {
+  /// Types [email] and [password] and submits them: a sign-in, or a new
+  /// account in [SignInMode.signUp].
+  Future<void> submitCredentials({
+    String email = SupabaseStub.email,
+    String password = goodPassword,
+  }) async {
     await enterEmail(email);
-    await tapSendCode();
+    await enterPassword(password);
+    await tapSubmit();
     await settle();
   }
 
-  /// The happy path up to the code step.
-  Future<void> requestCode([String email = SupabaseStub.email]) =>
-      submitEmail(email);
+  /// Types [email] and asks for a reset code.
+  Future<void> requestReset([String email = SupabaseStub.email]) async {
+    await enterEmail(email);
+    await tapForgotPassword();
+    await settle();
+  }
+
+  /// Types the confirmation [typed] code and confirms it.
+  Future<void> confirmWith([String typed = code]) async {
+    await enterCode(typed);
+    await tapConfirm();
+    await settle();
+  }
+
+  /// Types the reset [typed] code and [password] and saves them.
+  Future<void> resetWith({
+    String typed = code,
+    String password = goodPassword,
+  }) async {
+    await enterCode(typed);
+    await enterNewPassword(password);
+    await tapSavePassword();
+    await settle();
+  }
 }

@@ -1,11 +1,11 @@
 import 'package:analytics/src/post_hog_gate.dart';
 
-/// How a user got in: an emailed code, a review account's password, or a
+/// How a user got in: an email and its password (a new account's first
+/// sign-in, once its confirmation code is typed, and a reset's too), or a
 /// provider's ID token. Its name is the only thing a sign-in event says
 /// beyond the event itself, so a funnel can compare the ways in without
 /// learning who took them (ADR 0005).
 enum SignInMethod() {
-  code,
   password,
   google,
   apple,
@@ -13,24 +13,36 @@ enum SignInMethod() {
 
 /// Sign-in analytics, content-free by construction (ADR 0005): PostHog
 /// learns the user's id (a UUID), which step failed, and one boolean saying
-/// whether the account is ours — never the email or the code. The methods
-/// take no strings but the id, so a leak would be a type error before it was
-/// a bug.
+/// whether the account is ours — never the email, the password or a code.
+/// The methods take no strings but the id, so a leak would be a type error
+/// before it was a bug.
 class const AuthAnalytics({required final PostHogGate gate}) {
-  /// The user asked for a sign-in code.
-  Future<void> codeRequested() =>
-      gate.capture(eventName: 'sign_in_code_requested');
+  /// The user asked for an account with an email and a password.
+  Future<void> signUpRequested() =>
+      gate.capture(eventName: 'sign_up_requested');
 
-  /// Supabase refused to send a code (rate limit, outage).
-  Future<void> codeRequestFailed() =>
-      gate.capture(eventName: 'sign_in_code_request_failed');
+  /// Supabase did not create the account (an address it refused, a
+  /// password too short, a rate limit, an outage).
+  Future<void> signUpFailed() => gate.capture(eventName: 'sign_up_failed');
 
-  /// The code the user typed was wrong or expired.
-  Future<void> codeRejected() =>
-      gate.capture(eventName: 'sign_in_code_rejected');
+  /// The confirmation code the user typed was wrong or expired.
+  Future<void> confirmationCodeRejected() =>
+      gate.capture(eventName: 'sign_up_code_rejected');
 
-  /// A review account's password sign-in did not go through (wrong
-  /// password, outage).
+  /// The user asked for a code to reset a forgotten password.
+  Future<void> passwordResetRequested() =>
+      gate.capture(eventName: 'password_reset_requested');
+
+  /// The reset did not go through: no code could be sent, or the new
+  /// password could not be saved.
+  Future<void> passwordResetFailed() =>
+      gate.capture(eventName: 'password_reset_failed');
+
+  /// The reset code the user typed was wrong or expired.
+  Future<void> resetCodeRejected() =>
+      gate.capture(eventName: 'password_reset_code_rejected');
+
+  /// A password sign-in did not go through (wrong password, outage).
   Future<void> passwordFailed() =>
       gate.capture(eventName: 'sign_in_password_failed');
 

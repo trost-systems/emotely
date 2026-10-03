@@ -184,7 +184,7 @@ void main() {
     testWidgets('honors a deep link opened while signed out once the user '
         'signs in', (tester) async {
       final supabase = SupabaseStub()
-        ..script(otp: [codeSent()], verify: [sessionGranted()])
+        ..script(password: [sessionGranted()])
         ..always('GET /rest/v1/entries', rows([entry]));
       await tester.pumpWidget(
         appUnderTest(
@@ -210,11 +210,7 @@ void main() {
     testWidgets('returns to the screen the user was on when the session '
         'ended under them', (tester) async {
       final supabase = SupabaseStub()
-        ..script(
-          logout: [signedOut()],
-          otp: [codeSent()],
-          verify: [sessionGranted()],
-        );
+        ..script(logout: [signedOut()], password: [sessionGranted()]);
       await supabase.signedIn();
       await tester.pumpWidget(
         appUnderTest(
@@ -252,8 +248,7 @@ void main() {
     });
 
     testWidgets('lands on the journal after a plain sign-in', (tester) async {
-      final supabase = SupabaseStub()
-        ..script(otp: [codeSent()], verify: [sessionGranted()]);
+      final supabase = SupabaseStub()..script(password: [sessionGranted()]);
       await tester.pumpWidget(
         appUnderTest(
           agent: AgentStub(),

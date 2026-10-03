@@ -5,8 +5,8 @@
 # `lib/app/environment.dart` and passes the values into the packages'
 # registration functions, so there is one inventory of defines and one
 # fail-fast point. The live integration test reads the smoke account's
-# password from its own `integration_test/environment.dart`, so the secret
-# never reaches `lib/`. The site (apps/web) has its own environment file and
+# address and password from its own `integration_test/environment.dart`,
+# so neither ever reaches `lib/`. The site (apps/web) has its own environment file and
 # its own document below.
 #
 # The Dart linter's `do_not_use_environment` bans the same calls, but

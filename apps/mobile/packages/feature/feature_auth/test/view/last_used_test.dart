@@ -53,7 +53,7 @@ void main() {
       expect(robot.lastUsedPill, findsOneWidget);
       expect(robot.tagged(robot.googleButton), isTrue);
       expect(robot.tagged(robot.appleButton), isFalse);
-      expect(robot.tagged(robot.sendCode), isFalse);
+      expect(robot.tagged(robot.submit), isFalse);
       final strings = robot.strings;
       expect(
         announced(tester, strings.lastUsedButton(strings.googleButton)),
@@ -82,49 +82,43 @@ void main() {
       semantics.dispose();
     }, variant: iOS);
 
-    testWidgets('marks the email code when it was used last, in its label '
-        'too', (tester) async {
+    testWidgets('marks the email and password when they were used last, in '
+        'the label too', (tester) async {
       final semantics = tester.ensureSemantics();
       final robot = robotFor(tester);
-      await robot.keep(SignInOption.emailCode);
+      await robot.keep(SignInOption.email);
       await robot.launch();
       await robot.enterEmail(SupabaseStub.email);
+      await robot.enterPassword(goodPassword);
 
-      expect(robot.tagged(robot.sendCode), isTrue);
+      expect(robot.tagged(robot.submit), isTrue);
       expect(robot.tagged(robot.googleButton), isFalse);
       final strings = robot.strings;
       expect(
-        announced(tester, strings.lastUsedButton(strings.sendCodeButton)),
+        announced(tester, strings.lastUsedButton(strings.signInButton)),
         isTrue,
       );
       semantics.dispose();
     });
 
-    testWidgets('remembers a code sign-in, and keeps it over sign-out', (
+    testWidgets('remembers a password sign-in, and keeps it over sign-out', (
       tester,
     ) async {
       final supabase = SupabaseStub()
-        ..script(
-          otp: [codeSent()],
-          verify: [sessionGranted()],
-          logout: [signedOut()],
-        );
+        ..script(password: [sessionGranted()], logout: [signedOut()]);
       final robot = robotFor(tester, supabase: supabase);
       await robot.keep(SignInOption.google);
       await robot.launch();
 
-      await robot.requestCode();
-      await robot.enterCode('123456');
-      await robot.tapSignIn();
-      await robot.settle();
+      await robot.submitCredentials();
 
       expect(robot.home, findsOneWidget);
-      expect(await robot.kept(), SignInOption.emailCode);
+      expect(await robot.kept(), SignInOption.email);
 
       await robot.signOut();
 
       expect(robot.signIn, findsOneWidget);
-      expect(robot.tagged(robot.sendCode), isTrue);
+      expect(robot.tagged(robot.submit), isTrue);
       expect(robot.tagged(robot.googleButton), isFalse);
     });
 
@@ -153,21 +147,6 @@ void main() {
       expect(robot.home, findsOneWidget);
       expect(await robot.kept(), SignInOption.apple);
     }, variant: iOS);
-
-    testWidgets('counts a review account’s password as the email, where it '
-        'started', (tester) async {
-      final supabase = SupabaseStub()..script(password: [sessionGranted()]);
-      final robot = robotFor(tester, supabase: supabase);
-      await robot.launch();
-
-      await robot.submitEmail('google-play-review@getemotely.com');
-      await robot.enterPassword('correct horse battery staple');
-      await robot.tapPasswordSignIn();
-      await robot.settle();
-
-      expect(robot.home, findsOneWidget);
-      expect(await robot.kept(), SignInOption.emailCode);
-    });
 
     testWidgets('keeps the last method when a sign-in is dismissed', (
       tester,

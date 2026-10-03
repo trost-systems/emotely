@@ -263,8 +263,8 @@ class AccountLocalizationsDe extends AccountLocalizations {
   String get signInHiddenByApple => 'Von Apple verborgen';
 
   @override
-  String get signInViaEmailCode =>
-      'Per E-Mail-Code. Hierhin gehen Anmeldecodes und Mails zu deinem Konto.';
+  String get signInViaEmail =>
+      'Per E-Mail-Adresse und Passwort. Hierhin gehen Codes und Mails zu deinem Konto.';
 
   @override
   String get signInViaGoogle =>
