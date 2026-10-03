@@ -48,15 +48,43 @@ dependency_overrides:
       path: packages/analytica
       ref: 103ba839d3d8e4e53853fad600cbde341b153192
 
-# `melos run <script>`. Every gate runs per package, in that package's
-# directory. EMOTELY_SCOPE narrows a run to the packages that changed plus
-# their dependents (CI sets it on pull requests, e.g.
-# `--diff=origin/main...HEAD --include-dependents`); unset, every package runs.
+# `melos run <script>`. Every gate but codegen:check and analyze runs per
+# package, in that package's directory. EMOTELY_SCOPE narrows a run to the
+# packages that changed plus their dependents (CI sets it on pull requests,
+# e.g. `--diff=origin/main...HEAD --include-dependents`); unset, every
+# package runs.
 melos:
   scripts:
     codegen:check:
-      description: Committed generated code (freezed, json_serializable, mockito) must match its source.
-      run: melos exec --fail-fast --concurrency=1 --file-exists=build.yaml $EMOTELY_SCOPE -- dart run build_runner build --only-check
+      description: Committed generated code (freezed, json_serializable, go_router_builder, mockito, flutter_gen) must match its source, in every package.
+      # One build over the whole workspace (build_runner's --workspace), not
+      # one per package: each build spends ~26 s on CI compiling the same
+      # builders before it writes its 1-9 files, so eleven of them took
+      # 6m46s and one takes well under a minute. Each package's build.yaml
+      # still applies, and --only-check fails on any stale, missing or extra
+      # file in any package. It is skipped only when nothing in scope runs
+      # build_runner; otherwise it checks every package, which costs no more
+      # than checking one.
+      # flutter_gen_runner writes its files itself, past build_runner, so
+      # --only-check neither sees nor stops it: a stale assets.gen.dart is
+      # silently rewritten and the build passes. The working tree before
+      # and after the build is compared instead, and any file the build
+      # changed fails the check.
+      run: |
+        if [ -z "$(melos list --parsable --depends-on=build_runner $EMOTELY_SCOPE)" ]; then
+          echo "No package in scope runs build_runner."
+          exit 0
+        fi
+        snapshot() { { git status --porcelain --untracked-files=all -- .; git diff --binary -- .; } | git hash-object --stdin; }
+        before=$(snapshot)
+        status=0
+        dart run build_runner build --workspace --only-check || status=$?
+        if [ "$(snapshot)" != "$before" ]; then
+          echo "The build rewrote files it should only have checked; commit what it wrote:"
+          git status --short -- .
+          status=1
+        fi
+        exit "$status"
     l10n:check:
       description: Committed gen-l10n output must match the ARB files, and every locale must carry every message (ADR 0020).
       # From each package directory; the script lives with the repo's other
@@ -75,6 +103,12 @@ melos:
       run: dart analyze --fatal-infos $(melos list --parsable $EMOTELY_SCOPE)
     test:
       description: The suite with the hard 100% coverage gate on hand-written code; packages without a test/ directory (analysis, testing) are not measured.
+      # One package at a time, measured (#272): the tests are CPU-bound, and
+      # four at a time on CI's 4-core runner took 3m27s against 4m08s. CI
+      # spreads the packages over runners instead. Parallel runs also race
+      # on mason's shared cache (~/.mason-cache), where very_good compiles
+      # its test optimizer on first use (a PathNotFoundException in CI); a
+      # cache per package avoids it but compiles it again in each, ~9 s.
       run: melos exec --fail-fast --concurrency=1 --dir-exists=test $EMOTELY_SCOPE -- dart pub global run very_good_cli:very_good test --coverage --min-coverage 100 --exclude-coverage "'**/*.{freezed,g,gen,mocks}.dart'"
     schema:generate:
       description: Typed Supabase tables for every repository (the supabase_schema package), generated from the running local database (`supabase db start` first, from the repo root).
@@ -92,6 +126,9 @@ melos:
       # again in each package, and there the bare glob would expand to the
       # app's own lib/l10n files.
       run: melos exec --fail-fast --dir-exists=lib $EMOTELY_SCOPE -- dart run cognitive_complexity --threshold 10 --fail-threshold 15 --max-function-lines 60 --max-file-lines 400 --exclude "'**/l10n/*_localizations*.dart'" '$MELOS_PACKAGE_PATH/lib'
+    checks:
+      description: Every gate but the tests, in the order CI runs them.
+      run: melos run codegen:check && melos run l10n:check && melos run format && melos run analyze && melos run complexity
     ci:
-      description: Everything the CI app job runs, in its order.
-      run: melos run codegen:check && melos run l10n:check && melos run format && melos run analyze && melos run complexity && melos run test
+      description: Everything the CI app job runs. CI runs the checks and the tests on separate runners, the tests split between them by package.
+      run: melos run checks && melos run test

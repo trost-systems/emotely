@@ -119,10 +119,26 @@ jobs:
   # gate on hand-written code (generated files excluded, main.dart carrying a
   # coverage:ignore-file marker). The gates are melos scripts in
   # apps/mobile/pubspec.yaml, so CI and a developer run the same thing.
+  # Spread over four runners to stay under five minutes (#272): one runs
+  # every gate but the tests (`melos run checks`), three run the tests, each
+  # for every third package in scope. The tests are CPU-bound: four
+  # packages at a time on one 4-core runner took 3m27s against 4m08s one at
+  # a time, so they scale by runners, not by concurrency. Each runner's
+  # setup is ~35 s, so a shard of a full run takes about as long as the
+  # checks. The matrix job fails if any part fails, which fails ci-ok.
   app:
     needs: changes
     if: needs.changes.outputs.app == 'true'
+    name: app (${{ matrix.part }})
     runs-on: ubuntu-latest
+    strategy:
+      # Every part reports, so one run shows every failing gate.
+      fail-fast: false
+      matrix:
+        # `checks` first: each test shard takes its number from its place
+        # after it, and the shard count from the length of this list, so
+        # another shard is one more entry here and nothing else.
+        part: [checks, tests 1, tests 2, tests 3]
     defaults:
       run:
         working-directory: apps/mobile
@@ -140,6 +156,7 @@ jobs:
       # file: one in a package makes the analyzer plugin resolve the
       # workspace again for it, and the analyze step ten times slower.
       - name: One analysis_options.yaml for the workspace
+        if: matrix.part == 'checks'
         run: |
           extra=$(git ls-files -- '*/analysis_options.yaml' | grep -v '^packages/utility/analysis/lib/' || true)
           if [ -n "$extra" ]; then
@@ -147,11 +164,24 @@ jobs:
             exit 1
           fi
       - run: flutter pub get
+      # build_runner's compiled builders (an AOT snapshot of the build
+      # script), ~26 s to compile on every run otherwise. Only the builders
+      # are cached, never generated output or build state: build_runner
+      # recompiles the snapshot whenever the MD5 of any of its inputs
+      # changes, and codegen:check compares freshly built output with what
+      # is committed on every run.
+      - if: matrix.part == 'checks'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: apps/mobile/.dart_tool/build/entrypoint
+          key: build-runner-${{ runner.os }}-${{ hashFiles('apps/mobile/app/.fvmrc', 'apps/mobile/pubspec.lock', 'apps/mobile/**/build.yaml') }}
+          restore-keys: build-runner-${{ runner.os }}-
       - run: dart pub global activate melos 8.7.0
       # 1.5.0 is the first release whose coverage works inside a workspace
       # member (very_good_cli #1683); older ones crash on the missing local
       # package_config.json.
-      - run: dart pub global activate very_good_cli 1.5.0
+      - if: startsWith(matrix.part, 'tests')
+        run: dart pub global activate very_good_cli 1.5.0
       # On a pull request, run only the packages that changed plus their
       # dependents — unless something outside a package changed (the workspace
       # pubspec or lock, the shared rule set in packages/utility/analysis, the
@@ -181,7 +211,32 @@ jobs:
             echo "EMOTELY_SCOPE=--diff=$BASE...HEAD --include-dependents" >> "$GITHUB_ENV"
             echo "scoped to the packages changed since $BASE and their dependents"
           fi
-      - run: melos run ci
+      - if: matrix.part == 'checks'
+        run: melos run checks
+      # This shard's share of the packages the test gate would run: every
+      # n-th one of the list the scope above selects (melos lists them by
+      # name), starting at the shard's own number. It replaces the scope
+      # with those names, so the shards never overlap and together run
+      # exactly the packages one runner would.
+      - name: This shard's packages
+        if: startsWith(matrix.part, 'tests')
+        env:
+          SHARD: ${{ strategy.job-index }}
+          PARTS: ${{ strategy.job-total }}
+        run: |
+          shards=$((PARTS - 1))
+          mine=$(melos list --json --dir-exists=test $EMOTELY_SCOPE \
+            | jq -r --argjson shard "$SHARD" --argjson shards "$shards" \
+              '[.[].name] | to_entries | map(select(.key % $shards == $shard - 1) | "--scope=\(.value)") | join(" ")')
+          if [ -z "$mine" ]; then
+            echo "No package in scope for shard $SHARD of $shards."
+            echo "EMOTELY_SHARD_EMPTY=true" >> "$GITHUB_ENV"
+          else
+            echo "Shard $SHARD of $shards: $mine"
+            echo "EMOTELY_SCOPE=$mine" >> "$GITHUB_ENV"
+          fi
+      - if: startsWith(matrix.part, 'tests') && env.EMOTELY_SHARD_EMPTY != 'true'
+        run: melos run test
 
   # The landing page (apps/web): a Dart-only Jaspr site. Generated
   # *.options.dart files are committed; the build must not change them. The

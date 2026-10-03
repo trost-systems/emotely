@@ -24,10 +24,14 @@ only on a fork PR for a missing key, that is expected and not yours to fix.
 
 ## `app` — `apps/mobile` (the Flutter workspace)
 
-One step, `melos run ci`, runs five gates per package; the log names the
-package (`[contract]`, `[emotely]`, …) in front of every line, so read the
-package name first and reproduce from that package's directory. All of them
-are `melos run <script>` from `apps/mobile` (scripts in its `pubspec.yaml`).
+The job is a matrix of four runners: `app (checks)` runs `melos run checks`
+(every gate but `test`), and `app (tests 1)` to `app (tests 3)` each run
+`melos run test` for every third package in scope; the step before it names
+the shard's packages. Read the failing part's log, then the package name, and
+reproduce from that package's directory. `codegen:check` is one build over
+the whole workspace and names each stale file as `package|path`. All of them
+are `melos run <script>` from `apps/mobile` (scripts in its `pubspec.yaml`);
+`melos run ci` runs them all in one go.
 
 | Failing script | What it means | Reproduce |
 | --- | --- | --- |
