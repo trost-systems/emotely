@@ -348,12 +348,27 @@ gh run watch
 **No Play write restarts a review.** `edits.commit` defaults to canceling
 whatever is in Google's review and resubmitting it with the new changes, and
 supply cannot change that; `fastlane/lib/play_review_guard.rb` makes every
-commit of every lane use `ERROR_IF_IN_REVIEW` instead. While a closed-testing
-release or a listing change is in review, a Play write therefore **fails**
-with a message that says so, rather than silently starting the review over:
-run it again once Google has finished (the Play Console's Publishing
-overview shows what is in review). That includes the `android-internal`
-upload of a merge.
+commit of every lane use `ERROR_IF_IN_REVIEW` instead.
+
+- **Play refuses only a commit that sends something new for review; an
+  internal build does not.** Observed 2026-10-03: with the store listing in
+  review (submission 531, sent 11:11 UTC), app-release run 37119210231
+  committed build 1065 to the `internal` track at 11:24 UTC with
+  `ERROR_IF_IN_REVIEW`, Play accepted it, and the listing review went on
+  uncanceled. So the `android-internal` upload of a merge goes through
+  while a review is open; `android beta` (an alpha release) and
+  `android metadata` (a listing) are the writes that can be refused.
+- **A refusal** is Google's documented answer (HTTP 400,
+  `FAILED_PRECONDITION`, `ErrorInfo` reason `CHANGES_ALREADY_IN_REVIEW`).
+  The guard recognizes exactly that, deletes the refused edit (Google keeps
+  it open otherwise), and fails the job red: *"Play has changes in review;
+  re-run this job once Google's review is done."* Do that: wait until the
+  Play Console's Publishing overview no longer lists changes in review,
+  then re-run the job. **Never switch a lane back to
+  `CANCEL_IN_REVIEW_AND_SUBMIT`** to get past it: that cancels the review
+  and starts it over, silently.
+- Any other refusal fails with Google's words and the general hint, as
+  before.
 
 **One Play writer at a time.** Play keeps one open edit per account and any
 commit invalidates the others, so every job that writes to Play
