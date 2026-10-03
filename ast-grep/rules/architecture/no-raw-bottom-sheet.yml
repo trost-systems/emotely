@@ -1,0 +1,44 @@
+# A modal bottom sheet opens through design_system's `showSheet` (#308),
+# never through material_ui's `showModalBottomSheet` or its
+# `ModalBottomSheetRoute`. Material's sheet lays out against the whole
+# screen and ignores the keyboard, so a text field in it opens a keyboard
+# that covers the sheet; `showSheet` lifts the sheet above it. Holding every
+# sheet to the one helper means the next sheet with a text field is
+# keyboard-aware without anyone remembering to make it so.
+#
+# Flagged, in hand-written Dart under apps/mobile: the name
+# `showModalBottomSheet` or `ModalBottomSheetRoute` anywhere in code, a call,
+# a tear-off or a prefixed reference alike. Scaffold's persistent
+# `showBottomSheet` is not flagged: the Scaffold lifts it itself.
+#
+# Checked first (ADR 0018), and why none covers it, against
+# flutter_agent_lints 1.0.1 under the Dart 3.13 analyzer and Flutter 3.47.2:
+# - No analyzer or SDK lint bans calling a named function or class.
+# - `deprecated_member_use` stays silent: neither name is deprecated in
+#   material_ui 1.3.0.
+# - emotely's own analyzer plugin (tools/emotely_lints) has no such rule, and
+#   needs none: types would only tell material_ui's sheet from another of the
+#   same name, and the workspace has no other (the framework's copy is
+#   already barred by no-flutter-material).
+#
+# Emotely-specific (ADR 0018, "General and emotely-specific rules"): it names
+# design_system's helper, the one file allowed to call Material's.
+id: no-raw-bottom-sheet
+language: dart
+severity: error
+files:
+  - apps/mobile/**/*.dart
+ignores:
+  # The helper itself.
+  - apps/mobile/packages/utility/design_system/lib/src/sheet.dart
+  # Generated code answers to its generator.
+  - "**/*.g.dart"
+  - "**/*.freezed.dart"
+  - "**/*.gen.dart"
+  - "**/*.mocks.dart"
+rule:
+  any:
+    - kind: identifier
+    - kind: type_identifier
+  regex: '\A(?:showModalBottomSheet|ModalBottomSheetRoute)\z'
+message: 'Material''s modal bottom sheet ignores the keyboard: open a sheet with showSheet from package:design_system, which keeps it above the keyboard (#308)'
