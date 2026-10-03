@@ -57,6 +57,7 @@
 #                                                             (beta lanes);
 #                                                             newest if unset
 
+require_relative "lib/store_paths"
 require_relative "lib/play_review_guard"
 require_relative "lib/app_store_listing"
 require_relative "lib/app_review_information"
@@ -91,22 +92,13 @@ def dart_defines
   defines
 end
 
-# apps/mobile/app. Lanes run from here, but `sh` runs inside fastlane/, so the
-# flutter command gets an explicit `cd`.
-APP_DIR = File.expand_path("..", FastlaneCore::FastlaneFolder.path)
-
-# The store listings, English and German, in deliver's layout; Play's under
-# android/ in supply's. scripts/store-listing-check.sh guards their limits.
-METADATA_DIR = File.join(FastlaneCore::FastlaneFolder.path, "metadata")
-
-# App Review information for Apple's reviewer, without its secrets (see
-# fastlane/lib/app_review_information.rb). Outside metadata/ because deliver
-# would read a review_information/ folder there itself.
-APP_REVIEW_DIR = File.join(FastlaneCore::FastlaneFolder.path, "app_review")
-
-# Play's Data safety declaration, as the Play Console exports it: the source
-# of truth for that form (see fastlane/lib/play_data_safety.rb).
-DATA_SAFETY_CSV = File.join(FastlaneCore::FastlaneFolder.path, "data_safety.csv")
+# Absolute paths only (fastlane/lib/store_paths.rb says why): lane code runs
+# inside fastlane/, actions in apps/mobile/app. `sh` runs inside fastlane/,
+# so the flutter command gets an explicit `cd` to APP_DIR.
+APP_DIR = StorePaths::APP_DIR
+METADATA_DIR = StorePaths::METADATA_DIR
+APP_REVIEW_DIR = StorePaths::APP_REVIEW_DIR
+DATA_SAFETY_CSV = StorePaths::DATA_SAFETY_CSV
 
 def flutter(*args)
   require "shellwords"
@@ -336,6 +328,9 @@ platform :ios do
     rescue StandardError
       false
     end
+
+    # deliver reads a missing folder as "no metadata" and reports success.
+    UI.user_error!("No App Store listing at #{METADATA_DIR}") unless File.directory?(File.join(METADATA_DIR, "en-US"))
 
     upload_to_app_store(
       api_key: api_key,
