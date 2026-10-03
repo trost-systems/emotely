@@ -177,8 +177,10 @@ class const PrivacyDe({super.key}) extends StatelessComponent {
       .text(
         'Die Website wird über eine verschlüsselte HTTPS-Verbindung '
         'ausgeliefert und baut keine unverschlüsselte auf. Die Warteliste '
-        'liegt in einer Postgres-Datenbank, die nur der eigene Server der '
-        'Website erreicht, nie der Browser. Sollte eine Datenpanne deine '
+        'liegt in einer Postgres-Datenbank. Ein Browser kann dort eine '
+        'Adresse eintragen und eine Adresse mit ihrem Bestätigungslink '
+        'bestätigen, sonst nichts: Die Liste selbst lässt sich von einem '
+        'Browser aus nie lesen. Sollte eine Datenpanne deine '
         'Adresse je gefährden, wird die unten genannte Aufsichtsbehörde '
         'innerhalb von 72 Stunden benachrichtigt, nachdem uns die Verletzung '
         'bekannt geworden ist (Art. 33 DSGVO), und du wirst direkt '

@@ -247,6 +247,22 @@ void main() {
       expect(find.textContaining('notice inside it'), findsNothing);
       expect(find.textContaining('own privacy notice'), findsOneComponent);
     });
+
+    testComponents('the privacy page says what a browser can do to the list', (
+      tester,
+    ) {
+      tester.pumpComponent(const Privacy());
+
+      // The form posts from the browser with the publishable key (ADR 0011),
+      // so the notice once overclaimed: there is no server in between. What
+      // the grants allow is an insert and the confirm_waitlist call (#281).
+      expect(find.textContaining('never the browser'), findsNothing);
+      expect(find.textContaining('own server can reach'), findsNothing);
+      expect(
+        find.textContaining('never readable from a browser'),
+        findsOneComponent,
+      );
+    });
   });
 
   group('AppPrivacy', () {
@@ -1285,6 +1301,17 @@ void main() {
               component is DomComponent &&
               component.attributes?['href'] == '/de/app-privacy',
         ),
+        findsOneComponent,
+      );
+    });
+
+    testComponents('says what a browser can do to the list', (tester) {
+      tester.pumpComponent(const PrivacyDe());
+
+      expect(find.textContaining('nie der Browser'), findsNothing);
+      expect(find.textContaining('eigene Server der'), findsNothing);
+      expect(
+        find.textContaining('von einem Browser aus nie lesen'),
         findsOneComponent,
       );
     });
