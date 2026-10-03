@@ -62,9 +62,11 @@ and Peter's iCloud Passwords.
   (`category`, `purposes`, `data_protections` per data type). What each
   answer means and why: the release-app skill's
   `references/data-declarations.md`.
-- Read from App Store Connect on 2026-10-03 (eight data types, all linked,
-  none used for tracking). `fastlane/test` checks every id is one App Store
-  Connect knows.
+- Eight data types, all linked, none used for tracking: read from App Store
+  Connect on 2026-10-03, then corrected to what the code does (#290).
+  `fastlane/test` checks every id is one App Store Connect knows and holds
+  the expected purposes per type, so a purpose changes in the test and the
+  file together; the console follows after the merge.
 - **Console**: App Store Connect → App Privacy → Edit, per data type.
   Alternatively Peter runs, in his own terminal (it asks for his Apple ID
   and 2FA, which no agent enters):

@@ -15,11 +15,54 @@ still the truth. The tables in this file describe what the CSV must say;
 when they and the CSV disagree, the CSV is what Play has.
 
 App Store Connect's App Privacy has no API for an API key and stays a form.
-Its answers belong in `apps/mobile/app/fastlane/console/app_privacy_details.json`
-(read from the console on 2026-10-03), and the store-consoles skill is how an agent puts them
-into the console. **App Store Connect needs Peter signed in** in that
+Its answers live in `apps/mobile/app/fastlane/console/app_privacy_details.json`,
+and the store-consoles skill is how an agent puts them into the console.
+The file was read from the console on 2026-10-03 and then corrected to what
+the code does (#290, table below); `fastlane/test/console_test.rb` holds the
+expected purposes per type with the reason for each, so a change to one is a
+change to the test too. **App Store Connect needs Peter signed in** in that
 Chrome profile: a signed-out session is his to sign in to, never the
 agent's. Play Console stays signed in.
+
+## What the code collects, in Apple's terms
+
+Established from the code on 2026-10-03 (#290), not from the other
+declarations. Everything except the account itself (Supabase) and the
+conversation (agent, gateway, model) goes to **PostHog, and only after the
+user taps Allow** (`PostHogGate` in `packages/utility/analytics`); Apple has
+no "optional" answer, so all of it is declared. Every type is **linked**:
+after sign-in `PostHogGate.identify` makes the Supabase account id the
+PostHog person, and the anonymous events before it join that person.
+**No tracking**: no third-party data, no data broker, no ad SDK.
+
+| Apple type | What, from where | Apple purposes |
+| --- | --- | --- |
+| Name | profile (Supabase), Google's token | App Functionality, Product Personalization |
+| Email Address | Supabase Auth sign-in; PostHog gets only a derived "internal account" boolean | App Functionality |
+| Other User Content | the journal (Supabase, the model); **survey free text** (PostHog, two surveys running since 2026-09-19) | App Functionality, **Analytics** |
+| User ID | the Supabase account id (auth, row-level security); the **PostHog person id** (`AuthAnalytics.identify`) | App Functionality, **Analytics** |
+| Device ID | PostHog's random anonymous id (a UUID the SDK mints at `setup`) | Analytics |
+| Product Interaction | screens, app lifecycle, the product events | Analytics |
+| Crash Data | uncaught Flutter, platform-dispatcher and isolate errors, release builds only (`withErrorTracking`); native crash capture is off | App Functionality |
+| Other Diagnostic Data | handled failures (`ErrorReporter`, `session_failed` and siblings) and the device and app context on every event (`$app_version`, `$os_version`, `$device_model`, `$is_emulator`) | App Functionality, **Analytics** |
+
+Why the purposes split as they do:
+
+- Apple's **App Functionality** includes "minimize app crashes, improve
+  scalability and performance"; its **Analytics** is "evaluate user
+  behavior". Crash reports are only read to fix crashes, so Crash Data is
+  App Functionality alone. The other diagnostics are read both ways: the Beta
+  dashboard's session-quality rate counts `session_failed`, its cohorts are
+  split by `$app_version`, and the test-account filter drops `$is_emulator`.
+- Play draws the line elsewhere: its **Analytics** is "how users use the app
+  or how it performs", so Play's Crash logs and Diagnostics are Analytics
+  for the same use. The two consoles differ in words, not in fact.
+- Not declared, and why: **Coarse Location** — the PostHog project discards
+  client IP addresses (`anonymize_ips`), so no location is derived;
+  **Performance Data** — the app sends no launch time, hang rate or energy
+  use (`duration_ms` on an onboarding step is how long the user took, so
+  usage data). The agent's own record of each round (latency, tokens, cost)
+  and its error reports carry no user or device identifier.
 
 ## What is declared
 
@@ -53,7 +96,7 @@ shared):
 | App interactions | required | Analytics |
 | Crash logs | required | Analytics |
 | Diagnostics | required | Analytics |
-| Other user-generated content | — | App functionality |
+| Other user-generated content | — | App functionality; **Analytics due** (survey free text, see below) |
 | Device or other IDs | declared | (not re-read on 2026-09-27) |
 
 ## Changes for the onboarding build (#204)
@@ -109,9 +152,10 @@ App interactions, Crash logs, Diagnostics and Device or other IDs
   itself, and Play takes one answer per data type. Analytics stays among its
   purposes, since PostHog links events to the account id after sign-in, if
   allowed.
-- **Other user-generated content**: unchanged (the journal, App
-  functionality). If PostHog surveys are switched on, their free-text
-  answers go to PostHog only after Allow: add Analytics as a purpose then.
+- **Other user-generated content**: the journal (App functionality) and,
+  since the two PostHog surveys started on 2026-09-19, their optional
+  free-text answers, which go to PostHog only after Allow: **add
+  Analytics** (Play's own example of this type is "open-ended responses").
 - **Shared: still none.** The name, like the journal, now reaches the AI
   Gateway and the model provider with each round. Play's sharing is
   "transferring user data collected from your app to a third party", except
@@ -140,9 +184,11 @@ So the analytics types stay declared exactly as they are.
   and the notice calls it the personalized service the user asked for, so
   both consoles and the notice tell the same story. App Functionality stays
   for the account record of a Google sign-in.
-- **Identifiers (user id, device id), Usage Data and Diagnostics**:
-  unchanged — Linked, the purposes already chosen (Analytics among them),
-  **no tracking**.
+- **Identifiers (user id, device id), Usage Data and Diagnostics**: stay
+  declared, Linked, **no tracking**. This bullet once said their purposes
+  had "Analytics among them"; on 2026-10-03 the console had it only for
+  Device ID and Product Interaction. The purposes per type are now in
+  "What the code collects, in Apple's terms" above (#290).
 - **No App Tracking Transparency prompt.** Tracking is "linking data
   collected from your app about a particular end-user or device … with
   Third-Party Data for targeted advertising or advertising measurement

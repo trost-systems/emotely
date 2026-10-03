@@ -21,12 +21,12 @@
   },
   {
     "category": "OTHER_DIAGNOSTIC_DATA",
-    "purposes": ["APP_FUNCTIONALITY"],
+    "purposes": ["APP_FUNCTIONALITY", "ANALYTICS"],
     "data_protections": ["DATA_LINKED_TO_YOU"]
   },
   {
     "category": "OTHER_USER_CONTENT",
-    "purposes": ["APP_FUNCTIONALITY"],
+    "purposes": ["APP_FUNCTIONALITY", "ANALYTICS"],
     "data_protections": ["DATA_LINKED_TO_YOU"]
   },
   {
@@ -36,7 +36,7 @@
   },
   {
     "category": "USER_ID",
-    "purposes": ["APP_FUNCTIONALITY"],
+    "purposes": ["APP_FUNCTIONALITY", "ANALYTICS"],
     "data_protections": ["DATA_LINKED_TO_YOU"]
   }
 ]
