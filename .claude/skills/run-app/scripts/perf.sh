@@ -233,7 +233,8 @@ probe_id_token() {
 # before-user-created hook lets this one service account have an account.
 sign_in_probe() {
   local id_token token
-  id_token="$(probe_id_token "$1")"
+  # A `die` in there ends only the substitution; this ends the probe.
+  id_token="$(probe_id_token "$1")" || exit 2
   jq -n --arg t "$id_token" '{provider: "google", id_token: $t}' >"$1/grant.json"
   printf 'header = "apikey: %s"\n' "$SUPABASE_PUBLISHABLE_KEY" >"$1/grant.curl"
   token="$(curl -sS --fail -K "$1/grant.curl" -H 'Content-Type: application/json' \
