@@ -137,10 +137,18 @@ journal hold made-up content only.
 
 **Your own smoke account.** Contributors bring their own: an address whose
 inbox you, and the agents you run, can read, so a flow that sends mail can
-be verified end to end. Put `SMOKE_EMAIL`, `SMOKE_PASSWORD` and
-`SMOKE_EMAIL_DOMAINS` (its domain, comma-separated if more than one) in
-`apps/agent/.env.local`. Inside emotely that is an address on
+be verified end to end. Put `SMOKE_EMAIL`, `SMOKE_PASSWORD`,
+`SMOKE_USER_ID` (the account's id: Supabase dashboard, Authentication,
+Users) and `SMOKE_EMAIL_DOMAINS` (its domain, comma-separated if more than
+one) in `apps/agent/.env.local`. Inside emotely that is an address on
 `getemotely.com`. Reading the inbox from the CLI is #186.
+
+**No sign-in before the build.** The hosted project's auth captcha (#94)
+refuses a password grant without a Turnstile token, which a script cannot
+get, so the CLI no longer proves the password with one. The app's own
+sign-in passes the check in its web view and is the credential check: a
+refused password fails the `sign-in` step at once, naming the env file.
+The user id comes from the env file for the same reason (#304).
 
 ## Parallel sessions
 

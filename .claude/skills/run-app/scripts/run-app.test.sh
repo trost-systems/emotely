@@ -83,6 +83,89 @@ test_read_smoke_account_accepts_a_listed_address() {
     fail "read_smoke_account accepts a listed address"
 }
 
+# --- the smoke user's id ----------------------------------------------------------
+
+test_read_smoke_user_id_refuses_a_missing_id() {
+  local env="${work}/no-id.env" err
+  printf 'SMOKE_EMAIL=smoke@example.com\nSMOKE_PASSWORD=made-up\n' >"${env}"
+  if err="$(ENV_FILE="${env}" read_smoke_user_id 2>&1)"; then
+    fail "read_smoke_user_id refuses a missing id: it passed"
+  fi
+  [[ "${err}" == *SMOKE_USER_ID* ]] ||
+    fail "read_smoke_user_id names SMOKE_USER_ID: got ${err}"
+}
+
+test_read_smoke_user_id_refuses_what_is_not_a_user_id() {
+  local env="${work}/bad-id.env"
+  printf 'SMOKE_USER_ID=smoke@example.com\n' >"${env}"
+  if (ENV_FILE="${env}" read_smoke_user_id) 2>/dev/null; then
+    fail "read_smoke_user_id refuses what is not a user id"
+  fi
+}
+
+test_read_smoke_user_id_reads_a_user_id() {
+  local env="${work}/id.env" id
+  printf 'SMOKE_USER_ID="0b6e2a52-6c1d-4f8e-9a3b-2d7c5e1f9a40"\n' >"${env}"
+  id="$(ENV_FILE="${env}" && read_smoke_user_id && printf '%s' "${SMOKE_USER_ID}")" ||
+    fail "read_smoke_user_id reads a user id: it failed"
+  [[ "${id}" == 0b6e2a52-6c1d-4f8e-9a3b-2d7c5e1f9a40 ]] ||
+    fail "read_smoke_user_id reads a user id: got ${id}"
+}
+
+# Under the auth captcha (#94) GoTrue refuses a password grant without a human
+# check, so the step before the build must not sign in: the app does.
+# with_path <dir> <command>...: runs a command with <dir> first on PATH.
+with_path() {
+  local PATH="$1:${PATH}"
+  shift
+  "$@"
+}
+
+test_the_credentials_step_signs_nothing_in() {
+  local dir="${work}/credentials" called
+  mkdir -p "${dir}/bin" "${dir}/private"
+  : >"${dir}/env"
+  printf '#!/usr/bin/env bash\ntouch "%s/called"\nexit 22\n' "${dir}" >"${dir}/bin/curl"
+  chmod +x "${dir}/bin/curl"
+  (STATE_FILE="${dir}/state" PRIVATE_DIR="${dir}/private" ENV_FILE="${dir}/env" \
+    SMOKE_EMAIL=smoke@example.com SMOKE_USER_ID=0b6e2a52-6c1d-4f8e-9a3b-2d7c5e1f9a40 \
+    with_path "${dir}/bin" credentials) 2>/dev/null ||
+    fail "the credentials step signs nothing in: it failed"
+  called="$([[ -e "${dir}/called" ]] && printf yes || printf no)"
+  [[ "${called}" == no ]] || fail "the credentials step signs nothing in: it called curl"
+  [[ "$(STATE_FILE="${dir}/state" state_get SMOKE_USER_ID)" == 0b6e2a52-6c1d-4f8e-9a3b-2d7c5e1f9a40 ]] ||
+    fail "the credentials step keeps the smoke user's id for collect"
+  [[ "$(jq -r .SMOKE_EMAIL "${dir}/private/defines.json")" == smoke@example.com ]] ||
+    fail "the credentials step writes the build's defines"
+}
+
+# --- the in-app sign-in -----------------------------------------------------------
+
+# fake_marionette <dir> <key>: a marionette on PATH that shows one widget.
+fake_marionette() {
+  mkdir -p "$1/bin"
+  printf '#!/usr/bin/env bash\nprintf '"'"'Key: "%s"\\n'"'"'\n' "$2" >"$1/bin/marionette"
+  chmod +x "$1/bin/marionette"
+}
+
+test_a_refused_sign_in_fails_at_once_naming_the_password() {
+  local dir="${work}/refused" err started=${SECONDS}
+  fake_marionette "${dir}" sign_in_page.error
+  if err="$(INSTANCE=made-up ENV_FILE=/made/up/.env.local with_path "${dir}/bin" await_sign_in 2>&1)"; then
+    fail "a refused sign-in fails: it passed"
+  fi
+  [[ "${err}" == *SMOKE_PASSWORD* && "${err}" == */made/up/.env.local* ]] ||
+    fail "a refused sign-in names SMOKE_PASSWORD and its file: got ${err}"
+  ((SECONDS - started < 10)) || fail "a refused sign-in fails at once, not after the timeout"
+}
+
+test_a_sign_in_that_reaches_the_journal_passes() {
+  local dir="${work}/journal"
+  fake_marionette "${dir}" app_shell.journal
+  (INSTANCE=made-up with_path "${dir}/bin" await_sign_in) 2>/dev/null ||
+    fail "a sign-in that reaches the journal passes"
+}
+
 # --- the build's defines ----------------------------------------------------------
 
 test_the_build_names_the_smoke_account_and_hides_the_debug_banner() {
