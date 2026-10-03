@@ -76,10 +76,10 @@ merge_base() {
 if base="$(previous_base)"; then
   since="the last deployment"
 elif [ "${VERCEL_GIT_COMMIT_REF:-}" = "$main" ]; then
-  say "no previous deployment of $main to diff against; building"
+  say "no reachable previous deployment of $main to diff against; building"
   exit 1
 elif base="$(merge_base)"; then
-  since="the merge base with $main"
+  since="the merge base with $main from $remote"
 else
   say "no reachable previous deployment and no merge base with $main; building"
   exit 1
