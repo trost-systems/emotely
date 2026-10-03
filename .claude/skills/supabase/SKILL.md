@@ -94,6 +94,18 @@ re-run the deploy (any push to `main` touching `supabase/**`). Sender and
 reply address is `hello@getemotely.com`, a Google Group in the Workspace.
 Anything with a secret uses `env(VAR)` and is never committed.
 
+**Every new account passes the before-user-created hook**
+(`public.before_user_created`, `[auth.hook.before_user_created]`). It
+refuses Google service accounts (`*.gserviceaccount.com`): anyone can mint
+one an ID token for our Google client id, and the ID-token grant needs no
+captcha, so without the hook a script signs up without limit (#304,
+verified on the hosted project). Its one exception is
+`signin-probe@emotely-ci.iam.gserviceaccount.com` through Google sign-in,
+the identity of the nightly probes. A hook that errors blocks every sign-up,
+so a change to it goes through `before_user_created.test.sql` first, and
+Auth reads the hook config only at start: `supabase stop && supabase start`
+after changing it locally.
+
 Changing Google or Apple sign-in — the `[auth.external.*]` blocks, a
 client id, a new app signing key — read
 [references/provider-sign-in.md](references/provider-sign-in.md) first.
