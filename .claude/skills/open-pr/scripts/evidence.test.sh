@@ -4,7 +4,7 @@
 # before/after section it writes, and how that section goes into a pull
 # request's body (inserted, replaced, or not there at all). Sources the
 # script (its `main` runs only when executed). Run from anywhere:
-#   bash .claude/skills/run-app/scripts/evidence.test.sh
+#   bash .claude/skills/open-pr/scripts/evidence.test.sh
 set -euo pipefail
 
 # shellcheck source=SCRIPTDIR/evidence.sh
@@ -113,7 +113,7 @@ test_a_change_that_touches_no_screen_plans_none() {
     apps/mobile/packages/feature/feature_journal/pubspec.yaml \
     apps/mobile/packages/utility/journal_repository/lib/src/journal_repository.dart \
     apps/agent/src/session.ts \
-    .claude/skills/run-app/scripts/evidence.sh \
+    .claude/skills/open-pr/scripts/evidence.sh \
     docs/adr/0005-journal-content-privacy-mode.md)"
   [[ "$(jq '.screens | length' <<<"${p}")" == 0 ]] ||
     fail "tests, utilities, the agent, scripts and docs touch no screen: got $(slugs "${p}")"

@@ -106,42 +106,19 @@ third-party picker has no keys) then `emoji_input.submit`;
 Discard what you open: the nightly live smoke starts a new session and fails
 on an unfinished one.
 
-## Posting evidence to a pull request or issue
+## The copies to post
 
-Before/after evidence in a pull request's description is
-`scripts/evidence.sh`, which follows this recipe:
-[pr-evidence.md](pr-evidence.md). By hand, for an issue or a comment, post
-the copies in `<bundle>/post/`, never the originals, which stay in the
-bundle:
+`collect` leaves the originals in the bundle and writes copies sized for
+GitHub into `<bundle>/post/`:
 
-- **Screenshots**: `collect` writes each at 600 px wide. Show them at
-  300 px: full size is huge in a pull request, and 600 px keeps them sharp
-  on a 2x screen. Markdown has no width, so use an `<img>` tag.
-- **Video**: `record stop` and `collect` write `video-4x.mp4`, four times
-  faster than real time, since an agent spends most of a recording between
+- **Screenshots** at 600 px wide: shown at 300 px they stay sharp on a 2x
+  screen, where the full size is huge.
+- **Video** as `video-4x.mp4` (from `record stop` too), four times faster
+  than real time, since an agent spends most of a recording between
   actions. H.264 in MP4 is what GitHub recommends for inline playback (WebM
   does not play in every browser), with no audio, 15 fps and 600 px wide,
   so it stays well under the 10 MB video limit. `--speed 2` or `--speed 1`
   on either command writes `video-2x.mp4` / `video-1x.mp4` instead.
-
-`--attach` (gh 2.99+, on `gh pr create|edit` and `gh issue create|comment`)
-rewrites only a Markdown reference, `![alt](path)` or `[text](path)`, into
-the uploaded URL. An `<img src="path">` tag or a bare video path stays as
-written and the file is appended at the end (gh 2.100.0, checked on #180
-and in its source, `internal/attachments`). So upload first, then write the
-tags with the URLs:
-
-```bash
-P=<bundle>/post
-gh pr edit <n> --attach "$P/01-journal.png" --attach "$P/02-first-question.png" \
-  --attach "$P/video-4x.mp4"
-gh pr view <n> --json body -q .body | grep -o 'https://github.com/user-attachments/assets/[^)]*'
-```
-
-The URLs come back in upload order. Rewrite the body with `gh pr edit <n>
---body-file`, dropping the appended lines: the screenshots side by side on
-one line as `<img src="<url>" width="300" alt="<what it shows>">`, and the
-video's URL alone on its own line, which GitHub renders as a player.
 
 ## Privacy
 
@@ -155,20 +132,15 @@ so. Never sign in as anyone else on a driven app.
 
 A screenshot is not text: it shows the real app, and with it the smoke
 address (More and Profile), the account's name and its journal entries.
-Posted, all of that is public, so the account's profile and journal hold
-made-up content only, and the address must be one that is fine to publish.
-`evidence.sh` refuses to run otherwise ([pr-evidence.md](pr-evidence.md),
-"Privacy").
+Posted anywhere, all of that is public, so the account's profile and
+journal hold made-up content only.
 
 **Your own smoke account.** Contributors bring their own: an address whose
 inbox you, and the agents you run, can read, so a flow that sends mail can
 be verified end to end. Put `SMOKE_EMAIL`, `SMOKE_PASSWORD` and
 `SMOKE_EMAIL_DOMAINS` (its domain, comma-separated if more than one) in
 `apps/agent/.env.local`. Inside emotely that is an address on
-`getemotely.com`. Reading the inbox from the CLI is #186. For pull request
-evidence the address also has to be publishable: on a documentation domain
-such as example.com, or on a domain you list in `EVIDENCE_PUBLIC_DOMAINS`
-for a dedicated public alias, never your personal address.
+`getemotely.com`. Reading the inbox from the CLI is #186.
 
 ## Parallel sessions
 

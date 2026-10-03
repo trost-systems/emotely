@@ -6,10 +6,11 @@ the app: it maps the diff to screens, checks out the base and the head in
 worktrees of their own, runs `run-app.sh up` and `down` in each, makes the
 posting copies, uploads them with `gh pr edit --attach` and writes the
 section. You drive each planned screen with marionette in between, with the
-feature map's `reach`, exactly as in [verification.md](verification.md).
+feature map's `reach`, exactly as in the run-app skill's
+[verification.md](../../run-app/references/verification.md).
 
 ```bash
-E=.claude/skills/run-app/scripts/evidence.sh
+E=.claude/skills/open-pr/scripts/evidence.sh
 $E plan                 # this branch's PR; or `$E plan <pr>` for another one
 $E up base              # prints the instance, each screen's reach and its screenshot command
 # drive to each planned screen; save it under the printed name, e.g.
@@ -21,8 +22,9 @@ $E post                 # uploads and writes the section; a re-run replaces it
 ```
 
 A few minutes for each side's `up` (the worktree's build, the boot and the
-sign-in; under three on #288), then your driving; `down` takes seconds. `$E status` shows where a run stands; `$E clean`
-brings an abandoned run down and removes its worktrees (the bundle stays in
+sign-in; under three on #288), then your driving; `down` takes seconds.
+`$E status` shows where a run stands; `$E clean` brings an abandoned run
+down and removes its worktrees (the bundle stays in
 `apps/mobile/app/build/evidence/`).
 
 ## What it plans
@@ -105,6 +107,23 @@ The section sits between `<!-- pr-evidence:start -->` and
 `<!-- pr-evidence:end -->`, before the "Generated with" trailer, and a
 re-run replaces it in place. On another agent's pull request this edits
 the description only; it pushes nothing.
+
+**By hand**, for an issue or a comment (`--attach` works on `gh issue
+create|comment` too), the same rule holds: post the copies in a run-app
+bundle's `post/`, never the originals; attach first, then write
+`<img src="<url>" width="300" alt="<what it shows>">` tags with the URLs and
+put a video's URL alone on its line. Without a Markdown reference to
+rewrite, gh appends each file at the end, in upload order:
+
+```bash
+P=<bundle>/post
+gh issue comment <n> --body 'Evidence follows.' --attach "$P/01-journal.png" --attach "$P/video-4x.mp4"
+gh issue view <n> --json comments -q '.comments[-1].body' |
+  grep -o 'https://github.com/user-attachments/assets/[^) ]*'
+```
+
+Then rewrite it with the tags: `gh issue comment <n> --edit-last
+--body-file <file>`.
 
 ## Several sessions at once
 

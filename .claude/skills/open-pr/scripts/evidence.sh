@@ -28,9 +28,10 @@ set -euo pipefail
 
 EVIDENCE_SCRIPTS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # run-app.sh's helpers: the smoke account and its lock, the session id,
-# the posting copies. Sourcing runs none of its commands.
-# shellcheck source=SCRIPTDIR/run-app.sh
-source "$EVIDENCE_SCRIPTS/run-app.sh"
+# the posting copies. Launching, driving and collecting are the run-app
+# skill's; sourcing runs none of its commands.
+# shellcheck source=SCRIPTDIR/../../run-app/scripts/run-app.sh
+source "$EVIDENCE_SCRIPTS/../../run-app/scripts/run-app.sh"
 
 MAP_PATH=".claude/skills/run-app/references/feature-map.yaml"
 RUN_APP_PATH=".claude/skills/run-app/scripts/run-app.sh"

@@ -316,7 +316,7 @@ jobs:
       - run: bash scripts/l10n-check.test.sh
       - run: bash scripts/vercel-ignore.test.sh
       - run: bash .claude/skills/run-app/scripts/run-app.test.sh
-      - run: bash .claude/skills/run-app/scripts/evidence.test.sh
+      - run: bash .claude/skills/open-pr/scripts/evidence.test.sh
       - run: bash .claude/skills/run-app/scripts/perf.test.sh
       - run: bash .claude/skills/run-app/scripts/survey.test.sh
 

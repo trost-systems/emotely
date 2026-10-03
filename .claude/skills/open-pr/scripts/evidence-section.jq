@@ -27,7 +27,7 @@ def video($side; $word):
   $start,
   "## Before and after",
   "",
-  "The screens this pull request changes, on the base (`\($meta.base)`) and on its head (`\($meta.head)`): an iOS simulator signed in as the smoke account, with made-up content only. Written by `.claude/skills/run-app/scripts/evidence.sh`; running it again replaces this section.",
+  "The screens this pull request changes, on the base (`\($meta.base)`) and on its head (`\($meta.head)`): an iOS simulator signed in as the smoke account, with made-up content only. Written by `.claude/skills/open-pr/scripts/evidence.sh`; running it again replaces this section.",
   "",
   "| Before | After |",
   "| :---: | :---: |",

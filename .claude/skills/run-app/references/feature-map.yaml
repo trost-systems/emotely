@@ -22,12 +22,12 @@
 #   keys     the widget keys that drive it (`--key` in marionette). The app
 #            sets no semantics identifiers; keys are the handles.
 #   flow     optional, true for a screen whose use is a sequence of steps;
-#            pull request evidence (scripts/evidence.sh) records a video of
-#            a change to one.
+#            pull request evidence (.claude/skills/open-pr/scripts/
+#            evidence.sh) records a video of a change to one.
 #
-# A pull request's evidence maps its diff to screens through `package`, so
-# the order of the entries is the order a walk visits them in: the screens
-# reached by signing out come last.
+# That evidence maps a diff to screens through `package` and walks them in
+# the order of the entries here: the screens reached by signing out come
+# last.
 #
 # CI keeps it honest: scripts/feature-map.sh fails when a package declares a
 # route the map does not list, when an entry names a route that no longer
