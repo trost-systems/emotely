@@ -43,6 +43,16 @@ with an `l10n.yaml` (ADR 0020): it regenerates the localizations and fails
 on stale or uncommitted generated code and on a message a locale lacks.
 `l10n-check.test.sh` drives it with a fake `flutter` on the PATH.
 
+`vercel-ignore.sh` is the Ignored Build Step of both Vercel projects: each
+`apps/<project>/scripts/vercel-ignore.sh` passes its own build inputs, and
+this script picks what to diff them against — the branch's last successful
+deployment, else its merge base with `main`, else it builds. Vercel's clone
+is shallow and may have no remote, so it fetches from the public GitHub
+repository the deployment names. `vercel-ignore.test.sh` runs it in
+throwaway shallow clones.
+
 Shell here is linted by the `scripts` CI job: `shellcheck --external-sources
---severity=style scripts/*.sh`, clean; the same job runs
-`bash scripts/release-status.test.sh` and `bash scripts/l10n-check.test.sh`.
+--severity=style scripts/*.sh`, clean (with the skills' and
+`apps/*/scripts` shell); the same job runs `bash
+scripts/release-status.test.sh`, `bash scripts/l10n-check.test.sh` and `bash
+scripts/vercel-ignore.test.sh`.
