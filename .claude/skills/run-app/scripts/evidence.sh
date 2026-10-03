@@ -263,11 +263,12 @@ run_up() {
   if [[ -d "$1/apps/mobile/app/build/ios/iphonesimulator/Runner.app" ]]; then skip=(--skip-build); fi
   while :; do
     wait_for_account
-    if "$run_app" up --out "$2" --analytics deny ${skip[@]+"${skip[@]}"} >"$EV_DIR/up.out" 2>"$err"; then
-      cat "$err" >&2
+    # Its log shows as it goes and is kept to tell a lost race apart;
+    # pipefail makes the pipeline fail with `up`.
+    if { "$run_app" up --out "$2" --analytics deny ${skip[@]+"${skip[@]}"} 2>&1 >"$EV_DIR/up.out"; } |
+      tee "$err" >&2; then
       return 0
     fi
-    cat "$err" >&2
     "$run_app" down >/dev/null 2>&1 || true
     grep -q 'smoke account is in use' "$err" || return 1
     log "another session took the smoke account first; waiting again"

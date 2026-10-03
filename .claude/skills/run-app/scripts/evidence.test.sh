@@ -19,6 +19,14 @@ fail() {
   failures=$((failures + 1))
 }
 
+# A process that is certainly dead: a finished background job.
+dead_pid() {
+  true &
+  local pid=$!
+  wait "${pid}"
+  printf '%s' "${pid}"
+}
+
 # --- fixtures ---------------------------------------------------------------------
 
 # Six screens over four features, two of them flows, in the order a walk
@@ -183,6 +191,29 @@ test_every_screen_of_the_feature_map_is_reachable_from_a_diff() {
   done)"
   [[ -z "${unreachable}" ]] ||
     fail "every package in the feature map lives where the mapping looks: not ${unreachable}"
+}
+
+# --- the smoke account's lock -----------------------------------------------------
+
+printf 'SMOKE_EMAIL=smoke@example.com\nSMOKE_PASSWORD=made-up\nSMOKE_EMAIL_DOMAINS=example.com\n' >"${work}/smoke.env"
+
+test_waiting_never_takes_the_account_from_a_live_holder() {
+  local lock err
+  lock="$(LOCK_ROOT="${work}/live" SMOKE_EMAIL=smoke@example.com account_lock)"
+  (LOCK_ROOT="${work}/live" SMOKE_EMAIL=smoke@example.com SESSION=other REPO=/checkout/other \
+    take_account_lock "$$") 2>/dev/null
+  if err="$(LOCK_ROOT="${work}/live" ENV_FILE="${work}/smoke.env" WAIT_MINUTES=0 wait_for_account 2>&1)"; then
+    fail "waiting gives up while a live session holds the account"
+  fi
+  [[ "${err}" == */checkout/other* ]] || fail "it names the checkout holding the account: got ${err}"
+  [[ "$(lock_field "${lock}" session)" == other ]] || fail "the holder keeps its lock"
+}
+
+test_waiting_passes_a_lock_whose_holder_is_dead() {
+  (LOCK_ROOT="${work}/dead" SMOKE_EMAIL=smoke@example.com SESSION=gone REPO=/checkout/gone \
+    take_account_lock "$(dead_pid)") 2>/dev/null
+  (LOCK_ROOT="${work}/dead" ENV_FILE="${work}/smoke.env" WAIT_MINUTES=0 wait_for_account) 2>/dev/null ||
+    fail "a dead holder's lock does not make it wait"
 }
 
 # --- the files it uploads ---------------------------------------------------------

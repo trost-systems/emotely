@@ -20,8 +20,8 @@ $E down head
 $E post                 # uploads and writes the section; a re-run replaces it
 ```
 
-About ten minutes for each side: a worktree's first build, the boot and
-sign-in, then your driving. `$E status` shows where a run stands; `$E clean`
+A few minutes for each side's `up` (the worktree's build, the boot and the
+sign-in; under three on #288), then your driving; `down` takes seconds. `$E status` shows where a run stands; `$E clean`
 brings an abandoned run down and removes its worktrees (the bundle stays in
 `apps/mobile/app/build/evidence/`).
 
