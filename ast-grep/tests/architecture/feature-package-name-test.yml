@@ -1,0 +1,18 @@
+id: feature-package-name
+valid:
+  - |
+    name: feature_journal
+    description: Home — the journal so far.
+    dependencies:
+      analytics: any
+  - |
+    name: "feature_insights"
+invalid:
+  # A feature named without the prefix: no-feature-dependency could not
+  # tell it from a utility.
+  - |
+    name: insights
+    dependencies:
+      analytics: any
+  - |
+    name: journal_feature

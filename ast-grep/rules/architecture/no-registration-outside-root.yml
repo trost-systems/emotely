@@ -1,0 +1,59 @@
+# One composition root (ADR 0015, "Dependency injection"; issue 170): the
+# app's `registerApp` calls one plain `registerX(GetIt getIt, {...})`
+# function per utility and per feature, in dependency order, and no package
+# registers anything on its own. So get_it's registration methods are called
+# only inside a top-level function whose name starts with `register` (or
+# `_register`, a private helper of one): `registerApp` and its helpers in
+# app/lib/app/dependencies.dart, the app's own `registerConfig`, each
+# package's `registerX` and the `testing` utility's
+# `registerUtilitiesUnderTest`, which composes the same functions for
+# feature tests.
+#
+# Flagged: a call of any of get_it 9.2.1's fourteen `register…` methods
+# (`registerSingleton`, `registerFactory`, `registerLazySingleton` and their
+# `Async`, `Param`, `Cached`, `WithDependencies` and `IfAbsent` forms),
+# plain or in a cascade, in a package's `lib/` outside such a function,
+# methods of a class included. Tests are out of scope: a feature test
+# registers its fake navigator over `registerUtilitiesUnderTest`. The methods
+# are told by their exact names, so Flutter's `registerForRestoration`
+# passes.
+#
+# Checked first (ADR 0018), and why none covers it: no analyzer, SDK or
+# flutter_agent_lints 1.0.1 rule knows get_it; get_it 9.2.1 ships no lints;
+# emotely's own analyzer plugin (tools/emotely_lints) has no rule about it.
+# The method names and the enclosing function are syntax, so no types are
+# needed.
+#
+# Emotely-specific (ADR 0018, "General and emotely-specific rules"): it
+# enforces ADR 0015's composition root.
+id: no-registration-outside-root
+language: dart
+severity: error
+files:
+  - apps/mobile/**/lib/**/*.dart
+# Generated code answers to its generator.
+ignores:
+  - "**/*.g.dart"
+  - "**/*.freezed.dart"
+  - "**/*.gen.dart"
+  - "**/*.mocks.dart"
+rule:
+  kind: identifier
+  regex: '\Aregister(?:(?:Cached)?Factory(?:Param)?(?:Async)?|(?:Lazy)?Singleton(?:Async)?|Singleton(?:WithDependencies|IfAbsent))\z'
+  pattern: $METHOD
+  inside:
+    field: property
+    any:
+      - kind: member_expression
+      - kind: cascade_call_expression
+      - kind: cascade_selector
+  not:
+    inside:
+      stopBy: end
+      kind: function_declaration
+      has:
+        field: signature
+        has:
+          field: name
+          regex: '\A_?register[A-Z]'
+message: '"$METHOD" outside a registration function: register in the package''s one top-level registerX(GetIt getIt, {...}) function, which the app''s registerApp calls (ADR 0015)'

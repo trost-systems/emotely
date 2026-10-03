@@ -1,0 +1,24 @@
+id: no-flutter-material
+valid:
+  # The standalone packages, and the rest of the framework.
+  - |
+    import 'package:cupertino_ui/cupertino_ui.dart';
+    import 'package:flutter/widgets.dart';
+    import 'package:material_ui/material_ui.dart';
+  - |
+    import 'package:flutter/services.dart' show SystemChannels;
+  # Named in a comment or a string, nothing is imported.
+  - |
+    /// The picker still builds on `package:flutter/material.dart`.
+    const source = "import 'package:flutter/material.dart';";
+invalid:
+  - |
+    import 'package:flutter/material.dart';
+  - |
+    import "package:flutter/material.dart" show Scaffold;
+  - |
+    import 'package:flutter/material.dart' as material hide Text;
+  - |
+    import 'package:flutter/cupertino.dart';
+  - |
+    export 'package:flutter/material.dart' show ThemeData;

@@ -1,0 +1,74 @@
+# Features never depend on features (ADR 0015; issue 170): a feature
+# depends only on utilities, and a utility only on utilities, so only the app
+# composes features. A feature reaches another feature's screen through its
+# navigator, and another feature's data through a source the app implements
+# (ADR 0015, "Consequences"); code two features share moves into a utility.
+#
+# Flagged: a key that starts with `feature_` under `dependencies`,
+# `dev_dependencies` or `dependency_overrides` of a pubspec under
+# apps/mobile/packages, block or flow style, quoted or not. A feature is
+# known by its name alone, since a workspace member is listed by name, so
+# feature-package-name below keeps every package under packages/feature
+# named `feature_<name>`.
+#
+# Checked first (ADR 0018), and why none covers it: pub and melos resolve
+# any dependency between workspace members, cycles included; the analyzer's
+# `depend_on_referenced_packages` (an error in flutter_agent_lints 1.0.1)
+# wants an imported package listed, which is the opposite check; no
+# analyzer rule reads a pubspec's dependency names against a layering;
+# emotely's own analyzer plugin (tools/emotely_lints) reads Dart only.
+#
+# Emotely-specific (ADR 0018, "General and emotely-specific rules"): it names
+# this repository's package tiers.
+id: no-feature-dependency
+language: yaml
+severity: error
+files:
+  - apps/mobile/packages/*/*/pubspec.yaml
+rule:
+  any:
+    - kind: block_mapping_pair
+    - kind: flow_pair
+  has:
+    field: key
+    regex: '\A[''"]?feature_'
+    pattern: $DEPENDENCY
+  inside:
+    stopBy: end
+    kind: block_mapping_pair
+    has:
+      field: key
+      regex: '\A(?:dependencies|dev_dependencies|dependency_overrides)\z'
+    # A top-level section, not a key of that name further down.
+    inside:
+      kind: block_mapping
+      inside:
+        kind: block_node
+        inside:
+          kind: document
+message: '$DEPENDENCY is a feature: features and utilities never depend on a feature; reach its screen through your navigator, its data through a source the app implements, or move shared code into a utility (ADR 0015)'
+---
+# Every package under apps/mobile/packages/feature is named
+# `feature_<name>` (the add-package skill's layout), so no-feature-dependency
+# above can tell a feature from a utility by the name it is listed under.
+id: feature-package-name
+language: yaml
+severity: error
+files:
+  - apps/mobile/packages/feature/*/pubspec.yaml
+rule:
+  kind: block_mapping_pair
+  has:
+    field: key
+    regex: '\Aname\z'
+  not:
+    has:
+      field: value
+      regex: '\A[''"]?feature_'
+  inside:
+    kind: block_mapping
+    inside:
+      kind: block_node
+      inside:
+        kind: document
+message: 'a feature package''s name starts with feature_ (apps/mobile/packages/feature/feature_<name>), so the no-feature-dependency rule knows it for a feature (ADR 0015)'

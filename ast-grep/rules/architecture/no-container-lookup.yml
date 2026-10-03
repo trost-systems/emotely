@@ -1,0 +1,120 @@
+# The get_it container is read in exactly two forms outside the composition
+# root (ADR 0015, "Dependency injection"; issue 170):
+# - a screen creates its bloc, `BlocProvider(create: (_) =>
+#   GetIt.I<SomeBloc>())`, optionally with a cascade that adds the event
+#   that starts it;
+# - a page resolves its own feature's navigator, `GetIt.I<SomeNavigator>()`.
+# Anything else a widget needs is passed into its bloc's constructor by the
+# package's `registerX` function, and a side effect that needs a dependency
+# (an analytics call, a store launch) becomes an event the bloc handles.
+#
+# Flagged: `GetIt.I` and `GetIt.instance` (with or without an import prefix)
+# anywhere in a package's `lib/` but those two forms. The ADR states the rule
+# for widgets; it is checked everywhere in `lib/`, because no non-widget code
+# reads the container either (blocs, repositories and the app's navigators
+# take theirs as constructor arguments), and because "inside a widget" is
+# not a syntactic fact: a widget's code also lives in a `State`, a
+# `GoRouteData.build`, a mixin or a top-level helper. `main` is exempt: it
+# hands `GetIt.I` to `registerApp` and resolves what must be ready before the
+# first frame. Tests are out of scope (`lib/` only): they register and read
+# fakes. The navigator is told apart by its name (`…Navigator`); a feature
+# cannot import another feature's navigator, since features never depend on
+# features (no-feature-dependency).
+#
+# The Dart grammar reads a closure whose body is a call with nothing after
+# it, `(_) => GetIt.I<SomeBloc>()`, as a lookup on the closure: `((_) =>
+# GetIt).I<SomeBloc>()`. A cascade after the call parses as written. Both
+# shapes are matched, and the tests pin each.
+#
+# Checked first (ADR 0018), and why none covers it: no analyzer, SDK or
+# flutter_agent_lints 1.0.1 rule knows get_it or service location; get_it
+# 9.2.1 ships no lints; emotely's own analyzer plugin (tools/emotely_lints)
+# has no rule about it. The forms are syntax, so no types are needed.
+#
+# Emotely-specific (ADR 0018, "General and emotely-specific rules"): it
+# enforces ADR 0015's two places.
+id: no-container-lookup
+language: dart
+severity: error
+files:
+  - apps/mobile/**/lib/**/*.dart
+ignores:
+  - apps/mobile/app/lib/main.dart
+  # Generated code answers to its generator.
+  - "**/*.g.dart"
+  - "**/*.freezed.dart"
+  - "**/*.gen.dart"
+  - "**/*.mocks.dart"
+utils:
+  # `GetIt.I<T>()`: the lookup is the function of an instantiation that is
+  # called.
+  typed-call:
+    inside:
+      kind: instantiation_expression
+      field: function
+      inside:
+        kind: call_expression
+        field: function
+  # The type argument names a navigator.
+  navigator-call:
+    matches: typed-call
+    inside:
+      kind: instantiation_expression
+      has:
+        field: type_arguments
+        has:
+          kind: type
+          regex: 'Navigator\z'
+  # The `create:` argument of a BlocProvider.
+  bloc-create-argument:
+    kind: named_argument
+    has:
+      kind: label
+      regex: '\Acreate\s*:\z'
+    inside:
+      kind: arguments
+      inside:
+        kind: call_expression
+        has:
+          field: function
+          regex: '\ABlocProvider(?:\s*<[^>]*>)?\z'
+  # `create: (_) => GetIt.I<T>()`, with or without a cascade after it.
+  bloc-create:
+    matches: typed-call
+    any:
+      # As written: the call is the closure's body.
+      - inside:
+          kind: instantiation_expression
+          inside:
+            kind: call_expression
+            inside:
+              kind: function_expression_body
+              inside:
+                kind: function_expression
+                inside:
+                  matches: bloc-create-argument
+      # As the grammar reads it without a cascade: the closure is the
+      # lookup's object, and the call is the argument's whole value.
+      - has:
+          field: object
+          kind: function_expression
+        inside:
+          kind: instantiation_expression
+          inside:
+            kind: call_expression
+            inside:
+              matches: bloc-create-argument
+rule:
+  kind: member_expression
+  all:
+    - has:
+        field: object
+        regex: '\bGetIt\z'
+    - has:
+        field: property
+        regex: '\A(?:I|instance)\z'
+  not:
+    any:
+      - matches: navigator-call
+      - matches: bloc-create
+message: 'a get_it lookup outside its two places: a widget writes only BlocProvider(create: (_) => GetIt.I<SomeBloc>()) and GetIt.I<ItsFeatureNavigator>(); pass anything else into the bloc''s constructor in the package''s registerX function, and turn a side effect into a bloc event (ADR 0015)'

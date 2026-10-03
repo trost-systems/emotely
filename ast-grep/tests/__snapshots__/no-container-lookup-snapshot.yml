@@ -1,0 +1,188 @@
+id: no-container-lookup
+snapshots:
+  ? |
+    Widget build(BuildContext context) =>
+        BlocProvider.value(value: GetIt.I<JournalBloc>(), child: child);
+  : labels:
+    - source: GetIt.I
+      style: primary
+      start: 68
+      end: 75
+    - source: GetIt
+      style: secondary
+      start: 68
+      end: 73
+    - source: I
+      style: secondary
+      start: 74
+      end: 75
+  ? |
+    Widget build(BuildContext context) => BlocProvider(
+      create: (_) => JournalBloc(repository: GetIt.I<JournalRepository>()),
+      child: const JournalView(),
+    );
+  : labels:
+    - source: GetIt.I
+      style: primary
+      start: 93
+      end: 100
+    - source: GetIt
+      style: secondary
+      start: 93
+      end: 98
+    - source: I
+      style: secondary
+      start: 99
+      end: 100
+  ? |
+    Widget build(BuildContext context) => BlocProvider(
+      create: (_) {
+        return GetIt.I<JournalBloc>();
+      },
+      child: child,
+    );
+  : labels:
+    - source: GetIt.I
+      style: primary
+      start: 79
+      end: 86
+    - source: GetIt
+      style: secondary
+      start: 79
+      end: 84
+    - source: I
+      style: secondary
+      start: 85
+      end: 86
+  ? |
+    Widget build(BuildContext context) => RepositoryProvider(
+      create: (_) => GetIt.I<JournalRepository>(),
+      child: child,
+    );
+  : labels:
+    - source: (_) => GetIt.I
+      style: primary
+      start: 68
+      end: 82
+    - source: (_) => GetIt
+      style: secondary
+      start: 68
+      end: 80
+    - source: I
+      style: secondary
+      start: 81
+      end: 82
+  ? |
+    Widget build(BuildContext context) => TextButton(
+      onPressed: () => GetIt.I<FeedbackLink>().open(),
+      child: label,
+    );
+  : labels:
+    - source: () => GetIt.I
+      style: primary
+      start: 63
+      end: 76
+    - source: () => GetIt
+      style: secondary
+      start: 63
+      end: 74
+    - source: I
+      style: secondary
+      start: 75
+      end: 76
+  ? |
+    Widget build(BuildContext context) {
+      final repository = GetIt.I<JournalRepository>();
+      return Text(repository.name);
+    }
+  : labels:
+    - source: GetIt.I
+      style: primary
+      start: 58
+      end: 65
+    - source: GetIt
+      style: secondary
+      start: 58
+      end: 63
+    - source: I
+      style: secondary
+      start: 64
+      end: 65
+  ? |
+    class JournalBloc extends Bloc<JournalEvent, JournalState> {
+      JournalBloc() : _repository = GetIt.I<JournalRepository>(), super(const JournalState());
+      final JournalRepository _repository;
+    }
+  : labels:
+    - source: GetIt.I
+      style: primary
+      start: 93
+      end: 100
+    - source: GetIt
+      style: secondary
+      start: 93
+      end: 98
+    - source: I
+      style: secondary
+      start: 99
+      end: 100
+  ? |
+    final locator = GetIt.I;
+  : labels:
+    - source: GetIt.I
+      style: primary
+      start: 16
+      end: 23
+    - source: GetIt
+      style: secondary
+      start: 16
+      end: 21
+    - source: I
+      style: secondary
+      start: 22
+      end: 23
+  ? |
+    final repository = GetIt.I.get<JournalRepository>();
+  : labels:
+    - source: GetIt.I
+      style: primary
+      start: 19
+      end: 26
+    - source: GetIt
+      style: secondary
+      start: 19
+      end: 24
+    - source: I
+      style: secondary
+      start: 25
+      end: 26
+  ? |
+    final repository = GetIt.instance<JournalRepository>();
+  : labels:
+    - source: GetIt.instance
+      style: primary
+      start: 19
+      end: 33
+    - source: GetIt
+      style: secondary
+      start: 19
+      end: 24
+    - source: instance
+      style: secondary
+      start: 25
+      end: 33
+  ? |
+    final repository = di.GetIt.I<JournalRepository>();
+  : labels:
+    - source: di.GetIt.I
+      style: primary
+      start: 19
+      end: 29
+    - source: di.GetIt
+      style: secondary
+      start: 19
+      end: 27
+    - source: I
+      style: secondary
+      start: 28
+      end: 29

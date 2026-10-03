@@ -353,8 +353,9 @@ jobs:
   # Dart, TypeScript and shell must not announce a workaround (TODO, FIXME,
   # HACK, XXX, "workaround", "for now", "temporary") or suppress a diagnostic
   # without a reason; deferred work goes into an issue. The architecture
-  # rules (ast-grep/rules/architecture): ADR 0015's boundaries, such as
-  # defines read only in an app's environment file. Each checks only what
+  # rules (ast-grep/rules/architecture): ADR 0015's and 0016's boundaries,
+  # such as defines read only in an app's environment file, no feature in a
+  # package's pubspec and nothing as go_router's `extra`. Each checks only what
   # the Dart analyzer and biome do not already fail. `ast-grep.sh test` also
   # fails a rule test whose rule is gone, and the scan fails an ast-grep
   # suppression comment that names no rule (`no-suppress-all`). It installs only the

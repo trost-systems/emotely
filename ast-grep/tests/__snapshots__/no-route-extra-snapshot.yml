@@ -1,0 +1,84 @@
+id: no-route-extra
+snapshots:
+  ? |
+    Widget builder(BuildContext context, GoRouterState state) =>
+        EntryPage(entry: state.extra! as Entry);
+  : labels:
+    - source: state.extra
+      style: primary
+      start: 82
+      end: 93
+    - source: extra
+      style: secondary
+      start: 88
+      end: 93
+  ? |
+    class const EntryRoute(final Entry $extra) extends GoRouteData with $EntryRoute {}
+  : labels:
+    - source: EntryRoute(final Entry $extra) extends GoRouteData with $EntryRoute
+      style: primary
+      start: 12
+      end: 79
+  ? |
+    class const EntryRoute({required final String id, final Entry? $extra})
+        extends GoRouteData
+        with $EntryRoute {}
+  : labels:
+    - source: EntryRoute({required final String id, final Entry? $extra})
+      style: primary
+      start: 12
+      end: 71
+  ? |
+    final entry = state.extra as Entry?;
+  : labels:
+    - source: state.extra
+      style: primary
+      start: 14
+      end: 25
+    - source: extra
+      style: secondary
+      start: 20
+      end: 25
+  ? |
+    void open(BuildContext context, Entry entry) =>
+        GoRouter.of(context).go('/entries/${entry.id}', extra: entry);
+  : labels:
+    - source: 'extra: entry'
+      style: primary
+      start: 100
+      end: 112
+    - source: 'extra:'
+      style: secondary
+      start: 100
+      end: 106
+  ? |
+    void open(BuildContext context, Entry entry) =>
+        context.push('/entries/${entry.id}', extra: entry);
+  : labels:
+    - source: 'extra: entry'
+      style: primary
+      start: 89
+      end: 101
+    - source: 'extra:'
+      style: secondary
+      start: 89
+      end: 95
+  ? |
+    void open(BuildContext context, Entry entry) =>
+        context.pushNamed('entry', pathParameters: {'id': entry.id}, extra: entry);
+  : labels:
+    - source: 'extra: entry'
+      style: primary
+      start: 113
+      end: 125
+    - source: 'extra:'
+      style: secondary
+      start: 113
+      end: 119
+  ? |
+    void open(BuildContext context, Entry entry) => EntryRoute($extra: entry).go(context);
+  : labels:
+    - source: $extra
+      style: primary
+      start: 59
+      end: 65
