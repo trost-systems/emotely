@@ -85,10 +85,21 @@ by default) holds:
   `signin-probe@emotely-ci.iam.gserviceaccount.com`, signed in through
   Auth's ID-token grant, which the auth captcha (#94) does not check; a
   password grant would need a human check (#304, ADR 0008). The nightly gets
-  its ID token keyless from GitHub (`PROBE_ID_TOKEN`). Locally `perf.sh`
-  mints one with the gcloud config in `~/.config/emotely/gcloud`, whose
-  account needs `roles/iam.serviceAccountOpenIdTokenCreator` on that service
-  account (Peter's has it); without it, `--latency` fails naming both.
+  its ID token keyless from GitHub (`PROBE_ID_TOKEN`), and its latency is
+  the one of record: run it with `gh workflow run nightly-perf.yml` on
+  `main`.
+- **Locally, `--latency` needs a grant nobody holds by default.** `perf.sh`
+  mints the token with the gcloud config in `~/.config/emotely/gcloud`,
+  whose account needs `roles/iam.serviceAccountOpenIdTokenCreator` on that
+  service account. Only the GitHub pool holds it standing; the maintainer's
+  own grant from the rollout was removed. Without it, `--latency` fails
+  naming `PROBE_ID_TOKEN` and the gcloud config. For a local measurement the
+  project owner grants it to themselves for the run and removes it after
+  (`gcloud iam service-accounts add-iam-policy-binding` /
+  `remove-iam-policy-binding signin-probe@emotely-ci.iam.gserviceaccount.com
+  --member=user:<owner> --role=roles/iam.serviceAccountOpenIdTokenCreator`,
+  both with `CLOUDSDK_CONFIG=~/.config/emotely/gcloud`); a grant takes a
+  minute to apply.
 
 ## Environments
 

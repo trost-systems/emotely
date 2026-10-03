@@ -208,7 +208,9 @@ cmd_run() {
 # account, audience our Google web client. CI hands one over (PROBE_ID_TOKEN,
 # minted keyless by google-github-actions/auth); locally it is minted through
 # IAM Credentials with the emotely gcloud config, whose account needs
-# roles/iam.serviceAccountOpenIdTokenCreator on the service account.
+# roles/iam.serviceAccountOpenIdTokenCreator on the service account: nobody
+# holds that standing, so a local run needs a grant for it first
+# (references/performance.md).
 probe_id_token() {
   if [[ -n "${PROBE_ID_TOKEN:-}" ]]; then
     printf '%s' "$PROBE_ID_TOKEN"
@@ -216,13 +218,14 @@ probe_id_token() {
   fi
   local config="$HOME/.config/emotely/gcloud" token
   [[ -d "$config" ]] ||
-    die "no probe token: set PROBE_ID_TOKEN, or sign in to $config (CLOUDSDK_CONFIG) with an account that may mint ID tokens for $PROBE_SERVICE_ACCOUNT"
+    die "no probe token: set PROBE_ID_TOKEN, or sign in to $config (CLOUDSDK_CONFIG) with an account granted roles/iam.serviceAccountOpenIdTokenCreator on $PROBE_SERVICE_ACCOUNT (references/performance.md)"
   printf 'header = "Authorization: Bearer %s"\n' "$(CLOUDSDK_CONFIG="$config" gcloud auth print-access-token)" \
     >"$1/gcp.curl" || die "gcloud could not give an access token from $config"
   token="$(curl -sS --fail -K "$1/gcp.curl" -H 'content-type: application/json' \
     --data "$(jq -cn --arg a "$GOOGLE_WEB_CLIENT_ID" '{audience: $a, includeEmail: true}')" \
     "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/$PROBE_SERVICE_ACCOUNT:generateIdToken" |
-    jq -r '.token // empty')" || die "could not mint an ID token for $PROBE_SERVICE_ACCOUNT"
+    jq -r '.token // empty')" ||
+    die "could not mint an ID token for $PROBE_SERVICE_ACCOUNT: the gcloud account needs roles/iam.serviceAccountOpenIdTokenCreator on it (references/performance.md)"
   [[ -n "$token" ]] || die "IAM Credentials returned no ID token for $PROBE_SERVICE_ACCOUNT"
   printf '%s' "$token"
 }

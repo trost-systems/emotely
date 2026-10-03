@@ -204,8 +204,10 @@ keyless (workload identity federation from GitHub, no stored key):
 - **Who may mint its token**: the workload identity pool `github-probes`
   (provider `emotely`), conditioned on this repository and its owner, on
   `refs/heads/main`, and on `nightly-evals.yml` or `nightly-perf.yml`, holds
-  `roles/iam.serviceAccountOpenIdTokenCreator` on it, and so does the
-  maintainer, for the latency probe run locally. It is a pool of its own
+  `roles/iam.serviceAccountOpenIdTokenCreator` on it, and nobody else
+  standing: the maintainer's grant for the rollout is removed after it, and
+  a local latency run needs the project owner to grant it again for that
+  run. It is a pool of its own
   so that the Test Lab pool's repository-wide binding on `ftl-runner`
   (which holds Editor) is not widened to the probe workflows.
 - **What a leak would cost**: a token is valid for an hour and signs in as
