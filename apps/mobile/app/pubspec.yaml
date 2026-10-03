@@ -82,7 +82,7 @@ dev_dependencies:
   analysis: any
   build_runner: 2.16.1
   # The host side of the performance run (test_driver/perf_driver.dart):
-  # it receives the traced timelines and summarises them. Part of the SDK,
+  # it receives the traced timelines and summarizes them. Part of the SDK,
   # so it moves with the pinned Flutter.
   flutter_driver:
     sdk: flutter

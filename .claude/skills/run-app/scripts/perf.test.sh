@@ -113,26 +113,26 @@ test_fails_an_extra_request_on_a_path() {
     fail "fails an extra request: the supabase count check is not a failure of 3 over 2"
 }
 
-test_summarises_a_failure_for_the_issue_it_opens() {
+test_summarizes_a_failure_for_the_issue_it_opens() {
   local run="$work/summary-failure"
   new_run "$run"
   jq '.scroll += ["supabase GET /rest/v1/entries"]' "$run/requests.json" >"$run/r" && mv "$run/r" "$run/requests.json"
   gate "$run" --env test
   grep -qF "Over budget on \`test\`" "$run/summary.md" ||
-    fail "summarises a failure: no over-budget headline in summary.md"
+    fail "summarizes a failure: no over-budget headline in summary.md"
   grep -qF '| scroll | requests.supabase | 3 | 2 | **fail** |' "$run/summary.md" ||
-    fail "summarises a failure: no failing row for requests.supabase"
+    fail "summarizes a failure: no failing row for requests.supabase"
   # What the path asked for, so the extra request is found without a device.
   grep -qF "2 × \`supabase GET /rest/v1/entries\`" "$run/summary.md" ||
-    fail "summarises a failure: the path's requests are not listed"
+    fail "summarizes a failure: the path's requests are not listed"
 }
 
-test_summarises_a_pass() {
+test_summarizes_a_pass() {
   local run="$work/summary-pass"
   new_run "$run"
   gate "$run" --env test
   grep -qF "Within budget on \`test\`" "$run/summary.md" ||
-    fail "summarises a pass: no within-budget headline in summary.md"
+    fail "summarizes a pass: no within-budget headline in summary.md"
 }
 
 # --- frames -----------------------------------------------------------------------

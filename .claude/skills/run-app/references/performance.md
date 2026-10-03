@@ -6,7 +6,7 @@ things hold the app to it:
 | what | where | when | blocks |
 | --- | --- | --- | --- |
 | **Request counts** | `apps/mobile/app/test/perf/request_budget_test.dart`, a widget test in the app's `melos run test` | every app pull request, about a second | yes, through `ci-ok` |
-| **Frames and latency** | `.github/workflows/nightly-perf.yml`: `perf.sh run` in profile mode on three emulators, then the deployed backend's latency | nightly (and `gh workflow run`) | never: anything that fails opens or comments on the one issue labelled `performance` |
+| **Frames and latency** | `.github/workflows/nightly-perf.yml`: `perf.sh run` in profile mode on three emulators, then the deployed backend's latency | nightly (and `gh workflow run`) | never: anything that fails opens or comments on the one issue labeled `performance` |
 | **Frames on a real phone** | the device-farm survey, #256 | not yet | |
 
 `scripts/perf.sh` is the profile run, the same one the nightly runs, for an
@@ -105,7 +105,7 @@ let the runners judge it with `gh workflow run nightly-perf.yml --ref
 <branch>`. Pull requests never run this workflow.
 
 The nightly notifies; it does not block. Whatever fails opens or comments on
-the one open issue labelled `performance`, titled "Performance budget
+the one open issue labeled `performance`, titled "Performance budget
 exceeded", and says which part failed:
 - a check over budget: frames, request counts or latency;
 - a profile run that broke (the other samples are still judged);

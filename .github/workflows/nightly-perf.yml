@@ -8,7 +8,7 @@ name: Nightly performance budget
 # Nightly only, and it never blocks a pull request: it notifies. Every run
 # that does not pass — a path over budget (frames, request counts or the
 # deployed backend's latency), or any part of the measurement breaking —
-# opens or comments on the one open issue labelled `performance`, with what
+# opens or comments on the one open issue labeled `performance`, with what
 # failed, the numbers and a link to the run. Pull requests are gated on the
 # request counts by an ordinary widget test instead
 # (apps/mobile/app/test/perf/request_budget_test.dart), in seconds.
