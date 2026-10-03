@@ -92,6 +92,10 @@ class TurnstileStub() {
       rendered.last.getProperty<JSString?>(name.toJS)?.toDart;
 }
 
+/// The `<script>` that loads Cloudflare's Turnstile, if the page added one.
+web.Element? cloudflareScript() =>
+    web.document.querySelector('script[src*="challenges.cloudflare.com"]');
+
 /// The human check a request carried, as GoTrue reads it.
 Object? captchaOf(http.Request request) =>
     (jsonDecode(request.body) as Map)['gotrue_meta_security'];
@@ -189,19 +193,61 @@ void main() {
       );
     });
 
-    testClient("loads Cloudflare's script on the first request only", (
+    testClient(
+      "loads Cloudflare's script on the first request, and fails without it",
+      (tester) async {
+        final seen = <http.Request>[];
+        globalContext.delete('turnstile'.toJS);
+        await withApi(seen: seen, () async {
+          tester.pumpComponent(const DeleteAccountForm());
+
+          expect(cloudflareScript(), isNull);
+
+          await tester.input(
+            find.byKey(const Key('email')),
+            value: 'alice@example.com',
+          );
+          await tester.click(find.byKey(const Key('send-code')));
+          await pumpEventQueue();
+
+          expect(
+            cloudflareScript()?.getAttribute('src'),
+            'https://challenges.cloudflare.com/turnstile/v0/api.js'
+            '?render=explicit',
+          );
+          expect(seen, isEmpty);
+
+          // Blocked or offline: the check fails, and no code is asked for.
+          cloudflareScript()!.dispatchEvent(web.Event('error'));
+          await pumpEventQueue();
+
+          expect(seen, isEmpty);
+          expect(
+            find.textContaining('Something went wrong'),
+            findsOneComponent,
+          );
+          cloudflareScript()!.remove();
+        });
+      },
+    );
+
+    testClient('waits for a script already on its way, then checks', (
       tester,
     ) async {
       final seen = <http.Request>[];
       globalContext.delete('turnstile'.toJS);
+      // The script an earlier click added, still loading. As text/plain it
+      // fetches nothing, so the test decides when it has "loaded".
+      final loading = web.document.createElement('script')
+        ..setAttribute('type', 'text/plain')
+        ..setAttribute(
+          'src',
+          'https://challenges.cloudflare.com/turnstile/v0/api.js'
+              '?render=explicit',
+        );
+      web.document.head!.append(loading);
       await withApi(seen: seen, () async {
         tester.pumpComponent(const DeleteAccountForm());
-        String? scriptSource() => web.document
-            .querySelector('script[src*="challenges.cloudflare.com"]')
-            ?.getAttribute('src');
-
-        expect(scriptSource(), isNull);
-
         await tester.input(
           find.byKey(const Key('email')),
           value: 'alice@example.com',
@@ -209,25 +255,20 @@ void main() {
         await tester.click(find.byKey(const Key('send-code')));
         await pumpEventQueue();
 
-        expect(
-          scriptSource(),
-          'https://challenges.cloudflare.com/turnstile/v0/api.js'
-          '?render=explicit',
-        );
         expect(seen, isEmpty);
+        expect(
+          web.document.querySelectorAll('script[src*="challenges"]').length,
+          1,
+        );
 
         // What the script does once it ran: `window.turnstile` exists.
         turnstile.install();
-        web.document
-            .querySelector('script[src*="challenges.cloudflare.com"]')!
-            .dispatchEvent(web.Event('load'));
+        loading.dispatchEvent(web.Event('load'));
         await pumpEventQueue();
 
         expect(captchaOf(seen.single), {'captcha_token': 'turnstile-token-1'});
-        web.document
-            .querySelector('script[src*="challenges.cloudflare.com"]')!
-            .remove();
       });
+      loading.remove();
     });
 
     testClient('asks for a code, then deletes with the code', (tester) async {
