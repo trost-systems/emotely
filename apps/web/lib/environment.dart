@@ -23,13 +23,16 @@ const supabasePublishableKey = String.fromEnvironment(
 /// only names the widget. Its secret half lives in the hosted project's
 /// auth config, where GoTrue checks every token with Cloudflare (#94).
 ///
-/// The default is Cloudflare's published test key that always passes
-/// (developers.cloudflare.com/turnstile/troubleshooting/testing/), which
-/// hands out a dummy token only a test secret accepts: what a local stack
-/// verifies against.
+/// The default is the production widget `emotely` (managed, domain
+/// getemotely.com), the same one the app uses: the hosted project
+/// verifies against a single secret. Against a local stack, whose
+/// `config.toml` holds Cloudflare's always-pass test secret, pass
+/// Cloudflare's test site key `1x00000000000000000000AA`
+/// (developers.cloudflare.com/turnstile/troubleshooting/testing/): its
+/// dummy token is the only one that secret accepts.
 const turnstileSiteKey = String.fromEnvironment(
   'EMOTELY_TURNSTILE_SITE_KEY',
-  defaultValue: '1x00000000000000000000AA',
+  defaultValue: '0x4AAAAAAFM-YfLo___9K9cj',
 );
 
 /// The PostHog project token (`-DPOSTHOG_KEY=phc_…`), the same project as
