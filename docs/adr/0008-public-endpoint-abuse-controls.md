@@ -107,6 +107,25 @@ rate-limited rather than left open: an uncached path is still a function
 invocation, and an unauthenticated GET is the easiest thing in the system to
 point a script at. A real app reads it once per launch.
 
+### Amendment 2026-10-03: a third rule for `/api/revoke-apple`
+
+`POST /api/revoke-apple` (#193) revokes a user's Sign in with Apple grant
+before their account is deleted. It needs a live Supabase session and only
+ever revokes the Apple ID linked to that account, so it cannot reach anyone
+else's grant; what it can cost is two calls to Apple and one to Supabase
+per request, under our key. A real user calls it once, at deletion, so the
+limit is far tighter than the others:
+
+| Rule | Value |
+| --- | --- |
+| Project | `emotely-agent` → Firewall → Rules |
+| Match | Request Path equals `/api/revoke-apple` |
+| Limit | 10 requests / 60 s, fixed window, keyed by IP |
+| Action | 429 Too Many Requests |
+
+The app treats a 429 like any other refusal: the account is still deleted,
+and the user is told where to remove emotely from their Apple Account.
+
 We chose the WAF over an in-function limiter because the rule rejects at the
 edge, before a function invocation is billed, and because a Hobby project gets
 one rate-limit rule at no cost. Verified live on 2026-09-04: the 31st request
@@ -134,6 +153,12 @@ vercel firewall rules add "Rate limit config" \
   --project emotely-agent \
   --condition '{"type":"path","op":"eq","value":"/api/config"}' \
   --action rate_limit --rate-limit-window 60 --rate-limit-requests 60 \
+  --rate-limit-keys ip --rate-limit-action rate_limit --yes
+
+vercel firewall rules add "Rate limit revoke-apple" \
+  --project emotely-agent \
+  --condition '{"type":"path","op":"eq","value":"/api/revoke-apple"}' \
+  --action rate_limit --rate-limit-window 60 --rate-limit-requests 10 \
   --rate-limit-keys ip --rate-limit-action rate_limit --yes
 
 vercel firewall diff --project emotely-agent      # review

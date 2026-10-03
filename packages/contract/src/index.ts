@@ -184,6 +184,13 @@ export const errorCodes = [
   "method_not_allowed",
   // The gateway refused the round; waiting is what helps.
   "model_unavailable",
+  // `POST /api/revoke-apple` (#193): the code is for an Apple ID other than
+  // the one linked to the signed-in account, or the account has none.
+  "apple_identity_mismatch",
+  // `POST /api/revoke-apple`: Apple or Supabase refused or could not be
+  // reached, so the grant is still in place. The app deletes the account
+  // anyway and tells the user where to remove emotely themselves.
+  "apple_revocation_unavailable",
 ] as const;
 
 export const errorResponse = z.object({
@@ -210,3 +217,23 @@ export const configResponse = z.object({
   store_url: z.url({ protocol: /^https?$/ }),
 });
 export type ConfigResponse = z.infer<typeof configResponse>;
+
+// `POST /api/revoke-apple` (#193): what the app sends when a user whose
+// account has an Apple identity deletes it. Apple's sheet issues a fresh
+// authorization code (single-use, valid five minutes); the agent trades it
+// for a refresh token and revokes that at once, so no Apple token is ever
+// stored. Apple's codes run to well under a hundred characters; the cap keeps
+// anything larger from being forwarded to Apple at all.
+const maxAuthorizationCodeLength = 512;
+
+export const revokeAppleRequest = z.object({
+  authorization_code: z.string().min(1).max(maxAuthorizationCodeLength),
+});
+export type RevokeAppleRequest = z.infer<typeof revokeAppleRequest>;
+
+// The one success: Apple confirmed the revocation. Every refusal is an
+// `errorResponse`.
+export const revokeAppleResponse = z.object({
+  status: z.literal("revoked"),
+});
+export type RevokeAppleResponse = z.infer<typeof revokeAppleResponse>;
