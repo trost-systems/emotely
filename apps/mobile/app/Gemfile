@@ -7,3 +7,6 @@ gem "fastlane", "2.240.1"
 # `flutter build ipa` runs `pod install`; under `bundle exec` only gems from
 # this file are visible, so CocoaPods has to be one of them.
 gem "cocoapods", "1.17.0"
+# The tests of the Fastfile's helpers (fastlane/test, CI's fastlane job).
+# 5.x, not the current 6.x: CocoaPods' activesupport 7.2 needs minitest < 6.
+gem "minitest", "5.27.0"

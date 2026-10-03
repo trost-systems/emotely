@@ -26,6 +26,7 @@ jobs:
     outputs:
       agent: ${{ steps.filter.outputs.agent }}
       app: ${{ steps.filter.outputs.app }}
+      fastlane: ${{ steps.filter.outputs.fastlane }}
       lints: ${{ steps.filter.outputs.lints }}
       scripts: ${{ steps.filter.outputs.scripts }}
       supabase: ${{ steps.filter.outputs.supabase }}
@@ -54,6 +55,11 @@ jobs:
               - 'packages/contract/contract.schema.json'
               # What `melos run l10n:check` runs in every package.
               - 'scripts/l10n-check.sh'
+              - '.github/workflows/ci.yml'
+            fastlane:
+              - 'apps/mobile/app/fastlane/**'
+              - 'apps/mobile/app/Gemfile'
+              - 'apps/mobile/app/Gemfile.lock'
               - '.github/workflows/ci.yml'
             lints:
               - 'tools/emotely_lints/**'
@@ -273,6 +279,25 @@ jobs:
   # flutter_test pin test_api apart), so it is formatted, analyzed and tested
   # here on its own, with the rule set every package uses, at 100% coverage.
   # The app job above runs the plugin itself over every package.
+  # The Fastfile's own Ruby (fastlane/lib): the Play review guard and the App
+  # Store listing gate are what keep a release from restarting a store review
+  # or failing on a version Apple is reviewing, so they are tested before a
+  # release depends on them. Seconds once the bundle is cached.
+  fastlane:
+    needs: changes
+    if: needs.changes.outputs.fastlane == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile/app
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: ruby/setup-ruby@a0102e0972be65f351c307e2d64b9314a57c8073 # v1.324.0
+        with:
+          working-directory: apps/mobile/app
+          bundler-cache: true
+      - run: bundle exec ruby fastlane/test/run.rb
+
   lints:
     needs: changes
     if: needs.changes.outputs.lints == 'true'
@@ -446,7 +471,7 @@ jobs:
 
   # The single required check. Green only if every job succeeded or was skipped.
   ci-ok:
-    needs: [changes, agent, app, ast-grep, lints, scripts, supabase, web]
+    needs: [changes, agent, app, ast-grep, fastlane, lints, scripts, supabase, web]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:

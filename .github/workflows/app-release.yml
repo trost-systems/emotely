@@ -84,10 +84,42 @@ jobs:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           POSTHOG_KEY: ${{ secrets.POSTHOG_KEY }}
 
+  # The App Store listing catches up after every iOS build: a listing that
+  # merged while no version could take it (store-listings.yml skipped it)
+  # goes up as soon as one is in preparation. Skips with a notice otherwise.
+  app-store-listing:
+    needs: ios-internal
+    runs-on: ubuntu-latest
+    environment: release
+    concurrency:
+      group: app-store-listing
+      queue: max
+    defaults:
+      run:
+        working-directory: apps/mobile/app
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: ruby/setup-ruby@a0102e0972be65f351c307e2d64b9314a57c8073 # v1.324.0
+        with:
+          working-directory: apps/mobile/app
+          bundler-cache: true
+      - run: bundle exec fastlane ios metadata
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+
   android-internal:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     environment: release
+    # The lock every Play writer holds (also store-listings.yml): Play keeps
+    # one open edit per account and any commit invalidates the others, so the
+    # writers take turns. `queue: max` keeps every waiting job in order
+    # instead of replacing the pending one; the lock goes with the job.
+    concurrency:
+      group: play-writes
+      queue: max
     outputs:
       version: ${{ steps.lane.outputs.version }}
       build: ${{ steps.lane.outputs.build }}
@@ -228,6 +260,9 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment: release
+    concurrency:
+      group: play-writes
+      queue: max
     defaults:
       run:
         working-directory: apps/mobile/app

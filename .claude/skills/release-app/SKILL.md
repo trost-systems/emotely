@@ -325,9 +325,11 @@ dictionary, and the words CONTEXT.md says to avoid) and
 limits, App Store keywords counted in bytes; every locale has every field
 English has).
 
-**Changing a listing** is a pull request, then an upload once it has merged.
-The upload is the `metadata` lanes (`fastlane ios metadata`, `fastlane
-android metadata`), run by the manual workflow, never by a merge:
+**Changing a listing is a pull request; merging it is the upload.** The
+`store-listings` workflow runs the `metadata` lanes (`fastlane ios metadata`,
+`fastlane android metadata`) when a change under `fastlane/metadata` reaches
+`main`, so the pull request is where a listing is reviewed. It can also be
+run by hand (an agent asks Peter first: it writes to both stores):
 
 ```bash
 gh workflow run store-listings.yml                  # both stores
@@ -335,17 +337,34 @@ gh workflow run store-listings.yml -f store=play    # or app-store
 gh run watch
 ```
 
-It writes to both stores and is public once accepted, so **an agent asks
-Peter before starting it** and names what changes. What it does:
+- **App Store**: writes the version in preparation and the app info in
+  preparation. No binary, no screenshots, no submission; phased release and
+  a ratings reset stay as App Store Connect has them. It **skips with a
+  notice, green**, while no version can take a listing: none in
+  preparation, or one Apple is reviewing or has accepted (the gate is
+  `fastlane/lib/app_store_listing.rb`). `app-release` runs the lane again
+  after every iOS build (job `app-store-listing`), so a skipped listing goes
+  up once the next version is in preparation. What a live version shows
+  changes only with the next version.
+- **Play**: one edit with the listing text only; Google reviews it before it
+  shows. No binary, no images, no release notes, no track changes.
 
-- App Store: writes the version in preparation (the lane fails if there is
-  none) and the app info in preparation. No binary, no screenshots, no
-  submission; phased release and a ratings reset stay as App Store Connect
-  has them. Keywords, description and URLs of a version already live change
-  only with the next version.
-- Play: one edit with the listing text only, committed at once; Google
-  reviews it before it shows. No binary, no images, no release notes, no
-  track changes.
+**No Play write restarts a review.** `edits.commit` defaults to canceling
+whatever is in Google's review and resubmitting it with the new changes, and
+supply cannot change that; `fastlane/lib/play_review_guard.rb` makes every
+commit of every lane use `ERROR_IF_IN_REVIEW` instead. While a closed-testing
+release or a listing change is in review, a Play write therefore **fails**
+with a message that says so, rather than silently starting the review over:
+run it again once Google has finished (the Play Console's Publishing
+overview shows what is in review). That includes the `android-internal`
+upload of a merge.
+
+**One Play writer at a time.** Play keeps one open edit per account and any
+commit invalidates the others, so every job that writes to Play
+(`android-internal`, `android-beta`, the listing job) holds the job-level
+concurrency group `play-writes` with `queue: max`: waiting jobs queue in
+order, none is dropped, and the lock is released with the job. The App
+Store listing jobs share `app-store-listing` the same way.
 
 **Never downloaded into the repository**: `deliver download_metadata` writes
 `review_information/` with the reviewer account's password, and `supply init`

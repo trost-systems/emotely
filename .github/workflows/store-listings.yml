@@ -5,14 +5,22 @@ name: Store listings
 # lanes: listing text, keywords, URLs and categories only. No build, no
 # screenshots, no release notes, nothing submitted for review.
 #
-# Manual only, and never on a merge: a listing is public the moment a store
-# accepts it (Play reviews it first), so a person starts this run after the
-# pull request that changed the files has merged. The `release` environment
-# deploys from `main` only, so what runs is always what main holds.
+# Runs when a change to the listings reaches main, and by hand:
 #
 #   gh workflow run store-listings.yml                  # both stores
 #   gh workflow run store-listings.yml -f store=play    # one of them
+#
+# The App Store job skips with a notice while no version can take a listing
+# (none in preparation, or Apple reviewing it); app-release uploads it after
+# its next iOS build. Play reviews a listing change before it shows, and the
+# commit refuses to cancel anything already in review (ERROR_IF_IN_REVIEW,
+# fastlane/lib/play_review_guard.rb): such a run fails and is run again once
+# the review is done. The `release` environment deploys from `main` only.
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/app/fastlane/metadata/**'
   workflow_dispatch:
     inputs:
       store:
@@ -21,22 +29,21 @@ on:
         options: [both, app-store, play]
         default: both
 
-# Its own group: sharing app-release's would let this run replace a pending
-# release run. The two can still meet on Play, where only one edit commits;
-# the loser fails with an edit error and is simply run again.
-concurrency:
-  group: store-listings
-  cancel-in-progress: false
-
 permissions:
   contents: read
 
 jobs:
   # Store API calls only, so no Xcode, no Flutter, no macOS.
   app-store:
+    # On a push there are no inputs, so both jobs run.
     if: inputs.store != 'play'
     runs-on: ubuntu-latest
     environment: release
+    # One App Store listing upload at a time, here or in app-release; queued,
+    # never dropped.
+    concurrency:
+      group: app-store-listing
+      queue: max
     defaults:
       run:
         working-directory: apps/mobile/app
@@ -57,6 +64,11 @@ jobs:
     if: inputs.store != 'app-store'
     runs-on: ubuntu-latest
     environment: release
+    # The lock every Play writer holds (see app-release.yml): one open edit at
+    # a time, queued, never dropped.
+    concurrency:
+      group: play-writes
+      queue: max
     defaults:
       run:
         working-directory: apps/mobile/app
