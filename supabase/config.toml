@@ -297,11 +297,15 @@ content_path = "./supabase/templates/email_code.html"
 # subject = "You have been invited"
 # content_path = "./supabase/templates/invite.html"
 
-# Uncomment to customize notification email template
-# [auth.email.notification.password_changed]
-# enabled = true
-# subject = "Your password has been changed"
-# content_path = "./templates/password_changed_notification.html"
+# A security notification, not a code: whenever an account's password is
+# set to a new one (a reset, a first password for an account made with a
+# code, a password chosen again before confirming), its address hears
+# about it, so a change the owner did not make does not go unnoticed
+# (NIST SP 800-63B § 4.6). Same language rule as the mails above.
+[auth.email.notification.password_changed]
+enabled = true
+subject = '{{ if eq .Data.app_locale "de" }}Dein emotely-Passwort wurde geändert{{ else }}Your emotely password was changed{{ end }}'
+content_path = "./supabase/templates/password_changed.html"
 
 [auth.sms]
 # Allow/disallow new user signups via SMS to your project.

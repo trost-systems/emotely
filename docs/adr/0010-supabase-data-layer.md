@@ -182,11 +182,21 @@ password, beside Apple and Google; the app no longer offers the code.**
   problems, is what the app already did, and keeps `detectSessionInUri` off.
 - **Password rules follow NIST SP 800-63B:** at least ten characters, no
   composition rules, checked by the server whenever a password is set and
-  by the app before it asks. Supabase's leaked-password check
-  (HaveIBeenPwned) would come next, but it is a Pro-plan feature and this
-  project is on the free plan (decision 1); it is also set only through the
-  dashboard or the Management API, not `config.toml`, so it would be the
-  first auth setting outside decision 5.
+  by the app before it asks. **Supabase's leaked-password check
+  (HaveIBeenPwned) is off,** because it needs the Pro plan and this project
+  stays on the free plan (decision 1; Peter, 2026-10-03: no upgrade for
+  it). It is also set only through the dashboard or the Management API, not
+  `config.toml`, so turning it on would be the first auth setting outside
+  decision 5. Revisit when emotely has real users; the app already words
+  GoTrue's `weak_password` refusal, so turning it on needs no app change.
+- **The password a user typed last is the one that works.** GoTrue keeps
+  the first password when an unconfirmed address signs up again, so once
+  the confirmation code opens the account the app sets the password typed
+  last (`updateUser`; GoTrue answers `same_password` in the ordinary case,
+  which changes and mails nothing).
+- **A changed password is announced.** Supabase's password-changed
+  security notification is on, with its own template in English and German
+  like the code mails, so an owner hears of a reset they did not make.
 - **The code stays on the server, for two callers that are not the app's
   sign-in:** the web account-deletion page proves the mailbox with it, and
   installed app builds from before #187 sign in with it until the minimum

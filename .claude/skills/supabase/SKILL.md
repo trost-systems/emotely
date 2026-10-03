@@ -80,13 +80,15 @@ CI (`supabase config push`). People sign in with an email and a password
 (or Apple, Google); the address is confirmed before the account opens
 (`enable_confirmations`), and every mail Auth sends carries a six-digit
 code typed where it was asked for, never a link (ADR 0010, amendment
-2026-10-03). The templates, under `[auth.email.template.*]`:
+2026-10-03). The templates, under `[auth.email.template.*]` and
+`[auth.email.notification.*]`:
 
 | template | file | sent by |
 | --- | --- | --- |
 | `confirmation` | `supabase/templates/confirmation.html` | `signUp`, `resend` (type `signup`) |
 | `recovery` | `supabase/templates/recovery.html` | `resetPasswordForEmail` |
 | `magic_link` | `supabase/templates/email_code.html` | `/otp`: the web account-deletion page, and app builds from before #187 |
+| `notification.password_changed` | `supabase/templates/password_changed.html` | any `updateUser` that sets a different password (no code; `same_password` sends nothing) |
 
 Each branches on the account's `user_metadata.app_locale` (English, German)
 in its body and in its subject in `config.toml`; their words use
@@ -100,8 +102,9 @@ id="$(curl -s "http://127.0.0.1:54324/api/v1/search?query=to:new@example.com&lim
 curl -s "http://127.0.0.1:54324/api/v1/message/$id" | jq -r .Text | grep -oE '\b[0-9]{6}\b' | head -1
 ```
 
-Leaked-password protection (HaveIBeenPwned) is not on: it needs the Pro
-plan, and it is no `config.toml` key, so it could not deploy from `main`.
+Leaked-password protection (HaveIBeenPwned) is off: it needs the Pro plan,
+which emotely does not buy for it (ADR 0010, amendment 2026-10-03), and it
+is no `config.toml` key, so it could not deploy from `main` anyway.
 
 The hosted project sends through Resend (custom SMTP, #52), configured in
 the `[remotes.production]` block at the end of `config.toml`. The CLI applies
