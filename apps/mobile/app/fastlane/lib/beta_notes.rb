@@ -2,8 +2,9 @@
 
 require_relative "store_paths"
 
-# What a beta tester reads about a build: Play's release notes on the closed
-# `alpha` track, per language, and TestFlight's "What to Test", in English.
+# What a beta tester reads about a build, per language: Play's release notes
+# on the closed `alpha` track and TestFlight's "What to Test"
+# (lib/test_flight_info.rb).
 # The same for every build, since every build asks the same of a tester.
 #
 # The text is supply's default changelog in the Play listing's folders,
