@@ -40,7 +40,33 @@ gh run watch
 Without `build_number`, iOS takes the newest processed build of the version
 and Android the internal track's completed release; they are the same build
 only if both internal jobs of that merge succeeded, so pin the number when
-in doubt. iOS does nothing if `Beta` already has that build, so a rerun is
+in doubt.
+
+**The beta notes** are what a tester reads about the build, the same for
+every build: `fastlane/metadata/android/{en-US,de-DE}/changelogs/default.txt`
+(`fastlane/lib/beta_notes.rb`). `android beta` writes them onto the promoted
+`alpha` release in the promotion's own edit (`fastlane/lib/play_beta.rb` has
+supply's source behind it); a release without notes of its own showed
+testers the legacy production app's shutdown note (#317). Changing them is
+a pull request: the next promotion uploads them; neither app-release nor
+store-listings runs for them. Check after a promotion in **Play Console →
+Closed testing - Alpha → the release → Release notes**: both languages, with
+the files' text.
+
+**TestFlight, per language.** Both iOS lanes (`internal`, `beta`) pass
+`fastlane/lib/test_flight_info.rb`'s pilot options:
+
+- each build's "What to Test" is the same beta note, per language;
+- the app's Test Information comes from `fastlane/testflight/{en-US,de-DE}/`:
+  `description`, `feedback_email`, `marketing_url` and `privacy_policy_url`,
+  where the privacy URL is the app's notice in that language.
+
+pilot's plain `changelog` wrote the English note into every language a
+build has (builds 1069 and 1070 showed German testers English), and the
+German Test Information existed only by hand until 2026-10-04. A change to
+`fastlane/testflight` goes up with the next build or beta run and starts no
+build of its own. Check in **App Store Connect → TestFlight → Test
+Information** (each language) and a build's **What to Test**. iOS does nothing if `Beta` already has that build, so a rerun is
 safe and does not re-notify. The only reason to open a console is to change
 who is in a group.
 
@@ -52,9 +78,9 @@ Two waits follow a beta run, and neither is inside it:
 - **Beta App Review, once per version.** The first build of a new version
   goes to review before `Beta` sees it; later builds of the same version
   are submitted too but Apple auto-approves them within minutes. Review
-  reads Test Information (kept current by the `asc` prep, see below) and
-  the beta review contact already in App Store Connect — the lane
-  deliberately does not re-send either. **Apple takes one submission per
+  reads Test Information (written by the lane from `fastlane/testflight`,
+  see above) and the beta review contact already in App Store Connect,
+  which the lane deliberately does not re-send. **Apple takes one submission per
   version at a time**; while one is pending, `ios beta` fails with the
   build that blocks it (*"Another build in the same train is already in
   beta review"* is what pilot would otherwise get, runs 35510026821 and
@@ -293,11 +319,13 @@ on the version in preparation, with the listing (see
 
 ## App Store Connect prep for a new version
 
-Version records and TestFlight Test Information are set through the ASC API
-with the same key (no dashboard clicking). The one-off script that did it for
-2.0.0 lived outside the repo; the patterns are `appStoreVersions`,
-`betaAppLocalizations`, `betaAppReviewDetails`. The listing, the app name
-included, is not set this way any more: see the next section.
+Version records are set through the ASC API with the same key (no dashboard
+clicking). The one-off script that did it for 2.0.0 lived outside the repo;
+the patterns are `appStoreVersions` and `betaAppReviewDetails`. TestFlight
+Test Information (`betaAppLocalizations`) and the listing, the app name
+included, are not set this way any more: the iOS lanes write the first from
+`fastlane/testflight` (see [Two stages](#two-stages-internal-on-every-merge-beta-on-demand)),
+the next section says how the listing goes up.
 
 ## Store listings (English and German)
 
@@ -310,7 +338,10 @@ source of truth from then on:
   `marketing_url`; `copyright.txt` and `primary_category.txt` apply to both.
 - **Play** (supply's layout): `android/{en-US,de-DE}/` holds `title`,
   `short_description`, `full_description`. **No final newline**: supply
-  uploads the file as it is.
+  uploads the file as it is. `changelogs/default.txt` beside them is the
+  beta notes (see [Two stages](#two-stages-internal-on-every-merge-beta-on-demand)),
+  not listing text: the `metadata` lane skips it, and every language folder
+  here needs one, since supply writes an empty note for a folder without.
 
 A file that is absent leaves that field in the console alone, so add one only
 to take a field over. Copy follows [`CONTEXT.md`](../../../CONTEXT.md), in

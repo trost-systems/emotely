@@ -53,7 +53,8 @@ throwaway shallow clones.
 
 `store-listing-check.sh` checks the store listings in
 `apps/mobile/app/fastlane/metadata` against each store's field limits (App
-Store keywords count bytes, everything else characters), fails a locale that
+Store keywords count bytes, everything else characters; Play's release
+notes, the beta notes in `changelogs/`, 500), fails a locale that
 lacks a field English has, and a Play file ending in a newline (supply
 uploads it verbatim). A limit the stores change goes into its `case` table.
 

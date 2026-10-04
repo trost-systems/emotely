@@ -1,0 +1,1 @@
+emotely ist dein Tagebuch für den Abend: emotely stellt dir ein paar kurze Fragen und macht aus deinen Antworten einen Eintrag in deinem Tagebuch. Diese Beta ist das von Grund auf neu gebaute emotely. Wenn dir etwas seltsam, unklar oder langsam vorkommt, sag es uns: über das Feedback in TestFlight oder an hello@getemotely.com.

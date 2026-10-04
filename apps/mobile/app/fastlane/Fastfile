@@ -20,7 +20,9 @@
 #   bundle exec fastlane android internal   build the AAB and upload it to the
 #                                           Play `internal` track
 #   bundle exec fastlane android beta       no build: promote the `internal`
-#                                           release to the closed `alpha` track
+#                                           release to the closed `alpha` track,
+#                                           with the beta notes as its release
+#                                           notes (English and German)
 #   bundle exec fastlane ios metadata       no build: upload the App Store
 #                                           listing in fastlane/metadata to the
 #                                           version in preparation; no
@@ -62,6 +64,9 @@ require_relative "lib/play_review_guard"
 require_relative "lib/app_store_listing"
 require_relative "lib/app_review_information"
 require_relative "lib/play_data_safety"
+require_relative "lib/beta_notes"
+require_relative "lib/play_beta"
+require_relative "lib/test_flight_info"
 
 # The rebuild starts at 2.0.0 (ADR 0012): the legacy app got to 1.21.15.
 BUILD_NAME = "2.0.0"
@@ -105,13 +110,11 @@ def flutter(*args)
   sh("cd #{Shellwords.escape(APP_DIR)} && flutter #{Shellwords.join(args)}")
 end
 
-# Shown to beta testers as "What to Test". Static: every build is the same ask.
-BETA_CHANGELOG = <<~TEXT.strip
-  emotely is an evening journaling assistant. Please write an entry on a
-  few evenings — ideally on different days, so you see how it picks up
-  where you left off. Anything that felt off, confusing or slow is worth
-  reporting: tap "Send feedback" on the account screen.
-TEXT
+# What TestFlight shows testers, per language: the app's Test Information
+# from fastlane/testflight and each build's "What to Test", the beta note
+# Play's alpha testers read too (fastlane/lib/test_flight_info.rb). Static:
+# every build is the same ask.
+TESTFLIGHT_INFO = TestFlightInfo.pilot_options
 
 platform :ios do
   APP_IDENTIFIER = "de.emotely.emotely"
@@ -183,9 +186,10 @@ platform :ios do
       # the internal `Team` group has "access to all builds" in App Store
       # Connect and picks the build up once Apple has processed it. With a
       # changelog, pilot waits only until the build appears (a few minutes,
-      # not the 10-30 min of processing), sets "What to Test" and returns.
+      # not the 10-30 min of processing), sets the Test Information and
+      # "What to Test" in every language and returns.
       skip_waiting_for_build_processing: true,
-      changelog: BETA_CHANGELOG
+      **TESTFLIGHT_INFO
       # Deliberately not set: `uses_non_exempt_encryption` (Info.plist
       # already carries ITSAppUsesNonExemptEncryption=false) and
       # `expire_previous_builds` (testers keep the older build until they
@@ -280,9 +284,9 @@ platform :ios do
       # build reaches it on its own, and naming it here is rejected by Apple
       # ("Builds cannot be assigned to this internal group", run 35510026821).
       # `distribute_external` without `groups` is a hard error in pilot, and
-      # a changelog is required with it.
+      # a changelog is required with it (TESTFLIGHT_INFO carries one).
       groups: [BETA_GROUP],
-      changelog: BETA_CHANGELOG,
+      **TESTFLIGHT_INFO,
       notify_external_testers: true
       # submit_beta_review defaults to true: pilot submits every build whose
       # external state is READY_FOR_BETA_SUBMISSION, which every processed
@@ -410,7 +414,7 @@ platform :android do
     report_shipped(version: BUILD_NAME, build: build_number)
   end
 
-  desc "No build: promote the internal release (or PROMOTE_BUILD_NUMBER) to the closed alpha track"
+  desc "No build: promote the internal release (or PROMOTE_BUILD_NUMBER) to the closed alpha track, with the beta notes"
   lane :beta do
     # The closed track `alpha` ("Closed testing - Alpha" in the console,
     # testers = the "emotely beta" list). Google reviews closed-testing
@@ -419,15 +423,23 @@ platform :android do
     # A binary-free edit on purpose: supply ignores `track_promote_to`
     # whenever it uploaded a binary in the same edit (perform_upload only
     # reaches promote_track in the `else` of `if uploading_new_binaries`,
-    # supply/lib/supply/uploader.rb). Without `version_code` supply takes the
-    # internal track's one completed release, i.e. the newest upload.
-    upload_to_play_store(
-      **play_store_defaults,
-      skip_upload_aab: true,
-      track: "internal",
-      track_promote_to: "alpha",
-      **(promote_build_number ? { version_code: Integer(promote_build_number) } : {})
+    # supply/lib/supply/uploader.rb).
+    #
+    # The same edit writes the beta notes (metadata/android/<locale>/
+    # changelogs/default.txt) onto the promoted release: without notes of
+    # its own, Play showed testers the legacy production release's shutdown
+    # note (#317). supply needs the version code for that (fastlane/lib/
+    # play_beta.rb says why), so without PROMOTE_BUILD_NUMBER the lane reads
+    # the internal track's one completed release first, the release supply
+    # would promote, in an edit that it deletes again.
+    version_code = promote_build_number || PlayBeta.newest_internal_version_code(
+      Supply::Client.new(
+        service_account_json: StringIO.new(ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON")),
+        params: { timeout: 300 }
+      ),
+      PACKAGE_NAME
     )
+    upload_to_play_store(play_store_defaults.merge(PlayBeta.promotion(version_code: version_code)))
   end
 
   desc "No build: upload the Play listing (fastlane/metadata/android): title and descriptions"
