@@ -11,7 +11,7 @@ dependencies:
   contract: any
   flutter:
     sdk: flutter
-  get_it: 9.2.1
+  get_it: 9.3.0
   http: 1.6.0
   meta: ^1.19.0
   posthog_flutter: 5.39.0
