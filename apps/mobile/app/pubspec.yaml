@@ -38,7 +38,7 @@ dependencies:
   consent_repository: any
   contract: any
   # Cupertino Icons font for iOS-style icons.
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^2.0.0
   design_system: any
   feature_account: any
   feature_auth: any
