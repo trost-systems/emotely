@@ -9,4 +9,4 @@ gem "fastlane", "2.240.1"
 gem "cocoapods", "1.17.0"
 # The tests of the Fastfile's helpers (fastlane/test, CI's fastlane job).
 # 5.x, not the current 6.x: CocoaPods' activesupport 7.2 needs minitest < 6.
-gem "minitest", "5.27.0"
+gem "minitest", "6.0.6"
