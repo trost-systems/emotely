@@ -2,6 +2,13 @@
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
+#
+# This name and the local ports below are defaults only. Locally, each
+# checkout runs its own stack under its own name on ports the OS assigns:
+# .claude/skills/supabase/scripts/stack.sh writes them to the ignored
+# supabase/.env.development.local as SUPABASE_PROJECT_ID, SUPABASE_API_PORT
+# and so on, which the CLI reads before this file. A key added here that a
+# stack binds on the host (a port) needs its override there too.
 project_id = "emotely"
 
 [api]
@@ -102,7 +109,7 @@ openai_api_key = "env(OPENAI_API_KEY)"
 
 # Email testing server. Emails sent with the local dev setup are not actually sent - rather, they
 # are monitored, and you can view the emails that would have been sent from the web interface.
-[inbucket]
+[local_smtp]
 enabled = true
 # Port to use for the email testing server web interface.
 port = 54324

@@ -13,16 +13,31 @@ Everything here is agent-executable and needs Docker. The hosted project is
 
 ## Local stack
 
-Run from the repo root (that is where `supabase/config.toml` lives):
+Each checkout runs its own stack; several agent sessions share one machine,
+and a `db reset` on a shared stack replaces every other session's schema
+mid-task. Start it first, from anywhere in the checkout:
 
 ```bash
-supabase start        # first run pulls images (minutes); later runs are seconds
-supabase status -o env   # URLs and local keys, e.g. API_URL, ANON_KEY, DB_URL
-supabase stop
+bash .claude/skills/supabase/scripts/stack.sh up --db-only   # migrations, pgTAP, lint, schema:generate
+bash .claude/skills/supabase/scripts/stack.sh up             # plus Auth, Inbucket, Studio, the API
+bash .claude/skills/supabase/scripts/stack.sh down           # when done: deletes the stack and its data
 ```
 
-- Studio: http://127.0.0.1:54323. Inbucket (every email the local Auth sends,
-  including sign-in codes): http://127.0.0.1:54324.
+- `up` names the stack after the checkout and takes ports the OS assigns,
+  writing both to the ignored `supabase/.env.development.local`. The CLI
+  reads that file before `config.toml`, so from then on every plain
+  `supabase` command in this checkout reaches this stack and no other;
+  without it, a command reaches the stack named `emotely`, which any
+  session could reset. Data survives `up` again; the first `up` pulls
+  images (minutes).
+- `supabase status -o env` prints this stack's URLs and keys (`API_URL`,
+  `PUBLISHABLE_KEY`, `DB_URL`, `STUDIO_URL`, `INBUCKET_URL`); the ports
+  in `config.toml` are defaults nobody listens on. Inbucket holds every
+  email the local Auth sends, sign-in codes included.
+- A worktree deleted without `down` leaves its stack running; the next
+  `up` anywhere on the machine deletes it (`stack.sh prune` alone does
+  too). A stack started by hand is not registered: `supabase stop
+  --project-id <name> --no-backup` deletes it, `docker ps` lists names.
 - Storage, Realtime, Edge Functions and Analytics are disabled in
   `config.toml`; the product does not use them.
 
@@ -33,7 +48,7 @@ supabase stop
    helpers from `rls.test.sql`; they set the role and `request.jwt.claims`
    the way PostgREST does, so `auth.uid()` behaves as in production. Expect
    `42501` for privilege failures and RLS `with check` violations.
-2. Run it red:
+2. Run it red, on this checkout's stack (`stack.sh up --db-only` first):
 
    ```bash
    supabase test db --local
@@ -70,7 +85,7 @@ and out of band: the release skill's `reviewer-accounts.sh` fetches the
 `service_role` key blind through the maintainer's CLI login for one run to
 (re)create the two store reviewer accounts (ADR 0010, decision 4). A
 mutation check is cheap and worth it for policies:
-`docker exec supabase_db_emotely psql -U postgres -c "alter table public.x disable row level security"`,
+`supabase db query --local "alter table public.x disable row level security"`,
 run the suite, watch it fail, `supabase db reset --local`.
 
 ## Auth configuration
