@@ -602,8 +602,13 @@ AI_GATEWAY_API_KEY=
 # Only for scripts/live-smoke.ts and the on-device acceptance session:
 SUPABASE_URL=
 SUPABASE_PUBLISHABLE_KEY=
+# Your own smoke account, for run-app.sh and the on-device acceptance
+# session: its address, password, user id (Supabase dashboard,
+# Authentication, Users) and the domains of the inboxes you control.
 SMOKE_EMAIL=
 SMOKE_PASSWORD=
+SMOKE_USER_ID=
+SMOKE_EMAIL_DOMAINS=
 AGENT_ENV
 fi
 

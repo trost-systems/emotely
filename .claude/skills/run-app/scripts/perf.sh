@@ -24,6 +24,10 @@ ANDROID_SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}"
 # The system image a local emulator boots: the host's own architecture, so
 # it runs under hardware virtualisation.
 AVD_IMAGE="${EMOTELY_AVD_IMAGE:-system-images;android-34;google_apis;$([[ "$(uname -m)" == arm64 ]] && echo arm64-v8a || echo x86_64)}"
+# The hosted project, as `lib/app/environment.dart` defaults to it. Both are
+# public (ADR 0010); the latency probe signs in and reads with them.
+SUPABASE_URL="https://khfkszlujgkfjgnawdlf.supabase.co"
+SUPABASE_PUBLISHABLE_KEY="sb_publishable_di6BB76PPuuoDklt7jtI0w_KlwO_8JF"
 # Supabase reads and agent rounds per latency measurement.
 READ_SAMPLES=20
 AGENT_SAMPLES=5
