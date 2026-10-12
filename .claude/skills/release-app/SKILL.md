@@ -200,23 +200,20 @@ once no distributed build collects it without asking.
 
 ## Store reviewer accounts
 
-Sign-in is an emailed one-time code (ADR 0010), which App Review, Google
-Play's policy reviewers and Google's pre-launch crawler cannot receive: none
-of them reads our mailbox, and the crawler retrying the sign-in screen burns
-the Resend quota (100 mails/day, shared with the website's waitlist). Both
-stores accept a demo account as "username + password"; Google's guidance for
-apps with one-time-PIN sign-in is to provide reusable sign-in details that do
-not expire. So two accounts sign in with a **password, not a code**, and never
-trigger an email (`apps/mobile/packages/feature/feature_auth/lib/src/review_accounts.dart`):
+Everyone signs in with an email and a password (ADR 0010, amendment
+2026-10-03), and a new account opens only once the code mailed to it is
+typed in. App Review, Google Play's policy reviewers and Google's pre-launch
+crawler read no mailbox, so their two accounts are created **already
+confirmed** by the script below and sign in like anyone else, through the
+ordinary screen, without ever triggering an email. The app knows nothing
+about them:
 
 - `google-play-review@getemotely.com`
 - `app-store-review@getemotely.com`
 
-The app shows a password step for exactly these addresses (trimmed,
-case-insensitive) and calls `signInWithPassword`; the accounts exist only on
-the server, the app has no sign-up path. **The accounts must exist before the
-addresses are public** (in a store build or a console): they do, both were
-created on the hosted project through the Auth admin API on 2026-09-13.
+**The accounts must exist before the addresses are public** (in a store
+build or a console): they do, both were created on the hosted project
+through the Auth admin API on 2026-09-13.
 
 - **The password** is `REVIEWER_PASSWORD` in
   `~/.config/emotely/reviewer-accounts.env` (mode 600, never in the repo;
@@ -238,8 +235,8 @@ created on the hosted project through the Auth admin API on 2026-09-13.
   already exists, resets its password. It prints status lines only, never a
   body, a key or the password. Needs the linked Supabase CLI login, `jq`,
   `curl`, `openssl`. It stamps `app_metadata.review_account = true`, which is
-  informational only (dashboard, JWT) — nothing server-side reads it; the
-  app decides by address.
+  informational only (dashboard, JWT) — nothing server-side or in the app
+  reads it.
 - **The pre-launch crawler runs on every upload to a track**, and
   `app-release.yml` uploads on every merge that touches `apps/mobile/app` — not only
   on submissions. So an account a reviewer deleted stays broken, silently and
