@@ -21,7 +21,8 @@ fail() {
 # A fresh git repository with the rules and the script, all untracked, and
 # the files named in the arguments, each followed by its content, tracked.
 repo() {
-  local dir="${work}/repo-${RANDOM}"
+  local dir
+  dir="$(mktemp -d "${work}/repo-XXXXXX")"
   mkdir -p "${dir}/scripts"
   git -C "${dir}" init --quiet
   cp "${root}/sgconfig.yml" "${dir}/"
