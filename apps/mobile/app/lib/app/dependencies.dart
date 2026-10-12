@@ -13,6 +13,7 @@ import 'package:feature_session/feature_session.dart';
 import 'package:feedback_link/feedback_link.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:human_check/human_check.dart';
 import 'package:journal_repository/journal_repository.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:profile_repository/profile_repository.dart';
@@ -21,7 +22,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// The one composition root (ADR 0015): every utility and every feature
 /// registers into [getIt] here, in dependency order, and nowhere else. The
 /// parameters are the leaves — the http clients, Supabase, the PostHog
-/// instance and config (used by the gate alone, once allowed, #204) — and
+/// instance and config (used by the gate alone, once allowed, #204), the
+/// human check's token source (Turnstile in a web view, #94) — and
 /// the app's build-time values; a test passes scripted leaves only, so it
 /// exercises the production graph with fake edges.
 ///
@@ -47,19 +49,15 @@ void registerApp(
   required Uri configUrl,
   required Set<String> passwordAccounts,
   required GoogleClientIds google,
+  required HumanCheckToken humanCheckToken,
 }) {
   getIt.registerSingleton(supabase);
-  registerAgentClient(
+  _registerAgent(
     getIt,
-    agentHttpClient: agentHttpClient,
-    configHttpClient: configHttpClient,
-    agentUrl: agentUrl,
-    configUrl: configUrl,
+    supabase,
+    clients: (agent: agentHttpClient, config: configHttpClient),
+    urls: (agent: agentUrl, config: configUrl),
     appVersion: appVersion,
-    // The token the app holds on every round, refreshed when the agent says
-    // it lapsed; a refresh that cannot happen signs the user out.
-    accessToken: () => supabase.auth.currentSession?.accessToken,
-    refreshAccessToken: supabase.auth.refreshSession,
   );
   registerAnalytics(
     getIt,
@@ -71,6 +69,7 @@ void registerApp(
   _registerRecords(getIt, supabase);
   registerFeedbackLink(getIt, build: build);
   registerConfig(getIt, appVersion: appVersion);
+  registerHumanCheck(getIt, token: humanCheckToken);
   registerAuth(getIt, google: google, passwordAccounts: passwordAccounts);
   registerJournal(getIt);
   registerSession(getIt);
@@ -78,6 +77,26 @@ void registerApp(
   _registerSeams(getIt);
   registerAccount(getIt);
 }
+
+/// The agent's two endpoints, with the token the app holds on every round,
+/// refreshed when the agent says it lapsed; a refresh that cannot happen
+/// signs the user out.
+void _registerAgent(
+  GetIt getIt,
+  SupabaseClient supabase, {
+  required ({http.Client agent, http.Client config}) clients,
+  required ({Uri agent, Uri config}) urls,
+  required String appVersion,
+}) => registerAgentClient(
+  getIt,
+  agentHttpClient: clients.agent,
+  configHttpClient: clients.config,
+  agentUrl: urls.agent,
+  configUrl: urls.config,
+  appVersion: appVersion,
+  accessToken: () => supabase.auth.currentSession?.accessToken,
+  refreshAccessToken: supabase.auth.refreshSession,
+);
 
 /// The user's records on the server: the journal, the profile, and the
 /// consent record with the wordings the app currently asks consent for.

@@ -6,12 +6,15 @@ import 'package:consent_repository/consent_repository.dart';
 import 'package:feedback_link/feedback_link.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:human_check/human_check.dart';
 import 'package:journal_repository/journal_repository.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:profile_repository/profile_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show SupabaseClient;
 import 'package:testing/src/agent_stub.dart';
 import 'package:testing/src/analytics_spy.dart';
 import 'package:testing/src/config_stub.dart';
+import 'package:testing/src/human_check_stub.dart';
 import 'package:testing/src/supabase_stub.dart';
 
 /// The consent wording version a feature test registers. The app owns the
@@ -52,6 +55,7 @@ void registerUtilitiesUnderTest(
   required SupabaseStub supabase,
   required AnalyticsSpy analytics,
   ConfigStub? config,
+  HumanCheckStub? humanCheck,
   String appVersion = AgentStub.appVersion,
   String consentVersion = testConsentVersion,
   BuildInfo build = testBuildInfo,
@@ -86,13 +90,25 @@ void registerUtilitiesUnderTest(
       account: supabase.supabase.auth.currentUser?.id,
     ),
   );
-  registerJournalRepository(getIt, supabase: supabase.supabase);
-  registerProfileRepository(getIt, supabase: supabase.supabase);
+  _registerRecords(getIt, supabase.supabase, consentVersion: consentVersion);
+  registerFeedbackLink(getIt, build: build);
+  // A check that always passes unless the test hands in one it scripts.
+  registerHumanCheck(getIt, token: (humanCheck ?? HumanCheckStub()).token);
+}
+
+/// The repositories over the scripted Supabase, as the app's own
+/// `_registerRecords` registers them.
+void _registerRecords(
+  GetIt getIt,
+  SupabaseClient supabase, {
+  required String consentVersion,
+}) {
+  registerJournalRepository(getIt, supabase: supabase);
+  registerProfileRepository(getIt, supabase: supabase);
   registerConsentRepository(
     getIt,
-    supabase: supabase.supabase,
+    supabase: supabase,
     version: consentVersion,
     usageAnalyticsVersion: testUsageAnalyticsVersion,
   );
-  registerFeedbackLink(getIt, build: build);
 }

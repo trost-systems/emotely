@@ -61,7 +61,8 @@ emotely/
 │  │     │                  (the tool-call shapes), agent_client, analytics, the three
 │  │     │                  repositories (journal, consent, profile), supabase_schema
 │  │     │                  (the generated tables), design_system (theme and
-│  │     │                  shared widgets), legal_links, feedback_link, testing
+│  │     │                  shared widgets), legal_links, feedback_link, human_check
+│  │     │                  (the Turnstile token before a sign-in mail), testing
 │  │     │                  (shared test support)
 │  │     └─ feature/        depend only on utilities, never on each other: feature_auth,
 │  │                        feature_journal (home), feature_session, feature_account

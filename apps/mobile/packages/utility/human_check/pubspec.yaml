@@ -1,0 +1,26 @@
+name: human_check
+description: The proof that a person, not a script, is asking Supabase Auth for a mail or a sign-in — a Cloudflare Turnstile token in front of every captcha-protected call.
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  get_it: 9.2.1
+  # Cloudflare Turnstile runs in a web view (#94). The Flutter team's own
+  # plugin, not flutter_inappwebview: that one (via cloudflare_turnstile)
+  # has had no release since 2024 and its Android build fails under AGP 9
+  # (`getDefaultProguardFile('proguard-android.txt')`).
+  webview_flutter: 4.14.1
+
+dev_dependencies:
+  analysis: any
+  flutter_test:
+    sdk: flutter
+  # The web view's platform interface, faked in the tests like the sign-in
+  # plugins' are in `testing`.
+  plugin_platform_interface: 2.1.8
+  webview_flutter_platform_interface: 2.15.1

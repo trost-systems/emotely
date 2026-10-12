@@ -25,6 +25,7 @@ jobs:
       pull-requests: read
     outputs:
       agent: ${{ steps.filter.outputs.agent }}
+      android: ${{ steps.filter.outputs.android }}
       app: ${{ steps.filter.outputs.app }}
       fastlane: ${{ steps.filter.outputs.fastlane }}
       lints: ${{ steps.filter.outputs.lints }}
@@ -46,6 +47,16 @@ jobs:
               - 'tsconfig*.json'
               - 'biome.jsonc'
               - '.nvmrc'
+              - '.github/workflows/ci.yml'
+            # What changes the native Android build: a plugin in or out or at
+            # another version (every one is in the lock), the Gradle project,
+            # the Flutter version. The Dart gates never build Android, so a
+            # plugin whose Gradle file breaks under the app's AGP passed them
+            # all (#94, flutter_inappwebview under AGP 9).
+            android:
+              - 'apps/mobile/pubspec.lock'
+              - 'apps/mobile/app/android/**'
+              - 'apps/mobile/app/.fvmrc'
               - '.github/workflows/ci.yml'
             app:
               - 'apps/mobile/**'
@@ -283,6 +294,35 @@ jobs:
   # Store listing gate are what keep a release from restarting a store review
   # or failing on a version Apple is reviewing, so they are tested before a
   # release depends on them. Seconds once the bundle is cached.
+  # A release bundle of the app, signed with the debug key: Gradle
+  # evaluates every plugin's build file and R8 shrinks the result, which is
+  # where a native dependency breaks. Only when the lock, the Android
+  # project or the Flutter version changes, so most pull requests skip it;
+  # one ABI keeps it to a few minutes. app-release builds the signed one
+  # from main.
+  android:
+    needs: changes
+    if: needs.changes.outputs.android == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: apps/mobile/app
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version-file: apps/mobile/app/.fvmrc
+          cache: true
+      - run: flutter pub get
+      - run: flutter build appbundle --release --target-platform android-arm64
+
   fastlane:
     needs: changes
     if: needs.changes.outputs.fastlane == 'true'
@@ -475,7 +515,7 @@ jobs:
 
   # The single required check. Green only if every job succeeded or was skipped.
   ci-ok:
-    needs: [changes, agent, app, ast-grep, fastlane, lints, scripts, supabase, web]
+    needs: [changes, agent, android, app, ast-grep, fastlane, lints, scripts, supabase, web]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:

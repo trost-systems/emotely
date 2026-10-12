@@ -108,4 +108,8 @@ class AuthLocalizationsEn extends AuthLocalizations {
   @override
   String get providerFailedMessage =>
       'That sign-in did not go through. Try again, or use your email.';
+
+  @override
+  String get humanCheckFailedMessage =>
+      'I couldn’t confirm that a person is asking. Try again in a moment.';
 }

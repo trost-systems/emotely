@@ -32,7 +32,7 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
         'Diese Datenschutzerklärung gilt für die emotely-App für iOS und '
         'Android (bei Google Play als „Reflect Therapy AI: emotely“ '
         'gelistet). Für die Website getemotely.com und ihre Warteliste gibt '
-        'es eine eigene Datenschutzerklärung. Zuletzt aktualisiert am 2. '
+        'es eine eigene Datenschutzerklärung. Zuletzt aktualisiert am 3. '
         'Oktober 2026.',
       ),
     ]),
@@ -126,6 +126,22 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
         'Anbieter erfährt, dass du dich bei emotely angemeldet hast – als '
         'eigenständiger Verantwortlicher, nach seiner eigenen '
         'Datenschutzerklärung – und nichts über dein Tagebuch.',
+      ),
+    ]),
+    p([
+      .text(
+        'Bevor die App einen Code anfordert und bevor sie ein Passwort '
+        'prüft, prüft Cloudflare Turnstile in einer verborgenen Web-Ansicht, '
+        'dass ein Mensch und kein Skript fragt. Es liest, was es braucht, '
+        'um beides zu unterscheiden – deine IP-Adresse, den '
+        'TLS-Fingerabdruck und den User-Agent dieser Web-Ansicht und dass '
+        'die Anfrage von emotely kommt –, und antwortet mit einem '
+        'Einmal-Token, das Supabase bei Cloudflare bestätigt. Deine '
+        'E-Mail-Adresse sieht es nie. Rechtsgrundlage: unser berechtigtes '
+        'Interesse, Skripte davon abzuhalten, Fremden Codes zu schicken und '
+        'die Anmelde-E-Mails aufzubrauchen, auf die alle echten Nutzer '
+        'angewiesen sind (Art. 6 Abs. 1 lit. f DSGVO). „Mit Google '
+        'anmelden“ und „Mit Apple anmelden“ brauchen keine solche Prüfung.',
       ),
     ]),
     p([
@@ -430,7 +446,9 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
         'Anmeldemethode, die du zuletzt verwendet hast, damit der '
         'Anmeldebildschirm sie markieren kann. Die zuletzt verwendete '
         'Methode wird nirgendwohin gesendet; sie übersteht das Abmelden und '
-        'wird gelöscht, wenn du das Konto löschst. Für das Speichern braucht '
+        'wird gelöscht, wenn du das Konto löschst. Die Web-Ansicht, in der '
+        'die Prüfung von Cloudflare läuft, kann behalten, was die Prüfung '
+        'zum Funktionieren braucht. Für das Speichern braucht '
         'es keine Einwilligung, weil jedes davon für den Dienst, den du '
         'nutzen möchtest, unbedingt erforderlich ist (§ 25 Abs. 2 Nr. 2 '
         'TDDDG).',
@@ -438,8 +456,9 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
     ]),
     p([
       .text(
-        'Alles, was das Handy verlässt – zu unserem Server, zur Datenbank '
-        'und zum Analyseanbieter –, läuft über eine verschlüsselte '
+        'Alles, was das Handy verlässt – zu unserem Server, zur Datenbank, '
+        'zum Analyseanbieter und zu Cloudflare –, läuft über eine '
+        'verschlüsselte '
         'HTTPS-Verbindung; unverschlüsselte Verbindungen baut die App '
         'überhaupt nicht auf.',
       ),
@@ -497,6 +516,20 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
         ),
       ]),
       li([
+        strong([.text('Cloudflare')]),
+        .text(
+          ' – führt die Prüfung vor einem Code oder einer Anmeldung mit '
+          'Passwort durch (Turnstile), wie oben unter deiner E-Mail-Adresse '
+          'beschrieben. Es nutzt diese Signale außerdem als eigener '
+          'Verantwortlicher, um seine Bot-Erkennung zu verbessern, wie es '
+          'sein ',
+        ),
+        a(href: 'https://www.cloudflare.com/turnstile-privacy-policy/', [
+          .text('Turnstile-Datenschutzzusatz'),
+        ]),
+        .text(' beschreibt. Nie dein Tagebuch, dein Name oder deine Adresse.'),
+      ]),
+      li([
         strong([.text('Apple und Google')]),
         .text(
           ' – vertreiben die App und erheben, unabhängig von uns, eigene '
@@ -516,11 +549,14 @@ class const AppPrivacyDe({super.key}) extends StatelessComponent {
     ]),
     p([
       .text(
-        'Alle außer Apple und Google verarbeiten diese Daten nur auf unsere '
-        'Weisung, als Auftragsverarbeiter nach einem '
+        'Supabase, Vercel, der Modellanbieter und PostHog verarbeiten diese '
+        'Daten nur auf unsere Weisung, als Auftragsverarbeiter nach einem '
         'Auftragsverarbeitungsvertrag (Art. 28 DSGVO), der sie verpflichtet, '
         'die Daten nach demselben Standard zu schützen, der hier beschrieben '
-        'ist, und ihnen verbietet, sie für eigene Zwecke zu nutzen. Apple '
+        'ist, und ihnen verbietet, sie für eigene Zwecke zu nutzen. '
+        'Cloudflare führt die Prüfung zu denselben Bedingungen durch, nur '
+        'dass es mit ihren Signalen auch seine Bot-Erkennung verbessert, '
+        'wie oben beschrieben. Apple '
         'und Google sind nicht unsere Auftragsverarbeiter: Was sie beim '
         'Vertrieb der App erheben, erheben sie als eigenständige '
         'Verantwortliche, nach ihren eigenen Richtlinien und außerhalb '
