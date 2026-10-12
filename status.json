@@ -2,19 +2,19 @@
   "ios": {
     "internal": {
       "version": "2.0.0",
-      "build": 1076,
-      "label": "2.0.0 (1076)",
-      "commit": "62f483c8935611ccd0b695774a414b8611667989",
-      "updated_at": "2026-10-12T20:26:03Z"
+      "build": 1078,
+      "label": "2.0.0 (1078)",
+      "commit": "c0975ab110e360bc24ce1d5cf4785d9fa1ade491",
+      "updated_at": "2026-10-12T20:37:49Z"
     }
   },
   "android": {
     "internal": {
       "version": "2.0.0",
-      "build": 1076,
-      "label": "2.0.0 (1076)",
-      "commit": "62f483c8935611ccd0b695774a414b8611667989",
-      "updated_at": "2026-10-12T20:26:03Z"
+      "build": 1078,
+      "label": "2.0.0 (1078)",
+      "commit": "c0975ab110e360bc24ce1d5cf4785d9fa1ade491",
+      "updated_at": "2026-10-12T20:37:49Z"
     }
   }
 }
