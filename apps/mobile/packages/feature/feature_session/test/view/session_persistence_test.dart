@@ -47,6 +47,7 @@ void main() {
         },
         'questions': [SessionRobot.rate.toJson()],
         'app_version': AgentStub.appVersion,
+        'journal_day': '2026-10-03',
       });
 
       await robot.answerRating(7);
@@ -64,6 +65,23 @@ void main() {
         'app_version': AgentStub.appVersion,
       });
       expect(supabase.to(sessions), hasLength(1));
+    });
+
+    testWidgets('files the session under the day it started on, read when '
+        'it starts', (tester) async {
+      final agent = AgentStub()
+        ..script([awaiting(toolCallId: 'c1', question: SessionRobot.rate)]);
+      final robot = SessionRobot(tester, agent)
+        ..clock = DateTime(2026, 10, 3, 3, 59);
+      await robot.launch();
+      // The first round answers after the 04:00 cutoff has passed.
+      robot.clock = DateTime(2026, 10, 3, 4, 1);
+      await robot.settle();
+
+      expect(
+        robot.supabaseStub.to(sessions).single.body,
+        containsPair('journal_day', '2026-10-02'),
+      );
     });
 
     testWidgets('files the entry and closes the session in one call', (
