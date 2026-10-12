@@ -27,7 +27,15 @@ enum AgentErrorCode(final String wire) {
   methodNotAllowed('method_not_allowed'),
 
   /// The gateway refused the round; waiting is what helps.
-  modelUnavailable('model_unavailable');
+  modelUnavailable('model_unavailable'),
+
+  /// Revoking Sign in with Apple (#193): the code is for an Apple ID other
+  /// than the one linked to this account, or the account has none.
+  appleIdentityMismatch('apple_identity_mismatch'),
+
+  /// Revoking Sign in with Apple: Apple or Supabase refused or could not be
+  /// reached, so the grant is still in place.
+  appleRevocationUnavailable('apple_revocation_unavailable');
 
   /// The code for [wire], or null for one this build does not know, so a
   /// code added on the server later degrades to a generic failure.

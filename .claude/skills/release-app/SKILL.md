@@ -90,6 +90,11 @@ The README version badges are fed by the `status` job; how they work and how to 
   items `emotely_upload_keystore_base64` / `emotely_upload_key.properties_base64`.
   Play App Signing holds the app signing key; if the upload key is ever lost,
   request an upload-key reset in Play Console → Setup → App signing.
+- **Sign in with Apple key** (`.p8`, team `VCZSHMZY25`): not an app signing
+  key but the agent's, which signs its calls to Apple when a deleted account
+  is disconnected from Sign in with Apple (#193). It lives in the
+  `emotely-agent` Vercel environment. Creating, storing, verifying and
+  rotating it: [references/sign-in-with-apple-key.md](references/sign-in-with-apple-key.md).
 
 ## Secrets (`release` environment on trost-systems/emotely)
 
@@ -158,7 +163,10 @@ once no distributed build collects it without asking.
   tab) **→ Delete account → Delete** (the button on the account screen,
   then the confirmation). It calls `public.delete_account()`, which removes
   the auth user and every session and entry by cascade, then signs the
-  device out.
+  device out. An account that signs in with Apple has its Sign in with
+  Apple grant revoked first through the agent, as 5.1.1(v) asks; that needs
+  the key in [references/sign-in-with-apple-key.md](references/sign-in-with-apple-key.md)
+  to be in place before the build that does it goes to review.
 - **Google Play** additionally requires a **web** deletion URL declared in
   the Data safety form, because some users ask after uninstalling. The URL
   is `https://getemotely.com/delete-account` (`apps/web`, in the sitemap and
