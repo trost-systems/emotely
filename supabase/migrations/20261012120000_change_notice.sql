@@ -111,6 +111,23 @@ language sql immutable set search_path = '' as $$ select 50 $$;
 create function change_notice.per_month() returns int
 language sql immutable set search_path = '' as $$ select 1500 $$;
 
+-- What became of one delivery, from what check() read. Only a definite
+-- refusal (Resend answered 4xx: it sent nothing) is `refused` and queued
+-- again. A timeout, a 5xx or no response at all may still have sent the
+-- batch, and a new send carries a new Idempotency-Key, so such a reader is
+-- `unknown`: never queued again by a send, left for a human to look up in
+-- Resend's log by the notice's tag.
+create function change_notice.outcome(checked_at timestamptz, status_code int)
+returns text
+language sql immutable set search_path = '' as $$
+  select case
+    when checked_at is null then 'unanswered'
+    when status_code between 200 and 299 then 'accepted'
+    when status_code between 400 and 499 then 'refused'
+    else 'unknown'
+  end
+$$;
+
 -- Checks and rendering ------------------------------------------------------------
 
 create function change_notice.validate(audience text, effective_on date, message jsonb)
@@ -249,6 +266,12 @@ as $$
     select w.id, w.email, w.locale, w.confirmed_at
     from public.waitlist w
     where audience in ('waitlist', 'both') and w.confirmed_at is not null
+      -- Google service accounts, the probes' signin-probe among them, are
+      -- no mailbox: the before-user-created hook's own rule, asked without
+      -- a provider so that not even its exception passes.
+      and not public.before_user_created(
+        jsonb_build_object('user', jsonb_build_object('email', u.email))
+      ) ? 'error'
   ), readers as (
     select
       case when a.id is not null then 'account' else 'waitlist' end as kind,
@@ -279,6 +302,7 @@ as $$
 declare
   counts jsonb;
   pending int;
+  unknown int;
   mails jsonb;
   this_digest text := md5(audience || '|' || effective_on || '|' || message::text);
 begin
@@ -299,7 +323,18 @@ begin
     select 1 from change_notice.deliveries d
       join change_notice.notices n on n.id = d.notice_id
     where n.digest = this_digest
-      and (d.checked_at is null or d.status_code between 200 and 299)
+      and change_notice.outcome(d.checked_at, d.status_code) <> 'refused'
+      and (d.user_id = r.user_id or d.waitlist_id = r.waitlist_id)
+  );
+
+  -- Readers whose batch may or may not have gone out: no send retries them.
+  select count(*) into unknown
+  from change_notice.recipients(audience, message) r
+  where exists (
+    select 1 from change_notice.deliveries d
+      join change_notice.notices n on n.id = d.notice_id
+    where n.digest = this_digest
+      and change_notice.outcome(d.checked_at, d.status_code) = 'unknown'
       and (d.user_id = r.user_id or d.waitlist_id = r.waitlist_id)
   );
 
@@ -324,6 +359,7 @@ begin
     'lead_days', effective_on - current_date,
     'recipients', counts,
     'pending', pending,
+    'unknown', unknown,
     -- At most per_day() a day, and every run must still be lead_days()
     -- ahead: the last run is runs_needed - 1 days after the first.
     'runs_needed', ceil(pending::numeric / change_notice.per_day())::int,
@@ -340,8 +376,9 @@ comment on function change_notice.preview(text, date, jsonb) is
 --
 -- pg_net keeps a response for six hours, so this runs soon after a send
 -- (the skill's script runs it right away). A batch is all or nothing: a
--- refused one is failed for every reader in it, and the next send queues
--- them again.
+-- refused one (4xx) is failed for every reader in it, and the next send
+-- queues them again; one without a definite answer (a timeout, a 5xx) is
+-- unknown for every reader in it, and no send queues them again (outcome()).
 create function change_notice.check(notice uuid)
 returns jsonb
 language plpgsql
@@ -365,12 +402,18 @@ begin
 
   select jsonb_build_object(
     'queued', count(*),
-    'accepted', count(*) filter (where d.status_code between 200 and 299),
-    'failed', count(*) filter (
-      where d.checked_at is not null
-        and (d.status_code is null or d.status_code not between 200 and 299)
+    'accepted', count(*) filter (
+      where change_notice.outcome(d.checked_at, d.status_code) = 'accepted'
     ),
-    'unanswered', count(*) filter (where d.checked_at is null)
+    'failed', count(*) filter (
+      where change_notice.outcome(d.checked_at, d.status_code) = 'refused'
+    ),
+    'unknown', count(*) filter (
+      where change_notice.outcome(d.checked_at, d.status_code) = 'unknown'
+    ),
+    'unanswered', count(*) filter (
+      where change_notice.outcome(d.checked_at, d.status_code) = 'unanswered'
+    )
   ) into result
   from change_notice.deliveries d
   where d.notice_id = notice;
@@ -426,7 +469,8 @@ begin
     on conflict on constraint notices_digest_key do nothing;
   select n.id into notice from change_notice.notices n where n.digest = this_digest;
 
-  -- What Resend refused since the last run is sent again below.
+  -- What Resend refused since the last run is sent again below; what it
+  -- may have sent (outcome() 'unknown') is not.
   perform change_notice.check(notice);
 
   select coalesce(jsonb_agg(to_jsonb(r) order by r.since, r.email), '[]')
@@ -435,7 +479,7 @@ begin
   where not exists (
     select 1 from change_notice.deliveries d
     where d.notice_id = notice
-      and (d.checked_at is null or d.status_code between 200 and 299)
+      and change_notice.outcome(d.checked_at, d.status_code) <> 'refused'
       and (d.user_id = r.user_id or d.waitlist_id = r.waitlist_id)
   );
   if jsonb_array_length(pending) = 0 then

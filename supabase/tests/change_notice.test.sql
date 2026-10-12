@@ -5,7 +5,7 @@
 -- role reaches any of it. The Resend key is a throwaway created inside the
 -- transaction, so nothing leaves the database: pg_net sends only on commit.
 begin;
-select plan(46);
+select plan(53);
 
 -- Fixtures -------------------------------------------------------------------------
 
@@ -348,7 +348,7 @@ from net.http_request_queue;
 
 select is(
   change_notice.check((select id from change_notice.notices)),
-  '{"queued": 3, "accepted": 3, "failed": 0, "unanswered": 0}'::jsonb,
+  '{"queued": 3, "accepted": 3, "failed": 0, "unknown": 0, "unanswered": 0}'::jsonb,
   'check reads Resend''s answer into the record'
 );
 select is(
@@ -372,7 +372,7 @@ select max(id), 422, '{"name": "validation_error"}', now()
 from net.http_request_queue;
 select is(
   change_notice.check((select id from change_notice.notices)),
-  '{"queued": 4, "accepted": 3, "failed": 1, "unanswered": 0}'::jsonb,
+  '{"queued": 4, "accepted": 3, "failed": 1, "unknown": 0, "unanswered": 0}'::jsonb,
   'a refused batch is recorded as failed'
 );
 select is(
@@ -380,6 +380,68 @@ select is(
     - 'notice_id',
   '{"queued": 1, "remaining": 0}'::jsonb,
   'and its readers are queued again on the next run'
+);
+
+-- A batch that may have gone out is never sent again ---------------------------------
+
+-- The retry above times out: Resend may have sent it, and a new send would
+-- carry a new Idempotency-Key.
+insert into net._http_response (id, status_code, timed_out, error_msg, created)
+select max(id), null, true, 'Timeout of 10000 ms reached', now()
+from net.http_request_queue;
+select is(
+  change_notice.check((select id from change_notice.notices)),
+  '{"queued": 5, "accepted": 3, "failed": 1, "unknown": 1, "unanswered": 0}'::jsonb,
+  'a timed-out batch is recorded as unknown, not as failed'
+);
+select is(
+  change_notice.send('both', pg_temp.effective(), pg_temp.message())
+    - 'notice_id',
+  '{"queued": 0, "remaining": 0}'::jsonb,
+  'and its readers are not queued again, so nobody can get the mail twice'
+);
+select is(
+  (select jsonb_build_array(p -> 'pending', p -> 'unknown')
+    from change_notice.preview('both', pg_temp.effective(), pg_temp.message()) p),
+  '[0, 1]'::jsonb,
+  'the dry run shows them apart, for a human to look up in Resend''s log'
+);
+
+insert into public.waitlist (id, email, locale, confirmed_at)
+values ('00000000-0000-0000-0000-0000000000a1', 'gus@example.com', 'en', now());
+select is(
+  change_notice.send('both', pg_temp.effective(), pg_temp.message())
+    - 'notice_id',
+  '{"queued": 1, "remaining": 0}'::jsonb,
+  'the next reader goes out as usual'
+);
+insert into net._http_response (id, status_code, content, created)
+select max(id), 503, '{"name": "internal_server_error"}', now()
+from net.http_request_queue;
+select is(
+  change_notice.check((select id from change_notice.notices)) ->> 'unknown',
+  '2',
+  'a server error from Resend is unknown too: it may have sent the batch'
+);
+select is(
+  change_notice.send('both', pg_temp.effective(), pg_temp.message())
+    - 'notice_id',
+  '{"queued": 0, "remaining": 0}'::jsonb,
+  'and is not sent again either'
+);
+
+-- Service accounts are no readers ---------------------------------------------------
+
+insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data)
+values
+  ('00000000-0000-0000-0000-0000000000a2',
+    'signin-probe@emotely-ci.iam.gserviceaccount.com', now(), '{}'),
+  ('00000000-0000-0000-0000-0000000000a3',
+    'robot@someone.iam.gserviceaccount.com', now(), '{}');
+select is_empty(
+  $$select 1 from change_notice.recipients('accounts', '{}')
+    where email like '%gserviceaccount.com'$$,
+  'no Google service account is told, not even the probes'' signin-probe'
 );
 
 -- Resend's free tier ---------------------------------------------------------------
@@ -394,11 +456,12 @@ select is(
   2,
   'sixty readers take two days at 50 a day, which the dry run says'
 );
--- Today already spent 5 (three accepted, one failed, one queued again).
+-- Today already spent 7 (three accepted, one failed, one queued again and
+-- unknown, one more unknown).
 select is(
   change_notice.send('both', pg_temp.effective(), pg_temp.message())
     - 'notice_id',
-  '{"queued": 45, "remaining": 15}'::jsonb,
+  '{"queued": 43, "remaining": 17}'::jsonb,
   'a run sends at most what is left of the day''s 50 and says how many wait'
 );
 select throws_ok(
@@ -413,7 +476,7 @@ update change_notice.deliveries set queued_at = queued_at - interval '25 hours';
 select is(
   change_notice.send('both', pg_temp.effective(), pg_temp.message())
     - 'notice_id',
-  '{"queued": 15, "remaining": 0}'::jsonb,
+  '{"queued": 17, "remaining": 0}'::jsonb,
   'the next day the rest goes out'
 );
 select is(

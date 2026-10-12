@@ -9,7 +9,7 @@ Both privacy notices promise it: the site notice tells the waitlist "by email
 before it takes effect", the app notice tells account holders the same about
 their journal. The mail is the change notice, and it is the only thing that
 keeps those promises. It lives in the `change_notice` schema
-(`supabase/migrations/20261003120000_change_notice.sql`), which only postgres
+(`supabase/migrations/20261012120000_change_notice.sql`), which only postgres
 reaches, and `scripts/change-notice.sh` is the one way to drive it.
 
 A change notice is not re-consent. A change to what users agree to also needs
@@ -120,15 +120,17 @@ Apple developer account. Check that `hello@getemotely.com` (or
 
 ## 6. Check and the record
 
-`send` waits for Resend's answers and prints accepted and failed counts. pg_net
+`send` waits for Resend's answers and prints accepted, refused and unknown counts. pg_net
 keeps the answers for six hours; until then
 
 ```bash
 $S check --notice <id> --linked
 ```
 
-reads them into the record. A failed batch (Resend refused it) is queued
-again by the next `send`.
+reads them into the record. Only a refused batch (Resend answered 4xx) is
+queued again by the next `send`. A timeout or a 5xx is unknown: the mail may
+have gone out, so it is never sent again; the preview counts those readers,
+and a human looks them up in Resend's log by the notice tag.
 
 The record is `change_notice.notices` (audience, effective date, the exact
 mails) and `change_notice.deliveries` (one row per reader: user or waitlist

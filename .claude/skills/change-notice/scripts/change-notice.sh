@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Tells account holders and the waitlist about a material change to a
 # privacy notice, through the change_notice schema
-# (supabase/migrations/20261003120000_change_notice.sql).
+# (supabase/migrations/20261012120000_change_notice.sql).
 #
 #   change-notice.sh preview --about app|site|both \
 #       --effective YYYY-MM-DD --en FILE [--de FILE] [--linked]
@@ -107,7 +107,7 @@ trap 'rm -f "${tmp}"' EXIT
 preview() {
   printf 'select change_notice.preview(%s) as preview;\n' "${args}" >"${tmp}"
   query "${tmp}" | jq -r '.[0].preview |
-    "\(.recipients.total) readers (\(.recipients.account) by account, \(.recipients.waitlist) by the waitlist; \(.recipients.en) in English, \(.recipients.de) in German), \(.pending) not yet told.",
+    "\(.recipients.total) readers (\(.recipients.account) by account, \(.recipients.waitlist) by the waitlist; \(.recipients.en) in English, \(.recipients.de) in German), \(.unknown // 0) unknown (may have gone out; look them up in the Resend log), \(.pending) not yet told.",
     "The change takes effect on \(.effective_on), \(.lead_days) days from today.",
     "Sending takes \(.runs_needed) daily run(s) of at most \(.per_day); every run must still be \(.min_lead_days) days or more before the change.",
     (.mails[] |
@@ -147,14 +147,14 @@ case "${command}" in
       result="$(query "${tmp}" | jq -c '.[0].check')"
       [[ "$(jq -r '.unanswered' <<<"${result}")" == 0 ]] && break
     done
-    jq -r '"\(.queued) queued, \(.accepted) accepted, \(.failed) failed, \(.unanswered) unanswered."' <<<"${result}"
+    jq -r '"\(.queued) queued, \(.accepted) accepted, \(.failed) refused, \(.unknown // 0) unknown, \(.unanswered) unanswered."' <<<"${result}"
     ;;
   check)
     [[ "${notice}" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]] ||
       die "--notice is the notice's id (a uuid)"
     printf "select change_notice.check('%s') as check;\n" "${notice}" >"${tmp}"
     query "${tmp}" | jq -r '.[0].check |
-      "\(.queued) queued, \(.accepted) accepted, \(.failed) failed, \(.unanswered) unanswered."'
+      "\(.queued) queued, \(.accepted) accepted, \(.failed) refused, \(.unknown // 0) unknown, \(.unanswered) unanswered."'
     ;;
   *)
     usage
