@@ -23,6 +23,24 @@ class const JournalRepository({required final SupabaseClient supabase}) {
 
   static const _inProgress = 'in_progress';
 
+  /// The hour a journal day begins: a session started before it is about
+  /// the day before. The database derives the day with the same cutoff for
+  /// a row that arrives without one (`public.journal_day`).
+  static const _cutoffHour = 4;
+
+  /// The journal day of a session started at [startedAt], read on the
+  /// device's clock in its time zone at that moment: that date, or the one
+  /// before when the clock showed less than [_cutoffHour]. Wall-clock
+  /// fields, not a four-hour shift, so 04:00 stays the cutoff on the days
+  /// clocks change.
+  static PostgrestDate _journalDay(DateTime startedAt) {
+    final local = startedAt.toLocal();
+    final dayBefore = local.hour < _cutoffHour ? 1 : 0;
+    return PostgrestDate.fromDateTime(
+      DateTime.utc(local.year, local.month, local.day - dayBefore),
+    );
+  }
+
   /// The session still in progress, if any: what the journal offers to
   /// continue.
   Future<OpenSession?> openSession() async {
@@ -45,11 +63,13 @@ class const JournalRepository({required final SupabaseClient supabase}) {
     return row == null ? null : OpenSession.fromJson(row.toJson());
   }
 
-  /// Every filed entry, newest first.
+  /// Every filed entry, newest journal day first, and within a day the one
+  /// filed last first.
   Future<List<EntryRecord>> entries() async {
     final rows = await supabase
         .table(Entries.table)
         .select()
+        .order(Entries.journalDay.desc())
         .order(Entries.createdAt.desc());
     return [for (final row in rows) EntryRecord.fromJson(row.toJson())];
   }
@@ -79,8 +99,13 @@ class const JournalRepository({required final SupabaseClient supabase}) {
   /// question now pending (none once the session is over) and every
   /// question asked so far. The first call creates the row, replacing any
   /// session still in progress, and every call returns the row's id.
+  ///
+  /// The row is created under the journal day of [startedAt], the moment
+  /// the session started, and keeps it: a later round, on another day or
+  /// device, never moves it, and the entry is filed under it (#158).
   Future<String> saveRound({
     required String? sessionId,
+    required DateTime startedAt,
     required List<Object?> transcript,
     required String signature,
     required PendingQuestion? pending,
@@ -118,6 +143,7 @@ class const JournalRepository({required final SupabaseClient supabase}) {
             questions: asked,
             appVersion: appVersion,
             questionSetId: questionSetId,
+            journalDay: _journalDay(startedAt),
           ),
         )
         .select([Sessions.id])

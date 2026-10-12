@@ -14,7 +14,8 @@ class StorePathsTest < Minitest::Test
 
   def test_every_path_is_absolute_wherever_it_is_read_from
     Dir.chdir("/") do
-      [StorePaths::APP_DIR, StorePaths::METADATA_DIR, StorePaths::APP_REVIEW_DIR, StorePaths::DATA_SAFETY_CSV].each do |path|
+      [StorePaths::APP_DIR, StorePaths::METADATA_DIR, StorePaths::APP_REVIEW_DIR, StorePaths::TESTFLIGHT_DIR,
+       StorePaths::DATA_SAFETY_CSV].each do |path|
         assert path.start_with?("/"), "#{path} is relative"
       end
     end
@@ -25,6 +26,7 @@ class StorePathsTest < Minitest::Test
     assert_equal File.join(FASTLANE, "metadata"), StorePaths::METADATA_DIR
     assert File.directory?(File.join(StorePaths::METADATA_DIR, "android")), "no Play listing under #{StorePaths::METADATA_DIR}"
     assert File.directory?(StorePaths::APP_REVIEW_DIR), "no App Review folder at #{StorePaths::APP_REVIEW_DIR}"
+    assert File.directory?(StorePaths::TESTFLIGHT_DIR), "no TestFlight folder at #{StorePaths::TESTFLIGHT_DIR}"
     assert_equal File.join(FASTLANE, "data_safety.csv"), StorePaths::DATA_SAFETY_CSV
   end
 end

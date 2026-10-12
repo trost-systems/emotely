@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:contract/contract.dart';
+import 'package:design_system/design_system.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:feature_session/src/l10n/l10n.dart';
 import 'package:feature_session/src/widgets/emoji_search.dart';
@@ -34,7 +35,8 @@ class _EmojiInputState() extends State<EmojiInput> {
 
   Future<void> _open(int index) async {
     final current = index < _emoji.length ? _emoji[index] : null;
-    final pick = await showModalBottomSheet<_EmojiPick>(
+    // Its search sits above the keyboard it opens (#308).
+    final pick = await showSheet<_EmojiPick>(
       context: context,
       builder: (_) => _EmojiSheet(canClear: current != null),
     );

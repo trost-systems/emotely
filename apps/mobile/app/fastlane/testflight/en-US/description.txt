@@ -1,0 +1,1 @@
+emotely is your evening journal: emotely asks you a few short questions and turns your answers into a journal entry. This beta is emotely, rebuilt from the ground up. Anything that felt off, confusing or slow is worth telling us: through TestFlight’s feedback or at hello@getemotely.com.
