@@ -36,7 +36,7 @@ dev_dependencies:
       ref: 103ba839d3d8e4e53853fad600cbde341b153192
   # melos reads the workspace list above; it only recognizes the workspace
   # when it is declared here, and its configuration lives in the `melos` key.
-  melos: 8.7.0
+  melos: 8.9.0
 
 # Both tools want their shared library at a version only main has; pub treats
 # a git and a hosted source as different packages, so it has to be overridden
