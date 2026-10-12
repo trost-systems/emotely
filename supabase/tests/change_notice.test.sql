@@ -456,12 +456,12 @@ select is(
   2,
   'sixty readers take two days at 50 a day, which the dry run says'
 );
--- Today already spent 7 (three accepted, one failed, one queued again and
--- unknown, one more unknown).
+-- Today already spent 6 (three accepted, one failed, its retry unknown,
+-- one more unknown).
 select is(
   change_notice.send('both', pg_temp.effective(), pg_temp.message())
     - 'notice_id',
-  '{"queued": 43, "remaining": 17}'::jsonb,
+  '{"queued": 44, "remaining": 16}'::jsonb,
   'a run sends at most what is left of the day''s 50 and says how many wait'
 );
 select throws_ok(
@@ -476,7 +476,7 @@ update change_notice.deliveries set queued_at = queued_at - interval '25 hours';
 select is(
   change_notice.send('both', pg_temp.effective(), pg_temp.message())
     - 'notice_id',
-  '{"queued": 17, "remaining": 0}'::jsonb,
+  '{"queued": 16, "remaining": 0}'::jsonb,
   'the next day the rest goes out'
 );
 select is(
