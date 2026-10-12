@@ -17,8 +17,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   freezed_annotation: 3.1.0
-  get_it: 9.2.1
-  go_router: 18.0.1
+  get_it: 9.3.0
+  go_router: 18.0.2
   # The version flutter_localizations requires (^0.20.3), pinned.
   intl: 0.20.3
   journal_repository: any
@@ -32,7 +32,7 @@ dev_dependencies:
   contract: any
   flutter_test:
     sdk: flutter
-  freezed: 4.0.1
+  freezed: 4.0.2
   go_router_builder: 4.5.0
   supabase_flutter: 3.0.0-dev.7
   testing: any
