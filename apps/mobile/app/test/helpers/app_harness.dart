@@ -60,9 +60,6 @@ Widget appUnderTest({
     build: testBuildInfo,
     agentUrl: AgentStub.endpoint,
     configUrl: ConfigStub.endpoint,
-    // The release shape: every address outside the review accounts gets a
-    // code (feature_auth's tests cover the password accounts).
-    passwordAccounts: const {},
     // Public ids, but not the real ones: nothing here talks to Google.
     google: const GoogleClientIds(
       server: 'server.apps.googleusercontent.com',
@@ -100,13 +97,13 @@ Future<void> deepLink(WidgetTester tester, String location) async {
 const accountName = 'Alice';
 
 /// Signs in through the sign-in screen the way a returning user does: "I
-/// have an account" on Welcome, if that is where they are, then the email,
-/// the code, done. The Supabase stub must have `otp:` and `verify:` rounds
+/// have an account" on Welcome, if that is where they are, then the email
+/// and the password, done. The Supabase stub must have a `password:` round
 /// scripted.
 Future<void> signInThroughTheScreen(
   WidgetTester tester, {
   String email = SupabaseStub.email,
-  String code = '123456',
+  String password = 'correct horse battery staple',
 }) async {
   final haveAccount = find.byKey(WelcomeStepView.haveAccountKey);
   if (haveAccount.evaluate().isNotEmpty) {
@@ -114,11 +111,9 @@ Future<void> signInThroughTheScreen(
     await tester.pumpAndSettle();
   }
   await tester.enterText(find.byKey(SignInPage.emailKey), email);
+  await tester.enterText(find.byKey(SignInPage.passwordKey), password);
   await tester.pump();
-  await tester.tap(find.byKey(SignInPage.sendCodeKey));
-  await tester.pumpAndSettle();
-  await tester.enterText(find.byKey(SignInPage.codeKey), code);
-  await tester.pump();
-  await tester.tap(find.byKey(SignInPage.signInKey));
+  await tester.ensureVisible(find.byKey(SignInPage.submitKey));
+  await tester.tap(find.byKey(SignInPage.submitKey));
   await tester.pumpAndSettle();
 }

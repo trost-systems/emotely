@@ -143,7 +143,7 @@ abstract class AuthLocalizations {
   /// **'Continue with Google'**
   String get googleButton;
 
-  /// Sign-in screen: a small pill on the edge of the sign-in button the user used last on this phone (Apple, Google or the email code), to remind them which one they picked. Keep it very short.
+  /// Sign-in screen: a small pill on the edge of the sign-in button the user used last on this phone (Apple, Google or the email and password), to remind them which one they picked. Keep it very short.
   ///
   /// In en, this message translates to:
   /// **'Last used'**
@@ -155,67 +155,127 @@ abstract class AuthLocalizations {
   /// **'{button}, last used'**
   String lastUsedButton(String button);
 
-  /// Sign-in screen: a small label in a horizontal rule between the Apple and Google buttons above and the email field below. Lower case: it continues the buttons above it.
+  /// Sign-in screen: a small label in a horizontal rule between the Apple and Google buttons above and the email and password fields below. Lower case: it continues the buttons above it.
   ///
   /// In en, this message translates to:
   /// **'or with your email'**
   String get orWithEmail;
 
-  /// Sign-in screen, first step: the label of the field for the email address a sign-in code is sent to.
+  /// Sign-in screen: the label of the field for the account's email address.
   ///
   /// In en, this message translates to:
   /// **'Email address'**
   String get emailLabel;
 
-  /// Sign-in screen, first step: the example shown in the empty email field. Keep the reserved domain example.com; only the part before the @ may change, to the target language's "you".
+  /// Sign-in screen: the example shown in the empty email field. Keep the reserved domain example.com; only the part before the @ may change, to the target language's "you".
   ///
   /// In en, this message translates to:
   /// **'you@example.com'**
   String get emailHint;
 
-  /// Sign-in screen, first step: button that emails a six-digit sign-in code to the address typed above it.
-  ///
-  /// In en, this message translates to:
-  /// **'Send me a code'**
-  String get sendCodeButton;
-
-  /// Sign-in screen, second step: tells the user a six-digit code is on its way to their address, above the field to type it into.
-  ///
-  /// In en, this message translates to:
-  /// **'We sent a code to {email}.'**
-  String codeSentMessage(String email);
-
-  /// Sign-in screen, second step: the label of the field for the six-digit code from the email.
-  ///
-  /// In en, this message translates to:
-  /// **'Code'**
-  String get codeLabel;
-
-  /// Sign-in screen, second step for the app stores' review accounts only: asks for the account's password instead of a code.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter the password for {email}.'**
-  String passwordPrompt(String email);
-
-  /// Sign-in screen, second step for the app stores' review accounts: the label of the password field.
+  /// Sign-in screen: the label of the password field, under the email field, both when signing in and when creating an account.
   ///
   /// In en, this message translates to:
   /// **'Password'**
   String get passwordLabel;
 
-  /// Sign-in screen, second step: button that signs in with the code (or the review account's password) just typed.
+  /// Sign-in screen, resetting a forgotten password: the label of the field for the password the account will have from now on.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get newPasswordLabel;
+
+  /// Sign-in screen: the help line under a password field whenever the user chooses a password (a new account, a reset). There is no other rule: any characters count.
+  ///
+  /// In en, this message translates to:
+  /// **'At least {count} characters'**
+  String passwordRule(int count);
+
+  /// Sign-in screen: what a screen reader announces for the eye button at the end of a password field, which shows the password as typed.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get showPassword;
+
+  /// Sign-in screen: what a screen reader announces for the eye button at the end of a password field while the password is shown, which hides it again.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get hidePassword;
+
+  /// Sign-in screen, "I have an account": the button under the email and password that signs in.
   ///
   /// In en, this message translates to:
   /// **'Sign in'**
   String get signInButton;
 
-  /// Sign-in screen, second step: button that goes back to the first step to type another email address.
+  /// Sign-in screen, last step of onboarding: the button under the email and password that creates the account. A code to confirm the address is mailed next.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get createAccountButton;
+
+  /// Sign-in screen: a small button under the sign-in button that mails a code to the address typed above, to choose a new password.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPasswordButton;
+
+  /// Sign-in screen, after creating an account: tells the user a six-digit code is on its way to their address, above the field to type it into. The account opens once the code is typed.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a code to {email}. Enter it to confirm your address and open your account.'**
+  String confirmationSentMessage(String email);
+
+  /// Sign-in screen, after "Forgot password?": a six-digit code is on its way if the address has an account (the screen cannot know), above the fields for the code and the new password.
+  ///
+  /// In en, this message translates to:
+  /// **'If there is an account for {email}, we sent it a code. Enter the code and choose a new password.'**
+  String resetSentMessage(String email);
+
+  /// Sign-in screen: the label of the field for the six-digit code from the email.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get codeLabel;
+
+  /// Sign-in screen, after creating an account: button that checks the code just typed and opens the account.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirmButton;
+
+  /// Sign-in screen, resetting a forgotten password: button that saves the new password and signs in.
+  ///
+  /// In en, this message translates to:
+  /// **'Save password'**
+  String get savePasswordButton;
+
+  /// Sign-in screen, at a code step: button that mails a fresh code, for a mail that did not arrive or a code that expired.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a new code'**
+  String get resendCodeButton;
+
+  /// Sign-in screen, at a code step: confirms that "Send a new code" worked.
+  ///
+  /// In en, this message translates to:
+  /// **'A new code is on its way.'**
+  String get codeResentMessage;
+
+  /// Sign-in screen, resetting a forgotten password: shown when the code was right but the new password could not be saved, so the user picks it once more.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a new password for {email}.'**
+  String newPasswordPrompt(String email);
+
+  /// Sign-in screen, at a code step: button that goes back to the email and password to type another address.
   ///
   /// In en, this message translates to:
   /// **'Use a different email'**
   String get changeEmailButton;
 
-  /// Sign-in screen error, first step: the sign-in service refused to send another code because too many were sent recently.
+  /// Sign-in screen error: the sign-in service refused to mail another code because too many were sent recently.
   ///
   /// In en, this message translates to:
   /// **'Too many codes were requested. Please try again later.'**
@@ -227,23 +287,41 @@ abstract class AuthLocalizations {
   /// **'Too many attempts. Wait a few minutes and try again.'**
   String get tooManyAttemptsMessage;
 
-  /// Sign-in screen error, first step: the sign-in service refused to send a code to the address typed, most likely because it is not a real address.
+  /// Sign-in screen error: the sign-in service refused to mail the address typed (to create an account, or for a code), most likely because it is not a real address.
   ///
   /// In en, this message translates to:
-  /// **'Could not send a code to that email. Check the address and try again.'**
+  /// **'Could not send a mail to that address. Check it and try again.'**
   String get couldNotSendMessage;
 
-  /// Sign-in screen error, second step: the six-digit code the user typed did not sign them in.
+  /// Sign-in screen error, at a code step: the six-digit code the user typed was not accepted. "Send a new one" points at the "Send a new code" button.
   ///
   /// In en, this message translates to:
-  /// **'That code is wrong or has expired. Request a new one if needed.'**
+  /// **'That code is wrong or has expired. Send a new one if needed.'**
   String get wrongCodeMessage;
 
-  /// Sign-in screen error, second step for the app stores' review accounts: the password did not sign them in.
+  /// Sign-in screen error: the email and password did not sign in. The service does not say which of the two is wrong, so neither may be blamed alone. "Reset your password" points at "Forgot password?".
   ///
   /// In en, this message translates to:
-  /// **'That password was not accepted.'**
+  /// **'That email and password don’t match an account. Check both, or reset your password.'**
   String get wrongPasswordMessage;
+
+  /// Sign-in screen error: the sign-in service refused a new password as too weak.
+  ///
+  /// In en, this message translates to:
+  /// **'That password is too short. Use at least {count} characters.'**
+  String weakPasswordMessage(int count);
+
+  /// Sign-in screen error, last step of onboarding: the user tried to create an account for an address that has one, and the password typed is not that account's. "Reset it" points at "Forgot password?".
+  ///
+  /// In en, this message translates to:
+  /// **'There is already an account for this email. Enter its password, or reset it.'**
+  String get accountExistsMessage;
+
+  /// Sign-in screen error, resetting a forgotten password: the code was right, but saving the new password failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your new password could not be saved. Try again.'**
+  String get passwordNotSavedMessage;
 
   /// Sign-in screen error, any step: no answer from the sign-in service at all (offline, timeout).
   ///
@@ -251,19 +329,13 @@ abstract class AuthLocalizations {
   /// **'Could not reach the sign-in service.'**
   String get unreachableMessage;
 
-  /// Sign-in screen error, first step, for a returning user: there is no account for this address. emotely speaks as "I". "Get started" is the welcome screen's first button, which begins onboarding; quote it exactly as that button is translated.
-  ///
-  /// In en, this message translates to:
-  /// **'I don’t know this email yet – tap Get started to begin.'**
-  String get noAccountMessage;
-
-  /// Sign-in screen error, first step: signing in with Apple or Google failed (not a dismissal). The email code below is the other way in.
+  /// Sign-in screen error: signing in with Apple or Google failed (not a dismissal). The email and password below are the other way in.
   ///
   /// In en, this message translates to:
   /// **'That sign-in did not go through. Try again, or use your email.'**
   String get providerFailedMessage;
 
-  /// Sign-in screen error, email or password step: the invisible security check that runs before a code is sent or a password is checked (Cloudflare Turnstile) failed, or the sign-in service refused its result. Nothing the user typed is wrong, so it must not sound like a wrong address or password; trying again runs a fresh check. emotely speaks as "I".
+  /// Sign-in screen error: the invisible security check that runs before an account is created, a password is checked or a code is mailed (Cloudflare Turnstile) failed, or the sign-in service refused its result. Nothing the user typed is wrong, so it must not sound like a wrong address or password; trying again runs a fresh check. emotely speaks as "I".
   ///
   /// In en, this message translates to:
   /// **'I couldn’t confirm that a person is asking. Try again in a moment.'**

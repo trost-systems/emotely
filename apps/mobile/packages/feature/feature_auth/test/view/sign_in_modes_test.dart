@@ -39,9 +39,10 @@ void main() {
       expect(robot.headingText, robot.strings.signUpTitle);
     });
 
-    testWidgets('asks for a code that creates the account when there is '
-        'none', (tester) async {
-      final supabase = SupabaseStub()..script(otp: [codeSent()]);
+    testWidgets('creates an account with the email and password', (
+      tester,
+    ) async {
+      final supabase = SupabaseStub()..script(signUp: [accountCreated()]);
       final robot = SignInRobot(
         tester,
         supabase: supabase,
@@ -50,9 +51,19 @@ void main() {
         name: 'Peter',
       );
       await robot.launch();
-      await robot.requestCode();
 
-      expect(supabase.bodies('/auth/v1/otp').single['create_user'], isTrue);
+      expect(
+        tester
+            .widget<Text>(
+              find.descendant(of: robot.submit, matching: find.byType(Text)),
+            )
+            .data,
+        robot.strings.createAccountButton,
+      );
+      await robot.submitCredentials();
+
+      expect(supabase.to('POST /auth/v1/signup'), hasLength(1));
+      expect(supabase.to('POST /auth/v1/token'), isEmpty);
       expect(robot.codeField, findsOneWidget);
     });
 
@@ -90,41 +101,37 @@ void main() {
       expect(find.text(robot.strings.signUpBody), findsNothing);
     });
 
-    testWidgets('asks for a code that never creates an account', (
-      tester,
-    ) async {
-      final supabase = SupabaseStub()..script(otp: [codeSent()]);
-      final robot = SignInRobot(tester, supabase: supabase, agent: AgentStub());
-      await robot.launch();
-      await robot.requestCode();
-
-      expect(supabase.bodies('/auth/v1/otp').single['create_user'], isFalse);
-    });
-
-    testWidgets('tells an address without an account to get started', (
-      tester,
-    ) async {
+    testWidgets('signs in, and never creates an account', (tester) async {
       final supabase = SupabaseStub()
         ..script(
-          otp: [
-            // What GoTrue answers a code asked for with create_user false
-            // for an address it does not know.
+          password: [
             authRefused(
-              statusCode: 422,
-              errorCode: 'otp_disabled',
-              message: 'Signups not allowed for otp',
+              statusCode: 400,
+              errorCode: 'invalid_credentials',
+              message: 'Invalid login credentials',
             ),
           ],
         );
       final robot = SignInRobot(tester, supabase: supabase, agent: AgentStub());
       await robot.launch();
-      await robot.requestCode();
 
-      robot.expectError(
-        SignInProblem.noAccount,
-        robot.strings.noAccountMessage,
+      expect(
+        tester
+            .widget<Text>(
+              find.descendant(of: robot.submit, matching: find.byType(Text)),
+            )
+            .data,
+        robot.strings.signInButton,
       );
-      expect(robot.emailField, findsOneWidget);
+      // Its password is whatever the account has: no rule is shown.
+      expect(find.text(robot.strings.passwordRule(10)), findsNothing);
+      await robot.submitCredentials();
+
+      expect(supabase.to('POST /auth/v1/signup'), isEmpty);
+      robot.expectError(
+        SignInProblem.wrongPassword,
+        robot.strings.wrongPasswordMessage,
+      );
     });
 
     testWidgets('goes back to Welcome', (tester) async {

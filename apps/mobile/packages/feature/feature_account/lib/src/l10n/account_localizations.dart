@@ -536,11 +536,11 @@ abstract class AccountLocalizations {
   /// **'Hidden by Apple'**
   String get signInHiddenByApple;
 
-  /// Profile screen, under the address: the account signs in with a code sent by email.
+  /// Profile screen, under the address: the account signs in with its email address and a password. "Codes" are the six-digit codes emotely mails to confirm the address or reset the password.
   ///
   /// In en, this message translates to:
-  /// **'Via email code. This is where sign-in codes and account mail go.'**
-  String get signInViaEmailCode;
+  /// **'Via email and password. This is where codes and account mail go.'**
+  String get signInViaEmail;
 
   /// Profile screen, under the address: the account signs in with Google.
   ///

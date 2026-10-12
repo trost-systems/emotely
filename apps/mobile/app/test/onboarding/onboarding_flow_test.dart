@@ -61,13 +61,20 @@ void main() {
     }
   }
 
-  Future<void> signUpWithCode(WidgetTester tester) async {
+  /// A new account: the email and a password, then the code mailed to
+  /// confirm the address. The Supabase stub must have `signUp:` and
+  /// `verify:` rounds scripted.
+  Future<void> signUp(WidgetTester tester) async {
     await tester.enterText(key(SignInPage.emailKey), SupabaseStub.email);
+    await tester.enterText(
+      key(SignInPage.passwordKey),
+      'correct horse battery staple',
+    );
     await tester.pump();
-    await tap(tester, key(SignInPage.sendCodeKey));
+    await tap(tester, key(SignInPage.submitKey));
     await tester.enterText(key(SignInPage.codeKey), '123456');
     await tester.pump();
-    await tap(tester, key(SignInPage.signInKey));
+    await tap(tester, key(SignInPage.confirmKey));
   }
 
   String heading(WidgetTester tester) =>
@@ -83,7 +90,7 @@ void main() {
       tester,
     ) async {
       final supabase = SupabaseStub()
-        ..script(otp: [codeSent()], verify: [sessionGranted()])
+        ..script(signUp: [accountCreated()], verify: [sessionGranted()])
         // A new account: no name yet, and no consent yet.
         ..always(profileRead, rows(const []))
         ..always(consentRead, consentStands(granted: false));
@@ -108,9 +115,10 @@ void main() {
         signInStrings(tester).signUpTitleWithName('Peter'),
       );
 
-      await signUpWithCode(tester);
+      await signUp(tester);
 
-      expect(supabase.bodies('/auth/v1/otp').single['create_user'], isTrue);
+      expect(supabase.bodies('/auth/v1/signup'), hasLength(1));
+      expect(supabase.bodies('/auth/v1/verify').single['type'], 'signup');
       expect(supabase.bodies(profilesPath), [
         {'display_name': 'Peter', 'name_is_placeholder': false},
       ]);
@@ -137,7 +145,7 @@ void main() {
       tester,
     ) async {
       final supabase = SupabaseStub()
-        ..script(otp: [codeSent()], verify: [sessionGranted()])
+        ..script(signUp: [accountCreated()], verify: [sessionGranted()])
         ..always(profileRead, rows(const []))
         ..always(consentRead, consentStands(granted: false));
       await launch(tester, supabase);
@@ -151,7 +159,7 @@ void main() {
         signInStrings(tester).signUpTitleWithName(placeholder),
       );
 
-      await signUpWithCode(tester);
+      await signUp(tester);
 
       expect(supabase.bodies(profilesPath), [
         {'display_name': placeholder, 'name_is_placeholder': true},
@@ -207,15 +215,16 @@ void main() {
   });
 
   group('"I have an account"', () {
-    testWidgets('welcomes back, and tells an unknown address to get '
-        'started', (tester) async {
+    testWidgets('welcomes back, signs in and never creates an account', (
+      tester,
+    ) async {
       final supabase = SupabaseStub()
         ..script(
-          otp: [
+          password: [
             authRefused(
-              statusCode: 422,
-              errorCode: 'otp_disabled',
-              message: 'Signups not allowed for otp',
+              statusCode: 400,
+              errorCode: 'invalid_credentials',
+              message: 'Invalid login credentials',
             ),
           ],
         );
@@ -225,12 +234,13 @@ void main() {
 
       expect(heading(tester), signInStrings(tester).signInTitle);
 
-      await tester.enterText(key(SignInPage.emailKey), 'new@example.com');
-      await tester.pump();
-      await tap(tester, key(SignInPage.sendCodeKey));
+      await signInThroughTheScreen(tester, email: 'new@example.com');
 
-      expect(supabase.bodies('/auth/v1/otp').single['create_user'], isFalse);
-      expect(find.text(signInStrings(tester).noAccountMessage), findsOneWidget);
+      expect(supabase.to('POST /auth/v1/signup'), isEmpty);
+      expect(
+        find.text(signInStrings(tester).wrongPasswordMessage),
+        findsOneWidget,
+      );
 
       await tap(tester, key(SignInPage.backKey));
 
@@ -240,7 +250,7 @@ void main() {
     testWidgets('asks an account without a name for one, once, then shows '
         'the journal', (tester) async {
       final supabase = SupabaseStub()
-        ..script(otp: [codeSent()], verify: [sessionGranted()])
+        ..script(password: [sessionGranted()])
         ..rest(profileRead, [rows(const [])])
         ..always(profileRead, rows([profileRow(displayName: 'Peter')]));
       await launch(tester, supabase);
@@ -261,8 +271,7 @@ void main() {
     testWidgets('goes straight to the journal for an account with a name', (
       tester,
     ) async {
-      final supabase = SupabaseStub()
-        ..script(otp: [codeSent()], verify: [sessionGranted()]);
+      final supabase = SupabaseStub()..script(password: [sessionGranted()]);
       await launch(tester, supabase);
 
       await signInThroughTheScreen(tester);
@@ -319,11 +328,7 @@ void main() {
       'sign-in', (tester) async {
     final semantics = tester.ensureSemantics();
     final supabase = SupabaseStub()
-      ..script(
-        otp: [codeSent()],
-        verify: [sessionGranted()],
-        logout: [signedOut()],
-      );
+      ..script(password: [sessionGranted()], logout: [signedOut()]);
     await launch(tester, supabase);
     await signInThroughTheScreen(tester);
 
@@ -337,7 +342,7 @@ void main() {
     final strings = signInStrings(tester);
     expect(find.text(strings.lastUsedTag), findsOneWidget);
     expect(
-      find.bySemanticsLabel(strings.lastUsedButton(strings.sendCodeButton)),
+      find.bySemanticsLabel(strings.lastUsedButton(strings.signInButton)),
       findsOneWidget,
     );
     semantics.dispose();

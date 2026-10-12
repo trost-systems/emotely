@@ -58,18 +58,30 @@ class const ErrorReporter({required final PostHogGate gate}) {
     properties: {'session_id': ?sessionId},
   );
 
-  /// Supabase refused to send a sign-in code.
-  Future<void> codeRequestFailed(Exception error, StackTrace stackTrace) =>
-      _report(error, stackTrace, step: 'sign_in_code_request');
+  /// Supabase did not create the account asked for (never the address or
+  /// the password: an `AuthException` goes out with its message withheld).
+  Future<void> signUpFailed(Exception error, StackTrace stackTrace) =>
+      _report(error, stackTrace, step: 'sign_up');
 
-  /// Supabase refused the code the user typed.
+  /// Supabase refused to mail a code: a password reset's, or a
+  /// confirmation code sent again.
+  Future<void> codeSendFailed(Exception error, StackTrace stackTrace) =>
+      _report(error, stackTrace, step: 'auth_code_send');
+
+  /// Supabase refused the code the user typed, confirming an account or
+  /// resetting a password.
   Future<void> codeVerifyFailed(Exception error, StackTrace stackTrace) =>
-      _report(error, stackTrace, step: 'sign_in_code_verify');
+      _report(error, stackTrace, step: 'auth_code_verify');
 
-  /// Supabase refused a review account's password (never the password
-  /// itself: an `AuthException` goes out with its message withheld).
+  /// Supabase refused an email and password (never the password itself: an
+  /// `AuthException` goes out with its message withheld).
   Future<void> passwordSignInFailed(Exception error, StackTrace stackTrace) =>
       _report(error, stackTrace, step: 'sign_in_password');
+
+  /// A new password, after a reset code signed the account in, could not
+  /// be saved.
+  Future<void> passwordSaveFailed(Exception error, StackTrace stackTrace) =>
+      _report(error, stackTrace, step: 'password_save');
 
   /// Signing in with [provider] failed, on the platform's side or when
   /// Supabase checked its token (never the token itself: every such

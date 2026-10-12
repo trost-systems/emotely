@@ -1,4 +1,5 @@
 import 'package:feature_auth/src/bloc/auth_bloc.dart';
+import 'package:feature_auth/src/navigator.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'
@@ -11,63 +12,59 @@ import 'sign_in_robot.dart';
 final iOS = TargetPlatformVariant.only(TargetPlatform.iOS);
 
 void main() {
-  // The sign-in mail (supabase/templates/email_code.html) is written in
-  // the language the account keeps as `user_metadata.app_locale`, English
-  // when it keeps none. The app shows the screen in one language; the
-  // account learns it when a code is asked for (a new account) and after
-  // every sign-in (an existing one).
-  group('The sign-in mail language', () {
-    const code = '482913';
-
+  // The account's mails (supabase/templates/) are written in the language
+  // it keeps as `user_metadata.app_locale`, English when it keeps none. The
+  // app shows the screen in one language; the account learns it with the
+  // sign-up (its confirmation mail is the first) and after every sign-in.
+  group('The language of the account’s mails', () {
     Map<String, dynamic>? languageKept(SupabaseStub supabase) =>
-        [for (final body in supabase.bodies('/auth/v1/user')) body['data']]
-                .singleOrNull
+        [
+              for (final body in supabase.bodies('/auth/v1/user'))
+                if (body.containsKey('data')) body['data'],
+            ].singleOrNull
             as Map<String, dynamic>?;
 
-    testWidgets('is asked for with the code, in the screen’s language', (
+    testWidgets('goes with a new account, in the screen’s language', (
       tester,
     ) async {
-      final supabase = SupabaseStub()..script(otp: [codeSent()]);
-      final robot = SignInRobot(tester, supabase: supabase, agent: AgentStub());
-      await robot.launch();
-
-      await robot.requestCode();
-
-      // Supabase keeps it only for an account the request creates.
-      expect(supabase.bodies('/auth/v1/otp').single['data'], {
-        'app_locale': 'de',
-      });
-    });
-
-    testWidgets('follows the language the screen is shown in', (tester) async {
-      final supabase = SupabaseStub()..script(otp: [codeSent()]);
+      final supabase = SupabaseStub()..script(signUp: [accountCreated()]);
       final robot = SignInRobot(
         tester,
         supabase: supabase,
         agent: AgentStub(),
+        mode: SignInMode.signUp,
+      );
+      await robot.launch();
+
+      await robot.submitCredentials();
+
+      expect(robot.posted('signup').single['data'], {'app_locale': 'de'});
+    });
+
+    testWidgets('follows the language the screen is shown in', (tester) async {
+      final supabase = SupabaseStub()..script(signUp: [accountCreated()]);
+      final robot = SignInRobot(
+        tester,
+        supabase: supabase,
+        agent: AgentStub(),
+        mode: SignInMode.signUp,
         locale: const Locale('en'),
       );
       await robot.launch();
 
-      await robot.requestCode();
+      await robot.submitCredentials();
 
-      expect(supabase.bodies('/auth/v1/otp').single['data'], {
-        'app_locale': 'en',
-      });
+      expect(robot.posted('signup').single['data'], {'app_locale': 'en'});
     });
 
     testWidgets('is kept on an account that signs in without it', (
       tester,
     ) async {
-      final supabase = SupabaseStub()
-        ..script(otp: [codeSent()], verify: [sessionGranted()]);
+      final supabase = SupabaseStub()..script(password: [sessionGranted()]);
       final robot = SignInRobot(tester, supabase: supabase, agent: AgentStub());
       await robot.launch();
 
-      await robot.requestCode();
-      await robot.enterCode(code);
-      await robot.tapSignIn();
-      await robot.settle();
+      await robot.submitCredentials();
 
       expect(robot.home, findsOneWidget);
       expect(languageKept(supabase), {'app_locale': 'de'});
@@ -81,18 +78,14 @@ void main() {
     ) async {
       final supabase = SupabaseStub()
         ..script(
-          otp: [codeSent()],
-          verify: [
+          password: [
             sessionGranted(userMetadata: {'app_locale': 'en'}),
           ],
         );
       final robot = SignInRobot(tester, supabase: supabase, agent: AgentStub());
       await robot.launch();
 
-      await robot.requestCode();
-      await robot.enterCode(code);
-      await robot.tapSignIn();
-      await robot.settle();
+      await robot.submitCredentials();
 
       expect(languageKept(supabase), {'app_locale': 'de'});
     });
@@ -100,21 +93,30 @@ void main() {
     testWidgets('is not written again when the account has it', (tester) async {
       final supabase = SupabaseStub()
         ..script(
-          otp: [codeSent()],
-          verify: [
+          password: [
             sessionGranted(userMetadata: {'app_locale': 'de'}),
           ],
         );
       final robot = SignInRobot(tester, supabase: supabase, agent: AgentStub());
       await robot.launch();
 
-      await robot.requestCode();
-      await robot.enterCode(code);
-      await robot.tapSignIn();
-      await robot.settle();
+      await robot.submitCredentials();
 
       expect(robot.home, findsOneWidget);
       expect(supabase.to(SupabaseStub.updateUserEndpoint), isEmpty);
+    });
+
+    testWidgets('is kept after a reset', (tester) async {
+      final supabase = SupabaseStub()
+        ..script(recover: [codeSent()], verify: [sessionGranted()]);
+      final robot = SignInRobot(tester, supabase: supabase, agent: AgentStub());
+      await robot.launch();
+
+      await robot.requestReset();
+      await robot.resetWith();
+
+      expect(robot.home, findsOneWidget);
+      expect(languageKept(supabase), {'app_locale': 'de'});
     });
 
     testWidgets('is kept after Sign in with Google', (tester) async {
@@ -143,38 +145,14 @@ void main() {
       expect(languageKept(supabase), {'app_locale': 'de'});
     }, variant: iOS);
 
-    testWidgets('is kept after a review account’s password', (tester) async {
-      const reviewer = 'reviewer@example.com';
-      final supabase = SupabaseStub()
-        ..script(password: [sessionGranted(email: reviewer)]);
-      final robot = SignInRobot(
-        tester,
-        supabase: supabase,
-        agent: AgentStub(),
-        passwordAccounts: {reviewer},
-      );
-      await robot.launch();
-
-      await robot.submitEmail(reviewer);
-      await robot.enterPassword('a password');
-      await robot.tapPasswordSignIn();
-      await robot.settle();
-
-      expect(robot.home, findsOneWidget);
-      expect(languageKept(supabase), {'app_locale': 'de'});
-    });
-
     testWidgets('failing to keep it costs the sign-in nothing', (tester) async {
       final supabase = SupabaseStub()
-        ..script(otp: [codeSent()], verify: [sessionGranted()])
+        ..script(password: [sessionGranted()])
         ..rest(SupabaseStub.updateUserEndpoint, [authUnreachable()]);
       final robot = SignInRobot(tester, supabase: supabase, agent: AgentStub());
       await robot.launch();
 
-      await robot.requestCode();
-      await robot.enterCode(code);
-      await robot.tapSignIn();
-      await robot.settle();
+      await robot.submitCredentials();
 
       expect(robot.home, findsOneWidget);
       expect(robot.state, isA<AuthSignedIn>());

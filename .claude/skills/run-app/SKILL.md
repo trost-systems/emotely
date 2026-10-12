@@ -60,8 +60,7 @@ All configuration is `--dart-define`s, read in one place: `lib/app/environment.d
 | `POSTHOG_KEY` | empty = analytics off (the SDK skips setup) | PostHog project token (`phc_…`) |
 | `EMOTELY_SUPABASE_URL` | the hosted project | Supabase project URL; public (ADR 0010) |
 | `EMOTELY_SUPABASE_PUBLISHABLE_KEY` | the hosted project's key | Supabase publishable key; public, acts only under the signed-in user |
-| `SMOKE_EMAIL` | none | debug builds only: the one address asked for a password (the CLI sets it); the live integration test signs in with it too |
-| `SMOKE_PASSWORD` | none | integration_test only: the smoke user's password |
+| `SMOKE_EMAIL`, `SMOKE_PASSWORD` | none | integration_test only (`integration_test/environment.dart`): the smoke account the live test signs in as, through the ordinary sign-in screen. No app build reads them |
 | `EMOTELY_DEBUG_BANNER` | `true` | debug builds only: `false` hides Flutter's DEBUG banner (the CLI sets it, so screenshots look like the installed app) |
 
 Every secret lives in `apps/agent/.env.local` and is read **blind** — never
@@ -77,9 +76,10 @@ KEY=$(grep -E '^POSTHOG_KEY=' apps/agent/.env.local | cut -d= -f2- | tr -d '"' |
   anything else build and run by hand: `fvm flutter build ios --simulator`
   (plus the defines above) from `apps/mobile/app`, then the simulator tool's
   `launch` with `build/ios/iphonesimulator/Runner.app`, or `fvm flutter run
-  -d <device>`. On a device a person signs in with the emailed six-digit code;
-  against the local Supabase stack (supabase skill) the code shows up in
-  Inbucket at http://127.0.0.1:54324. The app renders a **blank screen** when
+  -d <device>`. On a device a person signs in with an email and a password;
+  a new account is confirmed, and a forgotten password reset, with a
+  six-digit code that the local Supabase stack (supabase skill) delivers to
+  Mailpit at http://127.0.0.1:54324. The app renders a **blank screen** when
   the `Runner.app` on disk came from `flutter test integration_test`: rebuild.
 - **Toolchain.** Flutter is pinned by FVM (`apps/mobile/app/.fvmrc`); call
   `fvm flutter` / `fvm dart` from `apps/mobile/app`. CocoaPods comes from the
@@ -119,8 +119,8 @@ curl -s -H "Authorization: Bearer $PHX" "https://eu.posthog.com/api/projects/262
 ```
 
 Error tracking answers on the same endpoint. Provoke a handled failure (the
-cheapest: request a sign-in code for an address Supabase refuses, e.g. a
-second request within 60 s), then list the `$exception` events since the run
+cheapest: sign in with a wrong password, which reports `sign_in_password`),
+then list the `$exception` events since the run
 started; the SDK stamps `$app_version`/`$app_build` and `ErrorReporter` adds
 `step`:
 

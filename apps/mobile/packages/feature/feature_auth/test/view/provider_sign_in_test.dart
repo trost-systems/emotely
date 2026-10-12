@@ -113,7 +113,7 @@ void main() {
 
       expect(robot.busy, findsOneWidget);
       expect(robot.canTapGoogle, isFalse);
-      expect(robot.sendCode, findsNothing);
+      expect(robot.submit, findsNothing);
 
       await robot.settle();
 

@@ -5,8 +5,8 @@ import process from "node:process";
 // per-PR suites never hit the network.
 //
 // The endpoint serves signed-in users only (ADR 0010), so the smoke signs in
-// as a dedicated user with a password. Password sign-in exists for this
-// probe alone; the app uses email codes.
+// as the smoke account, an ordinary confirmed email-and-password user like
+// anyone who signs up in the app (#187).
 
 const BASE = process.env["EMOTELY_AGENT_URL"] ?? "https://api.getemotely.com";
 const SUPABASE_URL = process.env["SUPABASE_URL"];

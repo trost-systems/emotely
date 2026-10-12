@@ -68,7 +68,6 @@ class PerfPaths(final WidgetTester tester, final FakeBackend backend) {
       build: testBuildInfo,
       agentUrl: FakeBackend.agentUrl,
       configUrl: FakeBackend.configUrl,
-      passwordAccounts: const {},
       google: googleClients,
       // Signed in already: no sign-in screen, so no human check to run.
       humanCheckToken: HumanCheckStub().token,
