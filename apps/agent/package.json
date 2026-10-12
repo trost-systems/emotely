@@ -14,20 +14,20 @@
     "smoke": "node scripts/live-smoke.ts"
   },
   "dependencies": {
-    "@ai-sdk/otel": "1.0.113",
+    "@ai-sdk/otel": "1.0.126",
     "@emotely/contract": "workspace:*",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/resources": "^2.11.0",
     "@opentelemetry/sdk-trace-base": "^2.11.0",
     "@opentelemetry/sdk-trace-node": "^2.11.0",
-    "@posthog/ai": "8.13.1",
+    "@posthog/ai": "8.13.4",
     "@vercel/functions": "^3.9.9",
-    "ai": "7.0.113",
+    "ai": "7.0.126",
     "jose": "6.2.12",
-    "posthog-node": "5.53.0",
+    "posthog-node": "5.55.0",
     "zod": "4.6.5"
   },
   "devDependencies": {
-    "@types/node": "^26.6.2"
+    "@types/node": "^26.6.3"
   }
 }
