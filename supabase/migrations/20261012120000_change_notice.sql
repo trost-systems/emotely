@@ -262,15 +262,19 @@ as $$
       and u.email_confirmed_at is not null
       and u.deleted_at is null
       and not u.is_anonymous
+      -- Google service accounts, the probes' signin-probe among them, are
+      -- no mailbox: the before-user-created hook's own rule, asked without
+      -- a provider so that not even its exception passes. Waiting applies
+      -- it too.
+      and not public.before_user_created(
+        jsonb_build_object('user', jsonb_build_object('email', u.email))
+      ) ? 'error'
   ), waiting as (
     select w.id, w.email, w.locale, w.confirmed_at
     from public.waitlist w
     where audience in ('waitlist', 'both') and w.confirmed_at is not null
-      -- Google service accounts, the probes' signin-probe among them, are
-      -- no mailbox: the before-user-created hook's own rule, asked without
-      -- a provider so that not even its exception passes.
       and not public.before_user_created(
-        jsonb_build_object('user', jsonb_build_object('email', u.email))
+        jsonb_build_object('user', jsonb_build_object('email', w.email))
       ) ? 'error'
   ), readers as (
     select
