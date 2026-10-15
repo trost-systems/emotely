@@ -26,7 +26,7 @@ dependencies:
   profile_repository: any
   # The method last used to sign in stays on the device, to tag it on the
   # sign-in screen (#204), in the store the usage-analytics choice uses.
-  shared_preferences: 2.5.5
+  shared_preferences: 2.5.6
   sign_in_with_apple: 8.2.0
   supabase_flutter: 3.0.0-dev.9
 

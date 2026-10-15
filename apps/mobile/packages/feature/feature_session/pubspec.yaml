@@ -44,7 +44,7 @@ dev_dependencies:
   http: 1.6.0
   # The emoji picker keeps its recents in shared_preferences; tests seed it
   # so the picker can load without a platform channel.
-  shared_preferences: 2.5.5
+  shared_preferences: 2.5.6
   supabase_flutter: 3.0.0-dev.9
   testing: any
 
