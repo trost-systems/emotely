@@ -61,19 +61,20 @@ final _spaces = RegExp(r'\s+', unicode: true);
 /// way", so the page never relays the distinction to its reader or its
 /// analytics.
 ///
-/// This does not *close* the oracle, and the page is not what opens it:
-/// `/auth/v1/otp` is public, the app's own sign-in calls it the same way,
-/// and a scripted caller reads the 422-vs-200 (or the send latency)
-/// straight from GoTrue whether this page exists or not. Closing it needs a
-/// server-side control — tracked in
-/// [#94](https://github.com/trost-systems/emotely/issues/94). What this page
-/// owes its reader is not to amplify it into a UI that answers the
-/// question for them, and that is what the shared copy does.
+/// The page is not what opens that oracle either: a scripted caller reads
+/// the 422-vs-200 (or the send latency) straight from GoTrue. What closes
+/// it, and keeps a script from spending the project's hourly mail quota,
+/// is the human check (#94): GoTrue refuses the request with `400
+/// captcha_failed` unless [captchaToken], a single-use Cloudflare Turnstile
+/// token, verifies with Cloudflare first, so every probe costs a solved
+/// check. That refusal is [CodeRequestOutcome.failed]; a retry asks
+/// Turnstile for a fresh token, since a spent one never verifies twice.
 Future<CodeRequestOutcome> requestDeletionCode(
   http.Client client, {
   required String email,
   required Uri supabaseUrl,
   required String publishableKey,
+  required String captchaToken,
 }) async {
   final http.Response response;
   try {
@@ -84,7 +85,11 @@ Future<CodeRequestOutcome> requestDeletionCode(
         'authorization': 'Bearer $publishableKey',
         'content-type': 'application/json',
       },
-      body: jsonEncode({'email': email, 'create_user': false}),
+      body: jsonEncode({
+        'email': email,
+        'create_user': false,
+        'gotrue_meta_security': {'captcha_token': captchaToken},
+      }),
     );
   } on http.ClientException {
     return CodeRequestOutcome.failed;

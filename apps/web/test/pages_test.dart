@@ -228,10 +228,39 @@ void main() {
       );
     });
 
+    testComponents(
+      "the privacy page names the deletion page's human check (#94)",
+      (tester) {
+        tester.pumpComponent(const Privacy());
+
+        // lib/turnstile_web.dart: Cloudflare's script loads on the deletion
+        // page, once its reader asks for a code, and nowhere else.
+        expect(find.textContaining('Cloudflare Turnstile'), findsComponents);
+        expect(
+          find.textContaining('only on the deletion page'),
+          findsComponents,
+        );
+        expect(find.textContaining('once you ask for a code'), findsComponents);
+        // What the Turnstile Privacy Addendum says it processes, and the
+        // part Cloudflare decides for itself.
+        expect(find.textContaining('TLS fingerprint'), findsComponents);
+        expect(
+          find.textContaining('improve its bot detection'),
+          findsComponents,
+        );
+        expect(find.textContaining('§ 25 (2) No. 2 TDDDG'), findsComponents);
+        // The old overclaims: PostHog is no longer the only outside script,
+        // and the providers are no longer four.
+        expect(find.textContaining('the only outside script'), findsNothing);
+        expect(find.textContaining('Four providers'), findsNothing);
+      },
+    );
+
     testComponents('the privacy page points at the deletion page', (tester) {
       tester.pumpComponent(const Privacy());
 
-      expect(find.textContaining('the deletion page'), findsOneComponent);
+      // The retention section links it; the human check names it too.
+      expect(find.textContaining('the deletion page'), findsComponents);
       expect(find.textContaining('Delete account'), findsComponents);
       // Truthful about backups, rather than promising none exist.
       expect(find.textContaining('retention window'), findsComponents);
@@ -1231,6 +1260,27 @@ void main() {
         find.textContaining('von dieser Website selbst ausgeliefert'),
         findsOneComponent,
       );
+    });
+
+    testComponents('names the human check on the deletion page (#94)', (
+      tester,
+    ) {
+      tester.pumpComponent(const PrivacyDe());
+
+      expect(find.textContaining('Cloudflare Turnstile'), findsComponents);
+      expect(find.textContaining('nur auf der Löschseite'), findsComponents);
+      expect(
+        find.textContaining('sobald du einen Code anforderst'),
+        findsComponents,
+      );
+      expect(find.textContaining('TLS-Fingerabdruck'), findsComponents);
+      expect(
+        find.textContaining('seine Bot-Erkennung zu verbessern'),
+        findsComponents,
+      );
+      expect(find.textContaining('§ 25 Abs. 2 Nr. 2 TDDDG'), findsComponents);
+      expect(find.textContaining('das einzige fremde Skript'), findsNothing);
+      expect(find.textContaining('Vier Anbieter'), findsNothing);
     });
 
     testComponents('answers the Art. 13 questions a reader cannot infer', (
