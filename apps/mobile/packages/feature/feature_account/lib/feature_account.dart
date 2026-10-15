@@ -16,6 +16,7 @@
 library;
 
 export 'src/account/account_device_data.dart';
+export 'src/account/sign_in_grants.dart';
 export 'src/account/view/account_page.dart';
 export 'src/consent/bloc/consent_bloc.dart';
 export 'src/consent/consent_outcome.dart';

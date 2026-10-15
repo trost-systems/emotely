@@ -239,4 +239,70 @@ void main() {
       await expectLater(client.advance(), throwsA(isA<TimeoutException>()));
     });
   });
+
+  group('AgentClient.revokeApple', () {
+    const code = 'apple-code';
+
+    test(
+      "posts the code beside the session's endpoint, with the token",
+      () async {
+        final stub = AgentStub()
+          ..accessToken = (() => 'jwt-123')
+          ..script([revoked()]);
+
+        await stub.agentClient.revokeApple(authorizationCode: code);
+
+        expect(stub.lastRequest, {'authorization_code': code});
+        expect(stub.lastHeaders['authorization'], 'Bearer jwt-123');
+        verify(
+          stub.client.post(
+            AgentStub.revokeAppleEndpoint,
+            headers: anyNamed('headers'),
+            body: anyNamed('body'),
+          ),
+        ).called(1);
+      },
+    );
+
+    test('surfaces a refusal by its code', () async {
+      final stub = AgentStub()
+        ..script([refused(403, AgentErrorCode.appleIdentityMismatch)]);
+
+      await expectLater(
+        stub.agentClient.revokeApple(authorizationCode: code),
+        throwsA(
+          isA<AgentException>().having(
+            (e) => e.code,
+            'code',
+            AgentErrorCode.appleIdentityMismatch,
+          ),
+        ),
+      );
+    });
+
+    test('renews a lapsed sign-in once and resends the same code', () async {
+      var token = 'expired';
+      final stub = AgentStub()
+        ..accessToken = (() => token)
+        ..refreshAccessToken = (() => Future.sync(() => token = 'renewed'))
+        ..script([refused(401, AgentErrorCode.unauthorized), revoked()]);
+
+      await stub.agentClient.revokeApple(authorizationCode: code);
+
+      expect(stub.headers.map((h) => h['authorization']), [
+        'Bearer expired',
+        'Bearer renewed',
+      ]);
+      expect(stub.requests[1], stub.requests[0]);
+    });
+
+    test('takes any answer but the agent’s yes as a failure', () async {
+      final stub = AgentStub()..script([raw('{"status":"maybe"}', 200)]);
+
+      await expectLater(
+        stub.agentClient.revokeApple(authorizationCode: code),
+        throwsA(isA<AgentException>()),
+      );
+    });
+  });
 }

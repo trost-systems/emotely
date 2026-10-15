@@ -38,7 +38,7 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         'This notice covers the emotely mobile app (listed on Google Play as '
         '"Reflect Therapy AI: emotely") for iOS and Android. The web site at '
         'getemotely.com and its waitlist have a separate notice. Last '
-        'updated 2 October 2026.',
+        'updated 3 October 2026.',
       ),
     ]),
 
@@ -517,6 +517,20 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
       .text(
         ', which mails you a code and deletes the account once you type it '
         'back in.',
+      ),
+    ]),
+    // #193: App Store Guideline 5.1.1(v) asks for the Apple grant to be
+    // revoked; the legacy app disconnected Google the same way.
+    p([
+      .text(
+        'If the account signs in with Apple, the app asks Apple for a fresh '
+        'one-time code when you delete it in the app, and our server sends '
+        'that code straight back to Apple so Apple removes emotely’s access '
+        'to your Apple account; nothing from it is stored. If it signs in '
+        'with Google, the app asks Google directly to disconnect emotely '
+        'from your Google account. If either cannot be done — or you delete '
+        'on the deletion page — the account is still deleted, and you can '
+        'remove emotely in that account’s settings yourself.',
       ),
     ]),
     p([
