@@ -28,7 +28,7 @@ dependencies:
   # sign-in screen (#204), in the store the usage-analytics choice uses.
   shared_preferences: 2.5.5
   sign_in_with_apple: 8.2.0
-  supabase_flutter: 3.0.0-dev.7
+  supabase_flutter: 3.0.0-dev.9
 
 dev_dependencies:
   analysis: any

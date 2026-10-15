@@ -73,7 +73,7 @@ dependencies:
   posthog_flutter: 5.39.0
   profile_repository: any
   pub_semver: 2.2.1
-  supabase_flutter: 3.0.0-dev.7
+  supabase_flutter: 3.0.0-dev.9
   url_launcher: 6.3.2
 
 dev_dependencies:

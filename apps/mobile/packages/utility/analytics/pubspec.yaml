@@ -18,7 +18,7 @@ dependencies:
   # The usage-analytics choice lives on the device until an account exists
   # (#204); the async API reads the platform store directly, no cache.
   shared_preferences: 2.5.5
-  supabase_flutter: 3.0.0-dev.7
+  supabase_flutter: 3.0.0-dev.9
 
 dev_dependencies:
   analysis: any
