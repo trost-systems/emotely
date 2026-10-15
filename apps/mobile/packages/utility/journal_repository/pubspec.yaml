@@ -14,7 +14,7 @@ dependencies:
   freezed_annotation: 3.1.0
   get_it: 9.3.0
   json_annotation: 4.12.0
-  supabase_flutter: 3.0.0-dev.7
+  supabase_flutter: 3.0.0-dev.9
   supabase_schema: any
 
 dev_dependencies:
