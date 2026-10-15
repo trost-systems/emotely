@@ -479,9 +479,21 @@ jobs:
             }
           done
 
+  # Migration order: `supabase db push` refuses a migration older than the
+  # hosted project's newest, so one that sorts before main's latest would
+  # merge green and fail supabase-deploy (#296). Pull requests only.
+  migration-order:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - run: bash scripts/migration-order.sh "origin/${{ github.base_ref }}"
+
   # The single required check. Green only if every job succeeded or was skipped.
   ci-ok:
-    needs: [changes, agent, app, ast-grep, fastlane, lints, scripts, supabase, web]
+    needs: [changes, agent, app, ast-grep, fastlane, lints, migration-order, scripts, supabase, web]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
