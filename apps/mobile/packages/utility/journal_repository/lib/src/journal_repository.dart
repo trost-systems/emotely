@@ -146,9 +146,9 @@ class const JournalRepository({required final SupabaseClient supabase}) {
             journalDay: _journalDay(startedAt),
           ),
         )
-        .select([Sessions.id])
+        .selectOnly([Sessions.id])
         .single();
-    return created.id;
+    return created.read(Sessions.id);
   }
 
   /// Files the [entry] and closes the session in one transaction on the
