@@ -148,7 +148,7 @@ class const JournalRepository({required final SupabaseClient supabase}) {
         )
         .selectOnly([Sessions.id])
         .single();
-    final String id = created.read(Sessions.id);
+    final id = created.read(Sessions.id);
     return id;
   }
 
