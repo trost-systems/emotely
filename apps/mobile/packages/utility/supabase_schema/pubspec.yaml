@@ -13,4 +13,4 @@ dev_dependencies:
   analysis: any
   # Generates lib/src/supabase_schema.g.dart from the running local database
   # (`melos run schema:generate`); CI regenerates it and fails on drift.
-  supabase_typegen: 0.4.0
+  supabase_typegen: 0.5.1

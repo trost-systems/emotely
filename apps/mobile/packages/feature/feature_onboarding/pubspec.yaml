@@ -25,7 +25,7 @@ dependencies:
   profile_repository: any
   # The progress through onboarding lives on the device until an account
   # exists (#204, ADR 0019), in the store the usage-analytics choice uses.
-  shared_preferences: 2.5.5
+  shared_preferences: 2.5.6
 
 dev_dependencies:
   analysis: any
