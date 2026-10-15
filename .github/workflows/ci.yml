@@ -462,7 +462,11 @@ jobs:
         with:
           version: 2.116.0
       - run: supabase link --project-ref "${{ vars.SUPABASE_PROJECT_REF }}"
-      - run: supabase db push
+      # --include-all: apply local migrations whose version sits before the
+      # latest already on remote (e.g. 20261003183020_journal_day merged after
+      # 20261003200000_before_user_created was already applied in production).
+      # Without it, db push refuses and production drifts.
+      - run: supabase db push --include-all
       - run: supabase config push --yes
       # A second push must find nothing left to change. A value the
       # Management API stores differently from config.toml (a comma list it
