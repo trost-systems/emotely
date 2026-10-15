@@ -148,7 +148,8 @@ class const JournalRepository({required final SupabaseClient supabase}) {
         )
         .selectOnly([Sessions.id])
         .single();
-    return created.read(Sessions.id);
+    final String id = created.read(Sessions.id);
+    return id;
   }
 
   /// Files the [entry] and closes the session in one transaction on the
