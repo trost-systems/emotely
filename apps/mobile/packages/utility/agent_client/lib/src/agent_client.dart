@@ -115,7 +115,12 @@ class const AgentClient({
     if (response.statusCode != 200) {
       throw _refusal(response.statusCode, text);
     }
-    return jsonDecode(text) as Map<String, dynamic>;
+    // Anything but an object is not the agent's answer: an AgentException,
+    // which callers handle, rather than a cast's TypeError, which they do not.
+    if (jsonDecode(text) case final Map<String, dynamic> json) {
+      return json;
+    }
+    throw const AgentException(200, 'unexpected response');
   }
 
   static AgentException _refusal(int statusCode, String body) {

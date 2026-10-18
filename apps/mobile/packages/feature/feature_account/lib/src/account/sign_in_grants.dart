@@ -13,7 +13,7 @@ enum SignInGrant() {
 /// Signing in belongs to the auth feature, and a feature never knows
 /// another feature (ADR 0015). So, like `AccountDeviceData`, this feature
 /// says when and the app says how: it implements this in its composition
-/// root and registers it as a singleton; a test fakes it.
+/// root and registers it; a test fakes it.
 abstract class SignInGrants() {
   /// Whether [revoke] will show Apple's sheet: the account signs in with
   /// Apple and this device has the sheet (iOS). The confirmation says so

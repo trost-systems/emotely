@@ -296,13 +296,15 @@ void main() {
       expect(stub.requests[1], stub.requests[0]);
     });
 
-    test('takes any answer but the agent’s yes as a failure', () async {
-      final stub = AgentStub()..script([raw('{"status":"maybe"}', 200)]);
+    for (final body in ['{"status":"maybe"}', '["revoked"]', '"revoked"']) {
+      test('takes $body, not the agent’s yes, as a failure', () async {
+        final stub = AgentStub()..script([raw(body, 200)]);
 
-      await expectLater(
-        stub.agentClient.revokeApple(authorizationCode: code),
-        throwsA(isA<AgentException>()),
-      );
-    });
+        await expectLater(
+          stub.agentClient.revokeApple(authorizationCode: code),
+          throwsA(isA<AgentException>()),
+        );
+      });
+    }
   });
 }

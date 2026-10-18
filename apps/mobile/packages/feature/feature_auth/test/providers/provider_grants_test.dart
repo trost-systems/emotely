@@ -128,6 +128,21 @@ void main() {
       ]);
     }, variant: iOS);
 
+    testWidgets('reports and leaves the Apple grant when the agent answers '
+        'something else', (tester) async {
+      final grants = _Grants(providers: ['apple']);
+      grants.apple.script([appleToken('apple-id-token')]);
+      grants.agent.script([raw('[]', 200)]);
+
+      final left = await grants.revoke(tester);
+
+      // Never throws, so the account is deleted anyway.
+      expect(left, {IdentityProvider.apple});
+      expect(grants.reported, [
+        {'step': 'sign_in_revocation', 'provider': 'apple'},
+      ]);
+    }, variant: iOS);
+
     testWidgets('reports and leaves the Apple grant when the sheet fails', (
       tester,
     ) async {
