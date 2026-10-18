@@ -11,14 +11,14 @@ dependencies:
   contract: any
   flutter:
     sdk: flutter
-  get_it: 9.2.1
+  get_it: 9.3.0
   http: 1.6.0
   meta: ^1.19.0
   posthog_flutter: 5.39.0
   # The usage-analytics choice lives on the device until an account exists
   # (#204); the async API reads the platform store directly, no cache.
-  shared_preferences: 2.5.5
-  supabase_flutter: 3.0.0-dev.7
+  shared_preferences: 2.5.6
+  supabase_flutter: 3.0.0-dev.9
 
 dev_dependencies:
   analysis: any

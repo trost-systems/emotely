@@ -7,7 +7,7 @@ environment:
   sdk: ^3.13.0
 
 dependencies:
-  supabase_flutter: 3.0.0-dev.7
+  supabase_flutter: 3.0.0-dev.9
 
 dev_dependencies:
   analysis: any

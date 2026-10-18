@@ -190,10 +190,10 @@ packages:
     dependency: transitive
     description:
       name: cli_launcher
-      sha256: "96883f87648524292e24e2cc6a369fbdf64883473fe3e3ddadd3d857bf16a484"
+      sha256: d2dd1baf7ae4ff1550e731dcb8fe669a5c652903e833f75359c178222c44214e
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.3+2"
+    version: "0.3.4"
   cli_util:
     dependency: transitive
     description:
@@ -271,10 +271,10 @@ packages:
     dependency: transitive
     description:
       name: cupertino_icons
-      sha256: "41e005c33bd814be4d3096aff55b1908d419fde52ca656c8c47719ec745873cd"
+      sha256: b7cc2390aac296c083bea762859413eb1cf5b630c70e0c7e4d831018f762a8b2
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.9"
+    version: "2.0.0"
   cupertino_ui:
     dependency: transitive
     description:
@@ -389,10 +389,10 @@ packages:
     dependency: transitive
     description:
       name: flutter_agent_lints
-      sha256: b5e596359390f6d9dc8879490818584c4f74c15152dc6671bcd48f8be61c287e
+      sha256: f77411935dc023da8ab89d752135e6cc10b1e56ede0142938ce948f2aabb592b
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.1"
+    version: "1.1.0"
   flutter_bloc:
     dependency: transitive
     description:
@@ -441,10 +441,10 @@ packages:
     dependency: transitive
     description:
       name: freezed
-      sha256: "541a82723c84298f3ca46a6c2186935aa21ad529ad1f1423d67af18040494f51"
+      sha256: "3af98c92d7d4dd182ea1393193e69a840fcbaee1f66f1158bd20504e5f3f6f4f"
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.1"
+    version: "4.0.2"
   freezed_annotation:
     dependency: transitive
     description:
@@ -462,10 +462,10 @@ packages:
     dependency: transitive
     description:
       name: get_it
-      sha256: "568d62f0e68666fb5d95519743b3c24a34c7f19d834b0658c46e26d778461f66"
+      sha256: "2b5c6b077aad30bba9782178baff6076a2044141f1d5f2f15b43bca3fbe74874"
       url: "https://pub.dev"
     source: hosted
-    version: "9.2.1"
+    version: "9.3.0"
   glob:
     dependency: transitive
     description:
@@ -478,10 +478,10 @@ packages:
     dependency: transitive
     description:
       name: go_router
-      sha256: "008ab21d89d0de8ccd79586838f7533f126c2d894f50bf25f2947888d3c225b5"
+      sha256: "530dcbb298dc7c319aea9e3b7c580a61effb2abee2c93825d2dd8d5af0e230f1"
       url: "https://pub.dev"
     source: hosted
-    version: "18.0.1"
+    version: "18.0.2"
   go_router_builder:
     dependency: transitive
     description:
@@ -590,10 +590,10 @@ packages:
     dependency: transitive
     description:
       name: iceberg
-      sha256: "601d98650f41cb007cd8c3ebc45ed821e84d5846f3accf559e75ac435c644947"
+      sha256: "76af358406ae973a8f8e604531cabd2f27cbc7b5cb9fa9b8a195145d462d1b85"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.3"
+    version: "0.1.5"
   image:
     dependency: transitive
     description:
@@ -683,10 +683,10 @@ packages:
     dependency: transitive
     description:
       name: marionette_flutter
-      sha256: "9bf6aa531157edeb3d94f7c4972367240a1d704bbe9f4ac558ef1a125c4d1a6d"
+      sha256: f74b192ddd7e486b026203caa35b5a5d0c515de023e73958ba2035531c0a62bf
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.0"
+    version: "0.7.0"
   matcher:
     dependency: transitive
     description:
@@ -715,10 +715,10 @@ packages:
     dependency: "direct dev"
     description:
       name: melos
-      sha256: f1fc649d6dc4d17a2f1573654446495b9758b926372d54bf219cd7b586877a02
+      sha256: "140e51d7990b5134663e64b39e19d3b64ead16382e69127c205942c91e752b16"
       url: "https://pub.dev"
     source: hosted
-    version: "8.7.0"
+    version: "8.9.0"
   meta:
     dependency: transitive
     description:
@@ -771,10 +771,10 @@ packages:
     dependency: transitive
     description:
       name: package_info_plus
-      sha256: "127e1751e37ffb2ff4658beeaca77bad0c27bf5f932bd3a501c2296926d4b481"
+      sha256: "73ef2cd5c11a7548f9b7f6fc2a4f6113de2e64aa2a70de63feede95548822908"
       url: "https://pub.dev"
     source: hosted
-    version: "10.2.1"
+    version: "10.2.2"
   package_info_plus_platform_interface:
     dependency: transitive
     description:
@@ -883,10 +883,10 @@ packages:
     dependency: transitive
     description:
       name: postgrest
-      sha256: fc555c57d630beabc921d28484ecd40164fa2b6a8fd3d77d6ff739ac515d73ef
+      sha256: "09ec1c9c5d455c8c5002149e43a5079c92e08331b89fcd1c42c9b74b723da84c"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0-dev.7"
+    version: "3.0.0-dev.9"
   posthog_flutter:
     dependency: transitive
     description:
@@ -947,10 +947,10 @@ packages:
     dependency: transitive
     description:
       name: shared_preferences
-      sha256: c3025c5534b01739267eb7d76959bbc25a6d10f6988e1c2a3036940133dd10bf
+      sha256: "1e85e0dccf5b4a016077fea7dfbb4a7cb39c759ac1596fcf60c06deadb7da91f"
       url: "https://pub.dev"
     source: hosted
-    version: "2.5.5"
+    version: "2.5.6"
   shared_preferences_android:
     dependency: transitive
     description:
@@ -1104,58 +1104,58 @@ packages:
     dependency: transitive
     description:
       name: supabase
-      sha256: a2e14f228f333227eeb513882d5da9cdf6fc9c3af621c19071ecca5501047886
+      sha256: "08330c928efd6f579a65bfdddb273551eab6c02df21e11fc1fc239d5f3142103"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0-dev.7"
+    version: "3.0.0-dev.9"
   supabase_auth:
     dependency: transitive
     description:
       name: supabase_auth
-      sha256: a1536f988a0ffb807e22daa1caeeb3092bb54ac4fc2fc497119c83672e54cce3
+      sha256: "20704abba914d8fda9a946752e853a714ea4710c386b0fc39af860a5de2151c5"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0-dev.6"
+    version: "3.0.0-dev.8"
   supabase_common:
     dependency: transitive
     description:
       name: supabase_common
-      sha256: dd753b4d8bd9156d988c1f79553ba584863e200386675f67c572f362ab3b44c5
+      sha256: add6a856641857e65cdca25b55be5788f67885b08d64ab043b5a6b603d47e522
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0-dev.4"
+    version: "3.0.0-dev.6"
   supabase_flutter:
     dependency: transitive
     description:
       name: supabase_flutter
-      sha256: f828d433f31db470e0bb17f2d1f031bce20a215331ea2045575caa104cb7c797
+      sha256: c881d4d8e961edc710a478e4fdfd730c545c85c2e103fb76fdd34cd8e3c8063c
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0-dev.7"
+    version: "3.0.0-dev.9"
   supabase_functions:
     dependency: transitive
     description:
       name: supabase_functions
-      sha256: "7696575ee7f6689027b6e3a99b42e4574843470f0c97f585457fe52c9e260294"
+      sha256: f29c4993b57f95a583a7b24e73e92083e90e22c5b1ae6e1ec91fbc9dbc469e7a
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0-dev.5"
+    version: "3.0.0-dev.7"
   supabase_realtime:
     dependency: transitive
     description:
       name: supabase_realtime
-      sha256: "09684a892bf04afddc4dd65186437a0e18495715d4d8bb467e66c418ff706092"
+      sha256: "165e3b8c2b176998b00a85fd6ead51e89b174d4735773a3d5f812fb7751af00c"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0-dev.6"
+    version: "3.0.0-dev.8"
   supabase_storage:
     dependency: transitive
     description:
       name: supabase_storage
-      sha256: "51dd5cd7a11944b753749404d62b9380fe21e908e81b76892919246af997e9ef"
+      sha256: "86a5ac444c49f59e1cb14426d43f2e9b65061143647b87e1c31df3dcf1fc847d"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0-dev.5"
+    version: "3.0.0-dev.7"
   supabase_typegen:
     dependency: transitive
     description:
@@ -1216,10 +1216,10 @@ packages:
     dependency: transitive
     description:
       name: url_launcher
-      sha256: f6a7e5c4835bb4e3026a04793a4199ca2d14c739ec378fdfe23fc8075d0439f8
+      sha256: e8cc955c97e06df9879140a1fe301f3d493f01b7c62dec7f46834be31d7e9fda
       url: "https://pub.dev"
     source: hosted
-    version: "6.3.2"
+    version: "6.3.3"
   url_launcher_android:
     dependency: transitive
     description:

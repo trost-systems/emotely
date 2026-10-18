@@ -55,36 +55,58 @@ Future<String?> turnstileToken({
     ..['expired-callback'] = failed.toJS
     ..['timeout-callback'] = failed.toJS
     ..['unsupported-callback'] = failed.toJS;
-  final widget = turnstile.callMethod<JSString?>(
-    'render'.toJS,
-    '#$containerId'.toJS,
-    options,
-  );
+  // A synchronous throw from Cloudflare's script fails the check like
+  // any other failure, so the form never stays busy.
+  final JSString? widget;
+  try {
+    widget = turnstile.callMethod<JSString?>(
+      'render'.toJS,
+      '#$containerId'.toJS,
+      options,
+    );
+  } on Object {
+    return null;
+  }
   if (widget == null) {
     return null;
   }
   try {
     turnstile.callMethod<JSAny?>('execute'.toJS, widget);
     return await token.future;
+  } on Object {
+    return null;
   } finally {
-    turnstile.callMethod<JSAny?>('remove'.toJS, widget);
+    try {
+      turnstile.callMethod<JSAny?>('remove'.toJS, widget);
+    } on Object {
+      // Already gone or never rendered: nothing is left to remove.
+    }
   }
 }
 
+/// The load of Cloudflare's script in flight or done, shared by every
+/// request on this page; null again once a load failed, so the next
+/// request starts a fresh one.
+Future<JSObject?>? _loading;
+
 /// `window.turnstile`, loading Cloudflare's script first if no earlier
 /// request on this page did; null if it does not load.
-Future<JSObject?> _turnstile() async {
+Future<JSObject?> _turnstile() {
   final loaded = globalContext.getProperty<JSObject?>('turnstile'.toJS);
   if (loaded != null) {
-    return loaded;
+    return Future.value(loaded);
   }
-  final script =
-      web.document.querySelector('script[src="$turnstileScript"]') ??
-      (web.document.createElement('script') as web.HTMLScriptElement
-        ..src = turnstileScript);
-  if (!script.isConnected) {
-    web.document.head?.append(script);
+  final head = web.document.head;
+  if (head == null) {
+    return Future.value();
   }
+  return _loading ??= _load(head);
+}
+
+/// Appends Cloudflare's script and waits until it loaded or failed. A
+/// failed script is removed: a dead element never fires again, so a retry
+/// appends a fresh one.
+Future<JSObject?> _load(web.HTMLHeadElement head) async {
   final done = Completer<void>();
   void finish(web.Event _) {
     if (!done.isCompleted) {
@@ -92,9 +114,16 @@ Future<JSObject?> _turnstile() async {
     }
   }
 
-  script
+  final script = web.document.createElement('script') as web.HTMLScriptElement
+    ..src = turnstileScript
     ..addEventListener('load', finish.toJS)
     ..addEventListener('error', finish.toJS);
+  head.append(script);
   await done.future;
-  return globalContext.getProperty<JSObject?>('turnstile'.toJS);
+  final turnstile = globalContext.getProperty<JSObject?>('turnstile'.toJS);
+  if (turnstile == null) {
+    script.remove();
+    _loading = null;
+  }
+  return turnstile;
 }

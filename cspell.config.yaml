@@ -17,6 +17,7 @@ files:
   - "apps/mobile/app/fastlane/metadata/**/*.txt"
   - "apps/mobile/app/fastlane/app_review/*.txt"
   - "apps/mobile/app/fastlane/console/*.txt"
+  - "apps/mobile/app/fastlane/testflight/**/*.txt"
 import:
   - "@cspell/dict-de-de/cspell-ext.json"
 dictionaryDefinitions:
@@ -66,6 +67,7 @@ overrides:
       - "**/l10n/*_en.arb"
       - "**/fastlane/metadata/en-US/*.txt"
       - "**/fastlane/metadata/android/en-US/**/*.txt"
+      - "**/fastlane/testflight/en-US/*.txt"
       # App Review information and Play's sign-in instructions, read by the
       # stores' reviewers in English.
       - "**/fastlane/app_review/*.txt"
@@ -80,6 +82,7 @@ overrides:
       - "**/l10n/*_de.arb"
       - "**/fastlane/metadata/de-DE/*.txt"
       - "**/fastlane/metadata/android/de-DE/**/*.txt"
+      - "**/fastlane/testflight/de-DE/*.txt"
     language: de
     dictionaries: [de-words]
     flagWords:
