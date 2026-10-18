@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -22,6 +24,9 @@ class WebViewFake.install()
 
   final views = <FakeWebView>[];
 
+  /// When true, every web view created from now on fails to load its page.
+  var failsToLoad = false;
+
   /// The web view created last.
   FakeWebView get last => views.last;
 
@@ -29,10 +34,15 @@ class WebViewFake.install()
   PlatformWebViewController createPlatformWebViewController(
     PlatformWebViewControllerCreationParams params,
   ) {
-    final view = FakeWebView(params);
+    final view = FakeWebView(params, failsToLoad: failsToLoad);
     views.add(view);
     return view;
   }
+
+  @override
+  PlatformNavigationDelegate createPlatformNavigationDelegate(
+    PlatformNavigationDelegateCreationParams params,
+  ) => _FakeNavigationDelegate(params);
 
   @override
   PlatformWebViewWidget createPlatformWebViewWidget(
@@ -41,7 +51,8 @@ class WebViewFake.install()
 }
 
 /// One web view: what it was told, and its page's side of the channels.
-class FakeWebView(super.params) extends PlatformWebViewController {
+class FakeWebView(super.params, {required final bool failsToLoad})
+    extends PlatformWebViewController {
   this : super.implementation();
 
   String? html;
@@ -50,12 +61,26 @@ class FakeWebView(super.params) extends PlatformWebViewController {
   Color? background;
   final channels = <String, JavaScriptChannelParams>{};
 
+  NavigationRequestCallback? _onNavigationRequest;
+
+  /// What the web view decides when its page or one of its frames
+  /// navigates to [url].
+  FutureOr<NavigationDecision> navigate(
+    String url, {
+    required bool mainFrame,
+  }) => _onNavigationRequest!(
+    NavigationRequest(url: url, isMainFrame: mainFrame),
+  );
+
   /// What the page posts to the channel [name].
   void post(String name, String message) =>
       channels[name]!.onMessageReceived(JavaScriptMessage(message: message));
 
   @override
   Future<void> loadHtmlString(String html, {String? baseUrl}) async {
+    if (failsToLoad) {
+      throw Exception('the web view could not load the page');
+    }
     this.html = html;
     this.baseUrl = baseUrl;
   }
@@ -71,6 +96,23 @@ class FakeWebView(super.params) extends PlatformWebViewController {
   Future<void> addJavaScriptChannel(
     JavaScriptChannelParams javaScriptChannelParams,
   ) async => channels[javaScriptChannelParams.name] = javaScriptChannelParams;
+
+  @override
+  Future<void> setPlatformNavigationDelegate(
+    PlatformNavigationDelegate handler,
+  ) async =>
+      _onNavigationRequest = (handler as _FakeNavigationDelegate).onRequest;
+}
+
+class _FakeNavigationDelegate(super.params) extends PlatformNavigationDelegate {
+  this : super.implementation();
+
+  NavigationRequestCallback? onRequest;
+
+  @override
+  Future<void> setOnNavigationRequest(
+    NavigationRequestCallback onNavigationRequest,
+  ) async => onRequest = onNavigationRequest;
 }
 
 class _FakeWebViewWidget(super.params) extends PlatformWebViewWidget {
