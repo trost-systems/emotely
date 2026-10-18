@@ -223,6 +223,17 @@ class SignInRobot(
     await settle();
   }
 
+  /// Signs in with [email] and [password] through the other door ("I have
+  /// an account" while this screen is sign-up), which shares the auth bloc
+  /// above every screen.
+  Future<void> signInThroughOtherDoor(String email, String password) async {
+    tester
+        .element(find.byType(BlocBuilder<AuthBloc, AuthState>).first)
+        .read<AuthBloc>()
+        .add(AuthEvent.signInSubmitted(email, password));
+    await settle();
+  }
+
   /// Types [email] and [password] and submits them: a sign-in, or a new
   /// account in [SignInMode.signUp].
   Future<void> submitCredentials({

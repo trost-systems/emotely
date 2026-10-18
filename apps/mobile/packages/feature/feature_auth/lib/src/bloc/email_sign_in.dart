@@ -22,6 +22,9 @@ mixin _EmailSignIn on Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     final email = event.email.trim();
+    // The password typed here is the one that works; a confirmation code
+    // it leads to sets no other.
+    _chosen = null;
     emit(AuthState.checking(email: email));
     await _passwordGrant(
       email,
