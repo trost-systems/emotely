@@ -72,7 +72,7 @@
   "profileSignedInAsLabel": "Angemeldet als",
   "profileSignOutButton": "Abmelden",
   "signInHiddenByApple": "Von Apple verborgen",
-  "signInViaEmailCode": "Per E-Mail-Code. Hierhin gehen Anmeldecodes und Mails zu deinem Konto.",
+  "signInViaEmail": "Per E-Mail-Adresse und Passwort. Hierhin gehen Codes und Mails zu deinem Konto.",
   "signInViaGoogle": "Über Google. Hierhin gehen Mails zu deinem Konto.",
   "signInViaApple": "Über Apple. Hierhin gehen Mails zu deinem Konto.",
   "signInViaAppleRelay": "Von Apple verborgen (privates Relay). Apple leitet Mails zu deinem Konto an dich weiter.",

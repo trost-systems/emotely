@@ -1,0 +1,19 @@
+{{- /*
+  A forgotten password (#187), and the way an account that never had one
+  (made by a sign-in code before #187) gets one. In the language the
+  account keeps as user_metadata.app_locale, which the app sets
+  (feature_auth's AuthBloc); English when it keeps none. The subject in
+  supabase/config.toml branches the same way. Words per CONTEXT.md: German
+  says "du", and "emotely" stays lower case.
+*/ -}}
+{{ if eq .Data.app_locale "de" }}
+<h2>Neues Passwort für emotely</h2>
+<p>Gib diesen Code in der App ein und wähle danach ein neues Passwort:</p>
+<p style="font-size: 2em; letter-spacing: 0.2em; font-weight: bold;">{{ .Token }}</p>
+<p>Der Code ist 10 Minuten lang gültig. Wenn du kein neues Passwort angefordert hast, kannst du diese E-Mail ignorieren; dein Passwort bleibt, wie es ist.</p>
+{{ else }}
+<h2>Reset your emotely password</h2>
+<p>Enter this code in the app, then choose a new password:</p>
+<p style="font-size: 2em; letter-spacing: 0.2em; font-weight: bold;">{{ .Token }}</p>
+<p>The code expires in 10 minutes. If you did not ask for a new password, you can ignore this email; your password stays as it is.</p>
+{{ end }}

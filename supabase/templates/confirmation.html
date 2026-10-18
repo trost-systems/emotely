@@ -1,0 +1,19 @@
+{{- /*
+  A new account made with a password (#187): the code confirms the address,
+  and only then does the account sign in. In the language the account
+  keeps as user_metadata.app_locale, which the app sends with the sign-up
+  (feature_auth's AuthBloc); English when it keeps none. The subject in
+  supabase/config.toml branches the same way. Words per CONTEXT.md: German
+  says "du", and "emotely" stays lower case.
+*/ -}}
+{{ if eq .Data.app_locale "de" }}
+<h2>Bestätige dein emotely-Konto</h2>
+<p>Gib diesen Code in der App ein, um deine E-Mail-Adresse zu bestätigen. Danach ist dein Konto bereit:</p>
+<p style="font-size: 2em; letter-spacing: 0.2em; font-weight: bold;">{{ .Token }}</p>
+<p>Der Code ist 10 Minuten lang gültig. Wenn du kein Konto bei emotely angelegt hast, kannst du diese E-Mail ignorieren.</p>
+{{ else }}
+<h2>Confirm your emotely account</h2>
+<p>Enter this code in the app to confirm your email address. Then your account is ready:</p>
+<p style="font-size: 2em; letter-spacing: 0.2em; font-weight: bold;">{{ .Token }}</p>
+<p>The code expires in 10 minutes. If you did not create an emotely account, you can ignore this email.</p>
+{{ end }}

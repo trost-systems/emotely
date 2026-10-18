@@ -55,26 +55,60 @@ class AuthLocalizationsEn extends AuthLocalizations {
   String get emailHint => 'you@example.com';
 
   @override
-  String get sendCodeButton => 'Send me a code';
+  String get passwordLabel => 'Password';
 
   @override
-  String codeSentMessage(String email) {
-    return 'We sent a code to $email.';
+  String get newPasswordLabel => 'New password';
+
+  @override
+  String passwordRule(int count) {
+    return 'At least $count characters';
+  }
+
+  @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
+
+  @override
+  String get signInButton => 'Sign in';
+
+  @override
+  String get createAccountButton => 'Create account';
+
+  @override
+  String get forgotPasswordButton => 'Forgot password?';
+
+  @override
+  String confirmationSentMessage(String email) {
+    return 'We sent a code to $email. Enter it to confirm your address and open your account.';
+  }
+
+  @override
+  String resetSentMessage(String email) {
+    return 'If there is an account for $email, we sent it a code. Enter the code and choose a new password.';
   }
 
   @override
   String get codeLabel => 'Code';
 
   @override
-  String passwordPrompt(String email) {
-    return 'Enter the password for $email.';
+  String get confirmButton => 'Confirm';
+
+  @override
+  String get savePasswordButton => 'Save password';
+
+  @override
+  String get resendCodeButton => 'Send a new code';
+
+  @override
+  String get codeResentMessage => 'A new code is on its way.';
+
+  @override
+  String newPasswordPrompt(String email) {
+    return 'Choose a new password for $email.';
   }
-
-  @override
-  String get passwordLabel => 'Password';
-
-  @override
-  String get signInButton => 'Sign in';
 
   @override
   String get changeEmailButton => 'Use a different email';
@@ -89,21 +123,31 @@ class AuthLocalizationsEn extends AuthLocalizations {
 
   @override
   String get couldNotSendMessage =>
-      'Could not send a code to that email. Check the address and try again.';
+      'Could not send a mail to that address. Check it and try again.';
 
   @override
   String get wrongCodeMessage =>
-      'That code is wrong or has expired. Request a new one if needed.';
+      'That code is wrong or has expired. Send a new one if needed.';
 
   @override
-  String get wrongPasswordMessage => 'That password was not accepted.';
+  String get wrongPasswordMessage =>
+      'That email and password don’t match an account. Check both, or reset your password.';
+
+  @override
+  String weakPasswordMessage(int count) {
+    return 'That password is too short. Use at least $count characters.';
+  }
+
+  @override
+  String get accountExistsMessage =>
+      'There is already an account for this email. Enter its password, or reset it.';
+
+  @override
+  String get passwordNotSavedMessage =>
+      'Your new password could not be saved. Try again.';
 
   @override
   String get unreachableMessage => 'Could not reach the sign-in service.';
-
-  @override
-  String get noAccountMessage =>
-      'I don’t know this email yet – tap Get started to begin.';
 
   @override
   String get providerFailedMessage =>

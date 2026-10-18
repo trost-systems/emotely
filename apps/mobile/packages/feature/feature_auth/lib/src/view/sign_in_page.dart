@@ -3,11 +3,10 @@ import 'dart:async';
 import 'package:feature_auth/src/bloc/auth_bloc.dart';
 import 'package:feature_auth/src/l10n/l10n.dart';
 import 'package:feature_auth/src/last_sign_in/last_sign_in_bloc.dart';
-import 'package:feature_auth/src/last_sign_in/last_sign_in_store.dart';
 import 'package:feature_auth/src/navigator.dart';
-import 'package:feature_auth/src/view/last_used_tag.dart';
+import 'package:feature_auth/src/view/code_steps.dart';
+import 'package:feature_auth/src/view/email_form.dart';
 import 'package:feature_auth/src/view/provider_buttons.dart';
-import 'package:feature_auth/src/view/sign_in_error.dart';
 import 'package:feature_auth/src/view/sign_in_heading.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -18,20 +17,23 @@ import 'package:material_ui/material_ui.dart';
 /// step of onboarding ([SignInMode.signUp], "Almost there, {name}") or
 /// behind "I have an account" ([SignInMode.signIn], "Welcome back").
 ///
-/// Apple (on iOS) and Google first, in one step each; then an email code in
-/// two steps: the email, then the six-digit code Supabase sent to it.
-/// Nothing to remember, nothing to leave the app for. The second step is a
-/// password instead for the accounts the bloc knows to ask one of (the app
-/// stores' reviewers). From sign-in, an email code never creates an
-/// account.
+/// Apple (on iOS) and Google first, in one step each; then the email and a
+/// password ([EmailForm]). A new account opens once the code mailed to its
+/// address is typed in, and a forgotten password is reset with a mailed
+/// code and a new password ([CodeStep]) — codes, never links, so nothing
+/// leaves the app (#187).
 class const SignInPage({final SignInMode mode = SignInMode.signIn, super.key})
     extends StatelessWidget {
   static const emailKey = Key('sign_in_page.email');
-  static const sendCodeKey = Key('sign_in_page.send_code');
-  static const codeKey = Key('sign_in_page.code');
-  static const signInKey = Key('sign_in_page.sign_in');
   static const passwordKey = Key('sign_in_page.password');
-  static const passwordSignInKey = Key('sign_in_page.password_sign_in');
+  static const submitKey = Key('sign_in_page.submit');
+  static const forgotPasswordKey = Key('sign_in_page.forgot_password');
+  static const codeKey = Key('sign_in_page.code');
+  static const confirmKey = Key('sign_in_page.confirm');
+  static const newPasswordKey = Key('sign_in_page.new_password');
+  static const savePasswordKey = Key('sign_in_page.save_password');
+  static const resendCodeKey = Key('sign_in_page.resend_code');
+  static const codeResentKey = Key('sign_in_page.code_resent');
   static const changeEmailKey = Key('sign_in_page.change_email');
   static const errorKey = Key('sign_in_page.error');
   static const privacyNoticeKey = Key('sign_in_page.privacy_notice');
@@ -101,8 +103,8 @@ class const SignInPage({final SignInMode mode = SignInMode.signIn, super.key})
 }
 
 /// Tells the auth bloc the language the screen is shown in, when it first
-/// shows and whenever that changes: the language of the account's sign-in
-/// mail. The one place that knows it, since the bloc lives above the app's
+/// shows and whenever that changes: the language of the account's mails.
+/// The one place that knows it, since the bloc lives above the app's
 /// localizations.
 class const _MailLanguage({required final Widget child})
     extends StatefulWidget {
@@ -128,265 +130,43 @@ class const _Step({required final SignInMode mode}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocBuilder<AuthBloc, AuthState>(
     builder: (context, state) => switch (state) {
-      AuthSignedOut(:final problem) => _EmailStep(mode: mode, problem: problem),
-      AuthRequestingCode() => _EmailStep(mode: mode, busy: true),
-      AuthSigningInWith() => _EmailStep(mode: mode, busy: true),
-      AuthCodeSent(:final email, :final problem) => _CodeStep(
+      AuthSignedOut(:final email, :final problem) => EmailForm(
+        mode: mode,
         email: email,
         problem: problem,
       ),
-      AuthVerifying(:final email) => _CodeStep(email: email, busy: true),
-      AuthPasswordRequired(:final email, :final problem) => _PasswordStep(
+      AuthChecking(:final email) => EmailForm(
+        mode: mode,
+        email: email,
+        busy: true,
+      ),
+      AuthSigningInWith() => EmailForm(mode: mode, busy: true),
+      AuthCodeSent(
+        :final email,
+        :final purpose,
+        :final problem,
+        :final resent,
+      ) =>
+        CodeStep(
+          email: email,
+          purpose: purpose,
+          problem: problem,
+          resent: resent,
+        ),
+      AuthCheckingCode(:final email, :final purpose) => CodeStep(
+        email: email,
+        purpose: purpose,
+        busy: true,
+      ),
+      AuthNewPasswordRequired(:final email, :final problem) => NewPasswordStep(
         email: email,
         problem: problem,
       ),
-      AuthCheckingPassword(:final email) => _PasswordStep(
+      AuthSavingPassword(:final email) => NewPasswordStep(
         email: email,
         busy: true,
       ),
       AuthSignedIn() => const SizedBox.shrink(),
     },
   );
-}
-
-class const _EmailStep({
-  required final SignInMode mode,
-  final SignInProblem? problem,
-  final bool busy = false,
-}) extends StatefulWidget {
-  @override
-  State<_EmailStep> createState() => _EmailStepState();
-}
-
-class _EmailStepState() extends State<_EmailStep> {
-  final _controller = TextEditingController();
-
-  String get _email => _controller.text.trim();
-
-  // Good enough to stop typos before a round trip; Supabase validates the
-  // address for real.
-  bool get _plausible => _email.contains('@') && _email.contains('.');
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    spacing: 16,
-    children: [
-      ProviderButtons(
-        enabled: !widget.busy,
-        lastUsed: context.watch<LastSignInBloc>().state,
-      ),
-      const OrWithEmail(),
-      TextField(
-        key: SignInPage.emailKey,
-        controller: _controller,
-        enabled: !widget.busy,
-        autofillHints: const [AutofillHints.email],
-        keyboardType: TextInputType.emailAddress,
-        autocorrect: false,
-        decoration: InputDecoration(
-          labelText: context.l10n.emailLabel,
-          hintText: context.l10n.emailHint,
-          border: const OutlineInputBorder(),
-        ),
-        onChanged: (_) => setState(() {}),
-      ),
-      SignInError(widget.problem),
-      if (widget.busy)
-        const _Busy()
-      else
-        _SendCode(
-          onPressed: _plausible
-              ? () => context.read<AuthBloc>().add(
-                  AuthEvent.emailSubmitted(
-                    _email,
-                    createAccount: widget.mode == SignInMode.signUp,
-                  ),
-                )
-              : null,
-        ),
-    ],
-  );
-}
-
-/// The email's way on, tagged when the email was the way in last time.
-class const _SendCode({required final VoidCallback? onPressed})
-    extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final strings = context.l10n;
-    final label = strings.sendCodeButton;
-    final lastUsed =
-        context.watch<LastSignInBloc>().state == SignInOption.emailCode;
-    final button = FilledButton.tonal(
-      key: SignInPage.sendCodeKey,
-      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-      onPressed: onPressed,
-      child: Text(
-        label,
-        semanticsLabel: lastUsed ? strings.lastUsedButton(label) : null,
-      ),
-    );
-    return lastUsed ? LastUsedTag(child: button) : button;
-  }
-}
-
-class const _CodeStep({
-  required final String email,
-  final SignInProblem? problem,
-  final bool busy = false,
-}) extends StatefulWidget {
-  static const codeLength = 6;
-
-  @override
-  State<_CodeStep> createState() => _CodeStepState();
-}
-
-class _CodeStepState() extends State<_CodeStep> {
-  final _controller = TextEditingController();
-
-  String get _code => _controller.text.trim();
-
-  bool get _complete =>
-      _code.length == _CodeStep.codeLength &&
-      _code.codeUnits.every((unit) => unit >= 0x30 && unit <= 0x39);
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    spacing: 16,
-    children: [
-      Text(
-        context.l10n.codeSentMessage(widget.email),
-        style: Theme.of(context).textTheme.bodyLarge,
-      ),
-      TextField(
-        key: SignInPage.codeKey,
-        controller: _controller,
-        enabled: !widget.busy,
-        autofillHints: const [AutofillHints.oneTimeCode],
-        keyboardType: TextInputType.number,
-        maxLength: _CodeStep.codeLength,
-        decoration: InputDecoration(labelText: context.l10n.codeLabel),
-        onChanged: (_) => setState(() {}),
-      ),
-      SignInError(widget.problem),
-      if (widget.busy)
-        const _Busy()
-      else
-        _StepActions(
-          signInKey: SignInPage.signInKey,
-          onSignIn: _complete
-              ? () =>
-                    context.read<AuthBloc>().add(AuthEvent.codeSubmitted(_code))
-              : null,
-        ),
-    ],
-  );
-}
-
-/// The password for an account that signs in with one. Obscured, never
-/// suggested or corrected, and submitted from the keyboard's "done" too.
-class const _PasswordStep({
-  required final String email,
-  final SignInProblem? problem,
-  final bool busy = false,
-}) extends StatefulWidget {
-  @override
-  State<_PasswordStep> createState() => _PasswordStepState();
-}
-
-class _PasswordStepState() extends State<_PasswordStep> {
-  final _controller = TextEditingController();
-
-  String get _password => _controller.text;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _submit() =>
-      context.read<AuthBloc>().add(AuthEvent.passwordSubmitted(_password));
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    spacing: 16,
-    children: [
-      Text(
-        context.l10n.passwordPrompt(widget.email),
-        style: Theme.of(context).textTheme.bodyLarge,
-      ),
-      TextField(
-        key: SignInPage.passwordKey,
-        controller: _controller,
-        enabled: !widget.busy,
-        obscureText: true,
-        autocorrect: false,
-        enableSuggestions: false,
-        autofillHints: const [AutofillHints.password],
-        keyboardType: TextInputType.visiblePassword,
-        textInputAction: TextInputAction.done,
-        decoration: InputDecoration(labelText: context.l10n.passwordLabel),
-        onChanged: (_) => setState(() {}),
-        // The field is disabled while a check is in flight, so "done"
-        // cannot submit twice.
-        onSubmitted: (_) => _password.isEmpty ? null : _submit(),
-      ),
-      SignInError(widget.problem),
-      if (widget.busy)
-        const _Busy()
-      else
-        _StepActions(
-          signInKey: SignInPage.passwordSignInKey,
-          onSignIn: _password.isEmpty ? null : _submit,
-        ),
-    ],
-  );
-}
-
-/// Sign in with what the step asked for, or go back for a different email.
-class const _StepActions({
-  required final Key signInKey,
-  required final VoidCallback? onSignIn,
-}) extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    spacing: 8,
-    children: [
-      FilledButton(
-        key: signInKey,
-        onPressed: onSignIn,
-        child: Text(context.l10n.signInButton),
-      ),
-      TextButton(
-        key: SignInPage.changeEmailKey,
-        onPressed: () => context.read<AuthBloc>().add(
-          const AuthEvent.emailChangeRequested(),
-        ),
-        child: Text(context.l10n.changeEmailButton),
-      ),
-    ],
-  );
-}
-
-class const _Busy() extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) =>
-      const Center(child: CircularProgressIndicator());
 }

@@ -22,9 +22,16 @@ void main() {
 
       expect(await relaunched.read(), SignInOption.google);
 
-      await relaunched.remember(SignInOption.emailCode);
+      await relaunched.remember(SignInOption.email);
 
-      expect(await relaunched.read(), SignInOption.emailCode);
+      expect(await relaunched.read(), SignInOption.email);
+    });
+
+    test('reads the email kept before #187 as the email', () async {
+      // From when the email field mailed a sign-in code.
+      final store = storeWith({LastSignInStore.key: 'email_code'});
+
+      expect(await store.read(), SignInOption.email);
     });
 
     test('forgets the method when cleared', () async {

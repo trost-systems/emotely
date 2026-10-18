@@ -8,21 +8,15 @@ import 'sign_in_robot.dart';
 
 void main() {
   group(AuthSignedIn, () {
-    testWidgets('carries the address and the method of a code sign-in', (
+    testWidgets('carries the address and the method of a password sign-in', (
       tester,
     ) async {
       final supabase = SupabaseStub()
-        ..script(
-          otp: [codeSent()],
-          verify: [sessionGranted(provider: 'email')],
-        );
+        ..script(password: [sessionGranted(provider: 'email')]);
       final robot = SignInRobot(tester, supabase: supabase, agent: AgentStub());
       await robot.launch();
 
-      await robot.requestCode();
-      await robot.enterCode('123456');
-      await robot.tapSignIn();
-      await robot.settle();
+      await robot.submitCredentials();
 
       expect(
         robot.state,
@@ -30,7 +24,7 @@ void main() {
           userId: SupabaseStub.userId,
           identity: SignInIdentity(
             email: SupabaseStub.email,
-            method: SignInVia.emailCode,
+            method: SignInVia.email,
           ),
         ),
       );

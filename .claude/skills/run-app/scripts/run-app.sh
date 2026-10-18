@@ -67,8 +67,8 @@ Options for up:
   --out <dir>      The evidence bundle.
                    Default: apps/mobile/app/build/evidence/<time>/.
   --skip-build     Reuse apps/mobile/app/build/ios/iphonesimulator/Runner.app.
-                   Only a build \`up\` made carries marionette and the smoke
-                   account; anything else fails at sign-in.
+                   Only a build \`up\` made carries marionette; anything
+                   else cannot be driven.
   --analytics <allow|deny>
                    How to answer the first-launch usage-analytics sheet,
                    which sits over sign-in on a fresh simulator. Default:
@@ -343,12 +343,12 @@ claim() {
   log "session $SESSION"
 }
 
-# app_defines <smoke email> <PostHog key>: the debug build's defines. The
-# DEBUG banner is off, so screenshots, which go public as evidence, look
-# like the app people install.
+# app_defines <PostHog key>: the debug build's defines. The DEBUG banner is
+# off, so screenshots, which go public as evidence, look like the app people
+# install. No account: the build is the one anyone runs, and the smoke
+# account signs in through the ordinary email-and-password screen (#187).
 app_defines() {
-  jq -n --arg email "$1" --arg key "$2" \
-    '{SMOKE_EMAIL: $email, POSTHOG_KEY: $key, EMOTELY_DEBUG_BANNER: "false"}'
+  jq -n --arg key "$1" '{POSTHOG_KEY: $key, EMOTELY_DEBUG_BANNER: "false"}'
 }
 
 # The build's defines, and the smoke user's id for `collect`. Nothing here
@@ -357,7 +357,7 @@ app_defines() {
 # is the credential check, and a refused one fails at once (await_sign_in).
 credentials() {
   step "credentials"
-  app_defines "$SMOKE_EMAIL" "$(env_value POSTHOG_KEY)" >"$PRIVATE_DIR/defines.json"
+  app_defines "$(env_value POSTHOG_KEY)" >"$PRIVATE_DIR/defines.json"
   state_set SMOKE_USER_ID "$SMOKE_USER_ID"
 }
 
@@ -463,19 +463,17 @@ answer_analytics() {
 }
 
 # Through the app's own screens, as a returning user: "I have an account" on
-# Welcome (#204), then the sign-in screen, which asks a debug build's smoke
-# account for its password. Before any recording, and nothing of it reaches
-# the bundle.
+# Welcome (#204), then the email and the password, as anyone signs in
+# (#187). Before any recording, and nothing of it reaches the bundle.
 sign_in() {
   step "sign-in"
   retry 60 m tap --key onboarding.welcome.have_account \
     || die "no Welcome to sign in from"
   retry 60 m enter-text --key sign_in_page.email --input "$SMOKE_EMAIL" \
-    || die "no email field (a build without SMOKE_EMAIL?)"
-  retry 10 m tap --key sign_in_page.send_code || die "could not submit the email"
-  retry 20 m enter-text --key sign_in_page.password --input "$SMOKE_PASSWORD" \
-    || die "no password step: the build does not name this account (rebuild without --skip-build)"
-  retry 10 m tap --key sign_in_page.password_sign_in || die "could not submit the password"
+    || die "no email field on the sign-in screen"
+  retry 10 m enter-text --key sign_in_page.password --input "$SMOKE_PASSWORD" \
+    || die "no password field on the sign-in screen"
+  retry 10 m tap --key sign_in_page.submit || die "could not submit the email and password"
   await_sign_in
   # An account without a name is asked for one once after sign-in; the
   # smoke account skips it and keeps the placeholder from then on.

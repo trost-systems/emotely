@@ -1,5 +1,5 @@
 name: feature_auth
-description: Who is signed in, and the email-code sign-in that gets there (a password for the stores' review accounts).
+description: Who is signed in, and the ways in — an email and a password (confirmed and reset with mailed codes), Google and Apple.
 publish_to: none
 resolution: workspace
 

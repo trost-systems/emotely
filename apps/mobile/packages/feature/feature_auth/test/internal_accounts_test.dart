@@ -1,4 +1,4 @@
-import 'package:feature_auth/src/review_accounts.dart';
+import 'package:feature_auth/src/internal_accounts.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -8,11 +8,9 @@ void main() {
       expect(isInternalAccount('  Test@GetEmotely.com '), isTrue);
     });
 
-    test('covers the review accounts, which are a subset', () {
-      for (final address in reviewAccounts) {
-        expect(isInternalAccount(address), isTrue);
-        expect(isReviewAccount(address), isTrue);
-      }
+    test('covers the store review accounts', () {
+      expect(isInternalAccount('google-play-review@getemotely.com'), isTrue);
+      expect(isInternalAccount('app-store-review@getemotely.com'), isTrue);
     });
 
     test('takes nobody outside the domain', () {

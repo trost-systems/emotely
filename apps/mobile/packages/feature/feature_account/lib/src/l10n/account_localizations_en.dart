@@ -256,8 +256,8 @@ class AccountLocalizationsEn extends AccountLocalizations {
   String get signInHiddenByApple => 'Hidden by Apple';
 
   @override
-  String get signInViaEmailCode =>
-      'Via email code. This is where sign-in codes and account mail go.';
+  String get signInViaEmail =>
+      'Via email and password. This is where codes and account mail go.';
 
   @override
   String get signInViaGoogle => 'Via Google. This is where account mail goes.';

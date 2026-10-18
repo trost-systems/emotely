@@ -7,7 +7,7 @@ import 'package:flutter/widgets.dart';
 /// with those features' routes; a test fakes it and records what was asked.
 abstract class OnboardingNavigator() {
   /// "I have an account": the sign-in screen as a sign-in, not a sign-up —
-  /// headed "Welcome back", and an email code from there creates no
+  /// headed "Welcome back", and nothing from there creates an
   /// account. [from] is where the user was going, if anywhere.
   void signIn(BuildContext context, {String? from});
 

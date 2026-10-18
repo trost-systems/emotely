@@ -70,7 +70,6 @@ Future<void> main() async {
     // Checked here, once: a bad define fails the launch, not the first round.
     agentUrl: urlFrom(agentUrl, define: 'EMOTELY_AGENT_URL'),
     configUrl: urlFrom(configUrl, define: 'EMOTELY_CONFIG_URL'),
-    passwordAccounts: passwordAccounts,
     google: googleClients,
     humanCheckToken: turnstile.token,
   );

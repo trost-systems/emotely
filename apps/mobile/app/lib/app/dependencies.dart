@@ -32,10 +32,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// as long as the session bloc that asks it. Nothing is lazy: a dependency
 /// that cannot be built fails the launch, not the first screen that needs
 /// it.
-///
-/// [passwordAccounts] are the addresses beyond the store review accounts
-/// that sign in with a password: the smoke account in a debug build the
-/// verification CLI drives, nothing in any other build.
 void registerApp(
   GetIt getIt, {
   required http.Client agentHttpClient,
@@ -47,7 +43,6 @@ void registerApp(
   required BuildInfo build,
   required Uri agentUrl,
   required Uri configUrl,
-  required Set<String> passwordAccounts,
   required GoogleClientIds google,
   required HumanCheckToken humanCheckToken,
 }) {
@@ -70,7 +65,7 @@ void registerApp(
   registerFeedbackLink(getIt, build: build);
   registerConfig(getIt, appVersion: appVersion);
   registerHumanCheck(getIt, token: humanCheckToken);
-  registerAuth(getIt, google: google, passwordAccounts: passwordAccounts);
+  registerAuth(getIt, google: google);
   registerJournal(getIt);
   registerSession(getIt);
   registerOnboarding(getIt);

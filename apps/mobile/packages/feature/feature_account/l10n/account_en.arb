@@ -301,9 +301,9 @@
   "@signInHiddenByApple": {
     "description": "Profile screen and the More tab's profile card: shown instead of the address when the user chose Apple's Hide My Email, since the address is one Apple made up."
   },
-  "signInViaEmailCode": "Via email code. This is where sign-in codes and account mail go.",
-  "@signInViaEmailCode": {
-    "description": "Profile screen, under the address: the account signs in with a code sent by email."
+  "signInViaEmail": "Via email and password. This is where codes and account mail go.",
+  "@signInViaEmail": {
+    "description": "Profile screen, under the address: the account signs in with its email address and a password. \"Codes\" are the six-digit codes emotely mails to confirm the address or reset the password."
   },
   "signInViaGoogle": "Via Google. This is where account mail goes.",
   "@signInViaGoogle": {

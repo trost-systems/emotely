@@ -1,17 +1,20 @@
 {{- /*
+  The code `/otp` sends to an account that exists: the web account-deletion
+  page proves the mailbox with it, and app builds from before #187 still
+  sign in with it. Worded for both, so it names neither.
   In the language the account keeps as user_metadata.app_locale, which the
   app sets (feature_auth's AuthBloc); English when it keeps none. The
   subject in supabase/config.toml branches the same way. Words per
   CONTEXT.md: German says "du", and "emotely" stays lower case.
 */ -}}
 {{ if eq .Data.app_locale "de" }}
-<h2>Dein Anmeldecode für emotely</h2>
-<p>Gib diesen Code in der App ein, um dich anzumelden:</p>
+<h2>Dein Code für emotely</h2>
+<p>Gib diesen Code dort ein, wo du ihn angefordert hast:</p>
 <p style="font-size: 2em; letter-spacing: 0.2em; font-weight: bold;">{{ .Token }}</p>
 <p>Der Code ist 10 Minuten lang gültig. Wenn du ihn nicht angefordert hast, kannst du diese E-Mail ignorieren.</p>
 {{ else }}
-<h2>Your emotely sign-in code</h2>
-<p>Enter this code in the app to sign in:</p>
+<h2>Your emotely code</h2>
+<p>Enter this code where you asked for it:</p>
 <p style="font-size: 2em; letter-spacing: 0.2em; font-weight: bold;">{{ .Token }}</p>
-<p>The code expires in 10 minutes. If you did not request it, you can ignore this email.</p>
+<p>The code expires in 10 minutes. If you did not ask for it, you can ignore this email.</p>
 {{ end }}
