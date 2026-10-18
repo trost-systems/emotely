@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/widgets.dart';
@@ -181,6 +182,68 @@ void main() {
       await superseded;
       expect(await second, 'second');
       expect(web.views, hasLength(2));
+    });
+
+    testWidgets('the page never navigates away from the origin', (
+      tester,
+    ) async {
+      final web = WebViewFake.install();
+      final challenges = TurnstileChallenges(
+        siteKey: _siteKey,
+        origin: _origin,
+      );
+      await _host(tester, challenges);
+      final token = challenges.token();
+      await tester.pump();
+      final view = web.last;
+
+      expect(
+        await view.navigate('https://getemotely.com/', mainFrame: true),
+        NavigationDecision.navigate,
+      );
+      expect(
+        await view.navigate(
+          'https://challenges.cloudflare.com/cdn-cgi/challenge-platform/',
+          mainFrame: false,
+        ),
+        NavigationDecision.navigate,
+      );
+      // The widget's privacy link, which iOS would open in its place.
+      expect(
+        await view.navigate(
+          'https://www.cloudflare.com/privacypolicy/',
+          mainFrame: true,
+        ),
+        NavigationDecision.prevent,
+      );
+      view.post(_channel, _report('token', 'still-here'));
+      expect(await token, 'still-here');
+    });
+
+    testWidgets('a web view that cannot load fails the check at once', (
+      tester,
+    ) async {
+      final web = WebViewFake.install()..failsToLoad = true;
+      final challenges = TurnstileChallenges(
+        siteKey: _siteKey,
+        origin: _origin,
+      );
+      await _host(tester, challenges);
+      Object? failure;
+
+      unawaited(
+        challenges.token().then<void>(
+          (_) {},
+          onError: (Object error) {
+            failure = error;
+          },
+        ),
+      );
+      await tester.pump();
+
+      // Long before its patience would have run out.
+      expect(failure, isA<HumanCheckFailed>());
+      expect(web.views, hasLength(1));
     });
 
     testWidgets('without a host there is no check to run', (tester) async {
