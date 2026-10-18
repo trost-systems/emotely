@@ -5,17 +5,19 @@ import process from "node:process";
 // per-PR suites never hit the network.
 //
 // The endpoint serves signed-in users only (ADR 0010), so the smoke signs in
-// as the smoke account, an ordinary confirmed email-and-password user like
-// anyone who signs up in the app (#187).
+// as the probes' own account: the Google service account
+// signin-probe@emotely-ci.iam.gserviceaccount.com, through Auth's ID-token
+// grant. CI mints its ID token keyless (google-github-actions/auth). Not a
+// password grant: under the auth captcha (#94) that needs a human check a
+// script cannot pass, and the ID-token grant needs none (#304, ADR 0008).
 
 const BASE = process.env["EMOTELY_AGENT_URL"] ?? "https://api.getemotely.com";
 const SUPABASE_URL = process.env["SUPABASE_URL"];
 const SUPABASE_KEY = process.env["SUPABASE_PUBLISHABLE_KEY"];
-const SMOKE_EMAIL = process.env["SMOKE_EMAIL"];
-const SMOKE_PASSWORD = process.env["SMOKE_PASSWORD"];
-if (!(SUPABASE_URL && SUPABASE_KEY && SMOKE_EMAIL && SMOKE_PASSWORD)) {
+const PROBE_ID_TOKEN = process.env["PROBE_ID_TOKEN"];
+if (!(SUPABASE_URL && SUPABASE_KEY && PROBE_ID_TOKEN)) {
   throw new Error(
-    "SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SMOKE_EMAIL and SMOKE_PASSWORD are required",
+    "SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and PROBE_ID_TOKEN are required",
   );
 }
 
@@ -41,13 +43,13 @@ type Res = {
 };
 
 async function signIn(): Promise<string> {
-  const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=id_token`, {
     method: "POST",
     headers: { apikey: SUPABASE_KEY, "content-type": "application/json" },
-    body: JSON.stringify({ email: SMOKE_EMAIL, password: SMOKE_PASSWORD }),
+    body: JSON.stringify({ provider: "google", id_token: PROBE_ID_TOKEN }),
   });
   if (!r.ok) {
-    throw new Error(`smoke user sign-in failed: ${r.status}`);
+    throw new Error(`probe sign-in failed: ${r.status}`);
   }
   const { access_token } = (await r.json()) as { access_token: string };
   return access_token;
@@ -172,6 +174,35 @@ for (const platform of ["ios", "android"]) {
   }
 }
 
+// Sign in with Apple revocation (#193). The function throws at cold start
+// when any of its variables is missing (the Apple key above all), which a
+// user only meets as "emotely may still be listed" after deleting their
+// account — so the probe is that it answers at all. Without a token it must
+// refuse with 401; with one and no code, with 400 before Supabase or Apple
+// is asked. A 500 here means a variable is missing or the key will not load.
+async function revokeApple(authorization?: string): Promise<Response> {
+  return await fetch(`${BASE}/api/revoke-apple`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...(authorization === undefined ? {} : { authorization }),
+    },
+    body: JSON.stringify({}),
+  });
+}
+const revokeAnonymous = await revokeApple();
+if (revokeAnonymous.status !== 401) {
+  throw new Error(
+    `revoke-apple did not refuse an anonymous caller: ${revokeAnonymous.status}`,
+  );
+}
+const revokeWithoutCode = await revokeApple(`Bearer ${accessToken}`);
+if (revokeWithoutCode.status !== 400) {
+  throw new Error(
+    `revoke-apple did not refuse a request without a code: ${revokeWithoutCode.status}`,
+  );
+}
+
 console.log(
-  `# live-smoke OK: ${askedOrder.length} questions, summary ${res.entry.summary.length} chars, 401s verified (anonymous, tampered, forged), config min ${config.min_app_version}`,
+  `# live-smoke OK: ${askedOrder.length} questions, summary ${res.entry.summary.length} chars, 401s verified (anonymous, tampered, forged, revoke-apple), config min ${config.min_app_version}`,
 );

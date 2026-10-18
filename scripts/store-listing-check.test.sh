@@ -131,6 +131,35 @@ test_fails_when_a_locale_lacks_a_field_english_has() {
   expect_failure "German without a short description" "android/de-DE/short_description.txt"
 }
 
+# Release notes (supply's changelogs/<version code>.txt or default.txt, the
+# beta notes of the alpha track): Play allows 500 characters per language.
+test_passes_on_play_release_notes_of_exactly_500_characters() {
+  local dir
+  dir="$(listing)"
+  mkdir -p "${dir}/android/de-DE/changelogs"
+  printf '%s' "$(repeat 'ü' 500)" >"${dir}/android/de-DE/changelogs/default.txt"
+  check "${dir}"
+  [[ ${status} -eq 0 ]] || fail "500-character release notes: exit ${status}: ${output}"
+}
+
+test_fails_on_play_release_notes_over_500_characters() {
+  local dir
+  dir="$(listing)"
+  mkdir -p "${dir}/android/en-US/changelogs"
+  printf '%s' "$(repeat a 501)" >"${dir}/android/en-US/changelogs/default.txt"
+  check "${dir}"
+  expect_failure "501-character release notes" "android/en-US/changelogs/default.txt"
+}
+
+test_fails_on_play_release_notes_ending_in_a_newline() {
+  local dir
+  dir="$(listing)"
+  mkdir -p "${dir}/android/en-US/changelogs"
+  printf 'New beta.\n' >"${dir}/android/en-US/changelogs/default.txt"
+  check "${dir}"
+  expect_failure "release notes with a trailing newline" "android/en-US/changelogs/default.txt"
+}
+
 test_passes_on_a_listing_within_its_limits
 test_passes_at_exactly_the_limit_counting_characters_not_bytes
 test_fails_on_an_app_store_subtitle_over_30_characters
@@ -140,6 +169,9 @@ test_fails_on_a_play_short_description_over_80_characters
 test_fails_on_a_play_title_over_30_characters
 test_fails_on_a_play_file_ending_in_a_newline
 test_fails_when_a_locale_lacks_a_field_english_has
+test_passes_on_play_release_notes_of_exactly_500_characters
+test_fails_on_play_release_notes_over_500_characters
+test_fails_on_play_release_notes_ending_in_a_newline
 
 if [[ ${failures} -gt 0 ]]; then
   printf '%d failed\n' "${failures}" >&2

@@ -24,9 +24,10 @@ export function signTranscript(transcript: unknown, secret: string): string {
  * key holding `undefined` is dropped here exactly as it is on the wire.
  */
 function canonicalJson(value: unknown): string {
-  return JSON.stringify(
-    sortedKeys(JSON.parse(JSON.stringify(value) ?? "null")),
-  );
+  // TypeScript's lib types the result as `string`, but `undefined`, a
+  // function or a symbol stringify to `undefined`, which `JSON.parse` throws on.
+  const json: string | undefined = JSON.stringify(value);
+  return JSON.stringify(sortedKeys(JSON.parse(json ?? "null")));
 }
 
 function sortedKeys(value: unknown): unknown {

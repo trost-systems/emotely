@@ -78,8 +78,9 @@ KEY=$(grep -E '^POSTHOG_KEY=' apps/agent/.env.local | cut -d= -f2- | tr -d '"' |
   `launch` with `build/ios/iphonesimulator/Runner.app`, or `fvm flutter run
   -d <device>`. On a device a person signs in with an email and a password;
   a new account is confirmed, and a forgotten password reset, with a
-  six-digit code that the local Supabase stack (supabase skill) delivers to
-  Mailpit at http://127.0.0.1:54324. The app renders a **blank screen** when
+  six-digit code that the checkout's local Supabase stack (supabase skill)
+  delivers to its Mailpit, at `INBUCKET_URL` from `supabase status -o env`.
+  The app renders a **blank screen** when
   the `Runner.app` on disk came from `flutter test integration_test`: rebuild.
 - **Toolchain.** Flutter is pinned by FVM (`apps/mobile/app/.fvmrc`); call
   `fvm flutter` / `fvm dart` from `apps/mobile/app`. CocoaPods comes from the

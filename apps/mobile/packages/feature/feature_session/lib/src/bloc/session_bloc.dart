@@ -26,6 +26,7 @@ class SessionBloc({
   required final ErrorReporter _errors,
   required final JournalRepository _repository,
   required final UserContextSource _userContext,
+  final DateTime Function() _now = DateTime.now,
 }) extends Bloc<SessionEvent, SessionState> {
   this : super(const SessionState.initial()) {
     on<SessionStarted>(_onStarted);
@@ -42,6 +43,11 @@ class SessionBloc({
   /// The language the screen showed when the session started (#228).
   Locale? _locale;
 
+  /// When this session started on the device clock: the journal day its
+  /// row is created under, however much later that happens (#158). A
+  /// resumed session has its row, and its day, already.
+  late DateTime _startedAt;
+
   /// What to repeat on retry: the model round that failed, or the filing of
   /// an entry the model already produced. Neither changes state on failure,
   /// so repeating is always safe.
@@ -52,6 +58,7 @@ class SessionBloc({
     Emitter<SessionState> emit,
   ) async {
     _locale = event.locale;
+    _startedAt = _now();
     if (event.resume case final id?) {
       _retry = (emit) => _onStarted(event, emit);
       emit(const SessionState.loading(answered: 0));
@@ -209,6 +216,7 @@ class SessionBloc({
     _signature = null;
     _sessionId = null;
     _asked.clear();
+    _startedAt = _now();
     unawaited(_analytics.sessionStarted());
     return _round(emit, _advance);
   }
@@ -229,6 +237,7 @@ class SessionBloc({
     try {
       _sessionId = await _repository.saveRound(
         sessionId: _sessionId,
+        startedAt: _startedAt,
         transcript: _transcript!,
         signature: _signature!,
         pending: pending,
@@ -268,6 +277,7 @@ class SessionBloc({
     try {
       _sessionId ??= await _repository.saveRound(
         sessionId: null,
+        startedAt: _startedAt,
         transcript: _transcript!,
         signature: _signature!,
         pending: null,

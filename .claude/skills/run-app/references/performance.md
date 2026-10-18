@@ -34,7 +34,7 @@ length.
 ```bash
 S=.claude/skills/run-app/scripts/perf.sh
 $S run                      # fresh headless Android emulator, then gone again
-$S run --latency            # plus the deployed backend, as the smoke account
+$S run --latency            # plus the deployed backend, as the probe's account
 $S run --device <id>        # a phone (`fvm flutter devices`) or a running emulator
 $S gate <run dir> --env local-emulator   # judge a run again after editing the budget
 $S baseline <run dir>...    # a new baseline from several runs
@@ -76,10 +76,30 @@ by default) holds:
   budget. `session_round`'s Supabase count includes one profile read for
   the whole session (#264), not one per agent round.
 - **Latency** (`--latency`, and nightly): 20 Supabase reads and 5 agent first
-  rounds from this machine, as the smoke account. p95 of the reads at most
+  rounds from this machine, as the probe's account. p95 of the reads at most
   1 s, of the agent's first byte at most 5 s; the whole round is tracked,
-  not gated. It takes the smoke account's lock like `run-app.sh up`, so it
-  fails at once while another session holds the account: wait and retry.
+  not gated. It takes that account's lock like `run-app.sh up` takes the
+  smoke account's, so it fails at once while another run holds it: wait and
+  retry.
+- **The probe's account** is the Google service account
+  `signin-probe@emotely-ci.iam.gserviceaccount.com`, signed in through
+  Auth's ID-token grant, which the auth captcha (#94) does not check; a
+  password grant would need a human check (#304, ADR 0008). The nightly gets
+  its ID token keyless from GitHub (`PROBE_ID_TOKEN`), and its latency is
+  the one of record: run it with `gh workflow run nightly-perf.yml` on
+  `main`.
+- **Locally, `--latency` needs a grant nobody holds by default.** `perf.sh`
+  mints the token with the gcloud config in `~/.config/emotely/gcloud`,
+  whose account needs `roles/iam.serviceAccountOpenIdTokenCreator` on that
+  service account. Only the GitHub pool holds it standing; the maintainer's
+  own grant from the rollout was removed. Without it, `--latency` fails
+  naming `PROBE_ID_TOKEN` and the gcloud config. For a local measurement the
+  project owner grants it to themselves for the run and removes it after
+  (`gcloud iam service-accounts add-iam-policy-binding` /
+  `remove-iam-policy-binding signin-probe@emotely-ci.iam.gserviceaccount.com
+  --member=user:<owner> --role=roles/iam.serviceAccountOpenIdTokenCreator`,
+  both with `CLOUDSDK_CONFIG=~/.config/emotely/gcloud`); a grant takes a
+  minute to apply.
 
 ## Environments
 

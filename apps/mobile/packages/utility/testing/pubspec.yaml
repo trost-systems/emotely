@@ -23,8 +23,8 @@ dependencies:
     sdk: flutter
   flutter_test:
     sdk: flutter
-  get_it: 9.2.1
-  go_router: 18.0.1
+  get_it: 9.3.0
+  go_router: 18.0.2
   # The two sign-in plugins, faked at their platform interfaces like
   # url_launcher (the Apple one sorts further down).
   google_sign_in_platform_interface: 3.1.0
@@ -38,10 +38,10 @@ dependencies:
   posthog_flutter: 5.39.0
   profile_repository: any
   # The in-memory store the usage-analytics choice is kept in under test.
-  shared_preferences: 2.5.5
+  shared_preferences: 2.5.6
   shared_preferences_platform_interface: 2.4.2
   sign_in_with_apple_platform_interface: 2.0.0
-  supabase_flutter: 3.0.0-dev.7
+  supabase_flutter: 3.0.0-dev.9
   url_launcher_platform_interface: 2.3.2
 
 dev_dependencies:

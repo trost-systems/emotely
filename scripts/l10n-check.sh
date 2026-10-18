@@ -7,6 +7,14 @@
 # that has an l10n.yaml.
 set -euo pipefail
 
+# melos applies `--file-exists=l10n.yaml` before `--include-dependents`, so
+# a scoped run (`EMOTELY_SCOPE`) also reaches dependents that show no text.
+# They have nothing to check.
+if [[ ! -f l10n.yaml ]]; then
+  printf 'no l10n.yaml here: nothing to check\n'
+  exit 0
+fi
+
 untranslated="$(yq '.["untranslated-messages-file"] // ""' l10n.yaml)"
 if [[ -z "${untranslated}" ]]; then
   printf 'l10n.yaml sets no untranslated-messages-file; copy it from another package.\n' >&2

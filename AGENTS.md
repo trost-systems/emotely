@@ -39,7 +39,11 @@ twice was held too low: move it up a layer. A one-off needs only its fix.
   OS assign ports, and put anything shared that cannot be split, such as a
   test account, under a lock that fails fast, names its holder and goes
   stale when the holder dies. The lock in
-  `.claude/skills/run-app/scripts/run-app.sh` is the one to reuse.
+  `.claude/skills/run-app/scripts/run-app.sh` is the one to reuse. A
+  committed config that fixes a machine-wide name or port (a Docker
+  project, a dev server) is shared state too: override it per checkout in
+  an ignored file the tool reads by itself, so its plain commands stay
+  safe, as `.claude/skills/supabase/scripts/stack.sh` does for Supabase.
 - `main` is protected: all changes land via squash-merged PR through the merge
   queue, `ci-ok` green on the PR and again on the queue's run.
 - Agent guidance is `AGENTS.md`; every `CLAUDE.md` is a symlink to the

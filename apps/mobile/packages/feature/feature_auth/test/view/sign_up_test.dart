@@ -326,48 +326,59 @@ void main() {
       ]);
     });
 
-    testWidgets('for an address with an account signs into it with the '
-        'password typed', (tester) async {
-      final supabase = SupabaseStub()
-        ..script(signUp: [alreadyRegistered], password: [sessionGranted()]);
-      final robot = robotFor(tester, supabase);
-      await robot.launch();
+    // GoTrue answers a sign-up for a confirmed address one of two ways:
+    // with confirmations on (as deployed) a made-up user and no mail, with
+    // them off `user_already_exists`.
+    for (final (answer, reply) in [
+      ('a hidden account', accountHidden()),
+      ('user_already_exists', alreadyRegistered),
+    ]) {
+      group('for an address with an account ($answer)', () {
+        testWidgets('signs into it with the password typed', (tester) async {
+          final supabase = SupabaseStub()
+            ..script(signUp: [reply], password: [sessionGranted()]);
+          final robot = robotFor(tester, supabase);
+          await robot.launch();
 
-      await robot.submitCredentials();
+          await robot.submitCredentials();
 
-      expect(
-        (supabase.to('POST /auth/v1/token').single.body! as Map)['password'],
-        goodPassword,
-      );
-      expect(robot.home, findsOneWidget);
-      // Not a failed sign-up: the person is in.
-      expect(robot.analytics.exceptions, isEmpty);
-    });
+          expect(
+            (supabase.to('POST /auth/v1/token').single.body!
+                as Map)['password'],
+            goodPassword,
+          );
+          expect(robot.home, findsOneWidget);
+          // Not a failed sign-up: the person is in.
+          expect(robot.analytics.exceptions, isEmpty);
+        });
 
-    testWidgets('for an address with an account says so when the password '
-        'is not its', (tester) async {
-      final supabase = SupabaseStub()
-        ..script(
-          signUp: [alreadyRegistered],
-          password: [
-            authRefused(
-              statusCode: 400,
-              errorCode: 'invalid_credentials',
-              message: 'Invalid login credentials',
-            ),
-          ],
-        );
-      final robot = robotFor(tester, supabase);
-      await robot.launch();
+        testWidgets('says so when the password is not its', (tester) async {
+          final supabase = SupabaseStub()
+            ..script(
+              signUp: [reply],
+              password: [
+                authRefused(
+                  statusCode: 400,
+                  errorCode: 'invalid_credentials',
+                  message: 'Invalid login credentials',
+                ),
+              ],
+            );
+          final robot = robotFor(tester, supabase);
+          await robot.launch();
 
-      await robot.submitCredentials();
+          await robot.submitCredentials();
 
-      robot.expectError(
-        SignInProblem.accountExists,
-        robot.strings.accountExistsMessage,
-      );
-      expect(robot.canReset, isTrue);
-    });
+          // No code step for a code that never comes.
+          expect(robot.codeField, findsNothing);
+          robot.expectError(
+            SignInProblem.accountExists,
+            robot.strings.accountExistsMessage,
+          );
+          expect(robot.canReset, isTrue);
+        });
+      });
+    }
 
     testWidgets('explains a password the server finds too weak', (
       tester,

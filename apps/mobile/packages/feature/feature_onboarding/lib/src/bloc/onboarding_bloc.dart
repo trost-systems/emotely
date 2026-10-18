@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:analytics/analytics.dart';
+import 'package:clock/clock.dart';
 import 'package:feature_onboarding/src/flow.dart';
 import 'package:feature_onboarding/src/onboarding_store.dart';
 import 'package:feature_onboarding/src/progress.dart';
@@ -44,6 +45,10 @@ class OnboardingBloc({
     on<OnboardingSkipped>(_onSkipped);
     on<OnboardingBack>(_onBack);
     on<OnboardingRetried>((_, emit) => _finish(emit));
+    // The step on screen when the usage-analytics question is answered
+    // was under its sheet until then: its clock starts over at the answer
+    // (#225). With the answer already given, that is as it comes on screen.
+    unawaited(_analytics.answered.then((_) => _onScreen.reset()));
   }
 
   final Random _random = random ?? Random();
@@ -51,7 +56,7 @@ class OnboardingBloc({
   var _phase = OnboardingPhase.beforeSignUp;
 
   /// How long the step on screen has been there.
-  final _onScreen = Stopwatch();
+  final _onScreen = clock.stopwatch();
 
   Future<void> _onStarted(
     OnboardingStarted event,

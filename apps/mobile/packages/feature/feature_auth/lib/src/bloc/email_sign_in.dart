@@ -78,8 +78,8 @@ mixin _EmailSignIn on Bloc<AuthEvent, AuthState> {
   /// A new account for [AuthSignUpSubmitted.email]. GoTrue answers with the
   /// account and no session, and mails the confirmation code; with
   /// confirmations off it answers with a session, which signs in at once.
-  /// An address that has an account already is signed into with the
-  /// password typed, which is the likeliest meaning of the request.
+  /// An address that has a confirmed account already is signed into with
+  /// the password typed, which is the likeliest meaning of the request.
   Future<void> _onSignUpSubmitted(
     AuthSignUpSubmitted event,
     Emitter<AuthState> emit,
@@ -101,19 +101,19 @@ mixin _EmailSignIn on Bloc<AuthEvent, AuthState> {
       );
       if (response.session case final session?) {
         _passwordAccepted(session.user, emit);
+      } else if (response.user?.identities case []) {
+        // With confirmations on, GoTrue hides a confirmed account: a made-up
+        // user with no identities, and no mail.
+        await _accountExists(email, event.password, emit);
       } else {
         emit(
           AuthState.codeSent(email: email, purpose: CodePurpose.confirmAccount),
         );
       }
     } on Exception catch (error, stackTrace) {
+      // With confirmations off, GoTrue says so.
       if (error case AuthApiException(errorCode: 'user_already_exists')) {
-        await _passwordGrant(
-          email,
-          event.password,
-          emit,
-          refused: SignInProblem.accountExists,
-        );
+        await _accountExists(email, event.password, emit);
         return;
       }
       unawaited(_errors.signUpFailed(error, stackTrace));
@@ -126,6 +126,19 @@ mixin _EmailSignIn on Bloc<AuthEvent, AuthState> {
       );
     }
   }
+
+  /// A sign-up for [email], which has an account: signs into it with
+  /// [password], or says the account exists.
+  Future<void> _accountExists(
+    String email,
+    String password,
+    Emitter<AuthState> emit,
+  ) => _passwordGrant(
+    email,
+    password,
+    emit,
+    refused: SignInProblem.accountExists,
+  );
 
   /// "Forgot password?" for [AuthResetRequested.email]. GoTrue answers the
   /// same whether the address has an account or not, so the step that

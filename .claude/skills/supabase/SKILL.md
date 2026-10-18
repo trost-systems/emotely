@@ -13,16 +13,32 @@ Everything here is agent-executable and needs Docker. The hosted project is
 
 ## Local stack
 
-Run from the repo root (that is where `supabase/config.toml` lives):
+Each checkout runs its own stack; several agent sessions share one machine,
+and a `db reset` on a shared stack replaces every other session's schema
+mid-task. Start it first, from anywhere in the checkout:
 
 ```bash
-supabase start        # first run pulls images (minutes); later runs are seconds
-supabase status -o env   # URLs and local keys, e.g. API_URL, ANON_KEY, DB_URL
-supabase stop
+bash .claude/skills/supabase/scripts/stack.sh up --db-only   # migrations, pgTAP, lint, schema:generate
+bash .claude/skills/supabase/scripts/stack.sh up             # plus Auth, Inbucket, Studio, the API
+bash .claude/skills/supabase/scripts/stack.sh down           # when done: deletes the stack and its data
 ```
 
-- Studio: http://127.0.0.1:54323. Inbucket (every email the local Auth sends,
-  including confirmation and reset codes): http://127.0.0.1:54324.
+- `up` names the stack after the checkout and takes ports the OS assigns,
+  writing both to the ignored `supabase/.env.development.local`. The CLI
+  reads that file before `config.toml`, so from then on every plain
+  `supabase` command in this checkout reaches this stack and no other;
+  without it, a command reaches the stack named `emotely`, which any
+  session could reset. Data survives `up` again; the first `up` pulls
+  images (minutes).
+- `supabase status -o env` prints this stack's URLs and keys (`API_URL`,
+  `PUBLISHABLE_KEY`, `DB_URL`, `STUDIO_URL`, `INBUCKET_URL`); the ports
+  in `config.toml` are defaults nobody listens on. Inbucket holds every
+  email the local Auth sends, sign-in, confirmation and reset codes
+  included.
+- A worktree deleted without `down` leaves its stack running; the next
+  `up` anywhere on the machine deletes it (`stack.sh prune` alone does
+  too). A stack started by hand is not registered: `supabase stop
+  --project-id <name> --no-backup` deletes it, `docker ps` lists names.
 - Storage, Realtime, Edge Functions and Analytics are disabled in
   `config.toml`; the product does not use them.
 
@@ -33,7 +49,7 @@ supabase stop
    helpers from `rls.test.sql`; they set the role and `request.jwt.claims`
    the way PostgREST does, so `auth.uid()` behaves as in production. Expect
    `42501` for privilege failures and RLS `with check` violations.
-2. Run it red:
+2. Run it red, on this checkout's stack (`stack.sh up --db-only` first):
 
    ```bash
    supabase test db --local
@@ -70,7 +86,7 @@ and out of band: the release skill's `reviewer-accounts.sh` fetches the
 `service_role` key blind through the maintainer's CLI login for one run to
 (re)create the two store reviewer accounts (ADR 0010, decision 4). A
 mutation check is cheap and worth it for policies:
-`docker exec supabase_db_emotely psql -U postgres -c "alter table public.x disable row level security"`,
+`supabase db query --local "alter table public.x disable row level security"`,
 run the suite, watch it fail, `supabase db reset --local`.
 
 ## Auth configuration
@@ -93,13 +109,14 @@ code typed where it was asked for, never a link (ADR 0010, amendment
 Each branches on the account's `user_metadata.app_locale` (English, German)
 in its body and in its subject in `config.toml`; their words use
 [`CONTEXT.md`](../../../CONTEXT.md)'s terms, as all copy does. Locally every
-mail renders into Mailpit (the `[inbucket]` port): its API reads the newest
-code for an address, which is how an agent confirms an account or resets a
-password end to end without a real mailbox:
+mail renders into Mailpit (this stack's `INBUCKET_URL`): its API reads the
+newest code for an address, which is how an agent confirms an account or
+resets a password end to end without a real mailbox:
 
 ```bash
-id="$(curl -s "http://127.0.0.1:54324/api/v1/search?query=to:new@example.com&limit=1" | jq -r '.messages[0].ID')"
-curl -s "http://127.0.0.1:54324/api/v1/message/$id" | jq -r .Text | grep -oE '\b[0-9]{6}\b' | head -1
+eval "$(supabase status -o env | grep '^INBUCKET_URL=')"
+id="$(curl -s "$INBUCKET_URL/api/v1/search?query=to:new@example.com&limit=1" | jq -r '.messages[0].ID')"
+curl -s "$INBUCKET_URL/api/v1/message/$id" | jq -r .Text | grep -oE '\b[0-9]{6}\b' | head -1
 ```
 
 Leaked-password protection (HaveIBeenPwned) is off: it needs the Pro plan,
@@ -118,6 +135,18 @@ clipboard into `gh secret set SMTP_PASS --env ci`, clear the clipboard, then
 re-run the deploy (any push to `main` touching `supabase/**`). Sender and
 reply address is `hello@getemotely.com`, a Google Group in the Workspace.
 Anything with a secret uses `env(VAR)` and is never committed.
+
+**Every new account passes the before-user-created hook**
+(`public.before_user_created`, `[auth.hook.before_user_created]`). It
+refuses Google service accounts (`*.gserviceaccount.com`): anyone can mint
+one an ID token for our Google client id, and the ID-token grant needs no
+captcha, so without the hook a script signs up without limit (#304,
+verified on the hosted project). Its one exception is
+`signin-probe@emotely-ci.iam.gserviceaccount.com` through Google sign-in,
+the identity of the nightly probes. A hook that errors blocks every sign-up,
+so a change to it goes through `before_user_created.test.sql` first, and
+Auth reads the hook config only at start: `supabase stop && supabase start`
+after changing it locally.
 
 Changing Google or Apple sign-in — the `[auth.external.*]` blocks, a
 client id, a new app signing key — read
