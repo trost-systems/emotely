@@ -104,6 +104,10 @@ extension type const EntriesRow(Map<String, dynamic> _json) implements Object {
   Object? get answers => _json['answers'] as Object?;
   DateTime get createdAt => DateTime.parse(_json['created_at'] as String);
   String get id => _json['id'] as String;
+
+  /// The day the entry is about: its session's journal day (#158).
+  PostgrestDate get journalDay =>
+      PostgrestDate.parse(_json['journal_day'] as String);
   Object? get questions => _json['questions'] as Object?;
   String? get sessionId => _json['session_id'] as String?;
   String get summary => _json['summary'] as String;
@@ -124,6 +128,7 @@ extension type const EntriesInsert._(Map<String, dynamic> _json)
     required Object answers,
     DateTime? createdAt,
     String? id,
+    required PostgrestDate journalDay,
     required Object questions,
     String? sessionId,
     required String summary,
@@ -132,6 +137,7 @@ extension type const EntriesInsert._(Map<String, dynamic> _json)
          'answers': answers,
          'created_at': ?createdAt?.toUtc().toIso8601String(),
          'id': ?id,
+         'journal_day': journalDay.literal,
          'questions': questions,
          'session_id': ?sessionId,
          'summary': summary,
@@ -153,6 +159,7 @@ extension type const EntriesUpdate._(Map<String, dynamic> _json)
     Object? answers,
     DateTime? createdAt,
     String? id,
+    PostgrestDate? journalDay,
     Object? questions,
     String? sessionId,
     String? summary,
@@ -161,6 +168,7 @@ extension type const EntriesUpdate._(Map<String, dynamic> _json)
          'answers': ?answers,
          'created_at': ?createdAt?.toUtc().toIso8601String(),
          'id': ?id,
+         'journal_day': ?journalDay?.literal,
          'questions': ?questions,
          'session_id': ?sessionId,
          'summary': ?summary,
@@ -189,6 +197,9 @@ class Entries {
   static const answers = PostgrestColumn<EntriesRow, Object>('answers');
   static const createdAt = PostgrestColumn<EntriesRow, DateTime>('created_at');
   static const id = PostgrestColumn<EntriesRow, String>('id');
+  static const journalDay = PostgrestColumn<EntriesRow, PostgrestDate>(
+    'journal_day',
+  );
   static const questions = PostgrestColumn<EntriesRow, Object>('questions');
   static const sessionId = PostgrestNullableColumn<EntriesRow, String>(
     'session_id',
@@ -297,6 +308,11 @@ extension type const SessionsRow(Map<String, dynamic> _json) implements Object {
   String? get appVersion => _json['app_version'] as String?;
   DateTime get createdAt => DateTime.parse(_json['created_at'] as String);
   String get id => _json['id'] as String;
+
+  /// The day the session belongs to, computed on the device when it started
+  /// (#158).
+  PostgrestDate get journalDay =>
+      PostgrestDate.parse(_json['journal_day'] as String);
   Object? get pending => _json['pending'] as Object?;
   String get questionSetId => _json['question_set_id'] as String;
   Object? get questions => _json['questions'] as Object?;
@@ -321,6 +337,7 @@ extension type const SessionsInsert._(Map<String, dynamic> _json)
     String? appVersion,
     DateTime? createdAt,
     String? id,
+    required PostgrestDate journalDay,
     Object? pending,
     required String questionSetId,
     Object? questions,
@@ -333,6 +350,7 @@ extension type const SessionsInsert._(Map<String, dynamic> _json)
          'app_version': ?appVersion,
          'created_at': ?createdAt?.toUtc().toIso8601String(),
          'id': ?id,
+         'journal_day': journalDay.literal,
          'pending': ?pending,
          'question_set_id': questionSetId,
          'questions': ?questions,
@@ -363,6 +381,7 @@ extension type const SessionsUpdate._(Map<String, dynamic> _json)
     String? appVersion,
     DateTime? createdAt,
     String? id,
+    PostgrestDate? journalDay,
     Object? pending,
     String? questionSetId,
     Object? questions,
@@ -375,6 +394,7 @@ extension type const SessionsUpdate._(Map<String, dynamic> _json)
          'app_version': ?appVersion,
          'created_at': ?createdAt?.toUtc().toIso8601String(),
          'id': ?id,
+         'journal_day': ?journalDay?.literal,
          'pending': ?pending,
          'question_set_id': ?questionSetId,
          'questions': ?questions,
@@ -415,6 +435,9 @@ class Sessions {
   );
   static const createdAt = PostgrestColumn<SessionsRow, DateTime>('created_at');
   static const id = PostgrestColumn<SessionsRow, String>('id');
+  static const journalDay = PostgrestColumn<SessionsRow, PostgrestDate>(
+    'journal_day',
+  );
   static const pending = PostgrestNullableColumn<SessionsRow, Object>(
     'pending',
   );

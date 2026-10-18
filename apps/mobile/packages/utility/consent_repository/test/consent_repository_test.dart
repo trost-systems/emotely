@@ -59,7 +59,7 @@ void main() {
         'purpose': 'eq.journal',
         'version': 'eq.$version',
         'action': 'eq.granted',
-        'order': 'seq.desc.nullslast',
+        'order': 'seq.desc',
         'limit': '1',
       });
     });

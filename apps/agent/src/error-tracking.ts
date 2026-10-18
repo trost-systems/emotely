@@ -49,6 +49,17 @@ export const FORWARDED_ERROR_TYPES: ReadonlySet<string> = new Set([
   "GatewayResponseError",
 ]);
 
+/**
+ * This service's own error types whose message is built from a fixed
+ * vocabulary — a step, a status and an upstream's closed error code — and so
+ * can never hold content: Apple's refusals and Supabase's (#193). Forwarded
+ * like the gateway's, but never classified as a gateway failure.
+ */
+const OWN_FORWARDED_ERROR_TYPES: ReadonlySet<string> = new Set([
+  "AppleRequestError",
+  "IdentityLookupError",
+]);
+
 /** The gateway's marker symbol; `GatewayError.isInstance` tests exactly this. */
 const GATEWAY_ERROR_MARKER = Symbol.for("vercel.ai.gateway.error");
 
@@ -168,7 +179,11 @@ export class WithheldError extends Error {
 
 /** Where the failure happened; a fixed vocabulary, never free text. */
 export type ErrorContext = {
-  step: "session_round";
+  /**
+   * `session_round` is a model round; `apple_revocation` is revoking a
+   * Sign in with Apple grant before an account is deleted (#193).
+   */
+  step: "session_round" | "apple_revocation";
   userId?: string;
   /** The configured model id — a config value, not user content. */
   model?: string;
@@ -198,7 +213,12 @@ function contentFree(error: unknown): Error {
   }
   const statusCode: unknown = (error as { statusCode?: unknown }).statusCode;
   const detail = typeof statusCode === "number" ? { statusCode } : {};
-  if (!FORWARDED_ERROR_TYPES.has(error.name)) {
+  if (
+    !(
+      FORWARDED_ERROR_TYPES.has(error.name) ||
+      OWN_FORWARDED_ERROR_TYPES.has(error.name)
+    )
+  ) {
     const withheld = new WithheldError(error.name, detail);
     // Keep where it was thrown; only the text is withheld.
     withheld.stack = error.stack;

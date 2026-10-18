@@ -9,4 +9,4 @@ environment:
 dependencies:
   # A regular dependency, not a dev one: the include chain has to resolve
   # from every package that includes this file.
-  flutter_agent_lints: 1.0.1
+  flutter_agent_lints: 1.1.0
