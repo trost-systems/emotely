@@ -3,3 +3,4 @@ journaling
 PostHog
 Vercel
 Trost
+TestFlight

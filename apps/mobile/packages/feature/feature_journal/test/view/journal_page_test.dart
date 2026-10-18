@@ -31,27 +31,43 @@ void main() {
       return JournalRobot(tester, supabase: supabase, agent: AgentStub());
     }
 
-    testWidgets('lists filed entries newest first with date and summary', (
-      tester,
-    ) async {
+    testWidgets('lists filed entries newest first with the day they are about '
+        'and summary', (tester) async {
+      // Filed on the evening of 7 September, about the 6th: its session
+      // started the day before and was resumed.
+      final aboutDay = DateTime(2026, 9, 6);
       final robot = robotWith(
         tester,
         entries: [
-          entryRow(id: 'e-new', summary: 'A calm day.', createdAt: newer),
-          entryRow(id: 'e-old', summary: 'A loud day.', createdAt: older),
+          entryRow(
+            id: 'e-new',
+            summary: 'A calm day.',
+            createdAt: newer,
+            journalDay: aboutDay,
+          ),
+          entryRow(
+            id: 'e-old',
+            summary: 'A loud day.',
+            createdAt: older,
+            journalDay: DateTime(2026, 9, 5),
+          ),
         ],
       );
       await robot.launch();
 
       final read = robot.supabase.to(entriesEndpoint).single;
-      expect(read.query['order'], 'created_at.desc');
+      expect(read.query['order'], 'journal_day.desc,created_at.desc');
       expect(robot.entries, findsNWidgets(2));
       expect(
         tester.getTopLeft(robot.entry('e-new')).dy,
         lessThan(tester.getTopLeft(robot.entry('e-old')).dy),
       );
       expect(find.text('A calm day.'), findsOneWidget);
-      expect(find.text(robot.material.formatShortDate(newer)), findsOneWidget);
+      expect(
+        find.text(robot.material.formatShortDate(aboutDay)),
+        findsOneWidget,
+      );
+      expect(find.text(robot.material.formatShortDate(newer)), findsNothing);
       expect(robot.empty, findsNothing);
       expect(robot.analytics.events, [
         event('journal_viewed', {'entries': 2, 'open_session': false}),

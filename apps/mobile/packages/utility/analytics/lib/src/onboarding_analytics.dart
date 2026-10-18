@@ -151,19 +151,29 @@ class const OnboardingAnalytics({
     'phase': step.phase.wire,
   };
 
-  /// The first screens come up under the usage-analytics sheet, before
-  /// anyone could have allowed anything; captured then, they would be
-  /// dropped by the shut gate and the funnel would lose its top. So they
-  /// wait for the answer: sent once it is "Allow", dropped by the gate on
-  /// "Don't allow".
-  Future<void> _afterTheQuestion(
-    String eventName,
-    Map<String, Object> properties,
-  ) async {
+  /// Completes once the usage-analytics question has an answer, "Allow" or
+  /// "Don't allow": soon after the call on a launch that already has one,
+  /// else when the sheet over the first screens is answered. The views of
+  /// those screens wait for it, and so does the clock of the step on
+  /// screen, so a step's duration never counts the time under the sheet
+  /// (#225).
+  Future<void> get answered async {
     await gate.settled;
     if (gate.choice == null) {
       await gate.changes.firstWhere((choice) => choice != null);
     }
+  }
+
+  /// The first screens come up under the usage-analytics sheet, before
+  /// anyone could have allowed anything; captured then, they would be
+  /// dropped by the shut gate and the funnel would lose its top. So they
+  /// wait for the [answered] question: sent once it is "Allow", dropped by
+  /// the gate on "Don't allow".
+  Future<void> _afterTheQuestion(
+    String eventName,
+    Map<String, Object> properties,
+  ) async {
+    await answered;
     await gate.capture(eventName: eventName, properties: properties);
   }
 }

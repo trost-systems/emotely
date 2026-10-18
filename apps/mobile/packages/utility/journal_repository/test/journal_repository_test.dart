@@ -75,13 +75,15 @@ void main() {
 
     test('lists the filed entries as the server orders them', () async {
       final older = DateTime.utc(2026, 9, 1, 8);
-      final newer = DateTime.utc(2026, 9, 2, 8);
+      // Filed after midnight, from a session started the evening before.
+      final newer = DateTime.utc(2026, 9, 2, 0, 30);
       supabase.rest('GET /rest/v1/entries', [
         rows([
           entryRow(
             id: 'e2',
             summary: 'Newer',
             createdAt: newer,
+            journalDay: DateTime(2026, 9),
             answers: answers,
             questions: const [question],
           ),
@@ -97,6 +99,7 @@ void main() {
           summary: 'Newer',
           answers: answers,
           questions: const [question],
+          journalDay: DateTime(2026, 9),
           createdAt: newer,
         ),
         EntryRecord(
@@ -104,12 +107,13 @@ void main() {
           summary: 'Older',
           answers: const {},
           questions: const [],
+          journalDay: DateTime(2026, 9),
           createdAt: older,
         ),
       ]);
       final request = supabase.to('GET /rest/v1/entries').single;
-      // `created_at` is not null, so no null placement is asked for.
-      expect(request.query['order'], 'created_at.desc');
+      // Neither column is null, so no null placement is asked for.
+      expect(request.query['order'], 'journal_day.desc,created_at.desc');
     });
 
     test('reads one entry by its id', () async {
@@ -120,6 +124,7 @@ void main() {
             id: 'e2',
             summary: 'Newer',
             createdAt: written,
+            journalDay: DateTime(2026, 9),
             answers: answers,
             questions: const [question],
           ),
@@ -135,6 +140,7 @@ void main() {
           summary: 'Newer',
           answers: answers,
           questions: const [question],
+          journalDay: DateTime(2026, 9),
           createdAt: written,
         ),
       );
@@ -174,6 +180,7 @@ void main() {
 
       final id = await repository.saveRound(
         sessionId: null,
+        startedAt: DateTime(2026, 10, 3, 9, 15),
         transcript: const ['t1'],
         signature: 'sig1',
         pending: pending,
@@ -195,6 +202,95 @@ void main() {
         'questions': [question.toJson()],
         'app_version': '2.0.0',
         'question_set_id': JournalRepository.questionSetId,
+        'journal_day': '2026-10-03',
+      });
+    });
+
+    group('files a new session under the journal day it started on', () {
+      // The device's wall clock decides, cutoff 04:00: a session started
+      // before then is about the day before.
+      final cases = {
+        'just before the cutoff, the day before': (
+          DateTime(2026, 10, 3, 3, 59),
+          '2026-10-02',
+        ),
+        'at the cutoff, that day': (DateTime(2026, 10, 3, 4), '2026-10-03'),
+        'just after midnight, the day before': (
+          DateTime(2026, 10, 3, 0, 10),
+          '2026-10-02',
+        ),
+        'late in the evening, that day': (
+          DateTime(2026, 10, 3, 23, 59),
+          '2026-10-03',
+        ),
+        'on the night of the new year, the old year': (
+          DateTime(2027, 1, 1, 1, 30),
+          '2026-12-31',
+        ),
+        // Clocks go forward in Europe at 02:00 on 2026-03-29, back at 03:00
+        // on 2026-10-25: 04:00 is the cutoff on the clock, however many
+        // hours after midnight it comes.
+        'at 03:59 on the day clocks go forward, the day before': (
+          DateTime(2026, 3, 29, 3, 59),
+          '2026-03-28',
+        ),
+        'at 04:00 on the day clocks go forward, that day': (
+          DateTime(2026, 3, 29, 4),
+          '2026-03-29',
+        ),
+        'at 03:59 on the day clocks go back, the day before': (
+          DateTime(2026, 10, 25, 3, 59),
+          '2026-10-24',
+        ),
+        'at 04:00 on the day clocks go back, that day': (
+          DateTime(2026, 10, 25, 4),
+          '2026-10-25',
+        ),
+      };
+      for (final MapEntry(key: name, value: (startedAt, journalDay))
+          in cases.entries) {
+        test('started $name', () async {
+          supabase
+            ..rest('DELETE /rest/v1/sessions', [rowsChanged()])
+            ..rest('POST /rest/v1/sessions', [rowCreated('s1')]);
+
+          await repository.saveRound(
+            sessionId: null,
+            startedAt: startedAt,
+            transcript: const ['t1'],
+            signature: 'sig1',
+            pending: pending,
+            questions: const [question],
+            appVersion: '2.0.0',
+          );
+
+          expect(
+            supabase.bodies('/rest/v1/sessions').single,
+            containsPair('journal_day', journalDay),
+          );
+        });
+      }
+
+      test('reads a moment given in UTC on the device clock', () async {
+        supabase
+          ..rest('DELETE /rest/v1/sessions', [rowsChanged()])
+          ..rest('POST /rest/v1/sessions', [rowCreated('s1')]);
+        final startedAt = DateTime(2026, 10, 3, 4, 30);
+
+        await repository.saveRound(
+          sessionId: null,
+          startedAt: startedAt.toUtc(),
+          transcript: const ['t1'],
+          signature: 'sig1',
+          pending: pending,
+          questions: const [question],
+          appVersion: '2.0.0',
+        );
+
+        expect(
+          supabase.bodies('/rest/v1/sessions').single,
+          containsPair('journal_day', '2026-10-03'),
+        );
       });
     });
 
@@ -203,6 +299,7 @@ void main() {
 
       final id = await repository.saveRound(
         sessionId: 's1',
+        startedAt: DateTime(2026, 10, 3, 9, 15),
         transcript: const ['t1', 't2'],
         signature: 'sig2',
         pending: null,
@@ -227,6 +324,7 @@ void main() {
 
       await repository.saveRound(
         sessionId: 's1',
+        startedAt: DateTime(2026, 10, 3, 9, 15),
         transcript: const ['t1', 't2'],
         signature: 'sig2',
         pending: pending,
@@ -266,6 +364,7 @@ void main() {
       summary: 'A quiet day.',
       answers: answers,
       questions: const [question],
+      journalDay: DateTime(2026, 9),
       createdAt: DateTime.utc(2026, 9, 2),
     );
 

@@ -11,8 +11,8 @@ dependencies:
   analytics: any
   flutter:
     sdk: flutter
-  get_it: 9.2.1
-  supabase_flutter: 3.0.0-dev.7
+  get_it: 9.3.0
+  supabase_flutter: 3.0.0-dev.9
 
 dev_dependencies:
   analysis: any

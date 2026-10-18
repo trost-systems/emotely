@@ -20,7 +20,12 @@ abstract class OpenSession with _$OpenSession {
   factory fromJson(Map<String, dynamic> json) => _$OpenSessionFromJson(json);
 }
 
-/// A filed entry, as the journal stores it.
+/// A filed entry, as the journal stores it: about its `journalDay`, the
+/// day its session started on (#158), and filed at `createdAt`, which
+/// orders entries within a day.
+///
+/// `journalDay` is a calendar date and reads as local midnight of it, so it
+/// formats as that date wherever the user is now.
 @freezed
 abstract class EntryRecord with _$EntryRecord {
   const factory({
@@ -28,6 +33,7 @@ abstract class EntryRecord with _$EntryRecord {
     required String summary,
     required Map<String, Answer> answers,
     required List<AskQuestion> questions,
+    required DateTime journalDay,
     required DateTime createdAt,
   }) = _EntryRecord;
 

@@ -381,6 +381,68 @@ test_judges_no_latency_when_the_run_measured_none() {
     fail "judges no latency when none was measured"
 }
 
+# --- the latency probe's sign-in -----------------------------------------------------
+
+# fake_curl <dir>: a curl on PATH that keeps each call's arguments and
+# posted body, and answers like Auth's token endpoint.
+fake_curl() {
+  mkdir -p "$1/bin"
+  cat >"$1/bin/curl" <<EOF
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >>"$1/calls"
+for arg in "\$@"; do
+  if [[ "\$arg" == @* ]]; then cat "\${arg#@}" >>"$1/bodies"; fi
+done
+printf '{"access_token":"made-up-access-token"}'
+EOF
+  chmod +x "$1/bin/curl"
+  printf '#!/usr/bin/env bash\ntouch "%s/gcloud-called"\nexit 1\n' "$1" >"$1/bin/gcloud"
+  chmod +x "$1/bin/gcloud"
+}
+
+# probe_sign_in <dir> <PROBE_ID_TOKEN, or empty>: signs in as perf.sh's
+# latency probe does, with the fake curl and a home without a gcloud
+# config, and prints the access token it got.
+probe_sign_in() {
+  local dir="$1"
+  mkdir -p "$dir/secrets" "$dir/home"
+  (
+    # shellcheck source=SCRIPTDIR/perf.sh
+    source "$PERF"
+    HOME="$dir/home" PROBE_ID_TOKEN="$2" PATH="$dir/bin:$PATH" sign_in_probe "$dir/secrets"
+  )
+}
+
+# Under the auth captcha (#94) a password grant needs a human check, which a
+# probe cannot pass; the ID-token grant needs none (#304).
+test_the_latency_probe_signs_in_with_the_probes_id_token_not_a_password() {
+  local dir="$work/probe" token
+  fake_curl "$dir"
+  token="$(probe_sign_in "$dir" made-up-id-token 2>/dev/null)" ||
+    fail "the latency probe signs in with an ID token: it failed"
+  [[ "$token" == made-up-access-token ]] ||
+    fail "the latency probe uses the access token Auth answers: got $token"
+  grep -q 'grant_type=id_token' "$dir/calls" ||
+    fail "the latency probe uses the ID-token grant: $(cat "$dir/calls")"
+  jq -e '.provider == "google" and .id_token == "made-up-id-token"' "$dir/bodies" >/dev/null ||
+    fail "the latency probe posts the probe's Google ID token: $(cat "$dir/bodies")"
+  if grep -qi password "$dir/calls" "$dir/bodies"; then
+    fail "the latency probe sends no password"
+  fi
+  [[ ! -e "$dir/gcloud-called" ]] ||
+    fail "the latency probe mints nothing when CI hands it a token"
+}
+
+test_the_latency_probe_without_a_token_or_gcloud_config_names_both() {
+  local dir="$work/no-token" err
+  fake_curl "$dir"
+  if err="$(probe_sign_in "$dir" '' 2>&1)"; then
+    fail "the latency probe without a token fails: it passed"
+  fi
+  [[ "$err" == *PROBE_ID_TOKEN* && "$err" == *.config/emotely/gcloud* ]] ||
+    fail "the latency probe names PROBE_ID_TOKEN and the gcloud config: got $err"
+}
+
 for test in $(declare -F | awk '$3 ~ /^test_/ {print $3}'); do
   "$test"
 done

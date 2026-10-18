@@ -29,11 +29,6 @@ STATE_FILE="$STATE_DIR/state"
 # $TMPDIR: a sandboxed agent session may be given a private one.
 LOCK_ROOT="${EMOTELY_RUN_APP_LOCKS:-${XDG_STATE_HOME:-$HOME/.local/state}/emotely/run-app}"
 POSTHOG_API="https://eu.posthog.com/api/projects/262464"
-# The hosted project, as `lib/app/environment.dart` defaults to it. Both are
-# public (ADR 0010); the CLI needs them to learn the smoke user's id, which
-# is how it finds this session's PostHog events among everyone else's.
-SUPABASE_URL="https://khfkszlujgkfjgnawdlf.supabase.co"
-SUPABASE_PUBLISHABLE_KEY="sb_publishable_di6BB76PPuuoDklt7jtI0w_KlwO_8JF"
 MARIONETTE_DOCS="https://github.com/leancodepl/marionette_mcp/blob/main/docs/cli.md"
 # Posting copies: screenshots 600 px wide (shown at 300, sharp on a 2x
 # screen), videos sped up this many times.
@@ -98,13 +93,15 @@ per smoke account at a time: a second \`up\` on the same account fails at
 once and names the checkout that holds it (locks in $LOCK_ROOT).
 
 Every command exits non-zero naming the step that failed. SMOKE_EMAIL,
-SMOKE_PASSWORD, SMOKE_EMAIL_DOMAINS, POSTHOG_KEY and
+SMOKE_PASSWORD, SMOKE_USER_ID, SMOKE_EMAIL_DOMAINS, POSTHOG_KEY and
 POSTHOG_PERSONAL_API_KEY are read from
 $ENV_FILE
 (EMOTELY_ENV_FILE overrides the path). Bring your own smoke account: an
-address whose inbox you (and your agents) can read, and its domain in
-SMOKE_EMAIL_DOMAINS (comma-separated). The CLI refuses any address outside
-that list, and refuses to run without one.
+address whose inbox you (and your agents) can read, its user id, and its
+domain in SMOKE_EMAIL_DOMAINS (comma-separated). The CLI refuses any address
+outside that list, and refuses to run without one. Nothing signs in before
+the build: the app's own sign-in checks the password, and a refused one
+fails the sign-in step at once.
 
 Marionette: $MARIONETTE_DOCS
 EOF
@@ -271,6 +268,15 @@ read_smoke_account() {
     || die "SMOKE_EMAIL is not on a domain in SMOKE_EMAIL_DOMAINS; the CLI signs in as your smoke account only"
 }
 
+# The smoke user's id, from the env file beside its password: `collect` finds
+# the session's PostHog events by it and scrubs it from the bundle. Read, not
+# learned from a password grant, which the auth captcha refuses (#94).
+read_smoke_user_id() {
+  SMOKE_USER_ID="$(env_value SMOKE_USER_ID)"
+  [[ "$SMOKE_USER_ID" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]] \
+    || die "SMOKE_USER_ID is missing or not a user id in $ENV_FILE: set it to your smoke user's id (Supabase dashboard, Authentication, Users)"
+}
+
 # --- marionette -------------------------------------------------------------------
 
 SESSION=""
@@ -321,6 +327,7 @@ claim() {
   [[ ! -d "$STATE_DIR" ]] \
     || die "a session is already up in this checkout ($(state_get SESSION)): run-app.sh down first"
   read_smoke_account
+  read_smoke_user_id
   SESSION="$(new_session_id "$REPO")"
   INSTANCE="emotely-$SESSION"
   take_account_lock "$$"
@@ -344,21 +351,14 @@ app_defines() {
     '{SMOKE_EMAIL: $email, POSTHOG_KEY: $key, EMOTELY_DEBUG_BANNER: "false"}'
 }
 
-# The smoke user's id: proves the credentials before a two-minute build,
-# and is how `collect` tells this session's PostHog events apart.
-check_credentials() {
+# The build's defines, and the smoke user's id for `collect`. Nothing here
+# signs in: under the auth captcha (#94) GoTrue refuses a password grant
+# without a human check, which only the app can pass. The app's own sign-in
+# is the credential check, and a refused one fails at once (await_sign_in).
+credentials() {
   step "credentials"
   app_defines "$SMOKE_EMAIL" "$(env_value POSTHOG_KEY)" >"$PRIVATE_DIR/defines.json"
-  jq -n --arg email "$SMOKE_EMAIL" --arg password "$SMOKE_PASSWORD" \
-    '{email: $email, password: $password}' >"$PRIVATE_DIR/grant.json"
-  printf 'header = "apikey: %s"\n' "$SUPABASE_PUBLISHABLE_KEY" >"$PRIVATE_DIR/supabase.curl"
-  local user_id
-  user_id="$(curl -sS --fail-with-body -K "$PRIVATE_DIR/supabase.curl" \
-    -H 'Content-Type: application/json' --data @"$PRIVATE_DIR/grant.json" \
-    "$SUPABASE_URL/auth/v1/token?grant_type=password" | jq -r '.user.id // empty')" \
-    || die "the smoke account's password grant failed"
-  [[ -n "$user_id" ]] || die "the smoke account's password grant returned no user"
-  state_set SMOKE_USER_ID "$user_id"
+  state_set SMOKE_USER_ID "$SMOKE_USER_ID"
 }
 
 build() {
@@ -476,7 +476,7 @@ sign_in() {
   retry 20 m enter-text --key sign_in_page.password --input "$SMOKE_PASSWORD" \
     || die "no password step: the build does not name this account (rebuild without --skip-build)"
   retry 10 m tap --key sign_in_page.password_sign_in || die "could not submit the password"
-  retry 60 signed_in_or_asked_for_a_name || die "not signed in after 60s"
+  await_sign_in
   # An account without a name is asked for one once after sign-in; the
   # smoke account skips it and keeps the placeholder from then on.
   if on_screen onboarding.name.skip; then
@@ -486,8 +486,16 @@ sign_in() {
   log "signed in"
 }
 
-signed_in_or_asked_for_a_name() {
-  on_screen app_shell.journal || on_screen onboarding.name.skip
+# Waits for the app's answer to the password: signed in, or refused. A
+# refusal fails at once, as the app's sign-in is the only credential check.
+await_sign_in() {
+  retry 60 signed_in_refused_or_asked_for_a_name || die "not signed in after 60s"
+  ! on_screen sign_in_page.error ||
+    die "the app refused the smoke account's sign-in: check SMOKE_EMAIL and SMOKE_PASSWORD in $ENV_FILE, or the human check failed (see the screen)"
+}
+
+signed_in_refused_or_asked_for_a_name() {
+  on_screen app_shell.journal || on_screen onboarding.name.skip || on_screen sign_in_page.error
 }
 
 cmd_up() {
@@ -515,7 +523,7 @@ cmd_up() {
 
   # A failed `up` leaves the session for `down` to clean away; the account
   # frees itself, as the lock's holder is gone.
-  check_credentials
+  credentials
   build
   simulator
   launch
