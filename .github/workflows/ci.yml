@@ -287,15 +287,6 @@ jobs:
       - run: jaspr build --sitemap-domain https://getemotely.com --sitemap-exclude '^(/de)?/beta$'
       - run: git diff --exit-code -- lib
 
-  # emotely's analyzer plugin (tools/emotely_lints, ADR 0020): its own gates.
-  # It is outside the apps/mobile workspace (analyzer_testing and
-  # flutter_test pin test_api apart), so it is formatted, analyzed and tested
-  # here on its own, with the rule set every package uses, at 100% coverage.
-  # The app job above runs the plugin itself over every package.
-  # The Fastfile's own Ruby (fastlane/lib): the Play review guard and the App
-  # Store listing gate are what keep a release from restarting a store review
-  # or failing on a version Apple is reviewing, so they are tested before a
-  # release depends on them. Seconds once the bundle is cached.
   # A release bundle of the app, signed with the debug key: Gradle
   # evaluates every plugin's build file and R8 shrinks the result, which is
   # where a native dependency breaks. Only when the lock, the Android
@@ -325,6 +316,15 @@ jobs:
       - run: flutter pub get
       - run: flutter build appbundle --release --target-platform android-arm64
 
+  # emotely's analyzer plugin (tools/emotely_lints, ADR 0020): its own gates.
+  # It is outside the apps/mobile workspace (analyzer_testing and
+  # flutter_test pin test_api apart), so it is formatted, analyzed and tested
+  # here on its own, with the rule set every package uses, at 100% coverage.
+  # The app job above runs the plugin itself over every package.
+  # The Fastfile's own Ruby (fastlane/lib): the Play review guard and the App
+  # Store listing gate are what keep a release from restarting a store review
+  # or failing on a version Apple is reviewing, so they are tested before a
+  # release depends on them. Seconds once the bundle is cached.
   fastlane:
     needs: changes
     if: needs.changes.outputs.fastlane == 'true'

@@ -14,9 +14,11 @@ const _channel = 'EmotelyHumanCheck';
 ///
 /// The web view loads a page of our own under [origin], whose hostname the
 /// widget behind [siteKey] must list; nothing is fetched from it, only
-/// Cloudflare's script. The widget runs in managed mode and stays
-/// invisible unless Cloudflare wants an interaction; then its checkbox
-/// appears at the bottom of the screen and takes taps until it answers.
+/// Cloudflare's script. The page never leaves [origin]: on iOS a link the
+/// widget opens in a new window would replace it, and the check would
+/// never answer. The widget runs in managed mode and stays invisible
+/// unless Cloudflare wants an interaction; then its checkbox appears at
+/// the bottom of the screen and takes taps until it answers.
 ///
 /// A check that has not answered within [patience] fails, unless it asked
 /// for an interaction, which then has [interactionPatience] to happen.
@@ -108,17 +110,32 @@ class TurnstileChallenge._(final TurnstileChallenges _challenges) {
   final interactive = ValueNotifier(false);
 
   Future<void> _load() async {
-    await controller.setJavaScriptMode(JavaScriptMode.unrestricted);
-    await controller.setBackgroundColor(const Color(0x00000000));
-    await controller.addJavaScriptChannel(
-      _channel,
-      onMessageReceived: (message) => _receive(message.message),
-    );
-    await controller.loadHtmlString(
-      _challenges._page,
-      baseUrl: _challenges.origin.toString(),
-    );
+    try {
+      await controller.setJavaScriptMode(JavaScriptMode.unrestricted);
+      await controller.setBackgroundColor(const Color(0x00000000));
+      await controller.setNavigationDelegate(
+        NavigationDelegate(onNavigationRequest: _navigation),
+      );
+      await controller.addJavaScriptChannel(
+        _channel,
+        onMessageReceived: (message) => _receive(message.message),
+      );
+      await controller.loadHtmlString(
+        _challenges._page,
+        baseUrl: _challenges.origin.toString(),
+      );
+    } on Exception catch (error) {
+      _fail(error);
+    }
   }
+
+  /// Cloudflare's frames go where they need to; the page stays on
+  /// [TurnstileChallenges.origin].
+  NavigationDecision _navigation(NavigationRequest request) =>
+      !request.isMainFrame ||
+          Uri.tryParse(request.url)?.host == _challenges.origin.host
+      ? NavigationDecision.navigate
+      : NavigationDecision.prevent;
 
   void _receive(String message) {
     final report = _decode(message);
@@ -149,7 +166,7 @@ class TurnstileChallenge._(final TurnstileChallenges _challenges) {
     return ('error', 'malformed report');
   }
 
-  void _fail(String cause) =>
+  void _fail(Object cause) =>
       _settle(() => _token.completeError(HumanCheckFailed(cause)));
 
   void _settle(void Function() complete) {
