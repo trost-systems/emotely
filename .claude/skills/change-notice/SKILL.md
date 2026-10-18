@@ -9,7 +9,7 @@ Both privacy notices promise it: the site notice tells the waitlist "by email
 before it takes effect", the app notice tells account holders the same about
 their journal. The mail is the change notice, and it is the only thing that
 keeps those promises. It lives in the `change_notice` schema
-(`supabase/migrations/20261012120000_change_notice.sql`), which only postgres
+(`supabase/migrations/20261018122742_change_notice.sql`), which only postgres
 reaches, and `scripts/change-notice.sh` is the one way to drive it.
 
 A change notice is not re-consent. A change to what users agree to also needs

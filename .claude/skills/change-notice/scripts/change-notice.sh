@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Tells account holders and the waitlist about a material change to a
 # privacy notice, through the change_notice schema
-# (supabase/migrations/20261012120000_change_notice.sql).
+# (supabase/migrations/20261018122742_change_notice.sql).
 #
 #   change-notice.sh preview --about app|site|both \
 #       --effective YYYY-MM-DD --en FILE [--de FILE] [--linked]
