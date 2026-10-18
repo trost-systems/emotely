@@ -26,5 +26,6 @@
   "wrongPasswordMessage": "Dieses Passwort wurde nicht angenommen.",
   "unreachableMessage": "Der Anmeldedienst ist gerade nicht erreichbar.",
   "noAccountMessage": "Diese E-Mail-Adresse kenne ich noch nicht – tippe auf „Los geht’s“, um zu beginnen.",
-  "providerFailedMessage": "Diese Anmeldung hat nicht geklappt. Versuch es noch einmal oder nimm deine E-Mail-Adresse."
+  "providerFailedMessage": "Diese Anmeldung hat nicht geklappt. Versuch es noch einmal oder nimm deine E-Mail-Adresse.",
+  "humanCheckFailedMessage": "Ich konnte nicht bestätigen, dass ein Mensch fragt. Versuch es gleich noch einmal."
 }

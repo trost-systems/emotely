@@ -262,6 +262,12 @@ abstract class AuthLocalizations {
   /// In en, this message translates to:
   /// **'That sign-in did not go through. Try again, or use your email.'**
   String get providerFailedMessage;
+
+  /// Sign-in screen error, email or password step: the invisible security check that runs before a code is sent or a password is checked (Cloudflare Turnstile) failed, or the sign-in service refused its result. Nothing the user typed is wrong, so it must not sound like a wrong address or password; trying again runs a fresh check. emotely speaks as "I".
+  ///
+  /// In en, this message translates to:
+  /// **'I couldn’t confirm that a person is asking. Try again in a moment.'**
+  String get humanCheckFailedMessage;
 }
 
 class _AuthLocalizationsDelegate

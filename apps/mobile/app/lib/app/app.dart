@@ -10,6 +10,7 @@ import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:human_check/human_check.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 
@@ -30,10 +31,14 @@ import 'package:posthog_flutter/posthog_flutter.dart';
 ///   about, restored before it is handed in.
 /// - [debugBanner], whether a debug build shows Flutter's DEBUG banner;
 ///   `environment.dart` says when it is off.
+/// - [turnstile], the human check's challenges (#94), shown over every
+///   screen while one runs; the same instance whose `token` `registerApp`
+///   was handed.
 class const EmotelyApp({
   required final NavigatorObserver screenViews,
   required final OnboardingStore onboarding,
   required final bool debugBanner,
+  required final TurnstileChallenges turnstile,
   super.key,
 }) extends StatelessWidget {
   @override
@@ -51,6 +56,7 @@ class const EmotelyApp({
       screenViews: screenViews,
       onboarding: onboarding,
       debugBanner: debugBanner,
+      turnstile: turnstile,
     ),
   );
 }
@@ -62,6 +68,7 @@ class const _Router({
   required final NavigatorObserver screenViews,
   required final OnboardingStore onboarding,
   required final bool debugBanner,
+  required final TurnstileChallenges turnstile,
 }) extends StatefulWidget {
   @override
   State<_Router> createState() => _RouterState();
@@ -108,9 +115,14 @@ class _RouterState() extends State<_Router> {
     // usage-analytics question: once this build may run, it comes before
     // anything else the user sees, over whatever screen the router shows
     // (#204). The PostHog wrapper does nothing until the SDK is set up.
-    builder: (context, child) => PostHogWidget(
-      child: ConfigGate(
-        child: UsageAnalyticsPrompt(child: child ?? const SizedBox.shrink()),
+    // Over all of it, the human check's web view while a check runs (#94):
+    // transparent unless Cloudflare asks the user for a tap.
+    builder: (context, child) => TurnstileHost(
+      challenges: widget.turnstile,
+      child: PostHogWidget(
+        child: ConfigGate(
+          child: UsageAnalyticsPrompt(child: child ?? const SizedBox.shrink()),
+        ),
       ),
     ),
   );

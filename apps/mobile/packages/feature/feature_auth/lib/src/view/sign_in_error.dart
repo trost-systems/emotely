@@ -27,5 +27,6 @@ class const SignInError(final SignInProblem? problem, {super.key})
         SignInProblem.unreachable => strings.unreachableMessage,
         SignInProblem.noAccount => strings.noAccountMessage,
         SignInProblem.providerFailed => strings.providerFailedMessage,
+        SignInProblem.humanCheckFailed => strings.humanCheckFailedMessage,
       };
 }

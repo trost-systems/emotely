@@ -38,7 +38,7 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         'This notice covers the emotely mobile app (listed on Google Play as '
         '"Reflect Therapy AI: emotely") for iOS and Android. The web site at '
         'getemotely.com and its waitlist have a separate notice. Last '
-        'updated 2 October 2026.',
+        'updated 3 October 2026.',
       ),
     ]),
 
@@ -127,6 +127,23 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         'password. The provider learns that you signed in to emotely — as a '
         'controller in its own right, under its own privacy policy — and '
         'nothing about your journal.',
+      ),
+    ]),
+    // #94: Supabase Auth refuses a code request or a password sign-in
+    // without a Turnstile token, which the app fetches first.
+    p([
+      .text(
+        'Before the app asks for a code, and before it checks a password, '
+        'Cloudflare Turnstile checks in a hidden web view that a person and '
+        'not a script is asking. It reads what it needs to tell the two '
+        'apart — your IP address, the TLS fingerprint and user agent of '
+        'that web view, and that the request comes from emotely — and '
+        'answers with a one-time token that Supabase confirms with '
+        'Cloudflare. It never sees your email address. Basis: our '
+        'legitimate interest in keeping scripts from mailing codes to '
+        'strangers and from using up the sign-in mail every real user '
+        'depends on (Art. 6 (1) (f) GDPR). Sign in with Google or Apple '
+        'needs no such check.',
       ),
     ]),
     // #229: the sign-in mail template reads user_metadata.app_locale.
@@ -413,16 +430,17 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         'account exists, and the sign-in method you last used, so the '
         'sign-in screen can mark it. The last used method is never sent '
         'anywhere; it survives signing out and is cleared when you delete '
-        'the account. Storing these needs no consent, because each is '
-        'strictly necessary for the service you asked for '
+        'the account. The web view that runs Cloudflare’s check may keep '
+        'what the check needs to work. Storing these needs no consent, '
+        'because each is strictly necessary for the service you asked for '
         '(§ 25 (2) no. 2 TDDDG).',
       ),
     ]),
     p([
       .text(
-        'Everything that does leave the phone — to our server, the database '
-        'and the analytics provider — travels over an encrypted HTTPS '
-        'connection; the app makes no unencrypted connection at all.',
+        'Everything that does leave the phone — to our server, the database, '
+        'the analytics provider and Cloudflare — travels over an encrypted '
+        'HTTPS connection; the app makes no unencrypted connection at all.',
       ),
     ]),
 
@@ -476,6 +494,19 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         ),
       ]),
       li([
+        strong([.text('Cloudflare')]),
+        .text(
+          ' — runs the human check before a code or a password sign-in '
+          '(Turnstile), as described under your email address above. It '
+          'also uses those signals, as a controller in its own right, to '
+          'improve its bot detection, as its ',
+        ),
+        a(href: 'https://www.cloudflare.com/turnstile-privacy-policy/', [
+          .text('Turnstile privacy addendum'),
+        ]),
+        .text(' describes. Never your journal, your name or your address.'),
+      ]),
+      li([
         strong([.text('Apple and Google')]),
         .text(
           ' — distribute the app and, independently of us, collect their own '
@@ -497,13 +528,16 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
     // separate statement from naming them, and one a reviewer looks for.
     p([
       .text(
-        'Every one of them except Apple and Google handles this data only on '
-        'our instructions, as a processor under a data processing agreement '
-        '(Art. 28 GDPR) that binds them to protect it to the same standard '
-        'described here and forbids them using it for their own purposes. '
-        'Apple and Google are not our processors: what they collect when '
-        'they distribute the app, they collect as controllers in their own '
-        'right, under their own policies and outside our reach.',
+        'Supabase, Vercel, the model provider and PostHog handle this data '
+        'only on our instructions, as processors under a data processing '
+        'agreement (Art. 28 GDPR) that binds them to protect it to the same '
+        'standard described here and forbids them using it for their own '
+        'purposes. Cloudflare runs the check on the same terms, except that '
+        'it also improves its bot detection with the check’s signals, as '
+        'described above. Apple and Google are not our processors: what '
+        'they collect when they distribute the app, they collect as '
+        'controllers in their own right, under their own policies and '
+        'outside our reach.',
       ),
     ]),
 

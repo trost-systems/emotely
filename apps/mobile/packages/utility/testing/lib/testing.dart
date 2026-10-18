@@ -12,6 +12,7 @@ export 'src/color_picker.dart';
 export 'src/compose.dart';
 export 'src/config_stub.dart';
 export 'src/consent_rounds.dart';
+export 'src/human_check_stub.dart';
 export 'src/identity_providers.dart';
 export 'src/journal_rows.dart';
 export 'src/mocks.dart';

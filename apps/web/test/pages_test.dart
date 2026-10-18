@@ -520,7 +520,7 @@ void main() {
       tester.pumpComponent(const AppPrivacy());
 
       expect(
-        find.textContaining('Last updated 2 October 2026'),
+        find.textContaining('Last updated 3 October 2026'),
         findsOneComponent,
       );
     });
@@ -662,6 +662,26 @@ void main() {
       expect(
         find.textContaining('retention window for the project'),
         findsComponents,
+      );
+    });
+
+    testComponents('names the human check before a sign-in mail (#94)', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacy());
+
+      // feature_auth: every captcha-protected Supabase call carries a
+      // Turnstile token the app fetched in a hidden web view first.
+      expect(find.textContaining('Cloudflare Turnstile'), findsComponents);
+      expect(find.textContaining('hidden web view'), findsComponents);
+      expect(find.textContaining('TLS fingerprint'), findsComponents);
+      expect(find.textContaining('improve its bot detection'), findsComponents);
+      expect(find.text('Cloudflare'), findsComponents);
+      // Cloudflare is the one recipient besides Apple and Google that also
+      // uses something for its own purpose; the blanket claim must say so.
+      expect(
+        find.textContaining('Every one of them except Apple and Google'),
+        findsNothing,
       );
     });
 
@@ -1015,7 +1035,7 @@ void main() {
       tester.pumpComponent(const AppPrivacyDe());
 
       expect(
-        find.textContaining('Zuletzt aktualisiert am 2. Oktober 2026'),
+        find.textContaining('Zuletzt aktualisiert am 3. Oktober 2026'),
         findsOneComponent,
       );
     });
@@ -1154,6 +1174,22 @@ void main() {
         expect(find.textContaining('Sitzung'), findsNothing);
         expect(find.textContaining('Datenschutzhinweis'), findsNothing);
       }
+    });
+
+    testComponents('names the human check before a sign-in mail (#94)', (
+      tester,
+    ) {
+      tester.pumpComponent(const AppPrivacyDe());
+
+      expect(find.textContaining('Cloudflare Turnstile'), findsComponents);
+      expect(find.textContaining('verborgenen Web-Ansicht'), findsComponents);
+      expect(find.textContaining('TLS-Fingerabdruck'), findsComponents);
+      expect(
+        find.textContaining('seine Bot-Erkennung zu verbessern'),
+        findsComponents,
+      );
+      expect(find.text('Cloudflare'), findsComponents);
+      expect(find.textContaining('Alle außer Apple und Google'), findsNothing);
     });
 
     group('claims nothing the code does not do', () {

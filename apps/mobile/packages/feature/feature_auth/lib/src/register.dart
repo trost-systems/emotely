@@ -28,6 +28,7 @@ void registerAuth(
       errors: getIt(),
       providers: getIt(),
       lastSignIn: getIt(),
+      humanCheck: getIt(),
       passwordAccounts: passwordAccounts,
     ),
   )
