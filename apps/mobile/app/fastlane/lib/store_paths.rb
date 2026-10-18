@@ -24,6 +24,11 @@ module StorePaths
   # read a review_information/ folder there itself.
   APP_REVIEW_DIR = File.join(FASTLANE_DIR, "app_review")
 
+  # TestFlight's Test Information per language (see lib/test_flight_info.rb).
+  # Outside metadata/ because deliver reads that folder as the App Store
+  # listing.
+  TESTFLIGHT_DIR = File.join(FASTLANE_DIR, "testflight")
+
   # Play's Data safety declaration, as the Play Console exports it (see
   # lib/play_data_safety.rb).
   DATA_SAFETY_CSV = File.join(FASTLANE_DIR, "data_safety.csv")

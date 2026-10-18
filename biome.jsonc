@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
   "files": {
     "includes": [
       "**",
@@ -75,11 +75,16 @@
   "overrides": [
     {
       // Tests and evals: literal expected values are the point, long
-      // test bodies are fine, and eval reports print to stdout.
+      // test bodies and files (one per module under test) are fine, and
+      // eval reports print to stdout.
       "includes": ["**/*.test.ts", "apps/agent/evals/**"],
       "linter": {
         "rules": {
-          "style": { "noMagicNumbers": "off", "noProcessEnv": "off" },
+          "style": {
+            "noMagicNumbers": "off",
+            "noProcessEnv": "off",
+            "noExcessiveLinesPerFile": "off"
+          },
           "complexity": { "noExcessiveLinesPerFunction": "off" },
           "performance": { "useTopLevelRegex": "off" },
           "suspicious": { "noConsole": "off" }

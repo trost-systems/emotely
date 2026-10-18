@@ -107,6 +107,25 @@ rate-limited rather than left open: an uncached path is still a function
 invocation, and an unauthenticated GET is the easiest thing in the system to
 point a script at. A real app reads it once per launch.
 
+### Amendment 2026-10-03: a third rule for `/api/revoke-apple`
+
+`POST /api/revoke-apple` (#193) revokes a user's Sign in with Apple grant
+before their account is deleted. It needs a live Supabase session and only
+ever revokes the Apple ID linked to that account, so it cannot reach anyone
+else's grant; what it can cost is two calls to Apple and one to Supabase
+per request, under our key. A real user calls it once, at deletion, so the
+limit is far tighter than the others:
+
+| Rule | Value |
+| --- | --- |
+| Project | `emotely-agent` → Firewall → Rules |
+| Match | Request Path equals `/api/revoke-apple` |
+| Limit | 10 requests / 60 s, fixed window, keyed by IP |
+| Action | 429 Too Many Requests |
+
+The app treats a 429 like any other refusal: the account is still deleted,
+and the user is told where to remove emotely from their Apple Account.
+
 We chose the WAF over an in-function limiter because the rule rejects at the
 edge, before a function invocation is billed, and because a Hobby project gets
 one rate-limit rule at no cost. Verified live on 2026-09-04: the 31st request
@@ -134,6 +153,12 @@ vercel firewall rules add "Rate limit config" \
   --project emotely-agent \
   --condition '{"type":"path","op":"eq","value":"/api/config"}' \
   --action rate_limit --rate-limit-window 60 --rate-limit-requests 60 \
+  --rate-limit-keys ip --rate-limit-action rate_limit --yes
+
+vercel firewall rules add "Rate limit revoke-apple" \
+  --project emotely-agent \
+  --condition '{"type":"path","op":"eq","value":"/api/revoke-apple"}' \
+  --action rate_limit --rate-limit-window 60 --rate-limit-requests 10 \
   --rate-limit-keys ip --rate-limit-action rate_limit --yes
 
 vercel firewall diff --project emotely-agent      # review
@@ -223,9 +248,10 @@ What it costs:
   signs in with a password: the nightly live smoke, the latency probe, and
   `run-app.sh`'s credential check. None of them can solve a challenge, and
   GoTrue's only bypass is a service-role key, which ADR 0010 keeps out of
-  CI. How they sign in under enforcement is
-  [#304](https://github.com/trost-systems/emotely/issues/304), and the
-  captcha is not switched on in production before it is settled.
+  CI. They moved off the password grant before enforcement
+  ([#304](https://github.com/trost-systems/emotely/issues/304), the next
+  amendment): the probes take the ID-token grant as a service account, and
+  `run-app.sh` lets the app's own sign-in pass the check.
 - **The free plan is sized for it**: unlimited challenges and siteverify
   calls, 20 widgets, 10 hostnames per widget.
 
@@ -246,3 +272,57 @@ curl -s -o /dev/null -w '%{http_code}\n' -H "apikey: $KEY" -H 'content-type: app
 
 The same 400 answers an unknown address, so the 422-vs-200 oracle needs a
 solved challenge per probe.
+
+## Amendment 2026-10-03: no accounts for service accounts; the probes sign in as one (#304)
+
+Supabase Auth's ID-token grant (`/token?grant_type=id_token`) is not
+behind the auth captcha (#94), and for provider `google` it accepts any
+token Google signed whose audience is one of our Google client ids
+(supabase/auth `internal/api/token_oidc.go`): the issuer is fixed to
+`https://accounts.google.com`, the nonce check passes when neither the
+token nor the request carries one, and the account's address is the
+token's `email` claim. A Google service account's ID token meets all of
+that. Anyone can create a service account in their own Google Cloud
+project for free and mint it an ID token for any audience, so a script
+could create accounts without limit and without a challenge, each able to
+start model sessions that cost money. Verified on the hosted project on
+2026-10-03: a token minted for a service account with our web client as
+its audience got a 200 and a new account (deleted again through
+`delete_account`); the same token for a foreign audience got 400
+"Unacceptable audience".
+
+**Decision: a before-user-created hook refuses service accounts.**
+`public.before_user_created` (a Postgres function, Auth's
+`[auth.hook.before_user_created]`, available on Free and Pro) answers 403
+for every new account on Google's service-account domains
+(`*.gserviceaccount.com`). People never sign in with one, and only new
+accounts pass the hook. The single exception is
+`signin-probe@emotely-ci.iam.gserviceaccount.com` through Google sign-in.
+
+**That service account is the probes' identity.** The nightly live smoke
+and the latency probe can no longer sign in with a password: under the
+captcha a password grant needs a human check, and GoTrue's only bypass is
+a service-role key, which ADR 0010 keeps out of CI. They take the ID-token
+grant instead, with a token for `signin-probe` that each workflow mints
+keyless (workload identity federation from GitHub, no stored key):
+
+- **The service account has no role** in `emotely-ci`. All it can do is
+  be signed in as, to emotely, as one ordinary user.
+- **Who may mint its token**: the workload identity pool `github-probes`
+  (provider `emotely`), conditioned on this repository and its owner, on
+  `refs/heads/main`, and on `nightly-evals.yml` or `nightly-perf.yml`, holds
+  `roles/iam.serviceAccountOpenIdTokenCreator` on it, and nobody else
+  standing: the maintainer's grant for the rollout is removed after it, and
+  a local latency run needs the project owner to grant it again for that
+  run. It is a pool of its own
+  so that the Test Lab pool's repository-wide binding on `ftl-runner`
+  (which holds Editor) is not widened to the probe workflows.
+- **What a leak would cost**: a token is valid for an hour and signs in as
+  the probe account only. The probe's sessions spend the same per-user
+  budget as anyone's (the caps above).
+
+The rejected alternatives: a service-role key for the probes (reverses ADR
+0010, and that key can do anything to the database), and probes against a
+local stack (they would stop proving the deployed system). `run-app.sh`
+dropped its pre-build password grant instead: the app's own sign-in passes
+the check in its web view and is the credential check.

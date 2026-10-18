@@ -103,8 +103,23 @@ The other kinds: `longtext_input.field` then `longtext_input.submit`;
 `rating_input.submit`; `emoji_input.slot.0`, `tap --text 😊` (the
 third-party picker has no keys) then `emoji_input.submit`;
 `color_input.slot.0`, `color_input.select` then `color_input.submit`.
-Discard what you open: the nightly live smoke starts a new session and fails
-on an unfinished one.
+Discard what you open: the on-device acceptance session starts a new
+session and fails on an unfinished one. (The nightly live smoke signs in
+as the probes' own account, not the smoke account.)
+
+## The on-screen keyboard
+
+Marionette's screenshot is Flutter's own picture: it never shows the iOS
+keyboard, so a screen with the keyboard open looks as if it were closed.
+To show it, take the screenshot with
+`xcrun simctl io <device> screenshot <bundle>/NN-<name>.png` instead, under
+the name the plan prints. Type with taps on the keyboard's keys (the
+simulator tool's `tap`) or with marionette's `enter-text`. The simulator
+tool's `text` sends hardware key presses, and after them iOS hides the
+on-screen keyboard for the rest of that simulator's life; only `down` and
+a fresh `up` bring it back. The first time a fresh simulator's keyboard
+opens, it covers itself with a "slide to type" card: tap its Continue, and
+check with a screenshot that it went, before you type.
 
 ## The copies to post
 
@@ -137,10 +152,18 @@ journal hold made-up content only.
 
 **Your own smoke account.** Contributors bring their own: an address whose
 inbox you, and the agents you run, can read, so a flow that sends mail can
-be verified end to end. Put `SMOKE_EMAIL`, `SMOKE_PASSWORD` and
-`SMOKE_EMAIL_DOMAINS` (its domain, comma-separated if more than one) in
-`apps/agent/.env.local`. Inside emotely that is an address on
+be verified end to end. Put `SMOKE_EMAIL`, `SMOKE_PASSWORD`,
+`SMOKE_USER_ID` (the account's id: Supabase dashboard, Authentication,
+Users) and `SMOKE_EMAIL_DOMAINS` (its domain, comma-separated if more than
+one) in `apps/agent/.env.local`. Inside emotely that is an address on
 `getemotely.com`. Reading the inbox from the CLI is #186.
+
+**No sign-in before the build.** The hosted project's auth captcha (#94)
+refuses a password grant without a Turnstile token, which a script cannot
+get, so the CLI no longer proves the password with one. The app's own
+sign-in passes the check in its web view and is the credential check: a
+refused password fails the `sign-in` step at once, naming the env file.
+The user id comes from the env file for the same reason (#304).
 
 ## Parallel sessions
 

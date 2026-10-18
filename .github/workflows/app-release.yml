@@ -33,6 +33,8 @@ on:
       - '!apps/mobile/app/fastlane/app_review/**'
       - '!apps/mobile/app/fastlane/data_safety.csv'
       - '!apps/mobile/app/fastlane/console/**'
+      # TestFlight's Test Information goes up with the next build or beta run.
+      - '!apps/mobile/app/fastlane/testflight/**'
       # The Dart contract is pinned against the emitted JSON Schema.
       - 'packages/contract/contract.schema.json'
       - '.github/workflows/app-release.yml'

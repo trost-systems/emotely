@@ -55,17 +55,22 @@ List<(String, Map<String, Object?>)> installPosthogStub() {
 }
 
 /// Stands in for Cloudflare's `window.turnstile`: hands out numbered
-/// tokens on `execute`, or fails every check when [fails] is set, and
-/// remembers how each widget was rendered and how many were removed.
+/// tokens on `execute`, or fails every check when [fails] is set, throws
+/// from `render` when [throws] is set, and remembers how each widget was
+/// rendered and how many were removed.
 class TurnstileStub() {
   final rendered = <JSObject>[];
   var removed = 0;
   var fails = false;
+  var throws = false;
 
   /// Installs this stub as `window.turnstile`, as the script would.
   void install() {
     final api = JSObject();
     api['render'] = ((JSString container, JSObject params) {
+      if (throws) {
+        throw StateError('Turnstile could not render');
+      }
       rendered.add(params);
       return 'widget-${rendered.length}'.toJS;
     }).toJS;
@@ -228,25 +233,36 @@ void main() {
             find.textContaining('Something went wrong'),
             findsOneComponent,
           );
+
+          // The dead script never fires again: a retry appends a fresh one
+          // and fails again on its error instead of waiting forever.
+          await tester.click(find.byKey(const Key('send-code')));
+          await pumpEventQueue();
+
+          expect(appended, hasLength(2));
+          expect(find.textContaining('Something went wrong'), findsNothing);
+
+          appended.last.dispatchEvent(web.Event('error'));
+          await pumpEventQueue();
+
+          expect(seen, isEmpty);
+          expect(
+            find.textContaining('Something went wrong'),
+            findsOneComponent,
+          );
         });
       },
     );
 
-    testClient('waits for a script already on its way, then checks', (
-      tester,
-    ) async {
+    testClient('waits for the script to load, then checks', (tester) async {
       final seen = <http.Request>[];
       globalContext.delete('turnstile'.toJS);
-      // The script an earlier click added, still loading. As text/plain it
-      // fetches nothing, so the test decides when it has "loaded".
-      final loading = web.document.createElement('script')
-        ..setAttribute('type', 'text/plain')
-        ..setAttribute(
-          'src',
-          'https://challenges.cloudflare.com/turnstile/v0/api.js'
-              '?render=explicit',
-        );
-      web.document.head!.append(loading);
+      // Kept here instead of in <head>, so nothing reaches Cloudflare and
+      // the test decides when the script has "loaded".
+      final appended = <web.Element>[];
+      final head = web.document.head!;
+      head['append'] = appended.add.toJS;
+      addTearDown(() => head.delete('append'.toJS));
       await withApi(seen: seen, () async {
         tester.pumpComponent(const DeleteAccountForm());
         await tester.input(
@@ -257,19 +273,32 @@ void main() {
         await pumpEventQueue();
 
         expect(seen, isEmpty);
-        expect(
-          web.document.querySelectorAll('script[src*="challenges"]').length,
-          1,
-        );
+        expect(appended, hasLength(1));
 
         // What the script does once it ran: `window.turnstile` exists.
         turnstile.install();
-        loading.dispatchEvent(web.Event('load'));
+        appended.single.dispatchEvent(web.Event('load'));
         await pumpEventQueue();
 
         expect(captchaOf(seen.single), {'captcha_token': 'turnstile-token-1'});
       });
-      loading.remove();
+    });
+
+    testClient('a check that throws fails like any other', (tester) async {
+      final seen = <http.Request>[];
+      turnstile.throws = true;
+      await withApi(seen: seen, () async {
+        tester.pumpComponent(const DeleteAccountForm());
+        await tester.input(
+          find.byKey(const Key('email')),
+          value: 'alice@example.com',
+        );
+        await tester.click(find.byKey(const Key('send-code')));
+        await pumpEventQueue();
+
+        expect(seen, isEmpty);
+        expect(find.textContaining('Something went wrong'), findsOneComponent);
+      });
     });
 
     testClient('asks for a code, then deletes with the code', (tester) async {

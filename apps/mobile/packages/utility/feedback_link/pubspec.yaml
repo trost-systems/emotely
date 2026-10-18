@@ -9,8 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  get_it: 9.2.1
-  url_launcher: 6.3.2
+  get_it: 9.3.0
+  url_launcher: 6.3.3
 
 dev_dependencies:
   analysis: any
