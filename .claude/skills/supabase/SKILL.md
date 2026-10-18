@@ -101,9 +101,9 @@ code typed where it was asked for, never a link (ADR 0010, amendment
 
 | template | file | sent by |
 | --- | --- | --- |
-| `confirmation` | `supabase/templates/confirmation.html` | `signUp`, `resend` (type `signup`) |
+| `confirmation` | `supabase/templates/confirmation.html` | `signUp`, `resend` (type `signup`), and `/otp` for an address with no confirmed account (GoTrue signs it up) |
 | `recovery` | `supabase/templates/recovery.html` | `resetPasswordForEmail` |
-| `magic_link` | `supabase/templates/email_code.html` | `/otp`: the web account-deletion page, and app builds from before #187 |
+| `magic_link` | `supabase/templates/email_code.html` | `/otp` for a confirmed account: the web account-deletion page, and app builds from before #187 |
 | `notification.password_changed` | `supabase/templates/password_changed.html` | any `updateUser` that sets a different password (no code; `same_password` sends nothing) |
 
 Each branches on the account's `user_metadata.app_locale` (English, German)

@@ -156,6 +156,41 @@ void main() {
           isNot(contains('password_reset_failed')),
         );
       });
+
+      testWidgets('unless a sign-in typed the one that works since', (
+        tester,
+      ) async {
+        // GoTrue kept the first password, which signs in from "I have an
+        // account"; the code that sign-in mails sets no other.
+        final supabase = SupabaseStub()
+          ..script(
+            signUp: [accountCreated(), accountCreated()],
+            password: [
+              authRefused(
+                statusCode: 400,
+                errorCode: 'email_not_confirmed',
+                message: 'Email not confirmed',
+              ),
+            ],
+            resend: [codeSent()],
+            verify: [sessionGranted()],
+          );
+        final robot = robotFor(tester, supabase);
+        await robot.launch();
+        await robot.submitCredentials(password: first);
+        await robot.tapChangeEmail();
+        await robot.submitCredentials(password: last);
+        await robot.tapChangeEmail();
+
+        await robot.signInThroughOtherDoor(SupabaseStub.email, first);
+        await robot.confirmWith();
+
+        expect(
+          robot.posted('user').where((body) => body.containsKey('password')),
+          isEmpty,
+        );
+        expect(robot.home, findsOneWidget);
+      });
     });
 
     testWidgets('signs in at once when the project confirms no addresses', (
