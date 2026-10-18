@@ -1,6 +1,6 @@
 ---
 name: supabase
-description: How to run the local Supabase stack, write and test migrations and row-level security with pgTAP, read local sign-in codes, and deploy schema/auth config to the hosted project. Use whenever touching supabase/, the database schema, RLS policies, or auth configuration.
+description: How to run the local Supabase stack, write and test migrations and row-level security with pgTAP, read the codes in local auth mails (confirming an account, resetting a password), and deploy schema/auth config to the hosted project. Use whenever touching supabase/, the database schema, RLS policies, or auth configuration.
 ---
 
 # Supabase (supabase/)
@@ -33,7 +33,8 @@ bash .claude/skills/supabase/scripts/stack.sh down           # when done: delete
 - `supabase status -o env` prints this stack's URLs and keys (`API_URL`,
   `PUBLISHABLE_KEY`, `DB_URL`, `STUDIO_URL`, `INBUCKET_URL`); the ports
   in `config.toml` are defaults nobody listens on. Inbucket holds every
-  email the local Auth sends, sign-in codes included.
+  email the local Auth sends, sign-in, confirmation and reset codes
+  included.
 - A worktree deleted without `down` leaves its stack running; the next
   `up` anywhere on the machine deletes it (`stack.sh prune` alone does
   too). A stack started by hand is not registered: `supabase stop
@@ -91,10 +92,36 @@ run the suite, watch it fail, `supabase db reset --local`.
 ## Auth configuration
 
 `supabase/config.toml` `[auth]` sections are pushed to the hosted project by
-CI (`supabase config push`). The sign-in code email is
-`supabase/templates/sign_in_code.html`, wired under
-`[auth.email.template.magic_link]`; locally it renders into Inbucket. Its
-words use [`CONTEXT.md`](../../../CONTEXT.md)'s terms, as all copy does.
+CI (`supabase config push`). People sign in with an email and a password
+(or Apple, Google); the address is confirmed before the account opens
+(`enable_confirmations`), and every mail Auth sends carries a six-digit
+code typed where it was asked for, never a link (ADR 0010, amendment
+2026-10-03). The templates, under `[auth.email.template.*]` and
+`[auth.email.notification.*]`:
+
+| template | file | sent by |
+| --- | --- | --- |
+| `confirmation` | `supabase/templates/confirmation.html` | `signUp`, `resend` (type `signup`), and `/otp` for an address with no confirmed account (GoTrue signs it up) |
+| `recovery` | `supabase/templates/recovery.html` | `resetPasswordForEmail` |
+| `magic_link` | `supabase/templates/email_code.html` | `/otp` for a confirmed account: the web account-deletion page, and app builds from before #187 |
+| `notification.password_changed` | `supabase/templates/password_changed.html` | any `updateUser` that sets a different password (no code; `same_password` sends nothing) |
+
+Each branches on the account's `user_metadata.app_locale` (English, German)
+in its body and in its subject in `config.toml`; their words use
+[`CONTEXT.md`](../../../CONTEXT.md)'s terms, as all copy does. Locally every
+mail renders into Mailpit (this stack's `INBUCKET_URL`): its API reads the
+newest code for an address, which is how an agent confirms an account or
+resets a password end to end without a real mailbox:
+
+```bash
+eval "$(supabase status -o env | grep '^INBUCKET_URL=')"
+id="$(curl -s "$INBUCKET_URL/api/v1/search?query=to:new@example.com&limit=1" | jq -r '.messages[0].ID')"
+curl -s "$INBUCKET_URL/api/v1/message/$id" | jq -r .Text | grep -oE '\b[0-9]{6}\b' | head -1
+```
+
+Leaked-password protection (HaveIBeenPwned) is off: it needs the Pro plan,
+which emotely does not buy for it (ADR 0010, amendment 2026-10-03), and it
+is no `config.toml` key, so it could not deploy from `main` anyway.
 
 The hosted project sends through Resend (custom SMTP, #52), configured in
 the `[remotes.production]` block at the end of `config.toml`. The CLI applies
