@@ -197,6 +197,52 @@ void main() {
       }),
     );
 
+    testWidgets(
+      'search results stay above the keyboard, to pick without closing it',
+      (tester) async {
+        addTearDown(tester.view.reset);
+        final submitted = await pumpTestWidget(tester);
+        await openSearch(tester);
+
+        // The keyboard search opens takes the lower half of the 800x600
+        // test screen.
+        tester.view.viewInsets = FakeViewPadding(
+          bottom: 300 * tester.view.devicePixelRatio,
+        );
+        await tester.pumpAndSettle();
+        await tester.enterText(find.byType(EditableText), 'Schmetterling');
+        await tester.pumpAndSettle();
+
+        final result = find.descendant(of: search, matching: find.text('🦋'));
+        expect(tester.getRect(search).bottom, lessThanOrEqualTo(300));
+        expect(tester.getRect(result).bottom, lessThanOrEqualTo(300));
+        // Still typing: the keyboard has not been closed to reach it.
+        expect(tester.testTextInput.isVisible, isTrue);
+
+        await tester.tap(result);
+        await tester.pumpAndSettle();
+
+        expect(picker, findsNothing);
+        await tapSubmit(tester, EmojiInput.submitKey);
+        expect(submitted.single, const Answer.emoji(['🦋']));
+      },
+      variant: const TargetPlatformVariant({
+        TargetPlatform.android,
+        TargetPlatform.iOS,
+      }),
+    );
+
+    testWidgets('without a keyboard the sheet sits at the bottom, as before', (
+      tester,
+    ) async {
+      await pumpTestWidget(tester);
+      await openSlot(tester, 0);
+
+      // The picker's own height (256), Material 3's widest sheet (640),
+      // centered on the bottom edge of the 800x600 test screen.
+      expect(tester.getRect(picker), const Rect.fromLTWH(80, 344, 640, 256));
+    });
+
     testWidgets('leaving search shows every emoji again', (tester) async {
       await pumpTestWidget(tester);
       await openSearch(tester);

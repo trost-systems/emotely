@@ -11,8 +11,8 @@ dependencies:
   flutter:
     sdk: flutter
   freezed_annotation: 3.1.0
-  get_it: 9.2.1
-  supabase_flutter: 3.0.0-dev.7
+  get_it: 9.3.0
+  supabase_flutter: 3.0.0-dev.9
   supabase_schema: any
 
 dev_dependencies:
@@ -20,5 +20,5 @@ dev_dependencies:
   build_runner: 2.16.1
   flutter_test:
     sdk: flutter
-  freezed: 4.0.1
+  freezed: 4.0.2
   testing: any

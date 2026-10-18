@@ -77,6 +77,10 @@ describe("transcript signing", () => {
     assert.equal(verifyTranscript(transcript, "not-base64!!", SECRET), false);
     assert.equal(verifyTranscript(transcript, "", SECRET), false);
   });
+
+  it("rejects a transcript JSON cannot encode without throwing", () => {
+    assert.equal(verifyTranscript(undefined, "not-base64!!", SECRET), false);
+  });
 });
 
 describe("transcript signing during a secret rotation", () => {

@@ -38,7 +38,7 @@ dependencies:
   consent_repository: any
   contract: any
   # Cupertino Icons font for iOS-style icons.
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^2.0.0
   design_system: any
   feature_account: any
   feature_auth: any
@@ -53,8 +53,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   freezed_annotation: 3.1.0
-  get_it: 9.2.1
-  go_router: 18.0.1
+  get_it: 9.3.0
+  go_router: 18.0.2
   http: 1.6.0
   # The version flutter_localizations requires (^0.20.3), pinned.
   intl: 0.20.3
@@ -66,15 +66,15 @@ dependencies:
   # under kDebugMode, a compile-time constant, so profile and release builds
   # tree-shake it away. Pure Dart, no native plugin. Keep it at the version
   # of marionette_cli the skill activates: the two speak one protocol.
-  marionette_flutter: 0.6.0
+  marionette_flutter: 0.7.0
   material_ui: ^1.1.0
   meta: ^1.19.0
-  package_info_plus: 10.2.1
+  package_info_plus: 10.2.2
   posthog_flutter: 5.39.0
   profile_repository: any
   pub_semver: 2.2.1
-  supabase_flutter: 3.0.0-dev.7
-  url_launcher: 6.3.2
+  supabase_flutter: 3.0.0-dev.9
+  url_launcher: 6.3.3
 
 dev_dependencies:
   # The analyzer configuration (flutter_agent_lints behind it) and the shared
@@ -91,7 +91,7 @@ dev_dependencies:
     sdk: flutter
   flutter_test:
     sdk: flutter
-  freezed: 4.0.1
+  freezed: 4.0.2
   integration_test:
     sdk: flutter
   json_serializable: 6.14.1

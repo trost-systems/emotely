@@ -7,8 +7,11 @@ import {
   askQuestionInput,
   completeSessionInput,
   configResponse,
+  errorCodes,
   maxDisplayNameLength,
   recordAnswerInput,
+  revokeAppleRequest,
+  revokeAppleResponse,
 } from "./index.ts";
 
 describe("ask_question input", () => {
@@ -398,5 +401,41 @@ describe("config response", () => {
   it("ignores unknown keys so the server can add fields (ADR 0009 rule 1)", () => {
     const parsed = configResponse.parse({ ...config, future_flag: true });
     assert.deepEqual(parsed, config);
+  });
+});
+
+describe("revoke_apple request", () => {
+  it("carries the single-use authorization code Apple's sheet issued", () => {
+    const request = { authorization_code: "c0de.0.abcd" };
+    assert.deepEqual(revokeAppleRequest.parse(request), request);
+  });
+
+  it("refuses a missing, empty or oversized code before Apple is asked", () => {
+    for (const bad of [{}, { authorization_code: "" }, { code: "c" }]) {
+      assert.equal(revokeAppleRequest.safeParse(bad).success, false);
+    }
+    const huge = { authorization_code: "c".repeat(513) };
+    assert.equal(revokeAppleRequest.safeParse(huge).success, false);
+  });
+});
+
+describe("revoke_apple response", () => {
+  it("says the grant is revoked, and nothing else", () => {
+    assert.deepEqual(revokeAppleResponse.parse({ status: "revoked" }), {
+      status: "revoked",
+    });
+    assert.equal(
+      revokeAppleResponse.safeParse({ status: "pending" }).success,
+      false,
+    );
+  });
+
+  it("has a code for each way revocation can be refused", () => {
+    for (const code of [
+      "apple_identity_mismatch",
+      "apple_revocation_unavailable",
+    ]) {
+      assert.ok((errorCodes as readonly string[]).includes(code), code);
+    }
   });
 });

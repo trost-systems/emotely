@@ -36,7 +36,7 @@ dev_dependencies:
       ref: 103ba839d3d8e4e53853fad600cbde341b153192
   # melos reads the workspace list above; it only recognizes the workspace
   # when it is declared here, and its configuration lives in the `melos` key.
-  melos: 8.7.0
+  melos: 8.9.0
 
 # Both tools want their shared library at a version only main has; pub treats
 # a git and a hosted source as different packages, so it has to be overridden
@@ -111,7 +111,7 @@ melos:
       # cache per package avoids it but compiles it again in each, ~9 s.
       run: melos exec --fail-fast --concurrency=1 --dir-exists=test $EMOTELY_SCOPE -- dart pub global run very_good_cli:very_good test --coverage --min-coverage 100 --exclude-coverage "'**/*.{freezed,g,gen,mocks}.dart'"
     schema:generate:
-      description: Typed Supabase tables for every repository (the supabase_schema package), generated from the running local database (`supabase db start` first, from the repo root).
+      description: Typed Supabase tables for every repository (the supabase_schema package), generated from the checkout's running local database (`bash .claude/skills/supabase/scripts/stack.sh up --db-only` first, from the repo root).
       # supabase_typegen defaults to importing package:postgrest, which the
       # package does not depend on; supabase_flutter re-exports the same types.
       run: melos exec --scope=supabase_schema -- dart run supabase_typegen --local --output lib/src/supabase_schema.g.dart --import package:supabase_flutter/supabase_flutter.dart
