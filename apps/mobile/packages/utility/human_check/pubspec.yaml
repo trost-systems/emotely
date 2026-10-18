@@ -9,7 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  get_it: 9.2.1
+  get_it: 9.3.0
   # Cloudflare Turnstile runs in a web view (#94). The Flutter team's own
   # plugin, not flutter_inappwebview: that one (via cloudflare_turnstile)
   # has had no release since 2024 and its Android build fails under AGP 9
