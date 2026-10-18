@@ -25,7 +25,7 @@ emotely-orange seed), not in hand-rolled widgets.
 - A screen that needs an object gets a bloc that loads it by the id in its
   location (`EntryRoute(id:)`, `SessionRoute(resume:)`), not a constructor
   argument from the caller.
-- Screens are routes; steps are bloc state. Sign-in's email-then-code, the
+- Screens are routes; steps are bloc state. Sign-in's password-then-code, the
   session's questions, the onboarding steps and the consent screen's
   states are one page whose bloc picks the widget, not a page stack.
 - The guard is `authRedirect` in `lib/app/router.dart`, pure over "signed
@@ -74,8 +74,10 @@ emotely-orange seed), not in hand-rolled widgets.
 - Build-time values (`--dart-define`s) are read and validated in the app
   only (`lib/app/environment.dart`, `urlFrom`) and passed into registration
   functions. No package calls `String.fromEnvironment`; CI's `ast-grep`
-  job fails any read outside that file, apart from the smoke password in
-  `integration_test/environment.dart`, which must never reach `lib/`.
+  job fails any read outside that file, apart from the smoke account in
+  `integration_test/environment.dart`, which must never reach `lib/`. No
+  build of the app knows any account: the smoke account, the stores'
+  review accounts and everyone else sign in through the same screen.
 - Tests compose with the same `registerApp` and replace only the leaves:
   the two http clients, the Supabase client, the PostHog instance, the
   preferences store and the human check's token source, which `main`

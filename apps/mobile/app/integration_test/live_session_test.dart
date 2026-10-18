@@ -8,8 +8,8 @@
 //     [--dart-define=EMOTELY_AGENT_URL=…]
 //
 // The agent serves signed-in users only, so the run signs in as the smoke
-// user (a password account like the store review accounts; everyone else
-// signs in with a code through the app's own screen).
+// user, an ordinary confirmed email-and-password account, through the
+// app's own sign-in screen ("I have an account" on Welcome).
 
 import 'package:analytics/analytics.dart';
 import 'package:design_system/design_system.dart';
@@ -17,6 +17,7 @@ import 'package:emotely/app/app.dart';
 import 'package:emotely/app/dependencies.dart';
 import 'package:emotely/app/environment.dart';
 import 'package:feature_account/feature_account.dart';
+import 'package:feature_auth/feature_auth.dart';
 import 'package:feature_journal/feature_journal.dart';
 import 'package:feature_onboarding/feature_onboarding.dart';
 import 'package:feature_session/feature_session.dart';
@@ -81,22 +82,12 @@ class LiveSessionRobot(final WidgetTester tester) {
         persistSession: false,
       ),
     );
-    // The password grant needs a human check like any other (#94): a real
-    // one, from the same web view the app shows on this device, hosted
-    // here until the app itself is up.
+    // The sign-in screen's password grant needs a human check like any
+    // other (#94): a real one, from the web view the app shows over its
+    // navigator on this device.
     final turnstile = TurnstileChallenges(
       siteKey: turnstileSiteKey,
       origin: Uri.parse(turnstileOrigin),
-    );
-    await tester.pumpWidget(
-      TurnstileHost(challenges: turnstile, child: const SizedBox.expand()),
-    );
-    final captchaToken = turnstile.token();
-    await tester.pumpAndSettle();
-    await supabase.client.auth.signInWithPassword(
-      email: smokeEmail,
-      password: smokePassword,
-      captchaToken: await captchaToken,
     );
     final posthog = Posthog();
     // The real startup gate against the real endpoint: if the deployed config
@@ -119,8 +110,6 @@ class LiveSessionRobot(final WidgetTester tester) {
       ),
       agentUrl: urlFrom(agentUrl, define: 'EMOTELY_AGENT_URL'),
       configUrl: urlFrom(configUrl, define: 'EMOTELY_CONFIG_URL'),
-      // Signed in above, not through the screen.
-      passwordAccounts: const {},
       google: googleClients,
       humanCheckToken: turnstile.token,
     );
@@ -137,10 +126,29 @@ class LiveSessionRobot(final WidgetTester tester) {
       ),
     );
     await tester.pumpAndSettle();
+    await _signIn();
     await tester.tap(find.byKey(JournalView.startKey));
     await tester.pumpAndSettle();
     await _consentIfAsked();
     await _settleRound();
+  }
+
+  /// Through the sign-in screen as a returning user: "I have an account" on
+  /// Welcome, the email and the password. The smoke account keeps the
+  /// placeholder name, so it skips the name step it may be asked once.
+  Future<void> _signIn() async {
+    await tester.tap(find.byKey(WelcomeStepView.haveAccountKey));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(SignInPage.emailKey), smokeEmail);
+    await tester.enterText(find.byKey(SignInPage.passwordKey), smokePassword);
+    await tester.pump();
+    await tester.ensureVisible(find.byKey(SignInPage.submitKey));
+    await tester.tap(find.byKey(SignInPage.submitKey));
+    await tester.pumpAndSettle();
+    if (find.byKey(NameStepView.skipKey).evaluate().isNotEmpty) {
+      await tester.tap(find.byKey(NameStepView.skipKey));
+      await tester.pumpAndSettle();
+    }
   }
 
   /// The consent gate, the first time this account ever starts a session.

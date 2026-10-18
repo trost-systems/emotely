@@ -28,8 +28,7 @@ void main() {
           agent: AgentStub(),
           supabase:
               supabase ??
-              (SupabaseStub()
-                ..script(otp: [codeSent()], verify: [sessionGranted()])),
+              (SupabaseStub()..script(password: [sessionGranted()])),
           analytics: analytics,
           config: config,
         ),
@@ -92,8 +91,7 @@ void main() {
           'step_index': 0,
           'phase': 'before_sign_up',
         }),
-        event('sign_in_code_requested'),
-        event('signed_in', {'method': 'code'}),
+        event('signed_in', {'method': 'password'}),
         event('journal_viewed', {'entries': 0, 'open_session': false}),
       ]);
     });
@@ -102,7 +100,7 @@ void main() {
       tester,
     ) async {
       final supabase = SupabaseStub()
-        ..script(otp: [codeSent()], verify: [sessionGranted()])
+        ..script(password: [sessionGranted()])
         ..rest(usageAnalyticsRead, [rpcReturned(false)])
         ..rest(usageAnalyticsGrant, [rpcReturned(null)]);
       await launch(tester, supabase: supabase);
@@ -126,7 +124,7 @@ void main() {
       tester,
     ) async {
       final supabase = SupabaseStub()
-        ..script(otp: [codeSent()], verify: [sessionGranted()])
+        ..script(password: [sessionGranted()])
         ..rest(usageAnalyticsRead, [rpcReturned(true)])
         ..rest(usageAnalyticsWithdraw, [rpcReturned(null)]);
       await launch(tester, supabase: supabase);
@@ -213,8 +211,7 @@ void main() {
       final supabase = SupabaseStub()
         ..script(
           logout: [signedOut()],
-          otp: [codeSent()],
-          verify: [sessionGranted(sub: next)],
+          password: [sessionGranted(sub: next)],
         )
         // The first person's consent stands; the next one has none.
         ..rest(usageAnalyticsRead, [rpcReturned(true), rpcReturned(false)]);
@@ -254,7 +251,7 @@ void main() {
         tester,
       ) async {
         final supabase = SupabaseStub()
-          ..script(otp: [codeSent()], verify: [sessionGranted()])
+          ..script(password: [sessionGranted()])
           ..rest(usageAnalyticsRead, [rpcReturned(false)]);
         // The last person allowed, and their session died while the app was
         // closed: the app starts signed out, with their answer on the phone.
@@ -325,7 +322,7 @@ void main() {
         tester,
       ) async {
         final supabase = SupabaseStub()
-          ..script(otp: [codeSent()], verify: [sessionGranted()])
+          ..script(password: [sessionGranted()])
           ..rest(usageAnalyticsRead, [rpcReturned(false)])
           ..rest(usageAnalyticsGrant, [rpcReturned(null)]);
         final analytics = await launch(tester, supabase: supabase);

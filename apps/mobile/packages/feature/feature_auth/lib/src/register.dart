@@ -10,15 +10,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// [google] clients; the way in last used, kept on the device like the
 /// preferences underneath; and its blocs, factories like every bloc, of
 /// which the app creates the one auth bloc it holds above every screen.
-///
-/// [passwordAccounts] are addresses that sign in with a password as the
-/// review accounts do, on top of them; the app decides which (none in a
-/// release build).
-void registerAuth(
-  GetIt getIt, {
-  required GoogleClientIds google,
-  Set<String> passwordAccounts = const {},
-}) => getIt
+/// The bloc takes the human check (`registerHumanCheck`, registered
+/// before this) for every request GoTrue guards with its captcha.
+void registerAuth(GetIt getIt, {required GoogleClientIds google}) => getIt
   ..registerSingleton(ProviderSignIn(google: google))
   ..registerSingleton(LastSignInStore(preferences: SharedPreferencesAsync()))
   ..registerFactory(
@@ -29,7 +23,6 @@ void registerAuth(
       providers: getIt(),
       lastSignIn: getIt(),
       humanCheck: getIt(),
-      passwordAccounts: passwordAccounts,
     ),
   )
   ..registerFactory(() => LastSignInBloc(store: getIt()));

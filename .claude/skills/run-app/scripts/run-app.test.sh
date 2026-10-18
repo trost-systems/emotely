@@ -135,8 +135,8 @@ test_the_credentials_step_signs_nothing_in() {
   [[ "${called}" == no ]] || fail "the credentials step signs nothing in: it called curl"
   [[ "$(STATE_FILE="${dir}/state" state_get SMOKE_USER_ID)" == 0b6e2a52-6c1d-4f8e-9a3b-2d7c5e1f9a40 ]] ||
     fail "the credentials step keeps the smoke user's id for collect"
-  [[ "$(jq -r .SMOKE_EMAIL "${dir}/private/defines.json")" == smoke@example.com ]] ||
-    fail "the credentials step writes the build's defines"
+  [[ "$(jq -r '.EMOTELY_DEBUG_BANNER, (has("SMOKE_EMAIL"))' "${dir}/private/defines.json")" == $'false\nfalse' ]] ||
+    fail "the credentials step writes the build's defines, naming no account"
 }
 
 # --- the in-app sign-in -----------------------------------------------------------
@@ -168,11 +168,13 @@ test_a_sign_in_that_reaches_the_journal_passes() {
 
 # --- the build's defines ----------------------------------------------------------
 
-test_the_build_names_the_smoke_account_and_hides_the_debug_banner() {
+test_the_build_names_no_account_and_hides_the_debug_banner() {
   local defines
-  defines="$(app_defines smoke@example.com phc_made_up)"
-  [[ "$(jq -r .SMOKE_EMAIL <<<"${defines}")" == smoke@example.com ]] ||
-    fail "the build names the smoke account: got ${defines}"
+  defines="$(app_defines phc_made_up)"
+  # No account in any build (#187): the smoke account signs in through the
+  # ordinary screen.
+  [[ "$(jq -r 'keys | map(select(startswith("SMOKE"))) | length' <<<"${defines}")" == 0 ]] ||
+    fail "the build names no smoke account: got ${defines}"
   [[ "$(jq -r .POSTHOG_KEY <<<"${defines}")" == phc_made_up ]] ||
     fail "the build carries the PostHog key: got ${defines}"
   [[ "$(jq -r .EMOTELY_DEBUG_BANNER <<<"${defines}")" == false ]] ||

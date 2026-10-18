@@ -7,32 +7,46 @@ part of 'auth_bloc.dart';
 /// print those (ADR 0005). `Instance of 'AuthCodeSent'` is all it shows.
 @Freezed(toStringOverride: false)
 sealed class AuthState with _$AuthState {
-  /// Nobody is signed in; the email step, with the last [problem] if any.
-  const factory signedOut({SignInProblem? problem}) = AuthSignedOut;
+  /// Nobody is signed in; the email and password, with the last [problem]
+  /// if any, and the [email] typed before if the user came back to it.
+  const factory signedOut({SignInProblem? problem, String? email}) =
+      AuthSignedOut;
 
-  /// A code is on its way to [email].
-  const factory requestingCode({required String email}) = AuthRequestingCode;
-
-  /// [email] has a code to type in, with the last [problem] if any.
-  const factory codeSent({required String email, SignInProblem? problem}) =
-      AuthCodeSent;
-
-  /// The code for [email] is being checked.
-  const factory verifying({required String email}) = AuthVerifying;
+  /// The email and password are with Supabase: a sign-in, a new account,
+  /// or a reset code on its way to [email].
+  const factory checking({required String email}) = AuthChecking;
 
   /// [provider]'s sheet is up, or its token is being traded for a session.
   const factory signingInWith(IdentityProvider provider) = AuthSigningInWith;
 
-  /// [email] is a review account and needs its password, with the last
-  /// [problem] if any.
-  const factory passwordRequired({
+  /// A code is in the mail to [email], for [purpose], with the last
+  /// [problem] if any; [resent] once the user asked for a new one and it
+  /// went out.
+  const factory codeSent({
     required String email,
+    required CodePurpose purpose,
     SignInProblem? problem,
-  }) = AuthPasswordRequired;
+    @Default(false) bool resent,
+  }) = AuthCodeSent;
 
-  /// The password for [email] is being checked.
-  const factory checkingPassword({required String email}) =
-      AuthCheckingPassword;
+  /// The code for [email] is being checked, or sent again, for [purpose].
+  const factory checkingCode({
+    required String email,
+    required CodePurpose purpose,
+  }) = AuthCheckingCode;
+
+  /// A reset code signed [user] in, but the new password could not be
+  /// saved ([problem] says why): the account is asked for it once more
+  /// before the user is let past the screen.
+  const factory newPasswordRequired({
+    required String email,
+    required User user,
+    SignInProblem? problem,
+  }) = AuthNewPasswordRequired;
+
+  /// The new password for [user] is being saved.
+  const factory savingPassword({required String email, required User user}) =
+      AuthSavingPassword;
 
   /// [userId] is signed in, as [identity]: the sign-in address and the
   /// method, for the screens to show on this device. Neither goes to
@@ -43,34 +57,51 @@ sealed class AuthState with _$AuthState {
   }) = AuthSignedIn;
 }
 
+/// What a mailed code is for.
+enum CodePurpose() {
+  /// Confirms a new account's address, which opens the account.
+  confirmAccount,
+
+  /// Signs the account in to choose a new password.
+  resetPassword,
+}
+
 /// Why the last try at a sign-in step failed, as far as the user can act on
 /// it. The screen words each in the user's language (ADR 0020); what exactly
 /// went wrong goes to error tracking, never onto the screen.
 enum SignInProblem() {
-  /// GoTrue will send no more codes to this address for now.
+  /// GoTrue will mail no more codes to this address for now.
   tooManyCodes,
 
   /// GoTrue is rate-limiting this device's sign-in requests. What the user
   /// typed may well be right, so this is never worded as a wrong answer.
   tooManyAttempts,
 
-  /// GoTrue refused to send a code to the address, most likely not a real
-  /// one.
+  /// GoTrue refused to mail the address, most likely not a real one.
   couldNotSend,
 
   /// The code did not sign anyone in: wrong, expired, or answered without a
   /// session.
   wrongCode,
 
-  /// A review account's password did not sign it in.
+  /// The email and password did not sign anyone in. Never says which of the
+  /// two was wrong: GoTrue does not tell, and the screen must not guess.
   wrongPassword,
+
+  /// GoTrue refused the new password as too weak (shorter than the
+  /// project's minimum).
+  weakPassword,
+
+  /// A new account was asked for an address that has one, and the password
+  /// typed is not its password.
+  accountExists,
+
+  /// A reset code signed the account in, but the new password could not be
+  /// saved.
+  passwordNotSaved,
 
   /// No answer from the sign-in service at all.
   unreachable,
-
-  /// A code asked for from "I have an account" for an address with no
-  /// account: the user belongs in onboarding.
-  noAccount,
 
   /// A provider's sheet or its token failed; not a dismissal.
   providerFailed,

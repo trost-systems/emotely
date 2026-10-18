@@ -14,7 +14,7 @@ extension SignInIdentityCopy on SignInIdentity {
   /// set up by hand) says only the second half.
   String methodLine(AccountLocalizations strings) => switch (method) {
     _ when hiddenByApple => strings.signInViaAppleRelay,
-    SignInVia.emailCode => strings.signInViaEmailCode,
+    SignInVia.email => strings.signInViaEmail,
     SignInVia.google => strings.signInViaGoogle,
     SignInVia.apple => strings.signInViaApple,
     null => strings.signInViaUnknown,
