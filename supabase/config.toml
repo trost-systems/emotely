@@ -289,7 +289,8 @@ content_path = "./supabase/templates/confirmation.html"
 subject = '{{ if eq .Data.app_locale "de" }}Neues Passwort für emotely{{ else }}Reset your emotely password{{ end }}'
 content_path = "./supabase/templates/recovery.html"
 
-# A code for an account that exists (`/otp`): the web account-deletion page
+# A code for a confirmed account (`/otp`; an unconfirmed or unknown address
+# gets the confirmation mail above instead): the web account-deletion page
 # proves the mailbox with it, and app builds from before #187 still sign in
 # with it until the minimum version retires them. Worded for both.
 [auth.email.template.magic_link]
