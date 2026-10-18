@@ -46,9 +46,11 @@ revoke all on schema change_notice from public, anon, authenticated, service_rol
 -- A notice is one message to one audience about one change; the same
 -- message sent again continues it rather than starting another. A delivery
 -- is one reader in one batch: by id, never by address, so the record proves
--- who was told and when without holding a mailbox. An account deleted later
--- leaves its delivery behind with the id cleared, so "we told N people on
--- this date" stays demonstrable after the person is gone.
+-- who was told and when without holding a mailbox. A reader in both sets
+-- keeps both ids, so one who deletes the account but stays on the waitlist
+-- is not told again as the waitlist. An account deleted later leaves its
+-- delivery behind with the id cleared, so "we told N people on this date"
+-- stays demonstrable after the person is gone.
 
 create table change_notice.notices (
   id uuid primary key default gen_random_uuid(),
@@ -539,8 +541,8 @@ begin
     (notice_id, kind, user_id, waitlist_id, locale, request_id, position)
   select notice,
     p.reader ->> 'kind',
-    case when p.reader ->> 'kind' = 'account' then (p.reader ->> 'user_id')::uuid end,
-    case when p.reader ->> 'kind' = 'waitlist' then (p.reader ->> 'waitlist_id')::uuid end,
+    (p.reader ->> 'user_id')::uuid,
+    (p.reader ->> 'waitlist_id')::uuid,
     p.reader ->> 'lang',
     request,
     p.ord - 1

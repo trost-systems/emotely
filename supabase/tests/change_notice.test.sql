@@ -5,7 +5,7 @@
 -- role reaches any of it. The Resend key is a throwaway created inside the
 -- transaction, so nothing leaves the database: pg_net sends only on commit.
 begin;
-select plan(53);
+select plan(54);
 
 -- Fixtures -------------------------------------------------------------------------
 
@@ -309,10 +309,11 @@ select results_eq(
   $$select kind, user_id, waitlist_id, locale from change_notice.deliveries
     order by kind, locale$$,
   $$values
-    ('account', '00000000-0000-0000-0000-00000000000b'::uuid, null::uuid, 'de'),
+    ('account', '00000000-0000-0000-0000-00000000000b'::uuid,
+      '00000000-0000-0000-0000-0000000000b1'::uuid, 'de'),
     ('account', '00000000-0000-0000-0000-00000000000a'::uuid, null::uuid, 'en'),
     ('waitlist', null::uuid, '00000000-0000-0000-0000-0000000000c1'::uuid, 'de')$$,
-  'the record names each reader by id, never by address'
+  'the record names each reader by id, never by address, both ids for one in both sets'
 );
 select ok(
   not exists (
@@ -493,6 +494,15 @@ select results_eq(
     where kind = 'account' and locale = 'en'$$,
   $$values (1, 0)$$,
   'a deleted account leaves the fact that a mail went out, not who it went to'
+);
+
+-- Bea, told as her account, deletes it and stays on the waitlist.
+delete from auth.users where id = '00000000-0000-0000-0000-00000000000b';
+select is(
+  change_notice.send('both', pg_temp.effective(), pg_temp.message())
+    - 'notice_id',
+  '{"queued": 0, "remaining": 0}'::jsonb,
+  'a reader told as the account is not told again as the waitlist once it is gone'
 );
 
 select * from finish();
