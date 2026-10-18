@@ -117,7 +117,8 @@ class const AgentClient({
     }
     // Anything but an object is not the agent's answer: an AgentException,
     // which callers handle, rather than a cast's TypeError, which they do not.
-    if ((jsonDecode(text) as Object?) case final Map<String, dynamic> json) {
+    final decoded = jsonDecode(text) as Object?;
+    if (decoded case final Map<String, dynamic> json) {
       return json;
     }
     throw const AgentException(200, 'unexpected response');
