@@ -100,12 +100,19 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
     h3([.text('Your email address')]),
     p([
       .text(
-        'Signing in needs an email address, given one of three ways: the '
-        'app mails you a six-digit code to type back in (no password, no '
-        'link), or Sign in with Google (iOS and Android) or Sign in with '
-        'Apple (iPhone) confirms who you are and passes your address on. '
-        'The address and the sign-in records live in Supabase Auth on '
-        'servers in Frankfurt, Germany (EU). The app never asks for a phone '
+        'Signing in needs an email address, given one of three ways: your '
+        'address and a password you choose, or Sign in with Google (iOS and '
+        'Android) or Sign in with Apple (iPhone), which confirms who you are '
+        'and passes your address on. A new account with a password opens '
+        'only once you type in the six-digit code the app mails to the '
+        'address, and a forgotten password is reset with such a code too '
+        '(a code, never a link). Whenever the password is changed, the '
+        'address gets a mail saying so, in case it was not you. Supabase '
+        'Auth keeps the password only as a '
+        'one-way hash, never as you typed it, so nobody can read it back. '
+        'The address, the password hash and the sign-in records live in '
+        'Supabase Auth on servers in Frankfurt, Germany (EU). The app never '
+        'asks for a phone '
         'number, a date of birth, contacts, photos, location or an '
         'advertising identifier.',
       ),
@@ -129,11 +136,13 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
         'nothing about your journal.',
       ),
     ]),
-    // #94: Supabase Auth refuses a code request or a password sign-in
-    // without a Turnstile token, which the app fetches first.
+    // #94: Supabase Auth refuses a sign-up, a password sign-in, a reset or
+    // a code request without a Turnstile token, which the app fetches
+    // first (feature_auth's HumanCheck).
     p([
       .text(
-        'Before the app asks for a code, and before it checks a password, '
+        'Before the app creates an account, checks a password or asks for '
+        'a code, '
         'Cloudflare Turnstile checks in a hidden web view that a person and '
         'not a script is asking. It reads what it needs to tell the two '
         'apart — your IP address, the TLS fingerprint and user agent of '
@@ -150,8 +159,8 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
     p([
       .text(
         'With the sign-in records, Supabase Auth also keeps the language the '
-        'app is shown in (English or German), so that your sign-in code '
-        'mails come in that language.',
+        'app is shown in (English or German), so that the mails with your '
+        'codes come in that language.',
       ),
     ]),
     p([
@@ -447,10 +456,10 @@ class const AppPrivacy({super.key}) extends StatelessComponent {
     h3([.text('The store reviewer accounts')]),
     p([
       .text(
-        'Two fixed accounts sign in with a password instead of a code, '
-        'because Apple’s and Google’s reviewers have no mailbox to read a '
-        'code from. They belong to the review process, and nothing in the '
-        'app can create one.',
+        'Two fixed accounts, made confirmed by us rather than through the '
+        'app, let Apple’s and Google’s reviewers sign in with an email and '
+        'a password like anyone else, without a mailbox to read a code '
+        'from. They belong to the review process.',
       ),
     ]),
 
