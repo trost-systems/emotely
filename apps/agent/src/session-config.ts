@@ -16,7 +16,12 @@ export const DEFAULT_MODEL = "openai/gpt-oss-120b";
 // Served by `GET /api/config`, which the app reads once at startup (#49); the
 // session response no longer carries it. Raising it blocks apps at their next
 // launch, and at their next config cache miss — see CONFIG_CACHE_CONTROL.
-export const MIN_APP_VERSION = "1.0.0";
+//
+// 2.0.1 (#94): the first build that sends a Cloudflare Turnstile token,
+// raised together with the captcha Supabase Auth enforces from the same
+// merge. An older build could no longer request a code or check a
+// password, so it is sent to the update screen before it gets that far.
+export const MIN_APP_VERSION = "2.0.1";
 
 // Where the app's force-update screen sends the user, served alongside the
 // minimum so the link can be corrected without an app release — the users who

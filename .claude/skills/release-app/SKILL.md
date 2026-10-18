@@ -245,9 +245,15 @@ about them:
 - `google-play-review@getemotely.com`
 - `app-store-review@getemotely.com`
 
-**The accounts must exist before the addresses are public** (in a store
-build or a console): they do, both were created on the hosted project
-through the Auth admin API on 2026-09-13.
+Their password grant, like everyone's, carries a Cloudflare Turnstile
+token, since the hosted project demands one on every password grant (#94).
+The token comes from a web view that stays invisible unless Cloudflare asks
+for a tap (then a checkbox appears at the bottom), so a reviewer's
+`sign_in_password_failed` burst can also be a failed check (error
+`HumanCheckFailed` or `captcha_failed` in PostHog). **The accounts must
+exist before the addresses are public** (in a store build or a console):
+they do, both were created on the hosted project through the Auth admin API
+on 2026-09-13.
 
 - **The password** is `REVIEWER_PASSWORD` in
   `~/.config/emotely/reviewer-accounts.env` (mode 600, never in the repo;
