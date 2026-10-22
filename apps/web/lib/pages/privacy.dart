@@ -94,9 +94,11 @@ class const Privacy({super.key}) extends StatelessComponent {
       li([
         strong([.text('Resend')]),
         .text(
-          ' sends two emails from servers in the EU: the one asking you to '
-          'confirm your address, and later the one that tells you your spot '
-          'is open.',
+          ' sends our emails from servers in the EU: the one asking you to '
+          'confirm your address, later the one that tells you your spot is '
+          'open, and, only if something material changes about what happens '
+          'to your address, a notice before it takes effect '
+          '(Art. 6 (1) (c) GDPR).',
         ),
       ]),
       li([
@@ -192,7 +194,9 @@ class const Privacy({super.key}) extends StatelessComponent {
         'version of this page is in the public repository, so what changed '
         'and when is a matter of record. If something material changes about '
         'what happens to your address, you are told by email before it takes '
-        'effect rather than being left to notice it here.',
+        'effect rather than being left to notice it here. That email meets '
+        'our duty to keep you informed (Art. 12 to 14 GDPR), so its legal '
+        'basis is Art. 6 (1) (c) GDPR.',
       ),
     ]),
 
