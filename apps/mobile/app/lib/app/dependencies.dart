@@ -3,6 +3,7 @@ import 'package:analytics/analytics.dart';
 import 'package:consent_repository/consent_repository.dart';
 import 'package:emotely/app/account_device_data.dart';
 import 'package:emotely/app/navigators.dart';
+import 'package:emotely/app/sign_in_grants.dart';
 import 'package:emotely/app/user_context.dart';
 import 'package:emotely/config/config_dependencies.dart';
 import 'package:feature_account/feature_account.dart';
@@ -94,7 +95,7 @@ void _registerRecords(GetIt getIt, SupabaseClient supabase) {
 
 /// The app's side of each feature's navigator, next to the features, of
 /// the session's question of who the user is, and of what a deleted
-/// account leaves on this device.
+/// account leaves on this device and with Apple and Google.
 ///
 /// The user context is a factory, like the bloc that asks it: it remembers
 /// the user's profile for one session (#264), and nothing per-user may
@@ -104,6 +105,7 @@ void _registerSeams(GetIt getIt) => getIt
     () => AppUserContextSource(profiles: getIt(), errors: getIt()),
   )
   ..registerSingleton<AccountDeviceData>(AppAccountDeviceData(getIt()))
+  ..registerFactory<SignInGrants>(() => AppSignInGrants(getIt()))
   ..registerSingleton<AccountNavigator>(const AppAccountNavigator())
   ..registerSingleton<JournalNavigator>(const AppJournalNavigator())
   ..registerSingleton<OnboardingNavigator>(const AppOnboardingNavigator())

@@ -39,9 +39,10 @@ class AccountRobot(
   Widget get app =>
       appUnderTest(agent: agent, supabase: supabase, analytics: analytics);
 
-  /// Launches the app signed in and opens the account screen.
-  Future<void> launch() async {
-    await supabase.signedIn();
+  /// Launches the app signed in and opens the account screen. [providers]
+  /// are the ways in linked to the account (none said: an email account).
+  Future<void> launch({List<String>? providers}) async {
+    await supabase.signedIn(provider: providers?.first, providers: providers);
     await tester.pumpWidget(app);
     await settle();
     await openAccount();

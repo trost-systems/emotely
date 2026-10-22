@@ -98,8 +98,10 @@ const _english = _Words(
   doneBody:
       'The account and everything in it — every entry, every session, the '
       'address itself — was deleted just now. Nothing is kept, so there is '
-      'nothing left to undo and nothing to sign in to. If you come back one '
-      'day, you start fresh.',
+      'nothing left to undo and nothing to sign in to. If you signed in with '
+      'Apple or Google, emotely may still be listed in that account’s '
+      'settings; you can remove it there. If you come back one day, you '
+      'start fresh.',
   addressLabel: 'The email address of the account',
   placeholder: 'you@example.com',
   sendingCode: 'Sending the code…',
@@ -137,7 +139,9 @@ const _german = _Words(
       'Das Konto und alles darin – jeder Eintrag, jede Session, die Adresse '
       'selbst – wurde eben gelöscht. Nichts wird aufbewahrt, es gibt also '
       'nichts rückgängig zu machen und nichts, womit du dich anmelden '
-      'könntest. Kommst du eines Tages zurück, fängst du neu an.',
+      'könntest. Hast du dich mit Apple oder Google angemeldet, steht emotely '
+      'womöglich noch in den Einstellungen dieses Kontos; dort kannst du es '
+      'entfernen. Kommst du eines Tages zurück, fängst du neu an.',
   addressLabel: 'Die E-Mail-Adresse des Kontos',
   placeholder: 'du@example.com',
   sendingCode: 'Der Code wird gesendet …',
