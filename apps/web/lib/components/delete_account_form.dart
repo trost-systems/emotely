@@ -4,6 +4,7 @@ import 'package:emotely_web/analytics.dart';
 import 'package:emotely_web/delete_account.dart';
 import 'package:emotely_web/environment.dart';
 import 'package:emotely_web/site_locale.dart';
+import 'package:emotely_web/turnstile.dart';
 import 'package:emotely_web/waitlist.dart' show looksLikeEmail;
 import 'package:http/http.dart' as http;
 import 'package:jaspr/dom.dart';
@@ -158,6 +159,9 @@ const _german = _Words(
 
 enum _Step { address, code, done }
 
+/// Where Cloudflare's checkbox appears, if it ever has to.
+const _turnstileId = 'delete-turnstile';
+
 class _DeleteAccountFormState extends State<DeleteAccountForm> {
   var _email = '';
   var _code = '';
@@ -200,6 +204,21 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
       _busy = true;
       _message = null;
     });
+    // Asked for here, on the reader's click, and nowhere earlier: only
+    // now does Cloudflare's script load (see `turnstile.dart`).
+    final captcha = await turnstileToken(
+      containerId: _turnstileId,
+      siteKey: turnstileSiteKey,
+      language: component.lang,
+    );
+    if (captcha == null) {
+      track('delete_code_requested', {'outcome': 'check_failed'});
+      setState(() {
+        _busy = false;
+        _message = _words.failed;
+      });
+      return;
+    }
     final client = http.Client();
     try {
       final outcome = await requestDeletionCode(
@@ -207,6 +226,7 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
         email: email,
         supabaseUrl: supabaseUrl,
         publishableKey: supabasePublishableKey,
+        captchaToken: captcha,
       );
       // No `source`, no address, no code: a deletion is not a campaign and
       // the event must not say whose account it was (ADR 0005).
@@ -317,6 +337,7 @@ class _DeleteAccountFormState extends State<DeleteAccountForm> {
           'aria-hidden': 'true',
         },
       ),
+      const div(id: _turnstileId, classes: 'delete-account-check', []),
       button(
         key: const Key('send-code'),
         type: .submit,
