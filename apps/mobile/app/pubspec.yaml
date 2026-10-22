@@ -80,7 +80,7 @@ dev_dependencies:
   # The analyzer configuration (flutter_agent_lints behind it) and the shared
   # test support, both workspace packages.
   analysis: any
-  build_runner: 2.16.1
+  build_runner: 2.16.2
   # The performance survey finds the app's container on an iPhone in Test
   # Lab, where the app has no HOME (integration_test/survey/).
   ffi: 2.2.0

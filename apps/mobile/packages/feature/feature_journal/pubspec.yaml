@@ -28,7 +28,7 @@ dependencies:
 dev_dependencies:
   agent_client: any
   analysis: any
-  build_runner: 2.16.1
+  build_runner: 2.16.2
   contract: any
   flutter_test:
     sdk: flutter
