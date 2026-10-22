@@ -32,7 +32,7 @@ dependencies:
 
 dev_dependencies:
   analysis: any
-  build_runner: 2.16.1
+  build_runner: 2.16.2
   # Typed accessors for the package's assets (lib/src/gen/assets.gen.dart),
   # never a path in a string: build_runner writes them with the rest.
   flutter_gen_runner: 5.15.0

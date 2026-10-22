@@ -44,4 +44,4 @@ dependencies:
 
 dev_dependencies:
   analysis: any
-  build_runner: 2.16.1
+  build_runner: 2.16.2

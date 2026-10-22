@@ -28,7 +28,7 @@ dependencies:
 
 dev_dependencies:
   analysis: any
-  build_runner: 2.16.1
+  build_runner: 2.16.2
   flutter_test:
     sdk: flutter
   freezed: 4.0.2
