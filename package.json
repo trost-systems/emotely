@@ -17,8 +17,8 @@
     "spell:us-english": "cspell lint --no-progress --no-summary --no-cache --no-config-search --config cspell.us-english.yaml"
   },
   "devDependencies": {
-    "@ast-grep/cli": "0.50.0",
-    "@biomejs/biome": "2.5.15",
+    "@ast-grep/cli": "0.51.0",
+    "@biomejs/biome": "2.6.2",
     "@cspell/dict-de-de": "4.1.3",
     "cspell": "10.4.0",
     "typescript": "7.0.2"
