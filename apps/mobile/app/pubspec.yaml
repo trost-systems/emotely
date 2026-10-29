@@ -54,7 +54,7 @@ dependencies:
     sdk: flutter
   freezed_annotation: 3.1.0
   get_it: 9.3.0
-  go_router: 18.0.2
+  go_router: 18.1.1
   http: 1.6.0
   # The version flutter_localizations requires (^0.20.3), pinned.
   intl: 0.20.3
@@ -67,7 +67,7 @@ dependencies:
   # tree-shake it away. Pure Dart, no native plugin. Keep it at the version
   # of marionette_cli the skill activates: the two speak one protocol.
   marionette_flutter: 0.7.0
-  material_ui: ^1.1.0
+  material_ui: ^1.8.0
   meta: ^1.19.0
   package_info_plus: 10.2.2
   posthog_flutter: 5.39.0
@@ -91,10 +91,10 @@ dev_dependencies:
     sdk: flutter
   flutter_test:
     sdk: flutter
-  freezed: 4.0.2
+  freezed: 4.0.3
   integration_test:
     sdk: flutter
-  json_serializable: 6.14.1
+  json_serializable: 6.15.2
   mockito: 5.8.1
   testing: any
   # The request-count test (test/perf) reads the performance budget's

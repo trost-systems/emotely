@@ -17,12 +17,12 @@ dependencies:
     sdk: flutter
   freezed_annotation: 3.1.0
   get_it: 9.3.0
-  go_router: 18.0.2
+  go_router: 18.1.1
   google_sign_in: 7.2.0
   # The version flutter_localizations requires (^0.20.3), pinned.
   intl: 0.20.3
   legal_links: any
-  material_ui: ^1.1.0
+  material_ui: ^1.8.0
   profile_repository: any
   # The method last used to sign in stays on the device, to tag it on the
   # sign-in screen (#204), in the store the usage-analytics choice uses.
@@ -38,8 +38,8 @@ dev_dependencies:
   flutter_gen_runner: 5.15.0
   flutter_test:
     sdk: flutter
-  freezed: 4.0.2
-  go_router_builder: 4.5.0
+  freezed: 4.0.3
+  go_router_builder: 4.5.2
   shared_preferences_platform_interface: 2.4.2
   testing: any
 
