@@ -32,7 +32,7 @@ dev_dependencies:
   contract: any
   flutter_test:
     sdk: flutter
-  freezed: 4.0.2
+  freezed: 4.0.3
   go_router_builder: 4.5.0
   supabase_flutter: 3.0.0-dev.9
   testing: any
