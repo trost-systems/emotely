@@ -39,8 +39,8 @@ dev_dependencies:
   build_runner: 2.16.2
   flutter_test:
     sdk: flutter
-  freezed: 4.0.2
-  go_router_builder: 4.5.0
+  freezed: 4.0.3
+  go_router_builder: 4.5.3
   http: 1.6.0
   # The emoji picker keeps its recents in shared_preferences; tests seed it
   # so the picker can load without a platform channel.
