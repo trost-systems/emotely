@@ -91,10 +91,10 @@ dev_dependencies:
     sdk: flutter
   flutter_test:
     sdk: flutter
-  freezed: 4.0.2
+  freezed: 4.0.3
   integration_test:
     sdk: flutter
-  json_serializable: 6.14.1
+  json_serializable: 6.15.2
   mockito: 5.8.1
   testing: any
   # The request-count test (test/perf) reads the performance budget's

@@ -8,7 +8,7 @@ environment:
 
 dependencies:
   analytics: any
-  crypto: 3.0.7
+  crypto: 3.0.8
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
@@ -38,8 +38,8 @@ dev_dependencies:
   flutter_gen_runner: 5.15.0
   flutter_test:
     sdk: flutter
-  freezed: 4.0.2
-  go_router_builder: 4.5.0
+  freezed: 4.0.3
+  go_router_builder: 4.5.3
   shared_preferences_platform_interface: 2.4.2
   testing: any
 
