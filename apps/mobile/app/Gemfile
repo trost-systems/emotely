@@ -3,10 +3,10 @@ source "https://rubygems.org"
 # Release tooling for both stores: signing (match), the TestFlight upload
 # (pilot) and the Play upload (supply). Driven by fastlane/Fastfile, run in
 # .github/workflows/app-release.yml and locally for the one-time signing setup.
-gem "fastlane", "2.241.0"
+gem "fastlane", "2.241.2"
 # `flutter build ipa` runs `pod install`; under `bundle exec` only gems from
 # this file are visible, so CocoaPods has to be one of them.
 gem "cocoapods", "1.17.0"
 # The tests of the Fastfile's helpers (fastlane/test, CI's fastlane job).
 # 5.x, not the current 6.x: CocoaPods' activesupport 7.2 needs minitest < 6.
-gem "minitest", "6.0.6"
+gem "minitest", "6.1.0"
